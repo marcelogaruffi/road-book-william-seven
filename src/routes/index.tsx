@@ -1,29 +1,36 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Road Book William Seven" },
+      { name: "description", content: "Gerencie road books de espetáculos com programação, hotel, teatro e contatos." },
+      { property: "og:title", content: "Road Book William Seven" },
+      { property: "og:description", content: "Gerencie road books de espetáculos com programação, hotel, teatro e contatos." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen bg-background flex items-center justify-center px-6">
+      <div className="max-w-xl text-center space-y-6">
+        <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">William Seven</p>
+        <h1 className="text-5xl font-semibold tracking-tight">Road Book</h1>
+        <p className="text-muted-foreground text-lg">
+          Organize a turnê: espetáculo, cidade, hotel, teatro, contatos e programação — tudo em uma página pública compartilhável.
+        </p>
+        <div className="flex gap-3 justify-center pt-4">
+          <Button asChild size="lg">
+            <Link to="/auth">Entrar</Link>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link to="/dashboard">Dashboard</Link>
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
