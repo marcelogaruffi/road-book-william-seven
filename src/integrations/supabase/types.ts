@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      roadbooks: {
+        Row: {
+          cidade: string
+          created_at: string
+          data_final: string | null
+          data_inicial: string | null
+          espetaculo: string
+          estado: string | null
+          festival: string | null
+          hotel_endereco: string | null
+          hotel_nome: string | null
+          id: string
+          producao_nome: string | null
+          producao_telefone: string | null
+          programacao: Json
+          receptivo_nome: string | null
+          receptivo_telefone: string | null
+          slug: string
+          teatro_endereco: string | null
+          teatro_nome: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cidade: string
+          created_at?: string
+          data_final?: string | null
+          data_inicial?: string | null
+          espetaculo: string
+          estado?: string | null
+          festival?: string | null
+          hotel_endereco?: string | null
+          hotel_nome?: string | null
+          id?: string
+          producao_nome?: string | null
+          producao_telefone?: string | null
+          programacao?: Json
+          receptivo_nome?: string | null
+          receptivo_telefone?: string | null
+          slug: string
+          teatro_endereco?: string | null
+          teatro_nome?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cidade?: string
+          created_at?: string
+          data_final?: string | null
+          data_inicial?: string | null
+          espetaculo?: string
+          estado?: string | null
+          festival?: string | null
+          hotel_endereco?: string | null
+          hotel_nome?: string | null
+          id?: string
+          producao_nome?: string | null
+          producao_telefone?: string | null
+          programacao?: Json
+          receptivo_nome?: string | null
+          receptivo_telefone?: string | null
+          slug?: string
+          teatro_endereco?: string | null
+          teatro_nome?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
