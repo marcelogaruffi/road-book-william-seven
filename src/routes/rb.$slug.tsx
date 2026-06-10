@@ -54,11 +54,11 @@ function fmtDate(d: string | null) {
 }
 
 function PublicPage() {
-  const r = Route.useLoaderData();
-  const prog = (r.programacao ?? []).slice().sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora));
+  const r = Route.useLoaderData() as Row;
+  const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora));
 
   // Group by date
-  const groups = prog.reduce<Record<string, ProgItem[]>>((acc, p) => {
+  const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p: ProgItem) => {
     const k = p.data || "—";
     (acc[k] ||= []).push(p);
     return acc;
