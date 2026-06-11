@@ -16,68 +16,160 @@ export type Database = {
     Tables: {
       roadbooks: {
         Row: {
+          automacoes: Json
           cidade: string
           created_at: string
           data_final: string | null
           data_inicial: string | null
+          documentos: Json
           espetaculo: string
           estado: string | null
           festival: string | null
+          festival_info: Json
+          hotel_checkin: string | null
+          hotel_checkout: string | null
           hotel_endereco: string | null
           hotel_nome: string | null
+          hotel_site: string | null
+          hotel_telefone: string | null
           id: string
+          ordem: number | null
+          outros_contatos: Json
           producao_nome: string | null
           producao_telefone: string | null
+          producao_whatsapp: string | null
           programacao: Json
+          quartos: Json
           receptivo_nome: string | null
           receptivo_telefone: string | null
+          receptivo_whatsapp: string | null
+          resumo_executivo: string | null
           slug: string
           teatro_endereco: string | null
           teatro_nome: string | null
+          teatro_observacoes: string | null
+          teatro_site: string | null
+          teatro_telefone: string | null
+          tour_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          automacoes?: Json
           cidade: string
           created_at?: string
           data_final?: string | null
           data_inicial?: string | null
+          documentos?: Json
           espetaculo: string
           estado?: string | null
           festival?: string | null
+          festival_info?: Json
+          hotel_checkin?: string | null
+          hotel_checkout?: string | null
           hotel_endereco?: string | null
           hotel_nome?: string | null
+          hotel_site?: string | null
+          hotel_telefone?: string | null
           id?: string
+          ordem?: number | null
+          outros_contatos?: Json
           producao_nome?: string | null
           producao_telefone?: string | null
+          producao_whatsapp?: string | null
           programacao?: Json
+          quartos?: Json
           receptivo_nome?: string | null
           receptivo_telefone?: string | null
+          receptivo_whatsapp?: string | null
+          resumo_executivo?: string | null
           slug: string
           teatro_endereco?: string | null
           teatro_nome?: string | null
+          teatro_observacoes?: string | null
+          teatro_site?: string | null
+          teatro_telefone?: string | null
+          tour_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          automacoes?: Json
           cidade?: string
           created_at?: string
           data_final?: string | null
           data_inicial?: string | null
+          documentos?: Json
           espetaculo?: string
           estado?: string | null
           festival?: string | null
+          festival_info?: Json
+          hotel_checkin?: string | null
+          hotel_checkout?: string | null
           hotel_endereco?: string | null
           hotel_nome?: string | null
+          hotel_site?: string | null
+          hotel_telefone?: string | null
           id?: string
+          ordem?: number | null
+          outros_contatos?: Json
           producao_nome?: string | null
           producao_telefone?: string | null
+          producao_whatsapp?: string | null
           programacao?: Json
+          quartos?: Json
           receptivo_nome?: string | null
           receptivo_telefone?: string | null
+          receptivo_whatsapp?: string | null
+          resumo_executivo?: string | null
           slug?: string
           teatro_endereco?: string | null
           teatro_nome?: string | null
+          teatro_observacoes?: string | null
+          teatro_site?: string | null
+          teatro_telefone?: string | null
+          tour_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadbooks_tour_id_fkey"
+            columns: ["tour_id"]
+            isOneToOne: false
+            referencedRelation: "tours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tours: {
+        Row: {
+          created_at: string
+          espetaculo: string | null
+          id: string
+          nome: string
+          producao: string | null
+          slug: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          espetaculo?: string | null
+          id?: string
+          nome: string
+          producao?: string | null
+          slug: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          espetaculo?: string | null
+          id?: string
+          nome?: string
+          producao?: string | null
+          slug?: string
           updated_at?: string
           user_id?: string
         }
