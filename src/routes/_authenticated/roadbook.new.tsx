@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { RoadbookForm, emptyRoadbook } from "@/components/RoadbookForm";
+import { RoadbookForm } from "@/components/RoadbookForm";
+import { emptyRoadbook } from "@/lib/roadbook-types";
 
 export const Route = createFileRoute("/_authenticated/roadbook/new")({
   head: () => ({ meta: [{ title: "Novo Road Book" }] }),
