@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { Plus, ExternalLink, Pencil, Trash2, Copy, Route as RouteIcon } from "lucide-react";
 import { toast } from "sonner";
+import { DuplicateRoadbookDialog } from "@/components/DuplicateRoadbookDialog";
 
 type Roadbook = {
   id: string;
@@ -15,7 +16,10 @@ type Roadbook = {
   festival: string | null;
   data_inicial: string | null;
   data_final: string | null;
+  tour_id: string | null;
 };
+
+type Tour = { id: string; slug: string; nome: string; espetaculo: string | null };
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Road Book William Seven" }] }),
@@ -24,85 +28,132 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const [items, setItems] = useState<Roadbook[]>([]);
+  const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dup, setDup] = useState<Roadbook | null>(null);
 
   async function load() {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("roadbooks")
-      .select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final")
-      .order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
-    else setItems((data as Roadbook[]) ?? []);
+    const [{ data: rb, error: e1 }, { data: tr, error: e2 }] = await Promise.all([
+      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id").order("created_at", { ascending: false }),
+      supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
+    ]);
+    if (e1) toast.error(e1.message);
+    if (e2) toast.error(e2.message);
+    setItems((rb as Roadbook[]) ?? []);
+    setTours((tr as Tour[]) ?? []);
     setLoading(false);
   }
 
-  useEffect(() => {
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   async function onDelete(id: string) {
     if (!confirm("Excluir este Road Book?")) return;
     const { error } = await supabase.from("roadbooks").delete().eq("id", id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Excluído");
-      load();
-    }
+    if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+  }
+
+  async function onDeleteTour(id: string) {
+    if (!confirm("Excluir esta turnê? Os Road Books vinculados serão mantidos.")) return;
+    const { error } = await supabase.from("tours").delete().eq("id", id);
+    if (error) toast.error(error.message); else { toast.success("Excluída"); load(); }
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Road Books</h1>
-          <p className="text-muted-foreground text-sm mt-1">Gerencie e publique road books.</p>
-        </div>
-        <Button asChild>
-          <Link to="/roadbook/new"><Plus className="size-4 mr-2" />Novo Road Book</Link>
-        </Button>
-      </div>
-
-      {loading ? (
-        <p className="text-muted-foreground">Carregando...</p>
-      ) : items.length === 0 ? (
-        <Card className="p-10 text-center">
-          <p className="text-muted-foreground">Nenhum road book cadastrado.</p>
-          <Button asChild className="mt-4">
-            <Link to="/roadbook/new"><Plus className="size-4 mr-2" />Criar o primeiro</Link>
+    <div className="space-y-10">
+      {/* TURNÊS */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Turnês</h2>
+            <p className="text-muted-foreground text-sm mt-1">Agrupe road books por cidade.</p>
+          </div>
+          <Button asChild variant="outline">
+            <Link to="/tour/new"><Plus className="size-4 mr-2" />Nova turnê</Link>
           </Button>
-        </Card>
-      ) : (
-        <div className="grid gap-3">
-          {items.map((r) => (
-            <Card key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
-              <div className="min-w-0">
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <h3 className="font-semibold text-lg truncate">{r.espetaculo}</h3>
-                  <span className="text-sm text-muted-foreground">
-                    {r.cidade}{r.estado ? `/${r.estado}` : ""}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {r.festival ? `${r.festival} · ` : ""}
-                  {r.data_inicial ?? ""}{r.data_final ? ` → ${r.data_final}` : ""}
-                  {" · "}/rb/{r.slug}
-                </p>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4" /></a>
-                </Button>
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4" /></Link>
-                </Button>
-                <Button variant="outline" size="sm" onClick={() => onDelete(r.id)}>
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            </Card>
-          ))}
         </div>
+        {tours.length === 0 ? (
+          <Card className="p-6 text-center text-sm text-muted-foreground">Nenhuma turnê.</Card>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {tours.map((t) => {
+              const count = items.filter((r) => r.tour_id === t.id).length;
+              return (
+                <Card key={t.id} className="p-4 flex flex-col gap-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2"><RouteIcon className="size-4 text-muted-foreground shrink-0" /><h3 className="font-semibold truncate">{t.nome}</h3></div>
+                      {t.espetaculo && <p className="text-sm text-muted-foreground truncate">{t.espetaculo}</p>}
+                      <p className="text-xs text-muted-foreground mt-1">{count} cidade{count === 1 ? "" : "s"} · /turne/{t.slug}</p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Button variant="ghost" size="icon" asChild><a href={`/turne/${t.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4" /></a></Button>
+                      <Button variant="ghost" size="icon" asChild><Link to="/tour/$id" params={{ id: t.id }}><Pencil className="size-4" /></Link></Button>
+                      <Button variant="ghost" size="icon" onClick={() => onDeleteTour(t.id)}><Trash2 className="size-4" /></Button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      {/* ROAD BOOKS */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">Road Books</h2>
+            <p className="text-muted-foreground text-sm mt-1">Gerencie e publique road books.</p>
+          </div>
+          <Button asChild>
+            <Link to="/roadbook/new"><Plus className="size-4 mr-2" />Novo Road Book</Link>
+          </Button>
+        </div>
+
+        {loading ? (
+          <p className="text-muted-foreground">Carregando...</p>
+        ) : items.length === 0 ? (
+          <Card className="p-10 text-center">
+            <p className="text-muted-foreground">Nenhum road book cadastrado.</p>
+            <Button asChild className="mt-4"><Link to="/roadbook/new"><Plus className="size-4 mr-2" />Criar o primeiro</Link></Button>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {items.map((r) => (
+              <Card key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-2 flex-wrap">
+                    <h3 className="font-semibold text-lg truncate">{r.espetaculo}</h3>
+                    <span className="text-sm text-muted-foreground">{r.cidade}{r.estado ? `/${r.estado}` : ""}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {r.festival ? `${r.festival} · ` : ""}
+                    {r.data_inicial ?? ""}{r.data_final ? ` → ${r.data_final}` : ""}
+                    {" · "}/rb/{r.slug}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0 flex-wrap">
+                  <Button variant="outline" size="sm" asChild><a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4" /></a></Button>
+                  <Button variant="outline" size="sm" asChild><Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4" /></Link></Button>
+                  <Button variant="outline" size="sm" onClick={() => setDup(r)} title="Duplicar"><Copy className="size-4" /></Button>
+                  <Button variant="outline" size="sm" onClick={() => onDelete(r.id)}><Trash2 className="size-4" /></Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {dup && (
+        <DuplicateRoadbookDialog
+          open={!!dup}
+          onOpenChange={(v) => !v && setDup(null)}
+          sourceId={dup.id}
+          defaultEspetaculo={dup.espetaculo}
+          defaultCidade={dup.cidade}
+          onDone={load}
+        />
       )}
     </div>
   );

@@ -12,8 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TurneSlugRouteImport } from './routes/turne.$slug'
 import { Route as RbSlugRouteImport } from './routes/rb.$slug'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticated/tour.new'
+import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated/tour.$id'
 import { Route as AuthenticatedRoadbookNewRouteImport } from './routes/_authenticated/roadbook.new'
 import { Route as AuthenticatedRoadbookIdRouteImport } from './routes/_authenticated/roadbook.$id'
 
@@ -31,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TurneSlugRoute = TurneSlugRouteImport.update({
+  id: '/turne/$slug',
+  path: '/turne/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RbSlugRoute = RbSlugRouteImport.update({
   id: '/rb/$slug',
   path: '/rb/$slug',
@@ -39,6 +47,16 @@ const RbSlugRoute = RbSlugRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTourNewRoute = AuthenticatedTourNewRouteImport.update({
+  id: '/tour/new',
+  path: '/tour/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTourIdRoute = AuthenticatedTourIdRouteImport.update({
+  id: '/tour/$id',
+  path: '/tour/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedRoadbookNewRoute =
@@ -58,16 +76,22 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
+  '/turne/$slug': typeof TurneSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
+  '/tour/$id': typeof AuthenticatedTourIdRoute
+  '/tour/new': typeof AuthenticatedTourNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
+  '/turne/$slug': typeof TurneSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
+  '/tour/$id': typeof AuthenticatedTourIdRoute
+  '/tour/new': typeof AuthenticatedTourNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -76,8 +100,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
+  '/turne/$slug': typeof TurneSlugRoute
   '/_authenticated/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/_authenticated/roadbook/new': typeof AuthenticatedRoadbookNewRoute
+  '/_authenticated/tour/$id': typeof AuthenticatedTourIdRoute
+  '/_authenticated/tour/new': typeof AuthenticatedTourNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -86,16 +113,22 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/rb/$slug'
+    | '/turne/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
+    | '/tour/$id'
+    | '/tour/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/dashboard'
     | '/rb/$slug'
+    | '/turne/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
+    | '/tour/$id'
+    | '/tour/new'
   id:
     | '__root__'
     | '/'
@@ -103,8 +136,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/rb/$slug'
+    | '/turne/$slug'
     | '/_authenticated/roadbook/$id'
     | '/_authenticated/roadbook/new'
+    | '/_authenticated/tour/$id'
+    | '/_authenticated/tour/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -112,6 +148,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   RbSlugRoute: typeof RbSlugRoute
+  TurneSlugRoute: typeof TurneSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -137,6 +174,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/turne/$slug': {
+      id: '/turne/$slug'
+      path: '/turne/$slug'
+      fullPath: '/turne/$slug'
+      preLoaderRoute: typeof TurneSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/rb/$slug': {
       id: '/rb/$slug'
       path: '/rb/$slug'
@@ -149,6 +193,20 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tour/new': {
+      id: '/_authenticated/tour/new'
+      path: '/tour/new'
+      fullPath: '/tour/new'
+      preLoaderRoute: typeof AuthenticatedTourNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tour/$id': {
+      id: '/_authenticated/tour/$id'
+      path: '/tour/$id'
+      fullPath: '/tour/$id'
+      preLoaderRoute: typeof AuthenticatedTourIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/roadbook/new': {
@@ -172,12 +230,16 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
   AuthenticatedRoadbookNewRoute: typeof AuthenticatedRoadbookNewRoute
+  AuthenticatedTourIdRoute: typeof AuthenticatedTourIdRoute
+  AuthenticatedTourNewRoute: typeof AuthenticatedTourNewRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,
   AuthenticatedRoadbookNewRoute: AuthenticatedRoadbookNewRoute,
+  AuthenticatedTourIdRoute: AuthenticatedTourIdRoute,
+  AuthenticatedTourNewRoute: AuthenticatedTourNewRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -188,7 +250,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   RbSlugRoute: RbSlugRoute,
+  TurneSlugRoute: TurneSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

@@ -13,3 +13,7 @@ export function makeRoadbookSlug(espetaculo: string, cidade: string): string {
   const s = `${slugify(espetaculo)}-${slugify(cidade)}`.replace(/^-+|-+$/g, "");
   return s || "road-book";
 }
+
+export function makeTourSlug(nome: string): string {
+  return slugify(nome) || "turne";
+}
