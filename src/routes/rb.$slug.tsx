@@ -47,7 +47,7 @@ function fmtDate(d: string | null | undefined) {
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
 function PublicPage() {
-  const r = Route.useLoaderData();
+  const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
   const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p) => {
     const k = p.data || "—"; (acc[k] ||= []).push(p); return acc;
