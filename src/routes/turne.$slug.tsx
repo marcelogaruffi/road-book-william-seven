@@ -49,7 +49,7 @@ function fmtDate(d: string | null) {
 }
 
 function Page() {
-  const { tour, cities } = Route.useLoaderData();
+  const { tour, cities } = Route.useLoaderData() as { tour: Tour; cities: City[] };
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-gradient-to-b from-card to-background">
