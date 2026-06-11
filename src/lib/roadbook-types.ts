@@ -130,11 +130,11 @@ export function rowToRoadbook(row: any): RoadbookData {
     receptivo_nome: row.receptivo_nome ?? "",
     receptivo_telefone: row.receptivo_telefone ?? "",
     receptivo_whatsapp: row.receptivo_whatsapp ?? "",
-    programacao: Array.isArray(row.programacao) ? row.programacao : [],
-    quartos: Array.isArray(row.quartos) ? row.quartos : [],
-    outros_contatos: Array.isArray(row.outros_contatos) ? row.outros_contatos : [],
-    festival_info: row.festival_info && typeof row.festival_info === "object" ? row.festival_info : {},
-    documentos: Array.isArray(row.documentos) ? row.documentos : [],
+    programacao: (Array.isArray(row.programacao) ? row.programacao : []) as ProgItem[],
+    quartos: (Array.isArray(row.quartos) ? row.quartos : []) as Quarto[],
+    outros_contatos: (Array.isArray(row.outros_contatos) ? row.outros_contatos : []) as OutroContato[],
+    festival_info: (row.festival_info && typeof row.festival_info === "object" ? row.festival_info : {}) as FestivalInfo,
+    documentos: (Array.isArray(row.documentos) ? row.documentos : []) as Documento[],
   };
 }
 
