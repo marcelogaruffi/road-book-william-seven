@@ -1,12 +1,14 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
-  MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles,
+  MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
 } from "lucide-react";
 import {
-  rowToRoadbook, progTitle, progHora, TIPO_COLORS,
-  type ProgItem, type Documento, type Quarto, type OutroContato,
+  rowToRoadbook, progTitle, progHora, TIPO_COLORS, FOTO_CATEGORIAS,
+  type ProgItem, type Documento, type Quarto, type OutroContato, type Foto,
 } from "@/lib/roadbook-types";
 
 export const Route = createFileRoute("/rb/$slug")({
@@ -16,7 +18,21 @@ export const Route = createFileRoute("/rb/$slug")({
       .from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!data) throw notFound();
-    return rowToRoadbook(data);
+    const rb = rowToRoadbook(data);
+
+    // Signed URLs for private bucket files (fotos + documentos)
+    const paths = [
+      ...rb.teatro_fotos.map((f) => f.path),
+      ...rb.documentos.map((d) => d.path),
+    ].filter(Boolean);
+    if (paths.length > 0) {
+      try {
+        const { urls } = await signRoadbookFiles({ data: { paths } });
+        rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
+        rb.documentos = rb.documentos.map((d) => ({ ...d, url: urls[d.path] ?? d.url }));
+      } catch { /* ignore — falls back to stored urls */ }
+    }
+    return rb;
   },
   head: ({ loaderData }) => {
     const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade}` : "Road Book";
@@ -56,6 +72,36 @@ function PublicPage() {
 
   const fi = r.festival_info ?? {};
   const hasFestivalInfo = !!(r.festival || fi.site || fi.instagram || fi.redes || fi.programacao_oficial || fi.observacoes);
+
+  // Lightbox
+  const [lightbox, setLightbox] = useState<Foto | null>(null);
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightbox(null); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [lightbox]);
+
+  // Agrupar fotos por categoria (ou "Outros - descrição")
+  const fotosGrupos: { key: string; label: string; fotos: Foto[] }[] = [];
+  const fotoMap = new Map<string, Foto[]>();
+  for (const f of r.teatro_fotos ?? []) {
+    const key = f.categoria === "Outros"
+      ? `Outros - ${(f.descricao || "Sem descrição").trim()}`
+      : f.categoria;
+    if (!fotoMap.has(key)) fotoMap.set(key, []);
+    fotoMap.get(key)!.push(f);
+  }
+  // ordem: categorias fixas primeiro, depois "Outros - *"
+  for (const c of FOTO_CATEGORIAS) {
+    if (c === "Outros") continue;
+    if (fotoMap.has(c)) fotosGrupos.push({ key: c, label: c, fotos: fotoMap.get(c)! });
+  }
+  for (const [k, fs] of fotoMap) {
+    if (k.startsWith("Outros - ")) fotosGrupos.push({ key: k, label: k.toUpperCase(), fotos: fs });
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,18 +226,53 @@ function PublicPage() {
           </Section>
         )}
 
+        {/* FOTOS DO TEATRO */}
+        {fotosGrupos.length > 0 && (
+          <Section title="Fotos do teatro" icon={<Camera className="size-4" />}>
+            <div className="space-y-6">
+              {fotosGrupos.map((g) => (
+                <div key={g.key}>
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{g.label}</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {g.fotos.map((f, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setLightbox(f)}
+                        className="group relative aspect-square overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        {f.url ? (
+                          <img
+                            src={f.url}
+                            alt={`${g.label} — ${f.nome}`}
+                            loading="lazy"
+                            decoding="async"
+                            className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Sem preview</div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
         {/* CONTATOS */}
-        {(r.producao_nome || r.producao_telefone || r.producao_whatsapp || r.receptivo_nome || r.receptivo_telefone || r.receptivo_whatsapp || r.outros_contatos.length > 0) && (
+        {(r.producao_nome || r.producao_whatsapp || r.receptivo_nome || r.receptivo_whatsapp || r.outros_contatos.length > 0) && (
           <Section title="Contatos" icon={<Users className="size-4" />}>
             <div className="grid sm:grid-cols-2 gap-3">
-              {(r.producao_nome || r.producao_telefone || r.producao_whatsapp) && (
-                <ContactCard label="Produção" name={r.producao_nome} phone={r.producao_telefone} whatsapp={r.producao_whatsapp} />
+              {(r.producao_nome || r.producao_whatsapp) && (
+                <ContactCard label="Produção" name={r.producao_nome} whatsapp={r.producao_whatsapp} />
               )}
-              {(r.receptivo_nome || r.receptivo_telefone || r.receptivo_whatsapp) && (
-                <ContactCard label="Receptivo" name={r.receptivo_nome} phone={r.receptivo_telefone} whatsapp={r.receptivo_whatsapp} />
+              {(r.receptivo_nome || r.receptivo_whatsapp) && (
+                <ContactCard label="Receptivo" name={r.receptivo_nome} whatsapp={r.receptivo_whatsapp} />
               )}
               {r.outros_contatos.map((c: OutroContato, i) => (
-                <ContactCard key={i} label={c.funcao || "Contato"} name={c.nome} phone={c.telefone} whatsapp={c.whatsapp} />
+                <ContactCard key={i} label={c.funcao || "Contato"} name={c.nome} whatsapp={c.whatsapp} />
               ))}
             </div>
           </Section>
@@ -232,6 +313,33 @@ function PublicPage() {
           Road Book · William Seven
         </footer>
       </main>
+
+      {/* LIGHTBOX */}
+      {lightbox && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setLightbox(null)}
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+        >
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLightbox(null); }}
+            aria-label="Fechar"
+            className="absolute top-4 right-4 text-white/80 hover:text-white p-2 rounded-full bg-white/10"
+          >
+            <X className="size-5" />
+          </button>
+          {lightbox.url && (
+            <img
+              src={lightbox.url}
+              alt={lightbox.nome}
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-full object-contain rounded shadow-2xl"
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -245,23 +353,23 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
   );
 }
 
-function ContactCard({ label, name, phone, whatsapp }: { label: string; name: string | null; phone: string | null; whatsapp?: string | null }) {
+function ContactCard({ label, name, whatsapp }: { label: string; name: string | null; whatsapp?: string | null }) {
+  const wa = whatsapp ? onlyDigits(whatsapp) : "";
   return (
     <div className="rounded-lg border p-4 bg-card">
       <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
       {name && <div className="font-medium mt-1">{name}</div>}
-      <div className="mt-2 flex flex-col gap-1 text-sm">
-        {phone && (
-          <a href={`tel:${onlyDigits(phone)}`} className="inline-flex items-center gap-1.5 text-primary hover:underline">
-            <Phone className="size-3.5" />{phone}
-          </a>
-        )}
-        {whatsapp && (
-          <a href={`https://wa.me/${onlyDigits(whatsapp)}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-primary hover:underline">
-            <MessageCircle className="size-3.5" />{whatsapp}
-          </a>
-        )}
-      </div>
+      {wa && (
+        <a
+          href={`https://wa.me/${wa}`}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] hover:bg-[#1faa54] text-white text-sm font-medium px-3 py-2 w-full transition-colors"
+        >
+          <MessageCircle className="size-4" />
+          Conversar no WhatsApp
+        </a>
+      )}
     </div>
   );
 }
