@@ -37,7 +37,7 @@ export const TIPO_COLORS: Record<string, string> = {
 };
 
 export type Quarto = { pessoa: string; numero: string };
-export type OutroContato = { nome: string; funcao: string; telefone: string; whatsapp: string };
+export type OutroContato = { nome: string; funcao: string; whatsapp: string; telefone?: string };
 export type FestivalInfo = {
   site?: string;
   instagram?: string;
@@ -46,6 +46,27 @@ export type FestivalInfo = {
   observacoes?: string;
 };
 export type Documento = { nome: string; path: string; tipo: string; url?: string };
+
+export const FOTO_CATEGORIAS = [
+  "Fachada",
+  "Palco",
+  "Plateia",
+  "Camarim",
+  "Acesso de carga",
+  "Bilheteria",
+  "Entrada do público",
+  "Área técnica",
+  "Outros",
+] as const;
+export type FotoCategoria = (typeof FOTO_CATEGORIAS)[number];
+
+export type Foto = {
+  path: string;
+  nome: string;
+  categoria: FotoCategoria;
+  descricao?: string; // usado quando categoria === "Outros"
+  url?: string;
+};
 
 export type RoadbookData = {
   id?: string;
