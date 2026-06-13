@@ -12,8 +12,8 @@ import { toast } from "sonner";
 import { Trash2, Plus, Upload, FileText, ExternalLink } from "lucide-react";
 import { makeRoadbookSlug } from "@/lib/slug";
 import {
-  type RoadbookData, type ProgItem, type Quarto, type OutroContato, type Documento,
-  PROG_TIPOS, roadbookToPayload,
+  type RoadbookData, type ProgItem, type Quarto, type OutroContato, type Documento, type Foto, type FotoCategoria,
+  PROG_TIPOS, FOTO_CATEGORIAS, roadbookToPayload,
 } from "@/lib/roadbook-types";
 
 export type { RoadbookData, ProgItem } from "@/lib/roadbook-types";
@@ -58,11 +58,49 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   function removeQuarto(i: number) { setD((s) => ({ ...s, quartos: s.quartos.filter((_, idx) => idx !== i) })); }
 
   // OUTROS CONTATOS
-  function addContato() { setD((s) => ({ ...s, outros_contatos: [...s.outros_contatos, { nome: "", funcao: "", telefone: "", whatsapp: "" }] })); }
+  function addContato() { setD((s) => ({ ...s, outros_contatos: [...s.outros_contatos, { nome: "", funcao: "", whatsapp: "" }] })); }
   function updateContato(i: number, patch: Partial<OutroContato>) {
     setD((s) => ({ ...s, outros_contatos: s.outros_contatos.map((c, idx) => idx === i ? { ...c, ...patch } : c) }));
   }
   function removeContato(i: number) { setD((s) => ({ ...s, outros_contatos: s.outros_contatos.filter((_, idx) => idx !== i) })); }
+
+  // FOTOS DO TEATRO
+  async function onUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (!uid) throw new Error("Sessão expirada");
+      const rbId = d.id ?? "draft";
+      const novos: Foto[] = [];
+      for (const f of Array.from(files)) {
+        if (!f.type.startsWith("image/")) continue;
+        const safeName = f.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${uid}/${rbId}/teatro/${Date.now()}-${safeName}`;
+        const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
+        if (error) throw error;
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
+        novos.push({ path, nome: f.name, categoria: "Outros", descricao: "", url: signed?.signedUrl });
+      }
+      setD((s) => ({ ...s, teatro_fotos: [...s.teatro_fotos, ...novos] }));
+      toast.success(`${novos.length} foto(s) enviada(s)`);
+    } catch (err: any) {
+      toast.error(err.message ?? "Erro no upload");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+  function updateFoto(i: number, patch: Partial<Foto>) {
+    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+  }
+  async function removeFoto(i: number) {
+    const foto = d.teatro_fotos[i];
+    try { if (foto.path) await supabase.storage.from("roadbook-docs").remove([foto.path]); } catch {}
+    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.filter((_, idx) => idx !== i) }));
+  }
 
   // DOCUMENTOS
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -214,7 +252,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="teatro" className="mt-4">
+        <TabsContent value="teatro" className="mt-4 space-y-4">
           <Card>
             <CardHeader><CardTitle>Local Principal (Teatro)</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
@@ -226,6 +264,48 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <div className="sm:col-span-2"><Field label="Observações"><Textarea rows={3} value={d.teatro_observacoes} onChange={(e) => up("teatro_observacoes", e.target.value)} /></Field></div>
             </CardContent>
           </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle>Fotos do teatro</CardTitle>
+              <label className="inline-flex">
+                <input type="file" multiple accept="image/*" className="hidden" onChange={onUploadFoto} disabled={uploading} />
+                <span className={"inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 cursor-pointer hover:bg-accent " + (uploading ? "opacity-50" : "")}>
+                  <Upload className="size-4" />{uploading ? "Enviando..." : "Adicionar fotos"}
+                </span>
+              </label>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {d.teatro_fotos.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma foto. Adicione imagens da fachada, palco, plateia, camarim, etc.</p>}
+              {d.teatro_fotos.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {d.teatro_fotos.map((f, i) => (
+                    <div key={i} className="border rounded-md p-3 space-y-2">
+                      {f.url && <img src={f.url} alt={f.nome} className="w-full h-40 object-cover rounded" loading="lazy" />}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs truncate flex-1 text-muted-foreground">{f.nome}</span>
+                        <Button type="button" variant="ghost" size="icon" onClick={() => removeFoto(i)}><Trash2 className="size-4" /></Button>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Categoria</Label>
+                        <Select value={f.categoria} onValueChange={(v) => updateFoto(i, { categoria: v as FotoCategoria, descricao: v === "Outros" ? (f.descricao ?? "") : "" })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {FOTO_CATEGORIAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {f.categoria === "Outros" && (
+                        <div>
+                          <Label className="text-xs">Descrição</Label>
+                          <Input value={f.descricao ?? ""} onChange={(e) => updateFoto(i, { descricao: e.target.value })} placeholder="Ex.: Sala de imprensa, Foyer..." />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="contatos" className="mt-4 space-y-4">
@@ -234,10 +314,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Produção — Nome"><Input value={d.producao_nome} onChange={(e) => up("producao_nome", e.target.value)} /></Field>
               <Field label="Receptivo — Nome"><Input value={d.receptivo_nome} onChange={(e) => up("receptivo_nome", e.target.value)} /></Field>
-              <Field label="Produção — Telefone"><Input value={d.producao_telefone} onChange={(e) => up("producao_telefone", e.target.value)} /></Field>
-              <Field label="Receptivo — Telefone"><Input value={d.receptivo_telefone} onChange={(e) => up("receptivo_telefone", e.target.value)} /></Field>
-              <Field label="Produção — WhatsApp"><Input value={d.producao_whatsapp} onChange={(e) => up("producao_whatsapp", e.target.value)} /></Field>
-              <Field label="Receptivo — WhatsApp"><Input value={d.receptivo_whatsapp} onChange={(e) => up("receptivo_whatsapp", e.target.value)} /></Field>
+              <Field label="Produção — WhatsApp"><Input value={d.producao_whatsapp} onChange={(e) => up("producao_whatsapp", e.target.value)} placeholder="55 11 99999-9999" /></Field>
+              <Field label="Receptivo — WhatsApp"><Input value={d.receptivo_whatsapp} onChange={(e) => up("receptivo_whatsapp", e.target.value)} placeholder="55 11 99999-9999" /></Field>
             </CardContent>
           </Card>
           <Card>
@@ -250,15 +328,15 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               {d.outros_contatos.map((c, i) => (
                 <div key={i} className="grid sm:grid-cols-12 gap-2 items-end border rounded-md p-3">
                   <div className="sm:col-span-4"><Label className="text-xs">Nome</Label><Input value={c.nome} onChange={(e) => updateContato(i, { nome: e.target.value })} /></div>
-                  <div className="sm:col-span-3"><Label className="text-xs">Função</Label><Input value={c.funcao} onChange={(e) => updateContato(i, { funcao: e.target.value })} /></div>
-                  <div className="sm:col-span-2"><Label className="text-xs">Telefone</Label><Input value={c.telefone} onChange={(e) => updateContato(i, { telefone: e.target.value })} /></div>
-                  <div className="sm:col-span-2"><Label className="text-xs">WhatsApp</Label><Input value={c.whatsapp} onChange={(e) => updateContato(i, { whatsapp: e.target.value })} /></div>
+                  <div className="sm:col-span-4"><Label className="text-xs">Função</Label><Input value={c.funcao} onChange={(e) => updateContato(i, { funcao: e.target.value })} /></div>
+                  <div className="sm:col-span-3"><Label className="text-xs">WhatsApp</Label><Input value={c.whatsapp} onChange={(e) => updateContato(i, { whatsapp: e.target.value })} placeholder="55 11 99999-9999" /></div>
                   <div className="sm:col-span-1 flex sm:justify-end"><Button type="button" variant="ghost" size="icon" onClick={() => removeContato(i)}><Trash2 className="size-4" /></Button></div>
                 </div>
               ))}
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="programacao" className="mt-4">
           <Card>

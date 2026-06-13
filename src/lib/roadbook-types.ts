@@ -37,7 +37,7 @@ export const TIPO_COLORS: Record<string, string> = {
 };
 
 export type Quarto = { pessoa: string; numero: string };
-export type OutroContato = { nome: string; funcao: string; telefone: string; whatsapp: string };
+export type OutroContato = { nome: string; funcao: string; whatsapp: string; telefone?: string };
 export type FestivalInfo = {
   site?: string;
   instagram?: string;
@@ -46,6 +46,27 @@ export type FestivalInfo = {
   observacoes?: string;
 };
 export type Documento = { nome: string; path: string; tipo: string; url?: string };
+
+export const FOTO_CATEGORIAS = [
+  "Fachada",
+  "Palco",
+  "Plateia",
+  "Camarim",
+  "Acesso de carga",
+  "Bilheteria",
+  "Entrada do público",
+  "Área técnica",
+  "Outros",
+] as const;
+export type FotoCategoria = (typeof FOTO_CATEGORIAS)[number];
+
+export type Foto = {
+  path: string;
+  nome: string;
+  categoria: FotoCategoria;
+  descricao?: string; // usado quando categoria === "Outros"
+  url?: string;
+};
 
 export type RoadbookData = {
   id?: string;
@@ -80,6 +101,7 @@ export type RoadbookData = {
   outros_contatos: OutroContato[];
   festival_info: FestivalInfo;
   documentos: Documento[];
+  teatro_fotos: Foto[];
 };
 
 export const emptyRoadbook: RoadbookData = {
@@ -98,6 +120,7 @@ export const emptyRoadbook: RoadbookData = {
   outros_contatos: [],
   festival_info: {},
   documentos: [],
+  teatro_fotos: [],
 };
 
 export function rowToRoadbook(row: any): RoadbookData {
@@ -135,6 +158,7 @@ export function rowToRoadbook(row: any): RoadbookData {
     outros_contatos: (Array.isArray(row.outros_contatos) ? row.outros_contatos : []) as OutroContato[],
     festival_info: (row.festival_info && typeof row.festival_info === "object" ? row.festival_info : {}) as FestivalInfo,
     documentos: (Array.isArray(row.documentos) ? row.documentos : []) as Documento[],
+    teatro_fotos: (Array.isArray(row.teatro_fotos) ? row.teatro_fotos : []) as Foto[],
   };
 }
 
@@ -171,6 +195,7 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     outros_contatos: d.outros_contatos as any,
     festival_info: d.festival_info as any,
     documentos: d.documentos as any,
+    teatro_fotos: d.teatro_fotos as any,
   };
 }
 
