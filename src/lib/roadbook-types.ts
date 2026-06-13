@@ -101,6 +101,7 @@ export type RoadbookData = {
   outros_contatos: OutroContato[];
   festival_info: FestivalInfo;
   documentos: Documento[];
+  teatro_fotos: Foto[];
 };
 
 export const emptyRoadbook: RoadbookData = {
@@ -119,6 +120,7 @@ export const emptyRoadbook: RoadbookData = {
   outros_contatos: [],
   festival_info: {},
   documentos: [],
+  teatro_fotos: [],
 };
 
 export function rowToRoadbook(row: any): RoadbookData {
@@ -156,6 +158,7 @@ export function rowToRoadbook(row: any): RoadbookData {
     outros_contatos: (Array.isArray(row.outros_contatos) ? row.outros_contatos : []) as OutroContato[],
     festival_info: (row.festival_info && typeof row.festival_info === "object" ? row.festival_info : {}) as FestivalInfo,
     documentos: (Array.isArray(row.documentos) ? row.documentos : []) as Documento[],
+    teatro_fotos: (Array.isArray(row.teatro_fotos) ? row.teatro_fotos : []) as Foto[],
   };
 }
 
@@ -192,6 +195,7 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     outros_contatos: d.outros_contatos as any,
     festival_info: d.festival_info as any,
     documentos: d.documentos as any,
+    teatro_fotos: d.teatro_fotos as any,
   };
 }
 
