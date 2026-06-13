@@ -12,8 +12,8 @@ import { toast } from "sonner";
 import { Trash2, Plus, Upload, FileText, ExternalLink } from "lucide-react";
 import { makeRoadbookSlug } from "@/lib/slug";
 import {
-  type RoadbookData, type ProgItem, type Quarto, type OutroContato, type Documento,
-  PROG_TIPOS, roadbookToPayload,
+  type RoadbookData, type ProgItem, type Quarto, type OutroContato, type Documento, type Foto, type FotoCategoria,
+  PROG_TIPOS, FOTO_CATEGORIAS, roadbookToPayload,
 } from "@/lib/roadbook-types";
 
 export type { RoadbookData, ProgItem } from "@/lib/roadbook-types";
@@ -58,11 +58,49 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   function removeQuarto(i: number) { setD((s) => ({ ...s, quartos: s.quartos.filter((_, idx) => idx !== i) })); }
 
   // OUTROS CONTATOS
-  function addContato() { setD((s) => ({ ...s, outros_contatos: [...s.outros_contatos, { nome: "", funcao: "", telefone: "", whatsapp: "" }] })); }
+  function addContato() { setD((s) => ({ ...s, outros_contatos: [...s.outros_contatos, { nome: "", funcao: "", whatsapp: "" }] })); }
   function updateContato(i: number, patch: Partial<OutroContato>) {
     setD((s) => ({ ...s, outros_contatos: s.outros_contatos.map((c, idx) => idx === i ? { ...c, ...patch } : c) }));
   }
   function removeContato(i: number) { setD((s) => ({ ...s, outros_contatos: s.outros_contatos.filter((_, idx) => idx !== i) })); }
+
+  // FOTOS DO TEATRO
+  async function onUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (!uid) throw new Error("Sessão expirada");
+      const rbId = d.id ?? "draft";
+      const novos: Foto[] = [];
+      for (const f of Array.from(files)) {
+        if (!f.type.startsWith("image/")) continue;
+        const safeName = f.name.replace(/[^\w.\-]+/g, "_");
+        const path = `${uid}/${rbId}/teatro/${Date.now()}-${safeName}`;
+        const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
+        if (error) throw error;
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
+        novos.push({ path, nome: f.name, categoria: "Outros", descricao: "", url: signed?.signedUrl });
+      }
+      setD((s) => ({ ...s, teatro_fotos: [...s.teatro_fotos, ...novos] }));
+      toast.success(`${novos.length} foto(s) enviada(s)`);
+    } catch (err: any) {
+      toast.error(err.message ?? "Erro no upload");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+  function updateFoto(i: number, patch: Partial<Foto>) {
+    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+  }
+  async function removeFoto(i: number) {
+    const foto = d.teatro_fotos[i];
+    try { if (foto.path) await supabase.storage.from("roadbook-docs").remove([foto.path]); } catch {}
+    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.filter((_, idx) => idx !== i) }));
+  }
 
   // DOCUMENTOS
   async function onUpload(e: React.ChangeEvent<HTMLInputElement>) {
