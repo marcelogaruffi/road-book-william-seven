@@ -46,6 +46,7 @@ export type Database = {
           resumo_executivo: string | null
           slug: string
           teatro_endereco: string | null
+          teatro_fotos: Json
           teatro_nome: string | null
           teatro_observacoes: string | null
           teatro_site: string | null
@@ -85,6 +86,7 @@ export type Database = {
           resumo_executivo?: string | null
           slug: string
           teatro_endereco?: string | null
+          teatro_fotos?: Json
           teatro_nome?: string | null
           teatro_observacoes?: string | null
           teatro_site?: string | null
@@ -124,6 +126,7 @@ export type Database = {
           resumo_executivo?: string | null
           slug?: string
           teatro_endereco?: string | null
+          teatro_fotos?: Json
           teatro_nome?: string | null
           teatro_observacoes?: string | null
           teatro_site?: string | null
