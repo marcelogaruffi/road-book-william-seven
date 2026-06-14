@@ -64,9 +64,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   }
   function removeContato(i: number) { setD((s) => ({ ...s, outros_contatos: s.outros_contatos.filter((_, idx) => idx !== i) })); }
 
-  // FOTOS DO TEATRO
-  async function onUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
+  // FOTOS (teatro + hotel)
+  async function uploadFotos(files: FileList | null, kind: "teatro" | "hotel") {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
@@ -78,28 +77,36 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       for (const f of Array.from(files)) {
         if (!f.type.startsWith("image/")) continue;
         const safeName = f.name.replace(/[^\w.\-]+/g, "_");
-        const path = `${uid}/${rbId}/teatro/${Date.now()}-${safeName}`;
+        const path = `${uid}/${rbId}/${kind}/${Date.now()}-${safeName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
         const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
         novos.push({ path, nome: f.name, categoria: "Outros", descricao: "", url: signed?.signedUrl });
       }
-      setD((s) => ({ ...s, teatro_fotos: [...s.teatro_fotos, ...novos] }));
+      const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+      setD((s) => ({ ...s, [key]: [...s[key], ...novos] }));
       toast.success(`${novos.length} foto(s) enviada(s)`);
     } catch (err: any) {
       toast.error(err.message ?? "Erro no upload");
     } finally {
       setUploading(false);
-      e.target.value = "";
     }
   }
-  function updateFoto(i: number, patch: Partial<Foto>) {
-    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+  function onUploadFotoTeatro(e: React.ChangeEvent<HTMLInputElement>) {
+    uploadFotos(e.target.files, "teatro").finally(() => { e.target.value = ""; });
   }
-  async function removeFoto(i: number) {
-    const foto = d.teatro_fotos[i];
+  function onUploadFotoHotel(e: React.ChangeEvent<HTMLInputElement>) {
+    uploadFotos(e.target.files, "hotel").finally(() => { e.target.value = ""; });
+  }
+  function updateFoto(kind: "teatro" | "hotel", i: number, patch: Partial<Foto>) {
+    const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+    setD((s) => ({ ...s, [key]: s[key].map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+  }
+  async function removeFoto(kind: "teatro" | "hotel", i: number) {
+    const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+    const foto = d[key][i];
     try { if (foto.path) await supabase.storage.from("roadbook-docs").remove([foto.path]); } catch {}
-    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.filter((_, idx) => idx !== i) }));
+    setD((s) => ({ ...s, [key]: s[key].filter((_, idx) => idx !== i) }));
   }
 
   // DOCUMENTOS
@@ -250,6 +257,14 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               ))}
             </CardContent>
           </Card>
+          <FotosCard
+            title="Fotos do hotel"
+            uploading={uploading}
+            fotos={d.hotel_fotos}
+            onUpload={onUploadFotoHotel}
+            onUpdate={(i, p) => updateFoto("hotel", i, p)}
+            onRemove={(i) => removeFoto("hotel", i)}
+          />
         </TabsContent>
 
         <TabsContent value="teatro" className="mt-4 space-y-4">
@@ -264,49 +279,16 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <div className="sm:col-span-2"><Field label="Observações"><Textarea rows={3} value={d.teatro_observacoes} onChange={(e) => up("teatro_observacoes", e.target.value)} /></Field></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Fotos do teatro</CardTitle>
-              <label className="inline-flex">
-                <input type="file" multiple accept="image/*" className="hidden" onChange={onUploadFoto} disabled={uploading} />
-                <span className={"inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 cursor-pointer hover:bg-accent " + (uploading ? "opacity-50" : "")}>
-                  <Upload className="size-4" />{uploading ? "Enviando..." : "Adicionar fotos"}
-                </span>
-              </label>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {d.teatro_fotos.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma foto. Adicione imagens da fachada, palco, plateia, camarim, etc.</p>}
-              {d.teatro_fotos.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {d.teatro_fotos.map((f, i) => (
-                    <div key={i} className="border rounded-md p-3 space-y-2">
-                      {f.url && <img src={f.url} alt={f.nome} className="w-full h-40 object-cover rounded" loading="lazy" />}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs truncate flex-1 text-muted-foreground">{f.nome}</span>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeFoto(i)}><Trash2 className="size-4" /></Button>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Categoria</Label>
-                        <Select value={f.categoria} onValueChange={(v) => updateFoto(i, { categoria: v as FotoCategoria, descricao: v === "Outros" ? (f.descricao ?? "") : "" })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {FOTO_CATEGORIAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {f.categoria === "Outros" && (
-                        <div>
-                          <Label className="text-xs">Descrição</Label>
-                          <Input value={f.descricao ?? ""} onChange={(e) => updateFoto(i, { descricao: e.target.value })} placeholder="Ex.: Sala de imprensa, Foyer..." />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <FotosCard
+            title="Fotos do teatro"
+            uploading={uploading}
+            fotos={d.teatro_fotos}
+            onUpload={onUploadFotoTeatro}
+            onUpdate={(i, p) => updateFoto("teatro", i, p)}
+            onRemove={(i) => removeFoto("teatro", i)}
+          />
         </TabsContent>
+
 
         <TabsContent value="contatos" className="mt-4 space-y-4">
           <Card>
@@ -422,5 +404,61 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <Label>{label}</Label>
       {children}
     </div>
+  );
+}
+
+function FotosCard({
+  title, uploading, fotos, onUpload, onUpdate, onRemove,
+}: {
+  title: string;
+  uploading: boolean;
+  fotos: Foto[];
+  onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onUpdate: (i: number, patch: Partial<Foto>) => void;
+  onRemove: (i: number) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle>{title}</CardTitle>
+        <label className="inline-flex">
+          <input type="file" multiple accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
+          <span className={"inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 cursor-pointer hover:bg-accent " + (uploading ? "opacity-50" : "")}>
+            <Upload className="size-4" />{uploading ? "Enviando..." : "Adicionar fotos"}
+          </span>
+        </label>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {fotos.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma foto.</p>}
+        {fotos.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {fotos.map((f, i) => (
+              <div key={i} className="border rounded-md p-3 space-y-2">
+                {f.url && <img src={f.url} alt={f.nome} className="w-full h-40 object-cover rounded" loading="lazy" />}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs truncate flex-1 text-muted-foreground">{f.nome}</span>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(i)}><Trash2 className="size-4" /></Button>
+                </div>
+                <div>
+                  <Label className="text-xs">Categoria</Label>
+                  <Select value={f.categoria} onValueChange={(v) => onUpdate(i, { categoria: v as FotoCategoria, descricao: v === "Outros" ? (f.descricao ?? "") : "" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {FOTO_CATEGORIAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {f.categoria === "Outros" && (
+                  <div>
+                    <Label className="text-xs">Descrição</Label>
+                    <Input value={f.descricao ?? ""} onChange={(e) => onUpdate(i, { descricao: e.target.value })} placeholder="Ex.: Piscina, Restaurante, Hall..." />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

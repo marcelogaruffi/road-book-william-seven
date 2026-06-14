@@ -29,6 +29,7 @@ export type Database = {
           hotel_checkin: string | null
           hotel_checkout: string | null
           hotel_endereco: string | null
+          hotel_fotos: Json
           hotel_nome: string | null
           hotel_site: string | null
           hotel_telefone: string | null
@@ -69,6 +70,7 @@ export type Database = {
           hotel_checkin?: string | null
           hotel_checkout?: string | null
           hotel_endereco?: string | null
+          hotel_fotos?: Json
           hotel_nome?: string | null
           hotel_site?: string | null
           hotel_telefone?: string | null
@@ -109,6 +111,7 @@ export type Database = {
           hotel_checkin?: string | null
           hotel_checkout?: string | null
           hotel_endereco?: string | null
+          hotel_fotos?: Json
           hotel_nome?: string | null
           hotel_site?: string | null
           hotel_telefone?: string | null
