@@ -257,6 +257,14 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               ))}
             </CardContent>
           </Card>
+          <FotosCard
+            title="Fotos do hotel"
+            uploading={uploading}
+            fotos={d.hotel_fotos}
+            onUpload={onUploadFotoHotel}
+            onUpdate={(i, p) => updateFoto("hotel", i, p)}
+            onRemove={(i) => removeFoto("hotel", i)}
+          />
         </TabsContent>
 
         <TabsContent value="teatro" className="mt-4 space-y-4">
@@ -271,49 +279,16 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <div className="sm:col-span-2"><Field label="Observações"><Textarea rows={3} value={d.teatro_observacoes} onChange={(e) => up("teatro_observacoes", e.target.value)} /></Field></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Fotos do teatro</CardTitle>
-              <label className="inline-flex">
-                <input type="file" multiple accept="image/*" className="hidden" onChange={onUploadFoto} disabled={uploading} />
-                <span className={"inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 cursor-pointer hover:bg-accent " + (uploading ? "opacity-50" : "")}>
-                  <Upload className="size-4" />{uploading ? "Enviando..." : "Adicionar fotos"}
-                </span>
-              </label>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {d.teatro_fotos.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma foto. Adicione imagens da fachada, palco, plateia, camarim, etc.</p>}
-              {d.teatro_fotos.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {d.teatro_fotos.map((f, i) => (
-                    <div key={i} className="border rounded-md p-3 space-y-2">
-                      {f.url && <img src={f.url} alt={f.nome} className="w-full h-40 object-cover rounded" loading="lazy" />}
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs truncate flex-1 text-muted-foreground">{f.nome}</span>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => removeFoto(i)}><Trash2 className="size-4" /></Button>
-                      </div>
-                      <div>
-                        <Label className="text-xs">Categoria</Label>
-                        <Select value={f.categoria} onValueChange={(v) => updateFoto(i, { categoria: v as FotoCategoria, descricao: v === "Outros" ? (f.descricao ?? "") : "" })}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {FOTO_CATEGORIAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {f.categoria === "Outros" && (
-                        <div>
-                          <Label className="text-xs">Descrição</Label>
-                          <Input value={f.descricao ?? ""} onChange={(e) => updateFoto(i, { descricao: e.target.value })} placeholder="Ex.: Sala de imprensa, Foyer..." />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <FotosCard
+            title="Fotos do teatro"
+            uploading={uploading}
+            fotos={d.teatro_fotos}
+            onUpload={onUploadFotoTeatro}
+            onUpdate={(i, p) => updateFoto("teatro", i, p)}
+            onRemove={(i) => removeFoto("teatro", i)}
+          />
         </TabsContent>
+
 
         <TabsContent value="contatos" className="mt-4 space-y-4">
           <Card>
