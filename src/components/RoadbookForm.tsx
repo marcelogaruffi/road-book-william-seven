@@ -406,3 +406,59 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function FotosCard({
+  title, uploading, fotos, onUpload, onUpdate, onRemove,
+}: {
+  title: string;
+  uploading: boolean;
+  fotos: Foto[];
+  onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onUpdate: (i: number, patch: Partial<Foto>) => void;
+  onRemove: (i: number) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <CardTitle>{title}</CardTitle>
+        <label className="inline-flex">
+          <input type="file" multiple accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
+          <span className={"inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 cursor-pointer hover:bg-accent " + (uploading ? "opacity-50" : "")}>
+            <Upload className="size-4" />{uploading ? "Enviando..." : "Adicionar fotos"}
+          </span>
+        </label>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {fotos.length === 0 && <p className="text-sm text-muted-foreground">Nenhuma foto.</p>}
+        {fotos.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {fotos.map((f, i) => (
+              <div key={i} className="border rounded-md p-3 space-y-2">
+                {f.url && <img src={f.url} alt={f.nome} className="w-full h-40 object-cover rounded" loading="lazy" />}
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs truncate flex-1 text-muted-foreground">{f.nome}</span>
+                  <Button type="button" variant="ghost" size="icon" onClick={() => onRemove(i)}><Trash2 className="size-4" /></Button>
+                </div>
+                <div>
+                  <Label className="text-xs">Categoria</Label>
+                  <Select value={f.categoria} onValueChange={(v) => onUpdate(i, { categoria: v as FotoCategoria, descricao: v === "Outros" ? (f.descricao ?? "") : "" })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {FOTO_CATEGORIAS.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {f.categoria === "Outros" && (
+                  <div>
+                    <Label className="text-xs">Descrição</Label>
+                    <Input value={f.descricao ?? ""} onChange={(e) => onUpdate(i, { descricao: e.target.value })} placeholder="Ex.: Piscina, Restaurante, Hall..." />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
