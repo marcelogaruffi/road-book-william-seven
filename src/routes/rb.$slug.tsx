@@ -5,9 +5,11 @@ import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
+  Navigation, Droplets,
 } from "lucide-react";
 import {
   rowToRoadbook, progTitle, progHora, TIPO_COLORS, FOTO_CATEGORIAS,
+  normalizeExternalUrl, mapsUrl,
   type ProgItem, type Documento, type Quarto, type OutroContato, type Foto,
 } from "@/lib/roadbook-types";
 
@@ -20,17 +22,18 @@ export const Route = createFileRoute("/rb/$slug")({
     if (!data) throw notFound();
     const rb = rowToRoadbook(data);
 
-    // Signed URLs for private bucket files (fotos + documentos)
     const paths = [
       ...rb.teatro_fotos.map((f) => f.path),
+      ...rb.hotel_fotos.map((f) => f.path),
       ...rb.documentos.map((d) => d.path),
     ].filter(Boolean);
     if (paths.length > 0) {
       try {
         const { urls } = await signRoadbookFiles({ data: { paths } });
         rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
+        rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
         rb.documentos = rb.documentos.map((d) => ({ ...d, url: urls[d.path] ?? d.url }));
-      } catch { /* ignore — falls back to stored urls */ }
+      } catch { /* fallback to stored urls */ }
     }
     return rb;
   },
@@ -71,7 +74,14 @@ function PublicPage() {
   const dias = Object.keys(groups);
 
   const fi = r.festival_info ?? {};
-  const hasFestivalInfo = !!(r.festival || fi.site || fi.instagram || fi.redes || fi.programacao_oficial || fi.observacoes);
+  const fiSite = normalizeExternalUrl(fi.site);
+  const fiInstagram = (fi.instagram ?? "").trim();
+  const fiInstagramUrl = fiInstagram
+    ? (/^https?:\/\//i.test(fiInstagram) ? fiInstagram : `https://instagram.com/${fiInstagram.replace(/^@/, "")}`)
+    : "";
+  const hotelSite = normalizeExternalUrl(r.hotel_site);
+  const teatroSite = normalizeExternalUrl(r.teatro_site);
+  const hasFestivalInfo = !!(r.festival || fiSite || fiInstagram || fi.redes || fi.programacao_oficial || fi.observacoes);
 
   // Lightbox
   const [lightbox, setLightbox] = useState<Foto | null>(null);
@@ -83,25 +93,6 @@ function PublicPage() {
     document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lightbox]);
-
-  // Agrupar fotos por categoria (ou "Outros - descrição")
-  const fotosGrupos: { key: string; label: string; fotos: Foto[] }[] = [];
-  const fotoMap = new Map<string, Foto[]>();
-  for (const f of r.teatro_fotos ?? []) {
-    const key = f.categoria === "Outros"
-      ? `Outros - ${(f.descricao || "Sem descrição").trim()}`
-      : f.categoria;
-    if (!fotoMap.has(key)) fotoMap.set(key, []);
-    fotoMap.get(key)!.push(f);
-  }
-  // ordem: categorias fixas primeiro, depois "Outros - *"
-  for (const c of FOTO_CATEGORIAS) {
-    if (c === "Outros") continue;
-    if (fotoMap.has(c)) fotosGrupos.push({ key: c, label: c, fotos: fotoMap.get(c)! });
-  }
-  for (const [k, fs] of fotoMap) {
-    if (k.startsWith("Outros - ")) fotosGrupos.push({ key: k, label: k.toUpperCase(), fotos: fs });
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,11 +119,9 @@ function PublicPage() {
           </Section>
         )}
 
-        {/* CLIMA (placeholder) */}
+        {/* CLIMA */}
         <Section title="Clima" icon={<CloudSun className="size-4" />}>
-          <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">
-            Previsão automática em breve.
-          </div>
+          <Weather cidade={r.cidade} estado={r.estado} dataInicial={r.data_inicial} dataFinal={r.data_final} />
         </Section>
 
         {/* CRONOGRAMA */}
@@ -180,14 +169,14 @@ function PublicPage() {
         )}
 
         {/* HOSPEDAGEM */}
-        {(r.hotel_nome || r.hotel_endereco || r.hotel_telefone || r.hotel_site || r.hotel_checkin || r.hotel_checkout || r.quartos.length > 0) && (
+        {(r.hotel_nome || r.hotel_endereco || r.hotel_telefone || hotelSite || r.hotel_checkin || r.hotel_checkout || r.quartos.length > 0 || r.hotel_fotos.length > 0) && (
           <Section title="Hospedagem" icon={<Hotel className="size-4" />}>
-            <div className="rounded-lg border p-4 bg-card space-y-2">
+            <div className="rounded-lg border p-4 bg-card space-y-3">
               {r.hotel_nome && <p className="font-semibold">{r.hotel_nome}</p>}
               {r.hotel_endereco && <p className="text-sm text-muted-foreground">{r.hotel_endereco}</p>}
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 {r.hotel_telefone && <a href={`tel:${onlyDigits(r.hotel_telefone)}`} className="text-primary inline-flex items-center gap-1"><Phone className="size-3.5" />{r.hotel_telefone}</a>}
-                {r.hotel_site && <a href={r.hotel_site} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site</a>}
+                {hotelSite && <a href={hotelSite} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site</a>}
               </div>
               {(r.hotel_checkin || r.hotel_checkout) && (
                 <p className="text-sm text-muted-foreground">
@@ -195,6 +184,15 @@ function PublicPage() {
                   {r.hotel_checkin && r.hotel_checkout && " · "}
                   {r.hotel_checkout && <>Check-out: <span className="text-foreground">{fmtDate(r.hotel_checkout)}</span></>}
                 </p>
+              )}
+              {(r.hotel_endereco || r.hotel_nome) && (
+                <a
+                  href={mapsUrl([r.hotel_nome, r.hotel_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border bg-background hover:bg-accent text-sm font-medium px-3 py-2 w-full transition-colors"
+                >
+                  <Navigation className="size-4" />📍 Abrir Hotel no Google Maps
+                </a>
               )}
             </div>
             {r.quartos.length > 0 && (
@@ -208,56 +206,32 @@ function PublicPage() {
                 ))}
               </div>
             )}
+            <PhotoGallery fotos={r.hotel_fotos} label="Fotos do hotel" onOpen={setLightbox} />
           </Section>
         )}
 
         {/* LOCAL PRINCIPAL */}
-        {(r.teatro_nome || r.teatro_endereco || r.teatro_telefone || r.teatro_site || r.teatro_observacoes) && (
+        {(r.teatro_nome || r.teatro_endereco || r.teatro_telefone || teatroSite || r.teatro_observacoes || r.teatro_fotos.length > 0) && (
           <Section title="Local Principal" icon={<Theater className="size-4" />}>
-            <div className="rounded-lg border p-4 bg-card space-y-2">
+            <div className="rounded-lg border p-4 bg-card space-y-3">
               {r.teatro_nome && <p className="font-semibold">{r.teatro_nome}</p>}
               {r.teatro_endereco && <p className="text-sm text-muted-foreground">{r.teatro_endereco}</p>}
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                 {r.teatro_telefone && <a href={`tel:${onlyDigits(r.teatro_telefone)}`} className="text-primary inline-flex items-center gap-1"><Phone className="size-3.5" />{r.teatro_telefone}</a>}
-                {r.teatro_site && <a href={r.teatro_site} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site</a>}
+                {teatroSite && <a href={teatroSite} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site</a>}
               </div>
               {r.teatro_observacoes && <p className="text-sm text-muted-foreground whitespace-pre-line">{r.teatro_observacoes}</p>}
+              {(r.teatro_endereco || r.teatro_nome) && (
+                <a
+                  href={mapsUrl([r.teatro_nome, r.teatro_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
+                  target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 rounded-md border bg-background hover:bg-accent text-sm font-medium px-3 py-2 w-full transition-colors"
+                >
+                  <Navigation className="size-4" />📍 Abrir Teatro no Google Maps
+                </a>
+              )}
             </div>
-          </Section>
-        )}
-
-        {/* FOTOS DO TEATRO */}
-        {fotosGrupos.length > 0 && (
-          <Section title="Fotos do teatro" icon={<Camera className="size-4" />}>
-            <div className="space-y-6">
-              {fotosGrupos.map((g) => (
-                <div key={g.key}>
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">{g.label}</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {g.fotos.map((f, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setLightbox(f)}
-                        className="group relative aspect-square overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        {f.url ? (
-                          <img
-                            src={f.url}
-                            alt={`${g.label} — ${f.nome}`}
-                            loading="lazy"
-                            decoding="async"
-                            className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Sem preview</div>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" onOpen={setLightbox} />
           </Section>
         )}
 
@@ -284,11 +258,11 @@ function PublicPage() {
             <div className="rounded-lg border p-4 bg-card space-y-2 text-sm">
               {r.festival && <p className="font-semibold">{r.festival}</p>}
               <div className="flex flex-wrap gap-x-4 gap-y-1">
-                {fi.site && <a href={fi.site} target="_blank" rel="noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site oficial</a>}
-                {fi.instagram && <a href={`https://instagram.com/${fi.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="text-primary">{fi.instagram}</a>}
+                {fiSite && <a href={fiSite} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site oficial</a>}
+                {fiInstagramUrl && <a href={fiInstagramUrl} target="_blank" rel="noopener noreferrer" className="text-primary">{fiInstagram.startsWith("@") || !/^https?:/i.test(fiInstagram) ? (fiInstagram.startsWith("@") ? fiInstagram : "@" + fiInstagram.replace(/^@/, "")) : "Instagram"}</a>}
               </div>
-              {fi.redes && <p className="text-muted-foreground">{fi.redes}</p>}
-              {fi.programacao_oficial && <p className="text-muted-foreground whitespace-pre-line"><span className="text-foreground font-medium">Programação oficial: </span>{fi.programacao_oficial}</p>}
+              {fi.redes && <RedesLinks text={fi.redes} />}
+              {fi.programacao_oficial && <ProgramacaoOficial text={fi.programacao_oficial} />}
               {fi.observacoes && <p className="text-muted-foreground whitespace-pre-line">{fi.observacoes}</p>}
             </div>
           </Section>
@@ -299,7 +273,7 @@ function PublicPage() {
           <Section title="Documentos" icon={<FileText className="size-4" />}>
             <div className="rounded-lg border bg-card divide-y">
               {r.documentos.map((doc: Documento, i) => (
-                <a key={i} href={doc.url ?? "#"} target="_blank" rel="noreferrer" className="p-3 flex items-center gap-3 hover:bg-accent transition-colors">
+                <a key={i} href={doc.url ?? "#"} target="_blank" rel="noopener noreferrer" className="p-3 flex items-center gap-3 hover:bg-accent transition-colors">
                   <FileText className="size-4 text-muted-foreground shrink-0" />
                   <span className="text-sm truncate flex-1">{doc.nome}</span>
                   <span className="text-xs text-muted-foreground">{doc.tipo?.split("/")[1] ?? ""}</span>
@@ -363,13 +337,168 @@ function ContactCard({ label, name, whatsapp }: { label: string; name: string | 
         <a
           href={`https://wa.me/${wa}`}
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
           className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] hover:bg-[#1faa54] text-white text-sm font-medium px-3 py-2 w-full transition-colors"
         >
           <MessageCircle className="size-4" />
           Conversar no WhatsApp
         </a>
       )}
+    </div>
+  );
+}
+
+function PhotoGallery({ fotos, label, onOpen }: { fotos: Foto[]; label: string; onOpen: (f: Foto) => void }) {
+  if (!fotos || fotos.length === 0) return null;
+  const fotoMap = new Map<string, Foto[]>();
+  for (const f of fotos) {
+    const key = f.categoria === "Outros"
+      ? `Outros - ${(f.descricao || "Sem descrição").trim()}`
+      : f.categoria;
+    if (!fotoMap.has(key)) fotoMap.set(key, []);
+    fotoMap.get(key)!.push(f);
+  }
+  const grupos: { key: string; label: string; fotos: Foto[] }[] = [];
+  for (const c of FOTO_CATEGORIAS) {
+    if (c === "Outros") continue;
+    if (fotoMap.has(c)) grupos.push({ key: c, label: c, fotos: fotoMap.get(c)! });
+  }
+  for (const [k, fs] of fotoMap) {
+    if (k.startsWith("Outros - ")) grupos.push({ key: k, label: k.toUpperCase(), fotos: fs });
+  }
+  return (
+    <div className="mt-3 space-y-4">
+      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2"><Camera className="size-3.5" />{label}</div>
+      {grupos.map((g) => (
+        <div key={g.key}>
+          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{g.label}</h4>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {g.fotos.map((f, i) => (
+              <button
+                key={i} type="button" onClick={() => onOpen(f)}
+                className="group relative aspect-square overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {f.url ? (
+                  <img src={f.url} alt={`${g.label} — ${f.nome}`} loading="lazy" decoding="async"
+                    className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Sem preview</div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProgramacaoOficial({ text }: { text: string }) {
+  const trimmed = text.trim();
+  if (/^https?:\/\//i.test(trimmed) && !/\s/.test(trimmed)) {
+    return (
+      <p className="text-muted-foreground">
+        <span className="text-foreground font-medium">Programação oficial: </span>
+        <a href={trimmed} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{trimmed}</a>
+      </p>
+    );
+  }
+  return (
+    <p className="text-muted-foreground whitespace-pre-line">
+      <span className="text-foreground font-medium">Programação oficial: </span>{text}
+    </p>
+  );
+}
+
+function RedesLinks({ text }: { text: string }) {
+  // Detect URLs and @handles, render the rest as text
+  const parts = text.split(/(\s+)/);
+  return (
+    <p className="text-muted-foreground">
+      {parts.map((p, i) => {
+        if (/^https?:\/\//i.test(p)) {
+          return <a key={i} href={p} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{p}</a>;
+        }
+        if (/^@[\w._]+$/.test(p)) {
+          return <a key={i} href={`https://instagram.com/${p.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" className="text-primary">{p}</a>;
+        }
+        return <span key={i}>{p}</span>;
+      })}
+    </p>
+  );
+}
+
+// ============ Weather (Open-Meteo, free, no key) ============
+type WeatherState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ok"; tempC: number; maxC: number; minC: number; rainPct: number; locationName: string };
+
+function Weather({ cidade, estado, dataInicial, dataFinal }: { cidade: string; estado: string; dataInicial?: string; dataFinal?: string }) {
+  const [state, setState] = useState<WeatherState>({ status: "loading" });
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        if (!cidade?.trim()) { setState({ status: "error", message: "Cidade não cadastrada" }); return; }
+        const query = encodeURIComponent(estado ? `${cidade}, ${estado}` : cidade);
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=1&language=pt&format=json&country=BR`);
+        if (!geoRes.ok) throw new Error("geo");
+        const geo = await geoRes.json();
+        const place = geo?.results?.[0];
+        if (!place) {
+          // retry without country filter
+          const r2 = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=1&language=pt&format=json`);
+          const g2 = await r2.json();
+          if (!g2?.results?.[0]) throw new Error("Cidade não encontrada");
+          Object.assign(geo, g2);
+        }
+        const { latitude, longitude, name, admin1 } = geo.results[0];
+        const today = new Date().toISOString().slice(0, 10);
+        // pick date range within forecast window
+        const start = dataInicial && dataInicial >= today ? dataInicial : today;
+        const end = dataFinal && dataFinal >= start ? dataFinal : start;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+          `&current=temperature_2m,precipitation_probability` +
+          `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+          `&timezone=auto&start_date=${start}&end_date=${end}`;
+        const wRes = await fetch(url);
+        if (!wRes.ok) throw new Error("weather");
+        const w = await wRes.json();
+        if (cancel) return;
+        const tempC = Math.round(w?.current?.temperature_2m ?? NaN);
+        const maxC = Math.round(w?.daily?.temperature_2m_max?.[0] ?? NaN);
+        const minC = Math.round(w?.daily?.temperature_2m_min?.[0] ?? NaN);
+        const rainPct = Math.round(w?.daily?.precipitation_probability_max?.[0] ?? w?.current?.precipitation_probability ?? 0);
+        setState({ status: "ok", tempC, maxC, minC, rainPct, locationName: `${name}${admin1 ? ", " + admin1 : ""}` });
+      } catch (e: any) {
+        if (!cancel) setState({ status: "error", message: e?.message || "Não foi possível carregar o clima" });
+      }
+    })();
+    return () => { cancel = true; };
+  }, [cidade, estado, dataInicial, dataFinal]);
+
+  if (state.status === "loading") {
+    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Carregando clima...</div>;
+  }
+  if (state.status === "error") {
+    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Clima indisponível.</div>;
+  }
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">{state.locationName}</div>
+          <div className="text-4xl font-semibold mt-1">{isFinite(state.tempC) ? `${state.tempC}°C` : "—"}</div>
+        </div>
+        <div className="text-sm text-muted-foreground space-y-1 text-right">
+          <div>Máx <span className="text-foreground font-medium">{isFinite(state.maxC) ? `${state.maxC}°` : "—"}</span></div>
+          <div>Mín <span className="text-foreground font-medium">{isFinite(state.minC) ? `${state.minC}°` : "—"}</span></div>
+          <div className="inline-flex items-center gap-1"><Droplets className="size-3.5" /> Chuva <span className="text-foreground font-medium">{state.rainPct}%</span></div>
+        </div>
+      </div>
+      <div className="text-[10px] text-muted-foreground mt-3">Fonte: Open-Meteo</div>
     </div>
   );
 }
