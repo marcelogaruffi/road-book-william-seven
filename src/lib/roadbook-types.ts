@@ -102,6 +102,7 @@ export type RoadbookData = {
   festival_info: FestivalInfo;
   documentos: Documento[];
   teatro_fotos: Foto[];
+  hotel_fotos: Foto[];
 };
 
 export const emptyRoadbook: RoadbookData = {
@@ -121,6 +122,7 @@ export const emptyRoadbook: RoadbookData = {
   festival_info: {},
   documentos: [],
   teatro_fotos: [],
+  hotel_fotos: [],
 };
 
 export function rowToRoadbook(row: any): RoadbookData {
@@ -159,6 +161,7 @@ export function rowToRoadbook(row: any): RoadbookData {
     festival_info: (row.festival_info && typeof row.festival_info === "object" ? row.festival_info : {}) as FestivalInfo,
     documentos: (Array.isArray(row.documentos) ? row.documentos : []) as Documento[],
     teatro_fotos: (Array.isArray(row.teatro_fotos) ? row.teatro_fotos : []) as Foto[],
+    hotel_fotos: (Array.isArray(row.hotel_fotos) ? row.hotel_fotos : []) as Foto[],
   };
 }
 
@@ -196,7 +199,21 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     festival_info: d.festival_info as any,
     documentos: d.documentos as any,
     teatro_fotos: d.teatro_fotos as any,
+    hotel_fotos: d.hotel_fotos as any,
   };
+}
+
+export function normalizeExternalUrl(u: string | null | undefined): string {
+  if (!u) return "";
+  const s = u.trim();
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) return s;
+  if (/^\/\//.test(s)) return "https:" + s;
+  return "https://" + s.replace(/^\/+/, "");
+}
+
+export function mapsUrl(address: string | null | undefined): string {
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((address ?? "").trim())}`;
 }
 
 export function progTitle(p: ProgItem): string {
