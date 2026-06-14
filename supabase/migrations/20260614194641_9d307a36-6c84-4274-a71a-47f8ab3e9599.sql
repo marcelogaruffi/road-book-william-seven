@@ -1,0 +1,1 @@
+ALTER TABLE public.roadbooks ADD COLUMN IF NOT EXISTS hotel_fotos jsonb NOT NULL DEFAULT '[]'::jsonb;
