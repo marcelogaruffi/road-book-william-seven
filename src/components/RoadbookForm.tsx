@@ -64,9 +64,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   }
   function removeContato(i: number) { setD((s) => ({ ...s, outros_contatos: s.outros_contatos.filter((_, idx) => idx !== i) })); }
 
-  // FOTOS DO TEATRO
-  async function onUploadFoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
+  // FOTOS (teatro + hotel)
+  async function uploadFotos(files: FileList | null, kind: "teatro" | "hotel") {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
@@ -78,28 +77,36 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       for (const f of Array.from(files)) {
         if (!f.type.startsWith("image/")) continue;
         const safeName = f.name.replace(/[^\w.\-]+/g, "_");
-        const path = `${uid}/${rbId}/teatro/${Date.now()}-${safeName}`;
+        const path = `${uid}/${rbId}/${kind}/${Date.now()}-${safeName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
         const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
         novos.push({ path, nome: f.name, categoria: "Outros", descricao: "", url: signed?.signedUrl });
       }
-      setD((s) => ({ ...s, teatro_fotos: [...s.teatro_fotos, ...novos] }));
+      const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+      setD((s) => ({ ...s, [key]: [...s[key], ...novos] }));
       toast.success(`${novos.length} foto(s) enviada(s)`);
     } catch (err: any) {
       toast.error(err.message ?? "Erro no upload");
     } finally {
       setUploading(false);
-      e.target.value = "";
     }
   }
-  function updateFoto(i: number, patch: Partial<Foto>) {
-    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+  function onUploadFotoTeatro(e: React.ChangeEvent<HTMLInputElement>) {
+    uploadFotos(e.target.files, "teatro").finally(() => { e.target.value = ""; });
   }
-  async function removeFoto(i: number) {
-    const foto = d.teatro_fotos[i];
+  function onUploadFotoHotel(e: React.ChangeEvent<HTMLInputElement>) {
+    uploadFotos(e.target.files, "hotel").finally(() => { e.target.value = ""; });
+  }
+  function updateFoto(kind: "teatro" | "hotel", i: number, patch: Partial<Foto>) {
+    const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+    setD((s) => ({ ...s, [key]: s[key].map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+  }
+  async function removeFoto(kind: "teatro" | "hotel", i: number) {
+    const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+    const foto = d[key][i];
     try { if (foto.path) await supabase.storage.from("roadbook-docs").remove([foto.path]); } catch {}
-    setD((s) => ({ ...s, teatro_fotos: s.teatro_fotos.filter((_, idx) => idx !== i) }));
+    setD((s) => ({ ...s, [key]: s[key].filter((_, idx) => idx !== i) }));
   }
 
   // DOCUMENTOS
