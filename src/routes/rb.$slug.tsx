@@ -485,8 +485,9 @@ function Weather({ cidade, estado, dataInicial, dataFinal }: { cidade: string; e
     return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Carregando clima...</div>;
   }
   if (state.status === "error") {
-    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Clima indisponível.</div>;
+    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Clima indisponível: {state.message}</div>;
   }
+
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
