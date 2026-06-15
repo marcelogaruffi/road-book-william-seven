@@ -1,5 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
@@ -12,6 +12,15 @@ import {
   normalizeExternalUrl, mapsUrl,
   type ProgItem, type Documento, type Quarto, type OutroContato, type Foto,
 } from "@/lib/roadbook-types";
+
+type GeoPlace = { latitude: number; longitude: number; name: string; admin1?: string };
+type GeoState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ok"; place: GeoPlace };
+const GeoContext = createContext<GeoState>({ status: "loading" });
+
+
 
 export const Route = createFileRoute("/rb/$slug")({
   ssr: false,
@@ -94,7 +103,10 @@ function PublicPage() {
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lightbox]);
 
+  const geo = useGeocode(r.cidade, r.estado);
+
   return (
+    <GeoContext.Provider value={geo}>
     <div className="min-h-screen bg-background">
       {/* CAPA */}
       <header className="border-b bg-gradient-to-b from-card to-background">
@@ -119,11 +131,6 @@ function PublicPage() {
           </Section>
         )}
 
-        {/* CLIMA */}
-        <Section title="Clima" icon={<CloudSun className="size-4" />}>
-          <Weather cidade={r.cidade} estado={r.estado} dataInicial={r.data_inicial} dataFinal={r.data_final} />
-        </Section>
-
         {/* CRONOGRAMA */}
         {dias.length > 0 && (
           <Section title="Cronograma" icon={<Calendar className="size-4" />}>
@@ -138,14 +145,15 @@ function PublicPage() {
           </Section>
         )}
 
-        {/* PROGRAMAÇÃO DIÁRIA */}
+        {/* PROGRAMAÇÃO DIÁRIA com clima por dia */}
         {prog.length > 0 && (
-          <Section title="Programação diária">
-            <div className="space-y-5">
+          <Section title="Programação diária" icon={<Calendar className="size-4" />}>
+            <div className="space-y-6">
               {dias.map((date) => (
                 <div key={date}>
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">{fmtDate(date)}</h3>
-                  <div className="rounded-lg border divide-y bg-card">
+                  <DayWeather date={date} />
+                  <div className="rounded-lg border divide-y bg-card mt-2">
                     {groups[date].map((p, i) => (
                       <div key={i} className="p-3 flex gap-3">
                         <div className="text-xs font-mono tabular-nums shrink-0 w-20 text-primary pt-0.5">{progHora(p)}</div>
@@ -167,6 +175,8 @@ function PublicPage() {
             </div>
           </Section>
         )}
+
+
 
         {/* HOSPEDAGEM */}
         {(r.hotel_nome || r.hotel_endereco || r.hotel_telefone || hotelSite || r.hotel_checkin || r.hotel_checkout || r.quartos.length > 0 || r.hotel_fotos.length > 0) && (
@@ -315,8 +325,10 @@ function PublicPage() {
         </div>
       )}
     </div>
+    </GeoContext.Provider>
   );
 }
+
 
 function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -429,79 +441,144 @@ function RedesLinks({ text }: { text: string }) {
 }
 
 // ============ Weather (Open-Meteo, free, no key) ============
-type WeatherState =
-  | { status: "loading" }
-  | { status: "error"; message: string }
-  | { status: "ok"; tempC: number; maxC: number; minC: number; rainPct: number; locationName: string };
+// Per-day weather:
+//  - forecast (±16 days from today) → Open-Meteo forecast API
+//  - dates outside that window → historical climate average (last 5 years on
+//    same month/day) from Open-Meteo archive API
+//
+// One geocode per page (shared via context); each day fetches its own data.
 
-function Weather({ cidade, estado, dataInicial, dataFinal }: { cidade: string; estado: string; dataInicial?: string; dataFinal?: string }) {
-  const [state, setState] = useState<WeatherState>({ status: "loading" });
-
+function useGeocode(cidade: string, _estado: string): GeoState {
+  const [state, setState] = useState<GeoState>({ status: "loading" });
   useEffect(() => {
     let cancel = false;
     (async () => {
       try {
         if (!cidade?.trim()) { setState({ status: "error", message: "Cidade não cadastrada" }); return; }
-        // Geocoding: search by city name only (state suffix often breaks matching)
-        const query = encodeURIComponent(cidade.trim());
-        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=pt&format=json`;
-        console.log("[Weather] geocoding:", geoUrl);
-        const geoRes = await fetch(geoUrl);
-        if (!geoRes.ok) throw new Error("geo http " + geoRes.status);
-        const geo = await geoRes.json();
-        console.log("[Weather] geocoding result:", geo);
-        const results: any[] = Array.isArray(geo?.results) ? geo.results : [];
+        const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade.trim())}&count=5&language=pt&format=json`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("geo http " + res.status);
+        const j = await res.json();
+        const results: any[] = Array.isArray(j?.results) ? j.results : [];
         if (results.length === 0) throw new Error("Cidade não encontrada");
-        // Prefer Brazilian match; fallback to first
-        const place =
-          results.find((r) => r.country_code === "BR") ||
-          results[0];
-        const { latitude, longitude, name, admin1 } = place;
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-          `&current=temperature_2m` +
-          `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
-          `&timezone=auto&forecast_days=1`;
-        console.log("[Weather] forecast:", url);
-        const wRes = await fetch(url);
-        if (!wRes.ok) throw new Error("weather http " + wRes.status);
-        const w = await wRes.json();
-        console.log("[Weather] forecast result:", w);
+        const p = results.find((r) => r.country_code === "BR") || results[0];
         if (cancel) return;
-        const tempC = Math.round(w?.current?.temperature_2m ?? NaN);
-        const maxC = Math.round(w?.daily?.temperature_2m_max?.[0] ?? NaN);
-        const minC = Math.round(w?.daily?.temperature_2m_min?.[0] ?? NaN);
-        const rainPct = Math.round(w?.daily?.precipitation_probability_max?.[0] ?? 0);
-        setState({ status: "ok", tempC, maxC, minC, rainPct, locationName: `${name}${admin1 ? ", " + admin1 : ""}` });
+        setState({ status: "ok", place: { latitude: p.latitude, longitude: p.longitude, name: p.name, admin1: p.admin1 } });
       } catch (e: any) {
-        console.error("[Weather] error:", e);
-        if (!cancel) setState({ status: "error", message: e?.message || "Não foi possível carregar o clima" });
+        if (!cancel) setState({ status: "error", message: e?.message || "Geocodificação falhou" });
       }
     })();
     return () => { cancel = true; };
-  }, [cidade, estado, dataInicial, dataFinal]);
+  }, [cidade]);
+  return state;
+}
 
+type DayData =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ok"; kind: "forecast" | "historical"; maxC: number; minC: number; rainPct: number };
 
-  if (state.status === "loading") {
-    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Carregando clima...</div>;
+function daysBetween(a: Date, b: Date) {
+  const ms = b.getTime() - a.getTime();
+  return Math.round(ms / 86400000);
+}
+
+function DayWeather({ date }: { date: string }) {
+  const geo = useContext(GeoContext);
+  const [data, setData] = useState<DayData>({ status: "loading" });
+
+  const target = useMemo(() => {
+    const [y, m, d] = (date || "").split("-").map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m - 1, d));
+  }, [date]);
+
+  useEffect(() => {
+    if (geo.status === "loading") { setData({ status: "loading" }); return; }
+    if (geo.status === "error") { setData({ status: "error", message: geo.message }); return; }
+    if (!target) { setData({ status: "error", message: "Data inválida" }); return; }
+    let cancel = false;
+    (async () => {
+      const { latitude, longitude } = geo.place;
+      const today = new Date();
+      const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+      const diff = daysBetween(todayUTC, target);
+      try {
+        if (diff >= -1 && diff <= 15) {
+          // Forecast
+          const iso = date;
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+            `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+            `&timezone=auto&start_date=${iso}&end_date=${iso}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error("forecast http " + res.status);
+          const j = await res.json();
+          if (cancel) return;
+          setData({
+            status: "ok", kind: "forecast",
+            maxC: Math.round(j?.daily?.temperature_2m_max?.[0] ?? NaN),
+            minC: Math.round(j?.daily?.temperature_2m_min?.[0] ?? NaN),
+            rainPct: Math.round(j?.daily?.precipitation_probability_max?.[0] ?? 0),
+          });
+        } else {
+          // Historical average: last 5 years, same month/day
+          const m = String(target.getUTCMonth() + 1).padStart(2, "0");
+          const d = String(target.getUTCDate()).padStart(2, "0");
+          const baseYear = todayUTC.getUTCFullYear() - 1;
+          const years = [0, 1, 2, 3, 4].map((i) => baseYear - i);
+          const results = await Promise.all(years.map(async (yr) => {
+            const iso = `${yr}-${m}-${d}`;
+            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}` +
+              `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
+              `&timezone=auto&start_date=${iso}&end_date=${iso}`;
+            const r = await fetch(url);
+            if (!r.ok) return null;
+            const jj = await r.json();
+            return {
+              max: jj?.daily?.temperature_2m_max?.[0],
+              min: jj?.daily?.temperature_2m_min?.[0],
+              precip: jj?.daily?.precipitation_sum?.[0],
+            };
+          }));
+          if (cancel) return;
+          const valid = results.filter((x): x is { max: number; min: number; precip: number } =>
+            !!x && typeof x.max === "number" && typeof x.min === "number");
+          if (valid.length === 0) throw new Error("Sem dados históricos");
+          const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+          const maxC = Math.round(avg(valid.map((v) => v.max)));
+          const minC = Math.round(avg(valid.map((v) => v.min)));
+          // % of past years where it rained > 1mm on that date
+          const rainyShare = valid.filter((v) => (v.precip ?? 0) > 1).length / valid.length;
+          setData({ status: "ok", kind: "historical", maxC, minC, rainPct: Math.round(rainyShare * 100) });
+        }
+      } catch (e: any) {
+        if (!cancel) setData({ status: "error", message: e?.message || "Clima indisponível" });
+      }
+    })();
+    return () => { cancel = true; };
+  }, [date, geo, target]);
+
+  if (data.status === "loading") {
+    return <div className="rounded-lg border bg-card p-3 text-xs text-muted-foreground flex items-center gap-2"><CloudSun className="size-3.5" />Carregando clima...</div>;
   }
-  if (state.status === "error") {
-    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Clima indisponível: {state.message}</div>;
+  if (data.status === "error") {
+    return <div className="rounded-lg border bg-card p-3 text-xs text-muted-foreground flex items-center gap-2"><CloudSun className="size-3.5" />Clima indisponível: {data.message}</div>;
   }
-
   return (
-    <div className="rounded-lg border bg-card p-4">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">{state.locationName}</div>
-          <div className="text-4xl font-semibold mt-1">{isFinite(state.tempC) ? `${state.tempC}°C` : "—"}</div>
-        </div>
-        <div className="text-sm text-muted-foreground space-y-1 text-right">
-          <div>Máx <span className="text-foreground font-medium">{isFinite(state.maxC) ? `${state.maxC}°` : "—"}</span></div>
-          <div>Mín <span className="text-foreground font-medium">{isFinite(state.minC) ? `${state.minC}°` : "—"}</span></div>
-          <div className="inline-flex items-center gap-1"><Droplets className="size-3.5" /> Chuva <span className="text-foreground font-medium">{state.rainPct}%</span></div>
-        </div>
+    <div className="rounded-lg border bg-card p-3 flex items-center gap-4 flex-wrap">
+      <div className="flex items-center gap-2 text-sm">
+        <CloudSun className="size-4 text-primary" />
+        <span className="font-medium">{isFinite(data.maxC) ? `${data.maxC}°` : "—"}</span>
+        <span className="text-muted-foreground">/ {isFinite(data.minC) ? `${data.minC}°` : "—"}</span>
       </div>
-      <div className="text-[10px] text-muted-foreground mt-3">Fonte: Open-Meteo</div>
+      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+        <Droplets className="size-3.5" />
+        {data.kind === "forecast" ? "Chuva" : "Histórico chuva"} <span className="text-foreground font-medium ml-1">{data.rainPct}%</span>
+      </div>
+      <div className="text-[10px] text-muted-foreground ml-auto">
+        {data.kind === "forecast" ? "Previsão" : "Média histórica (5 anos)"} · Open-Meteo
+      </div>
     </div>
   );
 }
+
