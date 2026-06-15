@@ -442,49 +442,52 @@ function Weather({ cidade, estado, dataInicial, dataFinal }: { cidade: string; e
     (async () => {
       try {
         if (!cidade?.trim()) { setState({ status: "error", message: "Cidade não cadastrada" }); return; }
-        const query = encodeURIComponent(estado ? `${cidade}, ${estado}` : cidade);
-        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=1&language=pt&format=json&country=BR`);
-        if (!geoRes.ok) throw new Error("geo");
+        // Geocoding: search by city name only (state suffix often breaks matching)
+        const query = encodeURIComponent(cidade.trim());
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=pt&format=json`;
+        console.log("[Weather] geocoding:", geoUrl);
+        const geoRes = await fetch(geoUrl);
+        if (!geoRes.ok) throw new Error("geo http " + geoRes.status);
         const geo = await geoRes.json();
-        const place = geo?.results?.[0];
-        if (!place) {
-          // retry without country filter
-          const r2 = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=1&language=pt&format=json`);
-          const g2 = await r2.json();
-          if (!g2?.results?.[0]) throw new Error("Cidade não encontrada");
-          Object.assign(geo, g2);
-        }
-        const { latitude, longitude, name, admin1 } = geo.results[0];
-        const today = new Date().toISOString().slice(0, 10);
-        // pick date range within forecast window
-        const start = dataInicial && dataInicial >= today ? dataInicial : today;
-        const end = dataFinal && dataFinal >= start ? dataFinal : start;
+        console.log("[Weather] geocoding result:", geo);
+        const results: any[] = Array.isArray(geo?.results) ? geo.results : [];
+        if (results.length === 0) throw new Error("Cidade não encontrada");
+        // Prefer Brazilian match; fallback to first
+        const place =
+          results.find((r) => r.country_code === "BR") ||
+          results[0];
+        const { latitude, longitude, name, admin1 } = place;
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-          `&current=temperature_2m,precipitation_probability` +
+          `&current=temperature_2m` +
           `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
-          `&timezone=auto&start_date=${start}&end_date=${end}`;
+          `&timezone=auto&forecast_days=1`;
+        console.log("[Weather] forecast:", url);
         const wRes = await fetch(url);
-        if (!wRes.ok) throw new Error("weather");
+        if (!wRes.ok) throw new Error("weather http " + wRes.status);
         const w = await wRes.json();
+        console.log("[Weather] forecast result:", w);
         if (cancel) return;
         const tempC = Math.round(w?.current?.temperature_2m ?? NaN);
         const maxC = Math.round(w?.daily?.temperature_2m_max?.[0] ?? NaN);
         const minC = Math.round(w?.daily?.temperature_2m_min?.[0] ?? NaN);
-        const rainPct = Math.round(w?.daily?.precipitation_probability_max?.[0] ?? w?.current?.precipitation_probability ?? 0);
+        const rainPct = Math.round(w?.daily?.precipitation_probability_max?.[0] ?? 0);
         setState({ status: "ok", tempC, maxC, minC, rainPct, locationName: `${name}${admin1 ? ", " + admin1 : ""}` });
       } catch (e: any) {
+        console.error("[Weather] error:", e);
         if (!cancel) setState({ status: "error", message: e?.message || "Não foi possível carregar o clima" });
       }
     })();
     return () => { cancel = true; };
   }, [cidade, estado, dataInicial, dataFinal]);
 
+
   if (state.status === "loading") {
     return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Carregando clima...</div>;
   }
   if (state.status === "error") {
-    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Clima indisponível.</div>;
+    return <div className="rounded-lg border bg-card p-4 text-sm text-muted-foreground">Clima indisponível: {state.message}</div>;
   }
+
   return (
     <div className="rounded-lg border bg-card p-4">
       <div className="flex items-start justify-between gap-4 flex-wrap">
