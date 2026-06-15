@@ -1,5 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
@@ -18,7 +18,8 @@ type GeoState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ok"; place: GeoPlace };
-const GeoContext = (await import("react")).createContext<GeoState>({ status: "loading" });
+const GeoContext = createContext<GeoState>({ status: "loading" });
+
 
 
 export const Route = createFileRoute("/rb/$slug")({
