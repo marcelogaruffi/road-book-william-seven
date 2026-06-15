@@ -103,7 +103,10 @@ function PublicPage() {
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lightbox]);
 
+  const geo = useGeocode(r.cidade, r.estado);
+
   return (
+    <GeoContext.Provider value={geo}>
     <div className="min-h-screen bg-background">
       {/* CAPA */}
       <header className="border-b bg-gradient-to-b from-card to-background">
@@ -128,11 +131,6 @@ function PublicPage() {
           </Section>
         )}
 
-        {/* CLIMA */}
-        <Section title="Clima" icon={<CloudSun className="size-4" />}>
-          <Weather cidade={r.cidade} estado={r.estado} dataInicial={r.data_inicial} dataFinal={r.data_final} />
-        </Section>
-
         {/* CRONOGRAMA */}
         {dias.length > 0 && (
           <Section title="Cronograma" icon={<Calendar className="size-4" />}>
@@ -147,14 +145,15 @@ function PublicPage() {
           </Section>
         )}
 
-        {/* PROGRAMAÇÃO DIÁRIA */}
+        {/* PROGRAMAÇÃO DIÁRIA com clima por dia */}
         {prog.length > 0 && (
-          <Section title="Programação diária">
-            <div className="space-y-5">
+          <Section title="Programação diária" icon={<Calendar className="size-4" />}>
+            <div className="space-y-6">
               {dias.map((date) => (
                 <div key={date}>
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">{fmtDate(date)}</h3>
-                  <div className="rounded-lg border divide-y bg-card">
+                  <DayWeather date={date} />
+                  <div className="rounded-lg border divide-y bg-card mt-2">
                     {groups[date].map((p, i) => (
                       <div key={i} className="p-3 flex gap-3">
                         <div className="text-xs font-mono tabular-nums shrink-0 w-20 text-primary pt-0.5">{progHora(p)}</div>
@@ -176,6 +175,8 @@ function PublicPage() {
             </div>
           </Section>
         )}
+
+
 
         {/* HOSPEDAGEM */}
         {(r.hotel_nome || r.hotel_endereco || r.hotel_telefone || hotelSite || r.hotel_checkin || r.hotel_checkout || r.quartos.length > 0 || r.hotel_fotos.length > 0) && (
