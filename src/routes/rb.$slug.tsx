@@ -325,8 +325,10 @@ function PublicPage() {
         </div>
       )}
     </div>
+    </GeoContext.Provider>
   );
 }
+
 
 function Section({ title, icon, children }: { title: string; icon?: React.ReactNode; children: React.ReactNode }) {
   return (
