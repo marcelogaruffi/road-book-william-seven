@@ -360,18 +360,19 @@ function ContactCard({ label, name, whatsapp }: { label: string; name: string | 
   );
 }
 
-function PhotoGallery({ fotos, label, onOpen }: { fotos: Foto[]; label: string; onOpen: (f: Foto) => void }) {
+function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; label: string; categorias: readonly string[]; onOpen: (f: Foto) => void }) {
   if (!fotos || fotos.length === 0) return null;
   const fotoMap = new Map<string, Foto[]>();
   for (const f of fotos) {
-    const key = f.categoria === "Outros"
+    const isOutros = !categorias.includes(f.categoria) || f.categoria === "Outros";
+    const key = isOutros
       ? `Outros - ${(f.descricao || "Sem descrição").trim()}`
       : f.categoria;
     if (!fotoMap.has(key)) fotoMap.set(key, []);
     fotoMap.get(key)!.push(f);
   }
   const grupos: { key: string; label: string; fotos: Foto[] }[] = [];
-  for (const c of FOTO_CATEGORIAS) {
+  for (const c of categorias) {
     if (c === "Outros") continue;
     if (fotoMap.has(c)) grupos.push({ key: c, label: c, fotos: fotoMap.get(c)! });
   }
