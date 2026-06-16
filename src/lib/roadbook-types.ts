@@ -2,10 +2,9 @@ export type ProgItem = {
   data: string;
   hora_inicio: string;
   hora_fim?: string;
-  // legacy fallback
-  hora?: string;
+  hora?: string; // legacy
   titulo?: string;
-  atividade?: string;
+  atividade?: string; // legacy
   tipo?: ProgTipo;
   local: string;
   observacao: string;
@@ -47,6 +46,7 @@ export type FestivalInfo = {
 };
 export type Documento = { nome: string; path: string; tipo: string; url?: string };
 
+// Categories shared (theatre) — keep export name for backwards compat
 export const FOTO_CATEGORIAS = [
   "Fachada",
   "Palco",
@@ -58,15 +58,49 @@ export const FOTO_CATEGORIAS = [
   "Área técnica",
   "Outros",
 ] as const;
-export type FotoCategoria = (typeof FOTO_CATEGORIAS)[number];
+export type FotoCategoria = string;
+
+export const TEATRO_FOTO_CATEGORIAS = FOTO_CATEGORIAS;
+
+export const HOTEL_FOTO_CATEGORIAS = [
+  "Fachada",
+  "Recepção",
+  "Café da manhã",
+  "Quarto",
+  "Banheiro",
+  "Hall / Lobby",
+  "Área de lazer",
+  "Academia",
+  "Piscina",
+  "Restaurante",
+  "Comodidades",
+  "Estacionamento",
+  "Outros",
+] as const;
 
 export type Foto = {
   path: string;
   nome: string;
-  categoria: FotoCategoria;
-  descricao?: string; // usado quando categoria === "Outros"
+  categoria: string;
+  descricao?: string;
   url?: string;
 };
+
+export type Passageiro = { nome: string; assento?: string; bagagens?: string };
+export type CartaoEmbarque = { path: string; nome: string; tipo: string; url?: string };
+export type Voo = {
+  aeroporto_origem?: string;
+  aeroporto_destino?: string;
+  numero?: string;
+  localizador?: string;
+  data?: string;
+  hora?: string;
+  portao?: string;
+  terminal?: string;
+  passageiros?: Passageiro[];
+  cartoes_embarque?: CartaoEmbarque[];
+};
+export const emptyVoo: Voo = { passageiros: [], cartoes_embarque: [] };
 
 export type RoadbookData = {
   id?: string;
@@ -85,6 +119,8 @@ export type RoadbookData = {
   hotel_site: string;
   hotel_checkin: string;
   hotel_checkout: string;
+  hotel_checkin_hora: string;
+  hotel_checkout_hora: string;
   teatro_nome: string;
   teatro_endereco: string;
   teatro_telefone: string;
@@ -103,6 +139,8 @@ export type RoadbookData = {
   documentos: Documento[];
   teatro_fotos: Foto[];
   hotel_fotos: Foto[];
+  voo_ida: Voo;
+  voo_volta: Voo;
 };
 
 export const emptyRoadbook: RoadbookData = {
@@ -112,6 +150,7 @@ export const emptyRoadbook: RoadbookData = {
   resumo_executivo: "",
   hotel_nome: "", hotel_endereco: "", hotel_telefone: "", hotel_site: "",
   hotel_checkin: "", hotel_checkout: "",
+  hotel_checkin_hora: "", hotel_checkout_hora: "",
   teatro_nome: "", teatro_endereco: "", teatro_telefone: "", teatro_site: "",
   teatro_observacoes: "",
   producao_nome: "", producao_telefone: "", producao_whatsapp: "",
@@ -123,9 +162,17 @@ export const emptyRoadbook: RoadbookData = {
   documentos: [],
   teatro_fotos: [],
   hotel_fotos: [],
+  voo_ida: { ...emptyVoo },
+  voo_volta: { ...emptyVoo },
 };
 
 export function rowToRoadbook(row: any): RoadbookData {
+  const voo = (v: any): Voo => ({
+    ...emptyVoo,
+    ...(v && typeof v === "object" ? v : {}),
+    passageiros: Array.isArray(v?.passageiros) ? v.passageiros : [],
+    cartoes_embarque: Array.isArray(v?.cartoes_embarque) ? v.cartoes_embarque : [],
+  });
   return {
     ...emptyRoadbook,
     id: row.id,
@@ -144,6 +191,8 @@ export function rowToRoadbook(row: any): RoadbookData {
     hotel_site: row.hotel_site ?? "",
     hotel_checkin: row.hotel_checkin ?? "",
     hotel_checkout: row.hotel_checkout ?? "",
+    hotel_checkin_hora: row.hotel_checkin_hora ?? "",
+    hotel_checkout_hora: row.hotel_checkout_hora ?? "",
     teatro_nome: row.teatro_nome ?? "",
     teatro_endereco: row.teatro_endereco ?? "",
     teatro_telefone: row.teatro_telefone ?? "",
@@ -162,6 +211,8 @@ export function rowToRoadbook(row: any): RoadbookData {
     documentos: (Array.isArray(row.documentos) ? row.documentos : []) as Documento[],
     teatro_fotos: (Array.isArray(row.teatro_fotos) ? row.teatro_fotos : []) as Foto[],
     hotel_fotos: (Array.isArray(row.hotel_fotos) ? row.hotel_fotos : []) as Foto[],
+    voo_ida: voo(row.voo_ida),
+    voo_volta: voo(row.voo_volta),
   };
 }
 
@@ -182,6 +233,8 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     hotel_site: d.hotel_site || null,
     hotel_checkin: d.hotel_checkin || null,
     hotel_checkout: d.hotel_checkout || null,
+    hotel_checkin_hora: d.hotel_checkin_hora || null,
+    hotel_checkout_hora: d.hotel_checkout_hora || null,
     teatro_nome: d.teatro_nome || null,
     teatro_endereco: d.teatro_endereco || null,
     teatro_telefone: d.teatro_telefone || null,
@@ -200,6 +253,8 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     documentos: d.documentos as any,
     teatro_fotos: d.teatro_fotos as any,
     hotel_fotos: d.hotel_fotos as any,
+    voo_ida: d.voo_ida as any,
+    voo_volta: d.voo_volta as any,
   };
 }
 
