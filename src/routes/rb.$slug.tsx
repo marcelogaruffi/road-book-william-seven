@@ -31,10 +31,14 @@ export const Route = createFileRoute("/rb/$slug")({
     if (!data) throw notFound();
     const rb = rowToRoadbook(data);
 
+    const idaPasses = rb.voo_ida.cartoes_embarque ?? [];
+    const voltaPasses = rb.voo_volta.cartoes_embarque ?? [];
     const paths = [
       ...rb.teatro_fotos.map((f) => f.path),
       ...rb.hotel_fotos.map((f) => f.path),
       ...rb.documentos.map((d) => d.path),
+      ...idaPasses.map((c) => c.path),
+      ...voltaPasses.map((c) => c.path),
     ].filter(Boolean);
     if (paths.length > 0) {
       try {
@@ -42,6 +46,8 @@ export const Route = createFileRoute("/rb/$slug")({
         rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
         rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
         rb.documentos = rb.documentos.map((d) => ({ ...d, url: urls[d.path] ?? d.url }));
+        rb.voo_ida.cartoes_embarque = idaPasses.map((c) => ({ ...c, url: urls[c.path] ?? c.url }));
+        rb.voo_volta.cartoes_embarque = voltaPasses.map((c) => ({ ...c, url: urls[c.path] ?? c.url }));
       } catch { /* fallback to stored urls */ }
     }
     return rb;
