@@ -5,12 +5,12 @@ import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
-  Navigation, Droplets,
+  Navigation, Droplets, Plane, Clock,
 } from "lucide-react";
 import {
-  rowToRoadbook, progTitle, progHora, TIPO_COLORS, FOTO_CATEGORIAS,
+  rowToRoadbook, progTitle, progHora, TIPO_COLORS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS,
   normalizeExternalUrl, mapsUrl,
-  type ProgItem, type Documento, type Quarto, type OutroContato, type Foto,
+  type ProgItem, type Documento, type Quarto, type OutroContato, type Foto, type Voo,
 } from "@/lib/roadbook-types";
 
 type GeoPlace = { latitude: number; longitude: number; name: string; admin1?: string };
