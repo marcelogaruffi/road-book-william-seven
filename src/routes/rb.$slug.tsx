@@ -216,7 +216,7 @@ function PublicPage() {
                 ))}
               </div>
             )}
-            <PhotoGallery fotos={r.hotel_fotos} label="Fotos do hotel" onOpen={setLightbox} />
+            <PhotoGallery fotos={r.hotel_fotos} label="Fotos do hotel" categorias={HOTEL_FOTO_CATEGORIAS} onOpen={setLightbox} />
           </Section>
         )}
 
