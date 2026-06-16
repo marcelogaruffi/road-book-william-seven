@@ -194,12 +194,23 @@ function PublicPage() {
                 {r.hotel_telefone && <a href={`tel:${onlyDigits(r.hotel_telefone)}`} className="text-primary inline-flex items-center gap-1"><Phone className="size-3.5" />{r.hotel_telefone}</a>}
                 {hotelSite && <a href={hotelSite} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site</a>}
               </div>
-              {(r.hotel_checkin || r.hotel_checkout) && (
-                <p className="text-sm text-muted-foreground">
-                  {r.hotel_checkin && <>Check-in: <span className="text-foreground">{fmtDate(r.hotel_checkin)}</span></>}
-                  {r.hotel_checkin && r.hotel_checkout && " · "}
-                  {r.hotel_checkout && <>Check-out: <span className="text-foreground">{fmtDate(r.hotel_checkout)}</span></>}
-                </p>
+              {(r.hotel_checkin || r.hotel_checkout || r.hotel_checkin_hora || r.hotel_checkout_hora) && (
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {(r.hotel_checkin || r.hotel_checkin_hora) && (
+                    <div className="rounded-md border bg-background px-3 py-2">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Check-in</div>
+                      {r.hotel_checkin && <div className="font-medium">{fmtDate(r.hotel_checkin)}</div>}
+                      {r.hotel_checkin_hora && <div className="flex items-center gap-1 text-muted-foreground text-xs"><Clock className="size-3" />{r.hotel_checkin_hora}</div>}
+                    </div>
+                  )}
+                  {(r.hotel_checkout || r.hotel_checkout_hora) && (
+                    <div className="rounded-md border bg-background px-3 py-2">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Check-out</div>
+                      {r.hotel_checkout && <div className="font-medium">{fmtDate(r.hotel_checkout)}</div>}
+                      {r.hotel_checkout_hora && <div className="flex items-center gap-1 text-muted-foreground text-xs"><Clock className="size-3" />{r.hotel_checkout_hora}</div>}
+                    </div>
+                  )}
+                </div>
               )}
               {(r.hotel_endereco || r.hotel_nome) && (
                 <a
