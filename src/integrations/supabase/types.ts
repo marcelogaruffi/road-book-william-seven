@@ -27,7 +27,9 @@ export type Database = {
           festival: string | null
           festival_info: Json
           hotel_checkin: string | null
+          hotel_checkin_hora: string | null
           hotel_checkout: string | null
+          hotel_checkout_hora: string | null
           hotel_endereco: string | null
           hotel_fotos: Json
           hotel_nome: string | null
@@ -55,6 +57,8 @@ export type Database = {
           tour_id: string | null
           updated_at: string
           user_id: string
+          voo_ida: Json
+          voo_volta: Json
         }
         Insert: {
           automacoes?: Json
@@ -68,7 +72,9 @@ export type Database = {
           festival?: string | null
           festival_info?: Json
           hotel_checkin?: string | null
+          hotel_checkin_hora?: string | null
           hotel_checkout?: string | null
+          hotel_checkout_hora?: string | null
           hotel_endereco?: string | null
           hotel_fotos?: Json
           hotel_nome?: string | null
@@ -96,6 +102,8 @@ export type Database = {
           tour_id?: string | null
           updated_at?: string
           user_id: string
+          voo_ida?: Json
+          voo_volta?: Json
         }
         Update: {
           automacoes?: Json
@@ -109,7 +117,9 @@ export type Database = {
           festival?: string | null
           festival_info?: Json
           hotel_checkin?: string | null
+          hotel_checkin_hora?: string | null
           hotel_checkout?: string | null
+          hotel_checkout_hora?: string | null
           hotel_endereco?: string | null
           hotel_fotos?: Json
           hotel_nome?: string | null
@@ -137,6 +147,8 @@ export type Database = {
           tour_id?: string | null
           updated_at?: string
           user_id?: string
+          voo_ida?: Json
+          voo_volta?: Json
         }
         Relationships: [
           {
