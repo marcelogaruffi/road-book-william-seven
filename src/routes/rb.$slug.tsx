@@ -241,7 +241,7 @@ function PublicPage() {
                 </a>
               )}
             </div>
-            <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" onOpen={setLightbox} />
+            <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" categorias={TEATRO_FOTO_CATEGORIAS} onOpen={setLightbox} />
           </Section>
         )}
 
