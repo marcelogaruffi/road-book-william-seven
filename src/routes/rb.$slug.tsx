@@ -5,12 +5,12 @@ import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
-  Navigation, Droplets,
+  Navigation, Droplets, Plane, Clock,
 } from "lucide-react";
 import {
-  rowToRoadbook, progTitle, progHora, TIPO_COLORS, FOTO_CATEGORIAS,
+  rowToRoadbook, progTitle, progHora, TIPO_COLORS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS,
   normalizeExternalUrl, mapsUrl,
-  type ProgItem, type Documento, type Quarto, type OutroContato, type Foto,
+  type ProgItem, type Documento, type Quarto, type OutroContato, type Foto, type Voo,
 } from "@/lib/roadbook-types";
 
 type GeoPlace = { latitude: number; longitude: number; name: string; admin1?: string };
@@ -31,10 +31,14 @@ export const Route = createFileRoute("/rb/$slug")({
     if (!data) throw notFound();
     const rb = rowToRoadbook(data);
 
+    const idaPasses = rb.voo_ida.cartoes_embarque ?? [];
+    const voltaPasses = rb.voo_volta.cartoes_embarque ?? [];
     const paths = [
       ...rb.teatro_fotos.map((f) => f.path),
       ...rb.hotel_fotos.map((f) => f.path),
       ...rb.documentos.map((d) => d.path),
+      ...idaPasses.map((c) => c.path),
+      ...voltaPasses.map((c) => c.path),
     ].filter(Boolean);
     if (paths.length > 0) {
       try {
@@ -42,6 +46,8 @@ export const Route = createFileRoute("/rb/$slug")({
         rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
         rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
         rb.documentos = rb.documentos.map((d) => ({ ...d, url: urls[d.path] ?? d.url }));
+        rb.voo_ida.cartoes_embarque = idaPasses.map((c) => ({ ...c, url: urls[c.path] ?? c.url }));
+        rb.voo_volta.cartoes_embarque = voltaPasses.map((c) => ({ ...c, url: urls[c.path] ?? c.url }));
       } catch { /* fallback to stored urls */ }
     }
     return rb;
@@ -188,12 +194,23 @@ function PublicPage() {
                 {r.hotel_telefone && <a href={`tel:${onlyDigits(r.hotel_telefone)}`} className="text-primary inline-flex items-center gap-1"><Phone className="size-3.5" />{r.hotel_telefone}</a>}
                 {hotelSite && <a href={hotelSite} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site</a>}
               </div>
-              {(r.hotel_checkin || r.hotel_checkout) && (
-                <p className="text-sm text-muted-foreground">
-                  {r.hotel_checkin && <>Check-in: <span className="text-foreground">{fmtDate(r.hotel_checkin)}</span></>}
-                  {r.hotel_checkin && r.hotel_checkout && " · "}
-                  {r.hotel_checkout && <>Check-out: <span className="text-foreground">{fmtDate(r.hotel_checkout)}</span></>}
-                </p>
+              {(r.hotel_checkin || r.hotel_checkout || r.hotel_checkin_hora || r.hotel_checkout_hora) && (
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  {(r.hotel_checkin || r.hotel_checkin_hora) && (
+                    <div className="rounded-md border bg-background px-3 py-2">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Check-in</div>
+                      {r.hotel_checkin && <div className="font-medium">{fmtDate(r.hotel_checkin)}</div>}
+                      {r.hotel_checkin_hora && <div className="flex items-center gap-1 text-muted-foreground text-xs"><Clock className="size-3" />{r.hotel_checkin_hora}</div>}
+                    </div>
+                  )}
+                  {(r.hotel_checkout || r.hotel_checkout_hora) && (
+                    <div className="rounded-md border bg-background px-3 py-2">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Check-out</div>
+                      {r.hotel_checkout && <div className="font-medium">{fmtDate(r.hotel_checkout)}</div>}
+                      {r.hotel_checkout_hora && <div className="flex items-center gap-1 text-muted-foreground text-xs"><Clock className="size-3" />{r.hotel_checkout_hora}</div>}
+                    </div>
+                  )}
+                </div>
               )}
               {(r.hotel_endereco || r.hotel_nome) && (
                 <a
@@ -216,7 +233,7 @@ function PublicPage() {
                 ))}
               </div>
             )}
-            <PhotoGallery fotos={r.hotel_fotos} label="Fotos do hotel" onOpen={setLightbox} />
+            <PhotoGallery fotos={r.hotel_fotos} label="Fotos do hotel" categorias={HOTEL_FOTO_CATEGORIAS} onOpen={setLightbox} />
           </Section>
         )}
 
@@ -241,22 +258,25 @@ function PublicPage() {
                 </a>
               )}
             </div>
-            <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" onOpen={setLightbox} />
+            <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" categorias={TEATRO_FOTO_CATEGORIAS} onOpen={setLightbox} />
           </Section>
         )}
 
+        {/* VOOS */}
+        <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={setLightbox} />
+
         {/* CONTATOS */}
-        {(r.producao_nome || r.producao_whatsapp || r.receptivo_nome || r.receptivo_whatsapp || r.outros_contatos.length > 0) && (
+        {(r.producao_nome || r.producao_whatsapp || r.producao_telefone || r.receptivo_nome || r.receptivo_whatsapp || r.receptivo_telefone || r.outros_contatos.length > 0) && (
           <Section title="Contatos" icon={<Users className="size-4" />}>
             <div className="grid sm:grid-cols-2 gap-3">
-              {(r.producao_nome || r.producao_whatsapp) && (
-                <ContactCard label="Produção" name={r.producao_nome} whatsapp={r.producao_whatsapp} />
+              {(r.producao_nome || r.producao_whatsapp || r.producao_telefone) && (
+                <ContactCard label="Produção" name={r.producao_nome} telefone={r.producao_telefone} whatsapp={r.producao_whatsapp} />
               )}
-              {(r.receptivo_nome || r.receptivo_whatsapp) && (
-                <ContactCard label="Receptivo" name={r.receptivo_nome} whatsapp={r.receptivo_whatsapp} />
+              {(r.receptivo_nome || r.receptivo_whatsapp || r.receptivo_telefone) && (
+                <ContactCard label="Receptivo" name={r.receptivo_nome} telefone={r.receptivo_telefone} whatsapp={r.receptivo_whatsapp} />
               )}
               {r.outros_contatos.map((c: OutroContato, i) => (
-                <ContactCard key={i} label={c.funcao || "Contato"} name={c.nome} whatsapp={c.whatsapp} />
+                <ContactCard key={i} label={c.funcao || "Contato"} name={c.nome} telefone={c.telefone} whatsapp={c.whatsapp} />
               ))}
             </div>
           </Section>
@@ -339,12 +359,18 @@ function Section({ title, icon, children }: { title: string; icon?: React.ReactN
   );
 }
 
-function ContactCard({ label, name, whatsapp }: { label: string; name: string | null; whatsapp?: string | null }) {
+function ContactCard({ label, name, telefone, whatsapp }: { label: string; name: string | null; telefone?: string | null; whatsapp?: string | null }) {
   const wa = whatsapp ? onlyDigits(whatsapp) : "";
+  const tel = telefone ? onlyDigits(telefone) : "";
   return (
     <div className="rounded-lg border p-4 bg-card">
       <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
       {name && <div className="font-medium mt-1">{name}</div>}
+      {telefone && (
+        <a href={`tel:${tel}`} className="mt-2 inline-flex items-center gap-1.5 text-sm text-primary">
+          <Phone className="size-3.5" />{telefone}
+        </a>
+      )}
       {wa && (
         <a
           href={`https://wa.me/${wa}`}
@@ -353,25 +379,111 @@ function ContactCard({ label, name, whatsapp }: { label: string; name: string | 
           className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] hover:bg-[#1faa54] text-white text-sm font-medium px-3 py-2 w-full transition-colors"
         >
           <MessageCircle className="size-4" />
-          Conversar no WhatsApp
+          {whatsapp ? `Chamar ${whatsapp} no WhatsApp` : "Chamar no WhatsApp"}
         </a>
       )}
     </div>
   );
 }
 
-function PhotoGallery({ fotos, label, onOpen }: { fotos: Foto[]; label: string; onOpen: (f: Foto) => void }) {
+function hasFlight(v: Voo): boolean {
+  return !!(v.aeroporto_origem || v.aeroporto_destino || v.numero || v.localizador || v.data || v.hora || v.portao || v.terminal || (v.passageiros?.length ?? 0) > 0 || (v.cartoes_embarque?.length ?? 0) > 0);
+}
+
+function FlightSection({ ida, volta, onOpenImage }: { ida: Voo; volta: Voo; onOpenImage: (f: Foto) => void }) {
+  if (!hasFlight(ida) && !hasFlight(volta)) return null;
+  return (
+    <Section title="Voos" icon={<Plane className="size-4" />}>
+      <div className="space-y-4">
+        {hasFlight(ida) && <FlightCard title="Voo de ida" voo={ida} onOpenImage={onOpenImage} />}
+        {hasFlight(volta) && <FlightCard title="Voo de volta" voo={volta} onOpenImage={onOpenImage} />}
+      </div>
+    </Section>
+  );
+}
+
+function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOpenImage: (f: Foto) => void }) {
+  const pax = voo.passageiros ?? [];
+  const passes = voo.cartoes_embarque ?? [];
+  return (
+    <div className="rounded-lg border p-4 bg-card space-y-3">
+      <div className="flex items-center gap-2"><Plane className="size-4 text-primary" /><h3 className="font-semibold">{title}</h3></div>
+      {(voo.aeroporto_origem || voo.aeroporto_destino) && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="font-medium">{voo.aeroporto_origem || "—"}</span>
+          <Plane className="size-3.5 text-muted-foreground rotate-45" />
+          <span className="font-medium">{voo.aeroporto_destino || "—"}</span>
+        </div>
+      )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+        {voo.numero && <InfoCell label="Voo" value={voo.numero} />}
+        {voo.localizador && <InfoCell label="Localizador" value={voo.localizador} />}
+        {voo.data && <InfoCell label="Data" value={fmtDate(voo.data)} />}
+        {voo.hora && <InfoCell label="Hora" value={voo.hora} />}
+        {voo.terminal && <InfoCell label="Terminal" value={voo.terminal} />}
+        {voo.portao && <InfoCell label="Portão" value={voo.portao} />}
+      </div>
+      {pax.length > 0 && (
+        <div className="rounded-md border divide-y">
+          <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-2"><Users className="size-3" />Passageiros</div>
+          {pax.map((p, i) => (
+            <div key={i} className="px-3 py-2 grid grid-cols-12 gap-2 text-sm">
+              <span className="col-span-7 truncate">{p.nome || "—"}</span>
+              <span className="col-span-2 text-muted-foreground text-xs">{p.assento ? `Assento ${p.assento}` : ""}</span>
+              <span className="col-span-3 text-muted-foreground text-xs text-right">{p.bagagens ? `${p.bagagens} bag.` : ""}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {passes.length > 0 && (
+        <div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Cartões de embarque</div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {passes.map((c, i) => {
+              const isImg = c.tipo?.startsWith("image/");
+              if (isImg && c.url) {
+                return (
+                  <button key={i} type="button" onClick={() => onOpenImage({ path: c.path, nome: c.nome, categoria: "Outros", url: c.url })} className="aspect-[3/4] overflow-hidden rounded-md border bg-muted">
+                    <img src={c.url} alt={c.nome} className="w-full h-full object-cover" loading="lazy" />
+                  </button>
+                );
+              }
+              return (
+                <a key={i} href={c.url ?? "#"} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-1 aspect-[3/4] rounded-md border bg-background p-2 text-center hover:bg-accent">
+                  <FileText className="size-6 text-muted-foreground" />
+                  <span className="text-[10px] text-muted-foreground truncate w-full">{c.nome}</span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InfoCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border bg-background px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="text-sm font-medium truncate">{value}</div>
+    </div>
+  );
+}
+
+function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; label: string; categorias: readonly string[]; onOpen: (f: Foto) => void }) {
   if (!fotos || fotos.length === 0) return null;
   const fotoMap = new Map<string, Foto[]>();
   for (const f of fotos) {
-    const key = f.categoria === "Outros"
+    const isOutros = !categorias.includes(f.categoria) || f.categoria === "Outros";
+    const key = isOutros
       ? `Outros - ${(f.descricao || "Sem descrição").trim()}`
       : f.categoria;
     if (!fotoMap.has(key)) fotoMap.set(key, []);
     fotoMap.get(key)!.push(f);
   }
   const grupos: { key: string; label: string; fotos: Foto[] }[] = [];
-  for (const c of FOTO_CATEGORIAS) {
+  for (const c of categorias) {
     if (c === "Outros") continue;
     if (fotoMap.has(c)) grupos.push({ key: c, label: c, fotos: fotoMap.get(c)! });
   }
