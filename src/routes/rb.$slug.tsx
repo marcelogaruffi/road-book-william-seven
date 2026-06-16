@@ -262,18 +262,21 @@ function PublicPage() {
           </Section>
         )}
 
+        {/* VOOS */}
+        <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={setLightbox} />
+
         {/* CONTATOS */}
-        {(r.producao_nome || r.producao_whatsapp || r.receptivo_nome || r.receptivo_whatsapp || r.outros_contatos.length > 0) && (
+        {(r.producao_nome || r.producao_whatsapp || r.producao_telefone || r.receptivo_nome || r.receptivo_whatsapp || r.receptivo_telefone || r.outros_contatos.length > 0) && (
           <Section title="Contatos" icon={<Users className="size-4" />}>
             <div className="grid sm:grid-cols-2 gap-3">
-              {(r.producao_nome || r.producao_whatsapp) && (
-                <ContactCard label="Produção" name={r.producao_nome} whatsapp={r.producao_whatsapp} />
+              {(r.producao_nome || r.producao_whatsapp || r.producao_telefone) && (
+                <ContactCard label="Produção" name={r.producao_nome} telefone={r.producao_telefone} whatsapp={r.producao_whatsapp} />
               )}
-              {(r.receptivo_nome || r.receptivo_whatsapp) && (
-                <ContactCard label="Receptivo" name={r.receptivo_nome} whatsapp={r.receptivo_whatsapp} />
+              {(r.receptivo_nome || r.receptivo_whatsapp || r.receptivo_telefone) && (
+                <ContactCard label="Receptivo" name={r.receptivo_nome} telefone={r.receptivo_telefone} whatsapp={r.receptivo_whatsapp} />
               )}
               {r.outros_contatos.map((c: OutroContato, i) => (
-                <ContactCard key={i} label={c.funcao || "Contato"} name={c.nome} whatsapp={c.whatsapp} />
+                <ContactCard key={i} label={c.funcao || "Contato"} name={c.nome} telefone={c.telefone} whatsapp={c.whatsapp} />
               ))}
             </div>
           </Section>
