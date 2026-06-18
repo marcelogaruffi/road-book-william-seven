@@ -20,7 +20,7 @@ function Index() {
         <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">William Seven</p>
         <h1 className="text-5xl font-semibold tracking-tight">Road Book</h1>
         <p className="text-muted-foreground text-lg">
-          Organize a turnê: espetáculo, cidade, hotel, teatro, contatos e programação — tudo em uma página pública compartilhável.
+          Organize a turnê: espetáculo, cidade, hotel, teatro, contatos e programação
         </p>
         <div className="flex gap-3 justify-center pt-4">
           <Button asChild size="lg">
