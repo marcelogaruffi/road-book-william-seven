@@ -26,30 +26,23 @@ const GeoContext = createContext<GeoState>({ status: "loading" });
 export const Route = createFileRoute("/rb/$slug")({
   ssr: false,
   loader: async ({ params }) => {
-    const { data, error } = await supabase.rpc("get_roadbook_by_slug", { p_slug: params.slug }).maybeSingle();
+    const { data, error } = await supabase.from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!data) throw notFound();
     const rb = rowToRoadbook(data);
 
-    const idaPasses = rb.voo_ida.cartoes_embarque ?? [];
-    const voltaPasses = rb.voo_volta.cartoes_embarque ?? [];
-    const paths = [
-      ...rb.teatro_fotos.map((f) => f.path),
-      ...rb.hotel_fotos.map((f) => f.path),
-      ...rb.documentos.map((d) => d.path),
-      ...idaPasses.map((c) => c.path),
-      ...voltaPasses.map((c) => c.path),
-    ].filter(Boolean);
-    if (paths.length > 0) {
-      try {
-        const { urls } = await signRoadbookFiles({ data: { paths } });
-        rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
-        rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: urls[f.path] ?? f.url }));
-        rb.documentos = rb.documentos.map((d) => ({ ...d, url: urls[d.path] ?? d.url }));
-        rb.voo_ida.cartoes_embarque = idaPasses.map((c) => ({ ...c, url: urls[c.path] ?? c.url }));
-        rb.voo_volta.cartoes_embarque = voltaPasses.map((c) => ({ ...c, url: urls[c.path] ?? c.url }));
-      } catch { /* fallback to stored urls */ }
-    }
+    // If bucket is public, we can just use getPublicUrl
+    const getUrl = (path: string) => {
+      if (!path) return "";
+      return supabase.storage.from("roadbook-docs").getPublicUrl(path).data.publicUrl;
+    };
+
+    rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: getUrl(f.path) || f.url }));
+    rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: getUrl(f.path) || f.url }));
+    rb.documentos = rb.documentos.map((d) => ({ ...d, url: getUrl(d.path) || d.url }));
+    rb.voo_ida.cartoes_embarque = (rb.voo_ida.cartoes_embarque ?? []).map((c) => ({ ...c, url: getUrl(c.path) || c.url }));
+    rb.voo_volta.cartoes_embarque = (rb.voo_volta.cartoes_embarque ?? []).map((c) => ({ ...c, url: getUrl(c.path) || c.url }));
+
     return rb;
   },
   head: ({ loaderData }) => {
