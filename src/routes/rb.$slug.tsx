@@ -1829,14 +1829,14 @@ function OperationalMap({
 
       const markers = L.featureGroup();
 
-      const hotelSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M2 22v-3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/><path d="M2 19V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/><path d="M6 8h4"/><path d="M6 12h10"/></svg>`;
-      const theaterSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M2 10s3-3 3-8h14s0 5 3 8v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10z"/><path d="M2 10h20"/></svg>`;
-      const pharmacySvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="size-4"><path d="M12 5v14M5 12h14"/></svg>`;
-      const supermarketSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`;
-      const hospitalSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="size-4"><path d="M4 4v16M20 4v16M4 12h16"/></svg>`;
-      const notebookSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5V4.5z"/><path d="M6 6h10M6 10h10"/></svg>`;
-      const brainSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M9.5 2C13.5 2 17 5 17 9.5c0 2.2-.8 3.5-1.5 4.5-.7 1-1 2-1 3v2c0 1.1-.9 2-2 2h-2c-1.1 0-2-.9-2-2v-2c0-1-.3-2-1-3C6.8 13 6 11.7 6 9.5 6 5 9.5 2 9.5 2Z" /><path d="M9.5 5a2 2 0 0 1 2 2v2M8.5 7.5a1 1 0 0 1 1-1" /></svg>`;
-      const exchangeSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M17 8a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v5a4 4 0 0 0 4 4h1l-2 3 4-3h3a4 4 0 0 0 4-4V8Z" /><path d="M23 11v4a3 3 0 0 1-3 3h-2l-3 2.5V18h-1c-.8 0-1.5-.3-2-1" /></svg>`;
+      const hotelSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" /><circle cx="9" cy="11" r="2" /></svg>`;
+      const theaterSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><path d="M3 14c0 2 2 3.5 4.5 3.5s4.5-1.5 4.5-3.5V6c0-2-2-3.5-4.5-3.5S3 4 3 6v8z" fill="currentColor" fill-opacity="0.1"/><path d="M5.5 8h.01M8.5 8h.01" stroke-width="2.5" /><path d="M6 12c.5 1 2.5 1 3 0" /><path d="M12 17.5c0 2 2 3.5 4.5 3.5s4.5-1.5 4.5-3.5V9.5c0-2-2-3.5-4.5-3.5s-4.5 1.5-4.5 3.5v8z" fill="#ffffff" stroke="currentColor"/><path d="M14 11.5h.01M18 11.5h.01" stroke-width="2.5" /><path d="M15 16.5c.5-1 2.5-1 3 0" /></svg>`;
+      const pharmacySvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><path d="M6 18V9a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9" /><path d="M9 3h6v4H9V3z" /><path d="M12 10v4M10 12h4" /><rect x="13" y="15" width="6" height="3" rx="1.5" transform="rotate(30 13 15)" /></svg>`;
+      const supermarketSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><circle cx="8" cy="21" r="1" /><circle cx="19" cy="21" r="1" /><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" /></svg>`;
+      const hospitalSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><path d="M3 21h18" /><path d="M5 21V9a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v12" /><path d="M9 21v-4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4" /><path d="M12 10v4M10 12h4" stroke-width="2.5" /></svg>`;
+      const notebookSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><rect x="3" y="3" width="18" height="11" rx="2" /><path d="M7 14l-3 6M17 14l3 6M10 20h4" /><path d="M7 7h10M7 10h5" /></svg>`;
+      const brainSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><path d="M9 22H8a4 4 0 0 1-4-4V12a8 8 0 0 1 15.66-2.31 4 4 0 0 1 1.6 6.31 4 4 0 0 1-3.26 6z" /><path d="M9.5 9.5a2 2 0 1 1 3 0c.5.5.5 1.5 0 2M8.5 7a3 3 0 0 1 6 0" /></svg>`;
+      const exchangeSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 100%; height: 100%;"><circle cx="7" cy="8" r="3" /><circle cx="17" cy="8" r="3" /><path d="M10 5a5 5 0 0 1 4 0" /><path d="M13 3l2 2-2 2" /><path d="M14 11a5 5 0 0 1-4 0" /><path d="M11 13l-2-2 2-2" /><path d="M4 17a3 3 0 0 0 6 0M14 17a3 3 0 0 0 6 0" /></svg>`;
       const defaultSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>`;
 
       const createMarkerIcon = (color: string, type: string) => {
@@ -1857,7 +1857,7 @@ function OperationalMap({
                 <path d="M18 0C8.06 0 0 8.06 0 18C0 29.25 18 42 18 42C18 42 36 29.25 36 18C36 8.06 27.94 0 18 0Z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
                 <circle cx="18" cy="18" r="13" fill="#ffffff" fill-opacity="0.95"/>
               </svg>
-              <div style="position: absolute; top: 8px; left: 10px; color: ${color}; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">
+              <div style="position: absolute; top: 8px; left: 8px; color: ${color}; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
                 ${iconSvg}
               </div>
             </div>
@@ -1869,16 +1869,35 @@ function OperationalMap({
         });
       };
 
+      // Prepare all markers to place
+      type MarkerItem = {
+        lat: number;
+        lon: number;
+        color: string;
+        type: string;
+        popupHtml: string;
+      };
+
+      const markersToRender: MarkerItem[] = [];
+
       if (hotelCoords) {
-        L.marker(hotelCoords, { icon: createMarkerIcon("#3b82f6", "hotel") }) // Blue
-          .bindPopup(`<b>Hotel:</b> ${hotelNome}`)
-          .addTo(markers);
+        markersToRender.push({
+          lat: hotelCoords[0],
+          lon: hotelCoords[1],
+          color: "#3b82f6", // Blue
+          type: "hotel",
+          popupHtml: `<b>Hotel:</b> ${hotelNome}`,
+        });
       }
 
       if (teatroCoords) {
-        L.marker(teatroCoords, { icon: createMarkerIcon("#ef4444", "theater") }) // Red
-          .bindPopup(`<b>Teatro:</b> ${teatroNome}`)
-          .addTo(markers);
+        markersToRender.push({
+          lat: teatroCoords[0],
+          lon: teatroCoords[1],
+          color: "#ef4444", // Red
+          type: "theater",
+          popupHtml: `<b>Teatro:</b> ${teatroNome}`,
+        });
       }
 
       places.forEach(p => {
@@ -1886,9 +1905,13 @@ function OperationalMap({
         if (p.type === "supermarket") color = "#f59e0b"; // Yellow/Orange
         if (p.type === "hospital") color = "#8b5cf6"; // Purple
 
-        L.marker([p.lat, p.lon], { icon: createMarkerIcon(color, p.type) })
-          .bindPopup(`<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : "Hospital"}`)
-          .addTo(markers);
+        markersToRender.push({
+          lat: p.lat,
+          lon: p.lon,
+          color,
+          type: p.type,
+          popupHtml: `<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : "Hospital"}`,
+        });
       });
 
       const getCustomIconType = (name: string) => {
@@ -1900,8 +1923,38 @@ function OperationalMap({
       };
 
       customPlaces.forEach(p => {
-        L.marker([p.lat, p.lon], { icon: createMarkerIcon("#d946ef", getCustomIconType(p.name)) }) // Fuchsia for custom locations
-          .bindPopup(`<b>${p.name}</b><br/>${p.address}`)
+        markersToRender.push({
+          lat: p.lat,
+          lon: p.lon,
+          color: "#d946ef", // Fuchsia for custom locations
+          type: getCustomIconType(p.name),
+          popupHtml: `<b>${p.name}</b><br/>${p.address}`,
+        });
+      });
+
+      // Group and shift overlapping markers
+      const coordGroups: { [key: string]: MarkerItem[] } = {};
+      markersToRender.forEach(m => {
+        const key = `${m.lat.toFixed(6)},${m.lon.toFixed(6)}`;
+        if (!coordGroups[key]) coordGroups[key] = [];
+        coordGroups[key].push(m);
+      });
+
+      Object.values(coordGroups).forEach(group => {
+        if (group.length === 1) return;
+        const N = group.length;
+        const radius = 0.00015; // Offset distance in degrees (approx 15m)
+        group.forEach((m, idx) => {
+          const angle = (2 * Math.PI * idx) / N;
+          m.lat = m.lat + Math.cos(angle) * radius;
+          m.lon = m.lon + Math.sin(angle) * radius;
+        });
+      });
+
+      // Render all markers
+      markersToRender.forEach(m => {
+        L.marker([m.lat, m.lon], { icon: createMarkerIcon(m.color, m.type) })
+          .bindPopup(m.popupHtml)
           .addTo(markers);
       });
 
