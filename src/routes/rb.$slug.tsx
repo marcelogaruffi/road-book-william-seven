@@ -5,11 +5,11 @@ import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
-  Navigation, Droplets, Plane, Clock, Map as MapIcon
+  Navigation, Droplets, Plane, Clock, Map as MapIcon, Instagram
 } from "lucide-react";
 import {
   rowToRoadbook, progTitle, progHora, TIPO_COLORS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS,
-  normalizeExternalUrl, mapsUrl,
+  normalizeExternalUrl, mapsUrl, getDaySummary,
   type ProgItem, type Documento, type Quarto, type OutroContato, type Foto, type Voo,
 } from "@/lib/roadbook-types";
 import "leaflet/dist/leaflet.css";
@@ -81,24 +81,6 @@ function fmtDate(d: string | null | undefined) {
 }
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
-function getDaySummary(items: ProgItem[]): string {
-  if (!items || items.length === 0) return "Livre";
-  
-  const types = items.map(i => i.tipo);
-  if (types.includes("Espetáculo")) return "Espetáculo";
-  if (types.includes("Oficina")) return "Oficina";
-  if (types.includes("Montagem")) return "Montagem";
-  if (types.includes("Viagem")) return "Viagem";
-  if (types.includes("Entrevista")) return "Entrevista";
-  if (types.includes("Desmontagem")) return "Desmontagem";
-  
-  const titles = items.map(p => p.titulo || p.atividade || "").filter(Boolean);
-  if (titles.length > 0) {
-    return titles.slice(0, 2).join(" / ");
-  }
-  
-  return "Programação";
-}
 
 function getHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371e3; // metres
@@ -155,16 +137,26 @@ function PublicPage() {
     assoc: "hotel" | "theater" | "general";
   }
 
+  interface CustomPlaceDetail {
+    name: string;
+    address: string;
+    lat: number;
+    lon: number;
+    distance: number;
+  }
+
   const [opState, setOpState] = useState<{
     loading: boolean;
     hotelCoords: [number, number] | null;
     teatroCoords: [number, number] | null;
     places: PlaceDetail[];
+    customPlaces: CustomPlaceDetail[];
   }>({
     loading: true,
     hotelCoords: null,
     teatroCoords: null,
     places: [],
+    customPlaces: [],
   });
 
   useEffect(() => {
@@ -201,25 +193,50 @@ function PublicPage() {
       const foundPlaces: PlaceDetail[] = [];
 
       const findNearestAmenity = async (q: string, lat: number, lon: number, type: "pharmacy" | "supermarket" | "hospital", assoc: "hotel" | "theater" | "general") => {
-        try {
-          const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&lat=${lat}&lon=${lon}&addressdetails=1`;
-          const res = await fetch(url, { headers: { "User-Agent": "RoadBookApp/1.0" } });
-          const data = await res.json();
-          if (data && data[0]) {
-            const pLat = parseFloat(data[0].lat);
-            const pLon = parseFloat(data[0].lon);
-            const dist = getHaversineDistance(lat, lon, pLat, pLon);
-            return {
-              name: data[0].display_name.split(",")[0] || q,
-              address: data[0].display_name,
-              lat: pLat,
-              lon: pLon,
-              distance: dist,
-              type,
-              assoc
-            };
-          }
-        } catch {}
+        const radii = [3, 5, 10, 15, 20]; // expanding radiuses in km
+        for (const radius of radii) {
+          try {
+            const latDiff = radius / 111.0;
+            const cosLat = Math.cos(lat * Math.PI / 180.0);
+            const lonDiff = radius / (111.0 * (cosLat !== 0 ? cosLat : 1.0));
+            const lonMin = lon - lonDiff;
+            const lonMax = lon + lonDiff;
+            const latMin = lat - latDiff;
+            const latMax = lat + latDiff;
+
+            const viewbox = `${lonMin},${latMax},${lonMax},${latMin}`;
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&lat=${lat}&lon=${lon}&addressdetails=1&viewbox=${viewbox}&bounded=1`;
+            
+            const res = await fetch(url, { headers: { "User-Agent": "RoadBookApp/1.0" } });
+            const data = await res.json();
+            
+            if (data && Array.isArray(data) && data.length > 0) {
+              let bestPlace: any = null;
+              let bestDist = Infinity;
+              
+              for (const item of data) {
+                const pLat = parseFloat(item.lat);
+                const pLon = parseFloat(item.lon);
+                const dist = getHaversineDistance(lat, lon, pLat, pLon);
+                if (dist < bestDist && dist <= radius * 1000) {
+                  bestDist = dist;
+                  bestPlace = {
+                    name: item.display_name.split(",")[0] || q,
+                    address: item.display_name,
+                    lat: pLat,
+                    lon: pLon,
+                    distance: dist,
+                    type,
+                    assoc
+                  };
+                }
+              }
+              
+              if (bestPlace) return bestPlace;
+            }
+          } catch {}
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
         return null;
       };
 
@@ -241,15 +258,46 @@ function PublicPage() {
 
       if (cancel) return;
 
+      // Geocode custom "Outros Locais"
+      const customPlaces: CustomPlaceDetail[] = [];
+      const outrosLocais = r.automacoes?.outros_locais ?? [];
+      for (const loc of outrosLocais) {
+        if (loc.endereco?.trim()) {
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(loc.endereco.trim())}&format=json&limit=1`, {
+              headers: { "User-Agent": "RoadBookApp/1.0" }
+            });
+            const data = await res.json();
+            if (data && data[0]) {
+              const locLat = parseFloat(data[0].lat);
+              const locLon = parseFloat(data[0].lon);
+              const baseCoords = hCoords || tCoords;
+              const dist = baseCoords ? getHaversineDistance(baseCoords[0], baseCoords[1], locLat, locLon) : 0;
+              customPlaces.push({
+                name: loc.nome || "Local",
+                address: loc.endereco,
+                lat: locLat,
+                lon: locLon,
+                distance: dist,
+              });
+            }
+          } catch {}
+          await new Promise(resolve => setTimeout(resolve, 150));
+        }
+      }
+
+      if (cancel) return;
+
       setOpState({
         loading: false,
         hotelCoords: hCoords,
         teatroCoords: tCoords,
         places: foundPlaces,
+        customPlaces: customPlaces,
       });
     })();
     return () => { cancel = true; };
-  }, [r.hotel_endereco, r.teatro_endereco]);
+  }, [r.hotel_endereco, r.teatro_endereco, r.automacoes?.outros_locais]);
 
   const geo = useGeocode(r.cidade, r.estado);
 
@@ -290,7 +338,7 @@ function PublicPage() {
                   <div className="absolute top-[37px] left-0 right-0 h-0.5 bg-muted z-0" />
                   
                   {dias.map((d, index) => {
-                    const summary = getDaySummary(groups[d]);
+                    const summary = r.automacoes?.timeline_overrides?.[d] || getDaySummary(groups[d]);
                     return (
                       <div key={d} className="relative z-10 flex flex-col items-center text-center flex-1 px-2">
                         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
@@ -311,7 +359,7 @@ function PublicPage() {
               {/* Mobile: Vertical Timeline */}
               <div className="block md:hidden space-y-4 relative before:absolute before:inset-y-0 before:left-3 before:w-0.5 before:bg-muted">
                 {dias.map((d, index) => {
-                  const summary = getDaySummary(groups[d]);
+                  const summary = r.automacoes?.timeline_overrides?.[d] || getDaySummary(groups[d]);
                   return (
                     <div key={d} className="relative pl-8 flex items-start gap-3">
                       {/* Vertical line circle */}
@@ -446,6 +494,63 @@ function PublicPage() {
         {/* VOOS */}
         <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={setLightbox} />
 
+        {/* OUTROS LOCAIS */}
+        {r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0 && (
+          <Section title="Outros Locais" icon={<MapPin className="size-4" />}>
+            <div className="rounded-lg border bg-card divide-y">
+              {opState.customPlaces.map((p, idx) => (
+                <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+                  <div>
+                    <h4 className="font-semibold text-foreground">{p.name}</h4>
+                    <p className="text-muted-foreground text-xs mt-0.5">{p.address}</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    {p.distance > 0 && (
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {p.distance < 1000 ? `${Math.round(p.distance)}m` : `${(p.distance / 1000).toFixed(1)}km`} do hotel
+                      </span>
+                    )}
+                    <a
+                      href={mapsUrl(p.address)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center gap-1 rounded-md border bg-background hover:bg-accent px-2.5 py-1 text-xs font-medium transition-colors"
+                    >
+                      <Navigation className="size-3" /> Mapa
+                    </a>
+                  </div>
+                </div>
+              ))}
+              {/* Fallback for places that couldn't be geocoded or if loading is still in progress */}
+              {opState.loading && (
+                <div className="p-4 text-xs text-muted-foreground italic animate-pulse">
+                  Carregando localizações...
+                </div>
+              )}
+              {!opState.loading && opState.customPlaces.length < r.automacoes.outros_locais.length && (
+                r.automacoes.outros_locais
+                  .filter(l => !opState.customPlaces.some(cp => cp.address === l.endereco))
+                  .map((l, idx) => (
+                    <div key={`fallback-${idx}`} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm opacity-80">
+                      <div>
+                        <h4 className="font-semibold text-foreground">{l.nome}</h4>
+                        <p className="text-muted-foreground text-xs mt-0.5">{l.endereco}</p>
+                      </div>
+                      <a
+                        href={mapsUrl(l.endereco)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-1 rounded-md border bg-background hover:bg-accent px-2.5 py-1 text-xs font-medium transition-colors shrink-0"
+                      >
+                        <Navigation className="size-3" /> Mapa
+                      </a>
+                    </div>
+                  ))
+              )}
+            </div>
+          </Section>
+        )}
+
         {/* MAPA OPERACIONAL */}
         <Section title="Mapa Operacional" icon={<MapIcon className="size-4" />}>
           {opState.loading ? (
@@ -459,6 +564,7 @@ function PublicPage() {
               hotelCoords={opState.hotelCoords}
               teatroCoords={opState.teatroCoords}
               places={opState.places}
+              customPlaces={opState.customPlaces}
             />
           )}
         </Section>
@@ -487,12 +593,18 @@ function PublicPage() {
               {r.festival && <p className="font-semibold">{r.festival}</p>}
               <div className="flex flex-wrap gap-x-4 gap-y-1">
                 {fiSite && <a href={fiSite} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1"><Globe className="size-3.5" />Site oficial</a>}
-                {fiInstagramUrl && <a href={fiInstagramUrl} target="_blank" rel="noopener noreferrer" className="text-primary">{fiInstagram.startsWith("@") || !/^https?:/i.test(fiInstagram) ? (fiInstagram.startsWith("@") ? fiInstagram : "@" + fiInstagram.replace(/^@/, "")) : "Instagram"}</a>}
+                {fiInstagramUrl && (
+                  <a href={fiInstagramUrl} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1">
+                    <Instagram className="size-3.5" />
+                    {fiInstagram.startsWith("@") || !/^https?:/i.test(fiInstagram) ? (fiInstagram.startsWith("@") ? fiInstagram : "@" + fiInstagram.replace(/^@/, "")) : "Instagram"}
+                  </a>
+                )}
               </div>
               {fi.redes && <RedesLinks text={fi.redes} />}
               {fi.programacao_oficial && <ProgramacaoOficial text={fi.programacao_oficial} />}
               {fi.observacoes && <p className="text-muted-foreground whitespace-pre-line">{fi.observacoes}</p>}
             </div>
+            <PhotoGallery fotos={r.festival_info?.fotos ?? []} label="Fotos do festival" categorias={["Fachada", "Apresentação", "Divulgação", "Outros"]} onOpen={setLightbox} />
           </Section>
         )}
 
@@ -1009,12 +1121,14 @@ function OperationalMap({
   hotelCoords,
   teatroCoords,
   places,
+  customPlaces = [],
 }: {
   hotelNome: string;
   teatroNome: string;
   hotelCoords: [number, number] | null;
   teatroCoords: [number, number] | null;
   places: PlaceDetail[];
+  customPlaces?: CustomPlaceDetail[];
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -1083,6 +1197,12 @@ function OperationalMap({
           .addTo(markers);
       });
 
+      customPlaces.forEach(p => {
+        L.marker([p.lat, p.lon], { icon: createMarkerIcon("#d946ef") }) // Fuchsia for custom locations
+          .bindPopup(`<b>${p.name}</b><br/>${p.address}`)
+          .addTo(markers);
+      });
+
       markers.addTo(map);
 
       if (markers.getBounds().isValid()) {
@@ -1097,7 +1217,7 @@ function OperationalMap({
         mapInstanceRef.current = null;
       }
     };
-  }, [hotelCoords, teatroCoords, places]);
+  }, [hotelCoords, teatroCoords, places, customPlaces]);
 
   const getDistanceFmt = (d: number) => {
     if (d < 1000) return `${Math.round(d)}m`;

@@ -43,6 +43,7 @@ export type FestivalInfo = {
   redes?: string;
   programacao_oficial?: string;
   observacoes?: string;
+  fotos?: Foto[];
 };
 export type Documento = { nome: string; path: string; tipo: string; url?: string };
 
@@ -102,6 +103,11 @@ export type Voo = {
 };
 export const emptyVoo: Voo = { passageiros: [], cartoes_embarque: [] };
 
+export type Automacoes = {
+  timeline_overrides?: Record<string, string>;
+  outros_locais?: { nome: string; endereco: string }[];
+};
+
 export type RoadbookData = {
   id?: string;
   slug?: string;
@@ -141,6 +147,7 @@ export type RoadbookData = {
   hotel_fotos: Foto[];
   voo_ida: Voo;
   voo_volta: Voo;
+  automacoes: Automacoes;
 };
 
 export const emptyRoadbook: RoadbookData = {
@@ -164,6 +171,7 @@ export const emptyRoadbook: RoadbookData = {
   hotel_fotos: [],
   voo_ida: { ...emptyVoo },
   voo_volta: { ...emptyVoo },
+  automacoes: {},
 };
 
 export function rowToRoadbook(row: any): RoadbookData {
@@ -213,6 +221,7 @@ export function rowToRoadbook(row: any): RoadbookData {
     hotel_fotos: (Array.isArray(row.hotel_fotos) ? row.hotel_fotos : []) as Foto[],
     voo_ida: voo(row.voo_ida),
     voo_volta: voo(row.voo_volta),
+    automacoes: (row.automacoes && typeof row.automacoes === "object" ? row.automacoes : {}) as Automacoes,
   };
 }
 
@@ -255,6 +264,7 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     hotel_fotos: d.hotel_fotos as any,
     voo_ida: d.voo_ida as any,
     voo_volta: d.voo_volta as any,
+    automacoes: d.automacoes as any,
   };
 }
 
@@ -279,3 +289,23 @@ export function progHora(p: ProgItem): string {
   if (p.hora_fim) return `${ini}–${p.hora_fim}`;
   return ini || "—";
 }
+
+export function getDaySummary(items: ProgItem[]): string {
+  if (!items || items.length === 0) return "Livre";
+  
+  const types = items.map(i => i.tipo);
+  if (types.includes("Espetáculo")) return "Espetáculo";
+  if (types.includes("Oficina")) return "Oficina";
+  if (types.includes("Montagem")) return "Montagem";
+  if (types.includes("Viagem")) return "Viagem";
+  if (types.includes("Entrevista")) return "Entrevista";
+  if (types.includes("Desmontagem")) return "Desmontagem";
+  
+  const titles = items.map(p => p.titulo || p.atividade || "").filter(Boolean);
+  if (titles.length > 0) {
+    return titles.slice(0, 2).join(" / ");
+  }
+  
+  return "Programação";
+}
+

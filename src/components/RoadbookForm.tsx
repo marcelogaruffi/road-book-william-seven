@@ -15,6 +15,7 @@ import {
   type RoadbookData, type ProgItem, type Quarto, type OutroContato, type Documento,
   type Foto, type Voo, type Passageiro, type CartaoEmbarque,
   PROG_TIPOS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS, roadbookToPayload,
+  getDaySummary,
 } from "@/lib/roadbook-types";
 
 export type { RoadbookData, ProgItem } from "@/lib/roadbook-types";
@@ -109,8 +110,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   }
   function removeContato(i: number) { setD((s) => ({ ...s, outros_contatos: s.outros_contatos.filter((_, idx) => idx !== i) })); }
 
-  // FOTOS (teatro + hotel)
-  async function uploadFotos(files: FileList | null, kind: "teatro" | "hotel") {
+  // FOTOS (teatro + hotel + festival)
+  async function uploadFotos(files: FileList | null, kind: "teatro" | "hotel" | "festival") {
     if (!files || files.length === 0) return;
     setUploading(true);
     try {
@@ -119,17 +120,38 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       if (!uid) throw new Error("Sessão expirada");
       const rbId = d.id ?? "draft";
       const novos: Foto[] = [];
+      
+      let existingCount = 0;
+      if (kind === "teatro") existingCount = d.teatro_fotos.length;
+      else if (kind === "hotel") existingCount = d.hotel_fotos.length;
+      else if (kind === "festival") existingCount = d.festival_info?.fotos?.length ?? 0;
+
+      let idx = existingCount + 1;
       for (const f of Array.from(files)) {
         if (!f.type.startsWith("image/")) continue;
-        const safeName = f.name.replace(/[^\w.\-]+/g, "_");
-        const path = `${uid}/${rbId}/${kind}/${Date.now()}-${safeName}`;
+        const ext = f.name.split('.').pop() || 'jpg';
+        const sequentialName = `foto-${idx}.${ext}`;
+        const path = `${uid}/${rbId}/${kind}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
         const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
-        novos.push({ path, nome: f.name, categoria: "Outros", descricao: "", url: signed?.signedUrl });
+        novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: signed?.signedUrl });
+        idx++;
       }
-      const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
-      setD((s) => ({ ...s, [key]: [...s[key], ...novos] }));
+
+      if (kind === "festival") {
+        const currentFotos = d.festival_info?.fotos ?? [];
+        setD((s) => ({
+          ...s,
+          festival_info: {
+            ...s.festival_info,
+            fotos: [...currentFotos, ...novos]
+          }
+        }));
+      } else {
+        const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+        setD((s) => ({ ...s, [key]: [...s[key], ...novos] }));
+      }
       toast.success(`${novos.length} foto(s) enviada(s)`);
     } catch (err: any) {
       toast.error(err.message ?? "Erro no upload");
@@ -137,15 +159,45 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       setUploading(false);
     }
   }
-  function updateFoto(kind: "teatro" | "hotel", i: number, patch: Partial<Foto>) {
-    const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
-    setD((s) => ({ ...s, [key]: s[key].map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+
+  function updateFoto(kind: "teatro" | "hotel" | "festival", i: number, patch: Partial<Foto>) {
+    if (kind === "festival") {
+      const fotos = d.festival_info?.fotos ?? [];
+      const updated = fotos.map((f, idx) => idx === i ? { ...f, ...patch } : f);
+      setD((s) => ({
+        ...s,
+        festival_info: { ...s.festival_info, fotos: updated }
+      }));
+    } else {
+      const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+      setD((s) => ({ ...s, [key]: s[key].map((f, idx) => idx === i ? { ...f, ...patch } : f) }));
+    }
   }
-  async function removeFoto(kind: "teatro" | "hotel", i: number) {
-    const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
-    const foto = d[key][i];
+
+  async function removeFoto(kind: "teatro" | "hotel" | "festival", i: number) {
+    let foto: Foto | undefined;
+    if (kind === "festival") {
+      foto = d.festival_info?.fotos?.[i];
+    } else {
+      const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+      foto = d[key][i];
+    }
+    if (!foto) return;
     try { if (foto.path) await supabase.storage.from("roadbook-docs").remove([foto.path]); } catch {}
-    setD((s) => ({ ...s, [key]: s[key].filter((_, idx) => idx !== i) }));
+    
+    if (kind === "festival") {
+      const fotos = d.festival_info?.fotos ?? [];
+      setD((s) => ({
+        ...s,
+        festival_info: {
+          ...s.festival_info,
+          fotos: fotos.filter((_, idx) => idx !== i)
+        }
+      }));
+    } else {
+      const key = kind === "teatro" ? "teatro_fotos" : "hotel_fotos";
+      setD((s) => ({ ...s, [key]: s[key].filter((_, idx) => idx !== i) }));
+    }
   }
 
   // VOOS
@@ -176,13 +228,16 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       if (!uid) throw new Error("Sessão expirada");
       const rbId = d.id ?? "draft";
       const novos: CartaoEmbarque[] = [];
+      let idx = (d[side].cartoes_embarque ?? []).length + 1;
       for (const f of Array.from(files)) {
-        const safeName = f.name.replace(/[^\w.\-]+/g, "_");
-        const path = `${uid}/${rbId}/boarding/${side}/${Date.now()}-${safeName}`;
+        const ext = f.name.split('.').pop() || '';
+        const sequentialName = `cartao-${idx}${ext ? '.' + ext : ''}`;
+        const path = `${uid}/${rbId}/boarding/${side}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
         const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
-        novos.push({ path, nome: f.name, tipo: f.type || "application/octet-stream", url: signed?.signedUrl });
+        novos.push({ path, nome: sequentialName, tipo: f.type || "application/octet-stream", url: signed?.signedUrl });
+        idx++;
       }
       setD((s) => ({ ...s, [side]: { ...s[side], cartoes_embarque: [...(s[side].cartoes_embarque ?? []), ...novos] } }));
       toast.success(`${novos.length} cartão(ões) enviado(s)`);
@@ -212,13 +267,16 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       if (!uid) throw new Error("Sessão expirada");
       const rbId = d.id ?? "draft";
       const novos: Documento[] = [];
+      let idx = d.documentos.length + 1;
       for (const f of Array.from(files)) {
-        const safeName = f.name.replace(/[^\w.\-]+/g, "_");
-        const path = `${uid}/${rbId}/${Date.now()}-${safeName}`;
+        const ext = f.name.split('.').pop() || '';
+        const sequentialName = `documento-${idx}${ext ? '.' + ext : ''}`;
+        const path = `${uid}/${rbId}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
         const { data: pub } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
-        novos.push({ nome: f.name, path, tipo: f.type || "application/octet-stream", url: pub.publicUrl });
+        novos.push({ nome: sequentialName, path, tipo: f.type || "application/octet-stream", url: pub.publicUrl });
+        idx++;
       }
       setD((s) => ({ ...s, documentos: [...s.documentos, ...novos] }));
       toast.success(`${novos.length} arquivo(s) enviado(s)`);
@@ -233,6 +291,31 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     const doc = d.documentos[i];
     try { if (doc.path) await supabase.storage.from("roadbook-docs").remove([doc.path]); } catch {}
     setD((s) => ({ ...s, documentos: s.documentos.filter((_, idx) => idx !== i) }));
+  }
+
+  // OUTROS LOCAIS
+  function addOutroLocal() {
+    const list = d.automacoes?.outros_locais ?? [];
+    up("automacoes", {
+      ...d.automacoes,
+      outros_locais: [...list, { nome: "", endereco: "" }]
+    });
+  }
+  function updateOutroLocal(i: number, patch: Partial<{ nome: string; endereco: string }>) {
+    const list = d.automacoes?.outros_locais ?? [];
+    const updated = list.map((item, idx) => idx === i ? { ...item, ...patch } : item);
+    up("automacoes", {
+      ...d.automacoes,
+      outros_locais: updated
+    });
+  }
+  function removeOutroLocal(i: number) {
+    const list = d.automacoes?.outros_locais ?? [];
+    const updated = list.filter((_, idx) => idx !== i);
+    up("automacoes", {
+      ...d.automacoes,
+      outros_locais: updated
+    });
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -286,6 +369,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           <TabsTrigger value="teatro">Teatro</TabsTrigger>
           <TabsTrigger value="contatos">Contatos</TabsTrigger>
           <TabsTrigger value="programacao">Programação</TabsTrigger>
+          <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
+          <TabsTrigger value="outros_locais">Outros Locais</TabsTrigger>
           <TabsTrigger value="voos">Voos</TabsTrigger>
           <TabsTrigger value="festival">Festival</TabsTrigger>
           <TabsTrigger value="docs">Documentos</TabsTrigger>
@@ -468,6 +553,103 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           </Card>
         </TabsContent>
 
+        <TabsContent value="timeline" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Personalizar Linha do Tempo</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Por padrão, o título de cada dia na linha do tempo é gerado automaticamente com base nas atividades (ex: Viagem, Espetáculo). 
+                Aqui você pode visualizar o título gerado e, se necessário, definir um nome personalizado para substituir o automático.
+              </p>
+              {dayGroups.filter(g => g.data).length === 0 && (
+                <p className="text-sm text-muted-foreground">Adicione dias com atividades na aba Programação primeiro.</p>
+              )}
+              {dayGroups.filter(g => g.data).map((g) => {
+                const autoSummary = getDaySummary(g.itens);
+                const override = d.automacoes?.timeline_overrides?.[g.data] ?? "";
+                return (
+                  <div key={g.data} className="grid sm:grid-cols-12 gap-3 items-center border rounded-md p-4 bg-background">
+                    <div className="sm:col-span-3">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Data</Label>
+                      <div className="font-mono text-sm mt-1">{g.data ? g.data.split("-").reverse().join("/") : "—"}</div>
+                    </div>
+                    <div className="sm:col-span-3">
+                      <Label className="text-xs text-muted-foreground">Título Automático</Label>
+                      <div className="text-sm font-medium text-muted-foreground mt-1 italic">{autoSummary}</div>
+                    </div>
+                    <div className="sm:col-span-6">
+                      <Label className="text-xs font-semibold">Título Personalizado (Sobrescrever)</Label>
+                      <Input
+                        value={override}
+                        onChange={(e) => {
+                          const overrides = { ...(d.automacoes?.timeline_overrides ?? {}) };
+                          if (e.target.value.trim()) {
+                            overrides[g.data] = e.target.value;
+                          } else {
+                            delete overrides[g.data];
+                          }
+                          up("automacoes", { ...d.automacoes, timeline_overrides: overrides });
+                        }}
+                        placeholder="Ex: Chegada / Montagem, Folga..."
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="outros_locais" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle>Outros Locais (Oficinas, Palestras, etc.)</CardTitle>
+              <Button type="button" size="sm" variant="outline" onClick={addOutroLocal}>
+                <Plus className="size-4 mr-1" />Adicionar local
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-sm text-muted-foreground mb-2">
+                Adicione outros locais relevantes da turnê (ex: salas de oficina, locais de debate, etc.). 
+                Eles serão listados na página pública e plotados no Mapa Operacional.
+              </p>
+              {(!d.automacoes?.outros_locais || d.automacoes.outros_locais.length === 0) && (
+                <p className="text-sm text-muted-foreground italic">Nenhum local cadastrado.</p>
+              )}
+              {(d.automacoes?.outros_locais ?? []).map((loc, i) => (
+                <div key={i} className="grid sm:grid-cols-12 gap-3 items-end border rounded-md p-4 bg-background">
+                  <div className="sm:col-span-4">
+                    <Label className="text-xs font-semibold">Nome do Local</Label>
+                    <Input
+                      value={loc.nome}
+                      onChange={(e) => updateOutroLocal(i, { nome: e.target.value })}
+                      placeholder="Ex: Espaço de Oficinas, Sesc..."
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="sm:col-span-7">
+                    <Label className="text-xs font-semibold">Endereço Completo</Label>
+                    <Input
+                      value={loc.endereco}
+                      onChange={(e) => updateOutroLocal(i, { endereco: e.target.value })}
+                      placeholder="Ex: Rua das Flores, 123 - Centro, Cidade - UF"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div className="sm:col-span-1 flex sm:justify-end">
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeOutroLocal(i)}>
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="voos" className="mt-4 space-y-4">
           <VooCard
             title="Voo de ida"
@@ -493,7 +675,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           />
         </TabsContent>
 
-        <TabsContent value="festival" className="mt-4">
+        <TabsContent value="festival" className="mt-4 space-y-4">
           <Card>
             <CardHeader><CardTitle>Festival e Comunicação (opcional)</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
@@ -504,6 +686,15 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <div className="sm:col-span-2"><Field label="Observações"><Textarea rows={3} value={d.festival_info.observacoes ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, observacoes: e.target.value })} /></Field></div>
             </CardContent>
           </Card>
+          <FotosCard
+            title="Fotos do festival / local"
+            categorias={["Fachada", "Apresentação", "Divulgação", "Outros"] as unknown as readonly string[]}
+            uploading={uploading}
+            fotos={d.festival_info.fotos ?? []}
+            onUpload={(e) => uploadFotos(e.target.files, "festival").finally(() => { e.target.value = ""; })}
+            onUpdate={(i, p) => updateFoto("festival", i, p)}
+            onRemove={(i) => removeFoto("festival", i)}
+          />
         </TabsContent>
 
         <TabsContent value="docs" className="mt-4">
