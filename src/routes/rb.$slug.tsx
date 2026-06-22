@@ -757,12 +757,29 @@ function PublicPage() {
       </main>
 
       {/* PRINT-ONLY WORD DOCUMENT DESIGN */}
-      <div className="hidden print:block w-full text-slate-900 bg-slate-50 antialiased max-w-[21cm] mx-auto" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <table className="hidden print:table w-full text-slate-900 bg-white antialiased max-w-[21cm] mx-auto" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+        <thead className="table-header-group">
+          <tr>
+            <td className="px-12 pt-8 pb-4 border-b-0 bg-white">
+              <PrintHeader title={r.espetaculo} />
+            </td>
+          </tr>
+        </thead>
+        <tfoot className="table-footer-group">
+          <tr>
+            <td className="px-12 pb-8 bg-white">
+              <PrintFooter />
+            </td>
+          </tr>
+        </tfoot>
+        <tbody className="table-row-group">
+          <tr>
+            <td className="px-12 pb-12 bg-white">
         
         {/* PAGE 1: DIARY SCHEDULE */}
-        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
+        <div className="mb-12 break-inside-auto">
           <div>
-            <PrintHeader title={r.espetaculo} isFirstPage={true} />
+            
 
             {/* Document Title & QR Code aligned */}
             <div className="flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm mb-6">
@@ -808,7 +825,7 @@ function PublicPage() {
                   </h3>
                   <div className="space-y-2">
                     {groups[date].map((p, i) => (
-                      <div key={i} className="flex gap-4 text-xs py-0.5 items-start">
+                      <div key={i} className="flex gap-4 text-xs py-0.5 items-center">
                         <div className="flex flex-col gap-0.5 w-24 shrink-0">
                           <span className="font-mono font-bold text-[#991b1b]">{progHora(p)}</span>
                           <HourWeather date={date} time={progHora(p)} />
@@ -827,14 +844,14 @@ function PublicPage() {
           </div>
 
           <div>
-            <PrintFooter pageNum={1} currentUrl={currentUrl} />
+            
           </div>
         </div>
 
         {/* PAGE 2: AIR TRAVEL & HOTEL */}
-        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
+        <div className="mb-12 break-inside-auto">
           <div>
-            <PrintHeader title="Logística e Hospedagem" />
+            
 
             {/* Flights info */}
             <div className="space-y-4">
@@ -926,54 +943,7 @@ function PublicPage() {
                     </div>
                   )}
 
-                  {/* Boarding Passes (Cartões de Embarque) */}
-                  {((r.voo_ida.cartoes_embarque?.length ?? 0) > 0 || (r.voo_volta.cartoes_embarque?.length ?? 0) > 0) && (
-                    <div className="border-t pt-3 mt-3 break-inside-avoid">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        {[...(r.voo_ida.cartoes_embarque ?? []), ...(r.voo_volta.cartoes_embarque ?? [])].map((c, cIdx) => (
-                          <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center">
-                            {c.url ? (
-                              <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
-                            ) : (
-                              <div className="h-24 w-full bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400">Cartão de Embarque</div>
-                            )}
-                            <span className="text-[9px] font-bold text-slate-600 mt-1">{c.nome || "Bilhete"}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Page Footer */}
-          <PrintFooter pageNum={2} currentUrl={currentUrl} />
-        </div>
-
-        {/* PAGE 3: THEATER */}
-        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
-          <div>
-            <PrintHeader title="Local Principal (Teatro)" />
-
-            {/* Teatro details */}
-            <div className="space-y-4">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">🏛️ Local Principal (Teatro)</h2>
-              
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#991b1b]" />
-                <div className="pl-2 space-y-3">
-                  {r.teatro_nome && (
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div className="col-span-2"><span className="font-bold text-slate-800 text-sm">{r.teatro_nome}</span></div>
-                      {r.teatro_endereco && <div className="col-span-2"><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{r.teatro_endereco}</span></div>}
-                      {r.teatro_telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{r.teatro_telefone}</span></div>}
-                      {r.teatro_site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{r.teatro_site}</span></div>}
-                      {r.teatro_observacoes && <div className="col-span-2 border-t pt-2 mt-2"><span className="font-semibold text-slate-400 block mb-0.5">Observações:</span> <p className="text-slate-600 whitespace-pre-line leading-relaxed italic">{r.teatro_observacoes}</p></div>}
-                    </div>
-                  )}
+                  
                 </div>
               </div>
             </div>
@@ -1002,14 +972,14 @@ function PublicPage() {
           </div>
 
           {/* Page Footer */}
-          <PrintFooter pageNum={3} currentUrl={currentUrl} />
+          
         </div>
 
         {/* PAGE 4: OTHER LOCATIONS */}
         {r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0 && (
-          <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
+          <div className="mb-12 break-inside-auto">
             <div>
-              <PrintHeader title="Outros Locais" />
+              
 
               {/* Outros Locais Details */}
               <div className="space-y-4">
@@ -1068,15 +1038,15 @@ function PublicPage() {
             </div>
 
             {/* Page Footer */}
-            <PrintFooter pageNum={4} currentUrl={currentUrl} />
+            
           </div>
         )}
 
         {/* PAGE 5: ADDITIONAL DETAILS (Contacts, Festival info, Documents) */}
         {(r.producao_nome || r.producao_whatsapp || r.producao_telefone || r.receptivo_nome || r.receptivo_whatsapp || r.receptivo_telefone || r.outros_contatos.length > 0 || hasFestivalInfo || r.documentos.length > 0) && (
-          <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
+          <div className="mb-12 break-inside-auto">
             <div>
-              <PrintHeader title="Informações Adicionais" />
+              
 
               <div className="space-y-6">
                 {/* Contatos Section */}
@@ -1091,7 +1061,7 @@ function PublicPage() {
                             <div className="font-bold text-[10px] uppercase text-slate-400">Produção</div>
                             <div className="font-bold text-slate-800">{r.producao_nome || "—"}</div>
                             {r.producao_telefone && <div>Tel: <span className="text-slate-600">{r.producao_telefone}</span></div>}
-                            {r.producao_whatsapp && <div>WhatsApp: <span className="text-slate-600">{r.producao_whatsapp}</span></div>}
+                            {r.producao_whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(r.producao_whatsapp)}`} target="_blank" className="text-slate-600 underline">{r.producao_whatsapp}</a></div>}
                           </div>
                         </div>
                       )}
@@ -1103,7 +1073,7 @@ function PublicPage() {
                             <div className="font-bold text-[10px] uppercase text-slate-400">Receptivo Local</div>
                             <div className="font-bold text-slate-800">{r.receptivo_nome || "—"}</div>
                             {r.receptivo_telefone && <div>Tel: <span className="text-slate-600">{r.receptivo_telefone}</span></div>}
-                            {r.receptivo_whatsapp && <div>WhatsApp: <span className="text-slate-600">{r.receptivo_whatsapp}</span></div>}
+                            {r.receptivo_whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(r.receptivo_whatsapp)}`} target="_blank" className="text-slate-600 underline">{r.receptivo_whatsapp}</a></div>}
                           </div>
                         </div>
                       )}
@@ -1115,7 +1085,7 @@ function PublicPage() {
                             <div className="font-bold text-[10px] uppercase text-slate-400">{c.funcao || "Contato"}</div>
                             <div className="font-bold text-slate-800">{c.nome || "—"}</div>
                             {c.telefone && <div>Tel: <span className="text-slate-600">{c.telefone}</span></div>}
-                            {c.whatsapp && <div>WhatsApp: <span className="text-slate-600">{c.whatsapp}</span></div>}
+                            {c.whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(c.whatsapp)}`} target="_blank" className="text-slate-600 underline">{c.whatsapp}</a></div>}
                           </div>
                         </div>
                       ))}
@@ -1162,10 +1132,13 @@ function PublicPage() {
             </div>
 
             {/* Page Footer */}
-            <PrintFooter pageNum={r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0 ? 5 : 4} currentUrl={currentUrl} />
+            
           </div>
         )}
-      </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       {/* LIGHTBOX */}
       {lightbox && (
