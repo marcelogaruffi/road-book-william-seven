@@ -1,17 +1,29 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
-  Navigation, Droplets, Plane, Clock,
+  Navigation, Droplets, Plane, Clock, Map as MapIcon
 } from "lucide-react";
 import {
   rowToRoadbook, progTitle, progHora, TIPO_COLORS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS,
   normalizeExternalUrl, mapsUrl,
   type ProgItem, type Documento, type Quarto, type OutroContato, type Foto, type Voo,
 } from "@/lib/roadbook-types";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix Leaflet marker icons in Vite build
+if (typeof window !== "undefined") {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+    iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  });
+}
 
 type GeoPlace = { latitude: number; longitude: number; name: string; admin1?: string };
 type GeoState =
@@ -80,6 +92,40 @@ function fmtDate(d: string | null | undefined) {
 }
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
+function getDaySummary(items: ProgItem[]): string {
+  if (!items || items.length === 0) return "Livre";
+  
+  const types = items.map(i => i.tipo);
+  if (types.includes("Espetáculo")) return "Espetáculo";
+  if (types.includes("Oficina")) return "Oficina";
+  if (types.includes("Montagem")) return "Montagem";
+  if (types.includes("Viagem")) return "Viagem";
+  if (types.includes("Entrevista")) return "Entrevista";
+  if (types.includes("Desmontagem")) return "Desmontagem";
+  
+  const titles = items.map(p => p.titulo || p.atividade || "").filter(Boolean);
+  if (titles.length > 0) {
+    return titles.slice(0, 2).join(" / ");
+  }
+  
+  return "Programação";
+}
+
+function getHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3; // metres
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c;
+}
+
 function PublicPage() {
   const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
@@ -98,8 +144,8 @@ function PublicPage() {
   const teatroSite = normalizeExternalUrl(r.teatro_site);
   const hasFestivalInfo = !!(r.festival || fiSite || fiInstagram || fi.redes || fi.programacao_oficial || fi.observacoes);
 
-  // Lightbox
-  const [lightbox, setLightbox] = useState<Foto | null>(null);
+  // Lightbox & Viewer
+  const [lightbox, setLightbox] = useState<any | null>(null);
   useEffect(() => {
     if (!lightbox) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightbox(null); };
@@ -108,6 +154,113 @@ function PublicPage() {
     document.body.style.overflow = "hidden";
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lightbox]);
+
+  // Operational Map State and Fetching
+  interface PlaceDetail {
+    name: string;
+    address: string;
+    lat: number;
+    lon: number;
+    distance: number;
+    type: "pharmacy" | "supermarket" | "hospital";
+    assoc: "hotel" | "theater" | "general";
+  }
+
+  const [opState, setOpState] = useState<{
+    loading: boolean;
+    hotelCoords: [number, number] | null;
+    teatroCoords: [number, number] | null;
+    places: PlaceDetail[];
+  }>({
+    loading: true,
+    hotelCoords: null,
+    teatroCoords: null,
+    places: [],
+  });
+
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      const hotelAddr = r.hotel_endereco;
+      const teatroAddr = r.teatro_endereco;
+
+      let hCoords: [number, number] | null = null;
+      let tCoords: [number, number] | null = null;
+
+      try {
+        if (hotelAddr?.trim()) {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(hotelAddr.trim())}&format=json&limit=1`, {
+            headers: { "User-Agent": "RoadBookApp/1.0" }
+          });
+          const data = await res.json();
+          if (data && data[0]) hCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+      } catch {}
+
+      try {
+        if (teatroAddr?.trim()) {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(teatroAddr.trim())}&format=json&limit=1`, {
+            headers: { "User-Agent": "RoadBookApp/1.0" }
+          });
+          const data = await res.json();
+          if (data && data[0]) tCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        }
+      } catch {}
+
+      if (cancel) return;
+
+      const foundPlaces: PlaceDetail[] = [];
+
+      const findNearestAmenity = async (q: string, lat: number, lon: number, type: "pharmacy" | "supermarket" | "hospital", assoc: "hotel" | "theater" | "general") => {
+        try {
+          const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&lat=${lat}&lon=${lon}&addressdetails=1`;
+          const res = await fetch(url, { headers: { "User-Agent": "RoadBookApp/1.0" } });
+          const data = await res.json();
+          if (data && data[0]) {
+            const pLat = parseFloat(data[0].lat);
+            const pLon = parseFloat(data[0].lon);
+            const dist = getHaversineDistance(lat, lon, pLat, pLon);
+            return {
+              name: data[0].display_name.split(",")[0] || q,
+              address: data[0].display_name,
+              lat: pLat,
+              lon: pLon,
+              distance: dist,
+              type,
+              assoc
+            };
+          }
+        } catch {}
+        return null;
+      };
+
+      if (hCoords) {
+        const ph = await findNearestAmenity("farmacia", hCoords[0], hCoords[1], "pharmacy", "hotel");
+        if (ph) foundPlaces.push(ph);
+        const sh = await findNearestAmenity("supermercado", hCoords[0], hCoords[1], "supermarket", "hotel");
+        if (sh) foundPlaces.push(sh);
+        const hosp = await findNearestAmenity("hospital", hCoords[0], hCoords[1], "hospital", "general");
+        if (hosp) foundPlaces.push(hosp);
+      }
+
+      if (tCoords) {
+        const pt = await findNearestAmenity("farmacia", tCoords[0], tCoords[1], "pharmacy", "theater");
+        if (pt) foundPlaces.push(pt);
+        const st = await findNearestAmenity("supermercado", tCoords[0], tCoords[1], "supermarket", "theater");
+        if (st) foundPlaces.push(st);
+      }
+
+      if (cancel) return;
+
+      setOpState({
+        loading: false,
+        hotelCoords: hCoords,
+        teatroCoords: tCoords,
+        places: foundPlaces,
+      });
+    })();
+    return () => { cancel = true; };
+  }, [r.hotel_endereco, r.teatro_endereco]);
 
   const geo = useGeocode(r.cidade, r.estado);
 
@@ -137,16 +290,55 @@ function PublicPage() {
           </Section>
         )}
 
-        {/* CRONOGRAMA */}
+        {/* LINHA DO TEMPO DA TURNÊ */}
         {dias.length > 0 && (
-          <Section title="Cronograma" icon={<Calendar className="size-4" />}>
-            <div className="rounded-lg border bg-card divide-y">
-              {dias.map((d) => (
-                <div key={d} className="p-3 flex items-center justify-between gap-3">
-                  <span className="font-medium text-sm">{fmtDate(d)}</span>
-                  <span className="text-xs text-muted-foreground">{groups[d].length} item{groups[d].length === 1 ? "" : "s"}</span>
+          <Section title="Linha do Tempo da Turnê" icon={<Calendar className="size-4" />}>
+            <div className="rounded-lg border p-5 bg-card">
+              {/* Desktop: Horizontal Timeline */}
+              <div className="hidden md:block">
+                <div className="relative flex justify-between items-start">
+                  {/* Horizontal line */}
+                  <div className="absolute top-[37px] left-0 right-0 h-0.5 bg-muted z-0" />
+                  
+                  {dias.map((d, index) => {
+                    const summary = getDaySummary(groups[d]);
+                    return (
+                      <div key={d} className="relative z-10 flex flex-col items-center text-center flex-1 px-2">
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                          {fmtDate(d).substring(0, 5)}
+                        </span>
+                        <div className="size-6 rounded-full border-2 border-primary bg-card flex items-center justify-center font-bold text-xs text-primary shadow-sm">
+                          {index + 1}
+                        </div>
+                        <span className="text-xs font-medium text-foreground mt-3 max-w-[120px] break-words">
+                          {summary}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
+              </div>
+
+              {/* Mobile: Vertical Timeline */}
+              <div className="block md:hidden space-y-4 relative before:absolute before:inset-y-0 before:left-3 before:w-0.5 before:bg-muted">
+                {dias.map((d, index) => {
+                  const summary = getDaySummary(groups[d]);
+                  return (
+                    <div key={d} className="relative pl-8 flex items-start gap-3">
+                      {/* Vertical line circle */}
+                      <div className="absolute left-1 top-1.5 size-4 rounded-full border-2 border-primary bg-background flex items-center justify-center" />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-mono text-muted-foreground font-semibold">
+                          {fmtDate(d)}
+                        </span>
+                        <span className="text-sm font-semibold text-foreground mt-0.5">
+                          {summary}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </Section>
         )}
@@ -265,6 +457,23 @@ function PublicPage() {
         {/* VOOS */}
         <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={setLightbox} />
 
+        {/* MAPA OPERACIONAL */}
+        <Section title="Mapa Operacional" icon={<MapIcon className="size-4" />}>
+          {opState.loading ? (
+            <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground bg-card animate-pulse">
+              Carregando localizações e estabelecimentos próximos...
+            </div>
+          ) : (
+            <OperationalMap
+              hotelNome={r.hotel_nome || "Hotel"}
+              teatroNome={r.teatro_nome || "Teatro"}
+              hotelCoords={opState.hotelCoords}
+              teatroCoords={opState.teatroCoords}
+              places={opState.places}
+            />
+          )}
+        </Section>
+
         {/* CONTATOS */}
         {(r.producao_nome || r.producao_whatsapp || r.producao_telefone || r.receptivo_nome || r.receptivo_whatsapp || r.receptivo_telefone || r.outros_contatos.length > 0) && (
           <Section title="Contatos" icon={<Users className="size-4" />}>
@@ -303,11 +512,16 @@ function PublicPage() {
           <Section title="Documentos" icon={<FileText className="size-4" />}>
             <div className="rounded-lg border bg-card divide-y">
               {r.documentos.map((doc: Documento, i) => (
-                <a key={i} href={doc.url ?? "#"} target="_blank" rel="noopener noreferrer" className="p-3 flex items-center gap-3 hover:bg-accent transition-colors">
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setLightbox({ url: doc.url ?? "", nome: doc.nome, tipo: doc.tipo })}
+                  className="p-3 flex items-center gap-3 hover:bg-accent transition-colors w-full text-left"
+                >
                   <FileText className="size-4 text-muted-foreground shrink-0" />
                   <span className="text-sm truncate flex-1">{doc.nome}</span>
-                  <span className="text-xs text-muted-foreground">{doc.tipo?.split("/")[1] ?? ""}</span>
-                </a>
+                  <span className="text-xs text-muted-foreground">{doc.tipo?.split("/")[1] ?? "PDF"}</span>
+                </button>
               ))}
             </div>
           </Section>
@@ -335,12 +549,21 @@ function PublicPage() {
             <X className="size-5" />
           </button>
           {lightbox.url && (
-            <img
-              src={lightbox.url}
-              alt={lightbox.nome}
-              onClick={(e) => e.stopPropagation()}
-              className="max-w-full max-h-full object-contain rounded shadow-2xl"
-            />
+            lightbox.tipo?.startsWith("application/pdf") || lightbox.nome?.toLowerCase().endsWith(".pdf") ? (
+              <iframe
+                src={lightbox.url}
+                title={lightbox.nome}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full h-full max-w-4xl max-h-[85vh] bg-white rounded-md shadow-2xl border-none"
+              />
+            ) : (
+              <img
+                src={lightbox.url}
+                alt={lightbox.nome}
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-full max-h-full object-contain rounded shadow-2xl"
+              />
+            )
           )}
         </div>
       )}
@@ -363,23 +586,33 @@ function ContactCard({ label, name, telefone, whatsapp }: { label: string; name:
   const wa = whatsapp ? onlyDigits(whatsapp) : "";
   const tel = telefone ? onlyDigits(telefone) : "";
   return (
-    <div className="rounded-lg border p-4 bg-card">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-      {name && <div className="font-medium mt-1">{name}</div>}
+    <div className="rounded-lg border p-4 bg-card space-y-2">
+      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
+      {name && <div className="font-semibold text-base text-card-foreground">{name}</div>}
+      
       {telefone && (
-        <a href={`tel:${tel}`} className="mt-2 inline-flex items-center gap-1.5 text-sm text-primary">
-          <Phone className="size-3.5" />{telefone}
-        </a>
+        <div className="text-sm flex items-center gap-2">
+          <span className="text-muted-foreground text-xs">Telefone:</span>
+          <a href={`tel:${tel}`} className="text-primary hover:underline font-mono">{telefone}</a>
+        </div>
       )}
+      
+      {whatsapp && (
+        <div className="text-sm flex items-center gap-2">
+          <span className="text-muted-foreground text-xs">WhatsApp:</span>
+          <span className="font-mono">{whatsapp}</span>
+        </div>
+      )}
+      
       {wa && (
         <a
           href={`https://wa.me/${wa}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] hover:bg-[#1faa54] text-white text-sm font-medium px-3 py-2 w-full transition-colors"
+          className="mt-2 inline-flex items-center justify-center gap-2 rounded-md bg-[#25D366] hover:bg-[#1faa54] text-white text-xs font-semibold px-3 py-2 w-full transition-colors"
         >
-          <MessageCircle className="size-4" />
-          {whatsapp ? `Chamar ${whatsapp} no WhatsApp` : "Chamar no WhatsApp"}
+          <MessageCircle className="size-3.5" />
+          Chamar no WhatsApp
         </a>
       )}
     </div>
@@ -390,10 +623,10 @@ function hasFlight(v: Voo): boolean {
   return !!(v.aeroporto_origem || v.aeroporto_destino || v.numero || v.localizador || v.data || v.hora || v.portao || v.terminal || (v.passageiros?.length ?? 0) > 0 || (v.cartoes_embarque?.length ?? 0) > 0);
 }
 
-function FlightSection({ ida, volta, onOpenImage }: { ida: Voo; volta: Voo; onOpenImage: (f: Foto) => void }) {
+function FlightSection({ ida, volta, onOpenImage }: { ida: Voo; volta: Voo; onOpenImage: (item: any) => void }) {
   if (!hasFlight(ida) && !hasFlight(volta)) return null;
   return (
-    <Section title="Voos" icon={<Plane className="size-4" />}>
+    <Section title="Transporte Aéreo" icon={<Plane className="size-4" />}>
       <div className="space-y-4">
         {hasFlight(ida) && <FlightCard title="Voo de ida" voo={ida} onOpenImage={onOpenImage} />}
         {hasFlight(volta) && <FlightCard title="Voo de volta" voo={volta} onOpenImage={onOpenImage} />}
@@ -402,7 +635,7 @@ function FlightSection({ ida, volta, onOpenImage }: { ida: Voo; volta: Voo; onOp
   );
 }
 
-function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOpenImage: (f: Foto) => void }) {
+function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOpenImage: (item: any) => void }) {
   const pax = voo.passageiros ?? [];
   const passes = voo.cartoes_embarque ?? [];
   return (
@@ -441,15 +674,44 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {passes.map((c, i) => {
               const isImg = c.tipo?.startsWith("image/");
+              const isPdf = c.tipo?.startsWith("application/pdf") || c.nome.toLowerCase().endsWith(".pdf");
+              
               if (isImg && c.url) {
                 return (
-                  <button key={i} type="button" onClick={() => onOpenImage({ path: c.path, nome: c.nome, categoria: "Outros", url: c.url })} className="aspect-[3/4] overflow-hidden rounded-md border bg-muted">
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => onOpenImage({ url: c.url, nome: c.nome, tipo: c.tipo })}
+                    className="aspect-[3/4] overflow-hidden rounded-md border bg-muted"
+                  >
                     <img src={c.url} alt={c.nome} className="w-full h-full object-cover" loading="lazy" />
                   </button>
                 );
               }
+              
+              if (isPdf && c.url) {
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => onOpenImage({ url: c.url, nome: c.nome, tipo: c.tipo })}
+                    className="flex flex-col items-center justify-center gap-1.5 aspect-[3/4] rounded-md border bg-background p-2 text-center hover:bg-accent"
+                  >
+                    <FileText className="size-6 text-primary" />
+                    <span className="text-[10px] text-muted-foreground truncate w-full">{c.nome}</span>
+                    <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium">Ver PDF</span>
+                  </button>
+                );
+              }
+              
               return (
-                <a key={i} href={c.url ?? "#"} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center justify-center gap-1 aspect-[3/4] rounded-md border bg-background p-2 text-center hover:bg-accent">
+                <a
+                  key={i}
+                  href={c.url ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex flex-col items-center justify-center gap-1 aspect-[3/4] rounded-md border bg-background p-2 text-center hover:bg-accent"
+                >
                   <FileText className="size-6 text-muted-foreground" />
                   <span className="text-[10px] text-muted-foreground truncate w-full">{c.nome}</span>
                 </a>
@@ -473,46 +735,92 @@ function InfoCell({ label, value }: { label: string; value: string }) {
 
 function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; label: string; categorias: readonly string[]; onOpen: (f: Foto) => void }) {
   if (!fotos || fotos.length === 0) return null;
-  const fotoMap = new Map<string, Foto[]>();
-  for (const f of fotos) {
-    const isOutros = !categorias.includes(f.categoria) || f.categoria === "Outros";
-    const key = isOutros
-      ? `Outros - ${(f.descricao || "Sem descrição").trim()}`
-      : f.categoria;
-    if (!fotoMap.has(key)) fotoMap.set(key, []);
-    fotoMap.get(key)!.push(f);
-  }
-  const grupos: { key: string; label: string; fotos: Foto[] }[] = [];
-  for (const c of categorias) {
-    if (c === "Outros") continue;
-    if (fotoMap.has(c)) grupos.push({ key: c, label: c, fotos: fotoMap.get(c)! });
-  }
-  for (const [k, fs] of fotoMap) {
-    if (k.startsWith("Outros - ")) grupos.push({ key: k, label: k.toUpperCase(), fotos: fs });
-  }
+
+  const [activeCategory, setActiveCategory] = useState<string>("Todas");
+
+  // Map photos to normalize categories
+  const normalizedPhotos = useMemo(() => {
+    return fotos.map(f => {
+      const isOutros = !categorias.includes(f.categoria) || f.categoria === "Outros";
+      const displayCategory = isOutros && f.descricao ? f.descricao.trim() : f.categoria;
+      return {
+        ...f,
+        displayCategory: displayCategory || "Outros"
+      };
+    });
+  }, [fotos, categorias]);
+
+  // Extract unique categories for filter tabs
+  const availableCategories = useMemo(() => {
+    const cats = new Set<string>();
+    normalizedPhotos.forEach(f => cats.add(f.displayCategory));
+    return ["Todas", ...Array.from(cats)].sort();
+  }, [normalizedPhotos]);
+
+  // Filter photos based on selection
+  const filteredPhotos = useMemo(() => {
+    if (activeCategory === "Todas") return normalizedPhotos;
+    return normalizedPhotos.filter(f => f.displayCategory === activeCategory);
+  }, [normalizedPhotos, activeCategory]);
+
   return (
-    <div className="mt-3 space-y-4">
-      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2"><Camera className="size-3.5" />{label}</div>
-      {grupos.map((g) => (
-        <div key={g.key}>
-          <h4 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">{g.label}</h4>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {g.fotos.map((f, i) => (
-              <button
-                key={i} type="button" onClick={() => onOpen(f)}
-                className="group relative aspect-square overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                {f.url ? (
-                  <img src={f.url} alt={`${g.label} — ${f.nome}`} loading="lazy" decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105" />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Sem preview</div>
-                )}
-              </button>
-            ))}
-          </div>
+    <div className="mt-4 space-y-3">
+      <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+        <Camera className="size-3.5" />{label}
+      </div>
+      
+      {/* Category filter tabs */}
+      {availableCategories.length > 2 && (
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none flex-wrap">
+          {availableCategories.map(cat => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setActiveCategory(cat)}
+              className={`rounded-full px-3 py-1 text-xs border transition-colors shrink-0 ${
+                activeCategory === cat
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-muted-foreground hover:text-foreground border-muted"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* Grid gallery */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+        {filteredPhotos.map((f, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={() => onOpen(f)}
+            className="group relative aspect-square overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            {f.url ? (
+              <>
+                <img
+                  src={f.url}
+                  alt={f.nome}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent p-2 text-left opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <span className="text-[10px] text-white font-medium block truncate">
+                    {f.displayCategory}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
+                Sem preview
+              </div>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -677,18 +985,185 @@ function DayWeather({ date }: { date: string }) {
     return <div className="rounded-lg border bg-card p-3 text-xs text-muted-foreground flex items-center gap-2"><CloudSun className="size-3.5" />Clima indisponível: {data.message}</div>;
   }
   return (
-    <div className="rounded-lg border bg-card p-3 flex items-center gap-4 flex-wrap">
-      <div className="flex items-center gap-2 text-sm">
-        <CloudSun className="size-4 text-primary" />
-        <span className="font-medium">{isFinite(data.maxC) ? `${data.maxC}°` : "—"}</span>
-        <span className="text-muted-foreground">/ {isFinite(data.minC) ? `${data.minC}°` : "—"}</span>
+    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3 font-medium bg-muted/40 px-3 py-1.5 rounded-md w-fit">
+      <div className="flex items-center gap-1">
+        <CloudSun className="size-3.5 text-primary" />
+        <span className="text-foreground">{isFinite(data.maxC) ? `${data.maxC}°C` : "—"}</span>
+        <span className="text-muted-foreground">/ {isFinite(data.minC) ? `${data.minC}°C` : "—"}</span>
       </div>
-      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-        <Droplets className="size-3.5" />
-        {data.kind === "forecast" ? "Chuva" : "Histórico chuva"} <span className="text-foreground font-medium ml-1">{data.rainPct}%</span>
+      <div className="h-3 w-px bg-muted-foreground/30" />
+      <div className="flex items-center gap-1">
+        <Droplets className="size-3.5 text-blue-500" />
+        <span>{data.rainPct}% de chance de chuva</span>
       </div>
-      <div className="text-[10px] text-muted-foreground ml-auto">
-        {data.kind === "forecast" ? "Previsão" : "Média histórica (5 anos)"} · Open-Meteo
+      <div className="h-3 w-px bg-muted-foreground/30" />
+      <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">
+        {data.kind === "forecast" ? "Previsão" : "Clima Histórico"}
+      </span>
+    </div>
+  );
+}
+
+interface PlaceDetail {
+  name: string;
+  address: string;
+  lat: number;
+  lon: number;
+  distance: number;
+  type: "pharmacy" | "supermarket" | "hospital";
+  assoc: "hotel" | "theater" | "general";
+}
+
+function OperationalMap({
+  hotelNome,
+  teatroNome,
+  hotelCoords,
+  teatroCoords,
+  places,
+}: {
+  hotelNome: string;
+  teatroNome: string;
+  hotelCoords: [number, number] | null;
+  teatroCoords: [number, number] | null;
+  places: PlaceDetail[];
+}) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<L.Map | null>(null);
+
+  useEffect(() => {
+    if (!mapRef.current || (!hotelCoords && !teatroCoords)) return;
+
+    const center = hotelCoords || teatroCoords || [0, 0];
+    
+    const map = L.map(mapRef.current, { zoomControl: true }).setView(center, 14);
+    mapInstanceRef.current = map;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map);
+
+    const markers = L.featureGroup();
+
+    const createMarkerIcon = (color: string) => {
+      return L.divIcon({
+        html: `
+          <svg class="size-6 drop-shadow-md" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
+          </svg>
+        `,
+        className: "custom-leaflet-icon",
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
+        popupAnchor: [0, -24],
+      });
+    };
+
+    if (hotelCoords) {
+      L.marker(hotelCoords, { icon: createMarkerIcon("#3b82f6") }) // Blue
+        .bindPopup(`<b>Hotel:</b> ${hotelNome}`)
+        .addTo(markers);
+    }
+
+    if (teatroCoords) {
+      L.marker(teatroCoords, { icon: createMarkerIcon("#ef4444") }) // Red
+        .bindPopup(`<b>Teatro:</b> ${teatroNome}`)
+        .addTo(markers);
+    }
+
+    places.forEach(p => {
+      let color = "#10b981"; // Green for Pharmacy
+      if (p.type === "supermarket") color = "#f59e0b"; // Yellow/Orange
+      if (p.type === "hospital") color = "#8b5cf6"; // Purple
+
+      L.marker([p.lat, p.lon], { icon: createMarkerIcon(color) })
+        .bindPopup(`<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : "Hospital"}`)
+        .addTo(markers);
+    });
+
+    markers.addTo(map);
+
+    if (markers.getBounds().isValid()) {
+      map.fitBounds(markers.getBounds().pad(0.1));
+    }
+
+    return () => {
+      map.remove();
+      mapInstanceRef.current = null;
+    };
+  }, [hotelCoords, teatroCoords, places]);
+
+  const getDistanceFmt = (d: number) => {
+    if (d < 1000) return `${Math.round(d)}m`;
+    return `${(d / 1000).toFixed(1)}km`;
+  };
+
+  const getWalkingTime = (d: number) => {
+    const time = Math.round((d * 1.25) / 80); // 80m/min
+    return time <= 1 ? "1 min" : `${time} min`;
+  };
+
+  const getCarTime = (d: number) => {
+    const time = Math.round((d * 1.25) / 400) + 1; // 400m/min + 1min overhead
+    return time <= 1 ? "1 min" : `${time} min`;
+  };
+
+  const getTypeLabel = (t: string) => {
+    if (t === "pharmacy") return "Farmácia";
+    if (t === "supermarket") return "Supermercado / Hortifruti";
+    return "Hospital de referência";
+  };
+
+  const getAssocLabel = (p: PlaceDetail) => {
+    if (p.assoc === "hotel") return "próximo ao hotel";
+    if (p.assoc === "theater") return "próximo ao teatro";
+    return "";
+  };
+
+  if (!hotelCoords && !teatroCoords) {
+    return (
+      <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground bg-card">
+        Localizações operacionais indisponíveis. Cadastre o endereço do Hotel ou Teatro.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div ref={mapRef} className="h-64 w-full rounded-lg border bg-muted shadow-sm z-0 relative" />
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        {places.map((p, idx) => (
+          <div key={idx} className="rounded-lg border p-4 bg-card flex flex-col justify-between space-y-3">
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className={`size-2.5 rounded-full ${
+                  p.type === "pharmacy" ? "bg-[#10b981]" : p.type === "supermarket" ? "bg-[#f59e0b]" : "bg-[#8b5cf6]"
+                }`} />
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {getTypeLabel(p.type)} {getAssocLabel(p)}
+                </span>
+              </div>
+              <h4 className="font-semibold mt-1 text-sm text-card-foreground line-clamp-1">{p.name}</h4>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{p.address}</p>
+            </div>
+            
+            <div className="pt-2 border-t">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>🚶 {getWalkingTime(p.distance)} a pé ({getDistanceFmt(p.distance)})</span>
+                <span>🚗 {getCarTime(p.distance)} de carro</span>
+              </div>
+              <a
+                href={mapsUrl(p.address)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-md border bg-background hover:bg-accent text-xs font-semibold px-2.5 py-1.5 w-full transition-colors"
+              >
+                <Navigation className="size-3" />
+                Abrir no Google Maps
+              </a>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

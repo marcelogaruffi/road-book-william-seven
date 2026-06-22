@@ -55,8 +55,27 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     return keys.map((k) => ({ data: k, itens: map.get(k)! }));
   }, [d.programacao]);
 
+  function getNextDayDate() {
+    const dates = d.programacao.map((p) => p.data).filter(Boolean).sort();
+    if (dates.length > 0) {
+      try {
+        const last = new Date(dates[dates.length - 1] + "T00:00:00");
+        last.setDate(last.getDate() + 1);
+        const y = last.getFullYear();
+        const m = String(last.getMonth() + 1).padStart(2, "0");
+        const day = String(last.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      } catch {}
+    }
+    return d.data_inicial || new Date().toISOString().split("T")[0];
+  }
+
   function addDay() {
-    setD((s) => ({ ...s, programacao: [...s.programacao, { data: "", hora_inicio: "", titulo: "", tipo: "Outro", local: "", observacao: "" }] }));
+    const nextDate = getNextDayDate();
+    setD((s) => ({
+      ...s,
+      programacao: [...s.programacao, { data: nextDate, hora_inicio: "", titulo: "", tipo: "Outro", local: "", observacao: "" }],
+    }));
   }
   function addEvent(dataKey: string) {
     setD((s) => ({ ...s, programacao: [...s.programacao, { data: dataKey, hora_inicio: "", titulo: "", tipo: "Outro", local: "", observacao: "" }] }));
@@ -418,12 +437,12 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                       />
                     </div>
                     <div className="flex gap-2">
-                      <Button type="button" size="sm" variant="outline" onClick={() => addEvent(g.data)}><Plus className="size-4 mr-1" />Adicionar evento</Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={() => { if (confirm("Remover este dia e seus eventos?")) removeDay(g.data); }}><Trash2 className="size-4" /></Button>
+                      <Button type="button" size="sm" variant="outline" onClick={() => addEvent(g.data)}><Plus className="size-4 mr-1" />Adicionar atividade</Button>
+                      <Button type="button" size="sm" variant="ghost" onClick={() => { if (confirm("Remover este dia e suas atividades?")) removeDay(g.data); }}><Trash2 className="size-4" /></Button>
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {g.itens.length === 0 && <p className="text-xs text-muted-foreground">Nenhum evento. Adicione o primeiro.</p>}
+                    {g.itens.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma atividade. Adicione a primeira.</p>}
                     {g.itens.map((p, idx) => (
                       <div key={idx} className="grid sm:grid-cols-12 gap-2 items-start border rounded-md p-3 bg-background">
                         <div className="sm:col-span-2"><Label className="text-xs">Início</Label><Input type="time" value={p.hora_inicio || p.hora || ""} onChange={(e) => updateProgItem(p, { hora_inicio: e.target.value })} /></div>
