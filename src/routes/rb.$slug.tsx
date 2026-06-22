@@ -21,6 +21,14 @@ type GeoState =
   | { status: "ok"; place: GeoPlace };
 const GeoContext = createContext<GeoState>({ status: "loading" });
 
+export type HourlyWeather = { temp: number; code: number; precip: number; isHistorical: boolean };
+export type DayWeatherMap = Record<string, HourlyWeather>;
+export const WeatherDataContext = createContext<{
+  hourly: Record<string, DayWeatherMap>;
+  setHourly: React.Dispatch<React.SetStateAction<Record<string, DayWeatherMap>>>;
+}>({ hourly: {}, setHourly: () => {} });
+
+
 
 
 export const Route = createFileRoute("/rb/$slug")({
@@ -380,9 +388,11 @@ function PublicPage() {
   }, [r.hotel_endereco, r.teatro_endereco, r.automacoes?.outros_locais]);
 
   const geo = useGeocode(r.cidade, r.estado);
+  const [hourly, setHourly] = useState<Record<string, DayWeatherMap>>({});
 
   return (
     <GeoContext.Provider value={geo}>
+      <WeatherDataContext.Provider value={{ hourly, setHourly }}>
     <div className="min-h-screen bg-background">
       {/* CAPA */}
       <header className="border-b bg-gradient-to-b from-card to-background no-print">
@@ -1143,6 +1153,26 @@ function PublicPage() {
             </div>
 
             {/* Page Footer */}
+
+
+                {/* MAPA OPERACIONAL NO PDF */}
+                {(r.hotel_endereco || r.teatro_endereco || (r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0)) && (
+                  <div className="space-y-3 mt-6 break-inside-avoid">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">🗺️ Mapa Operacional</h3>
+                    <div className="h-[400px] w-full rounded-xl overflow-hidden border border-slate-200 shadow-sm relative z-0">
+                      <OperationalMap
+                        hotelNome={r.hotel_nome || "Hotel"}
+                        teatroNome={r.teatro_nome || "Teatro"}
+                        hotelCoords={opState.hotelCoords}
+                        teatroCoords={opState.teatroCoords}
+                        places={opState.places}
+                        customPlaces={opState.customPlaces}
+                        outrosLocais={r.automacoes?.outros_locais || []}
+                      />
+                    </div>
+                  </div>
+                )}
+
             
           </div>
         )}
@@ -1187,6 +1217,7 @@ function PublicPage() {
         </div>
       )}
     </div>
+          </WeatherDataContext.Provider>
     </GeoContext.Provider>
   );
 }
@@ -1815,6 +1846,21 @@ function PrintWeatherForecastCard({ date }: { date: string }) {
           if (!res.ok) throw new Error();
           const j = await res.json();
           if (cancel) return;
+          
+          if (j?.hourly?.time) {
+            const map: DayWeatherMap = {};
+            j.hourly.time.forEach((t: string, idx: number) => {
+              const hour = t.split("T")[1].substring(0, 5); // "HH:MM"
+              map[hour] = {
+                temp: Math.round(j.hourly.temperature_2m[idx]),
+                code: j.hourly.weathercode[idx],
+                precip: j.hourly.precipitation_probability[idx] || 0,
+                isHistorical: false
+              };
+            });
+            setHourly(prev => ({ ...prev, [date]: map }));
+          }
+
           setData({
             status: "ok", kind: "forecast",
             maxC: Math.round(j?.daily?.temperature_2m_max?.[0] ?? NaN),
@@ -1846,6 +1892,29 @@ function PrintWeatherForecastCard({ date }: { date: string }) {
           const maxC = Math.round(avg(valid.map((v) => v.max)));
           const minC = Math.round(avg(valid.map((v) => v.min)));
           const code = valid[0]?.code ?? 0;
+          
+          // We don't fetch hourly for all 5 years to save time, we just fetch it for last year or skip hourly historical.
+          // Since it's historical, let's just fetch last year's hourly for the tooltip.
+          const lastYrIso = `${baseYear}-${m}-${d}`;
+          const hUrl = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,weathercode,precipitation&timezone=auto&start_date=${lastYrIso}&end_date=${lastYrIso}`;
+          try {
+            const hRes = await fetch(hUrl);
+            const hJ = await hRes.json();
+            if (hJ?.hourly?.time) {
+              const map: DayWeatherMap = {};
+              hJ.hourly.time.forEach((t: string, idx: number) => {
+                const hour = t.split("T")[1].substring(0, 5);
+                map[hour] = {
+                  temp: Math.round(hJ.hourly.temperature_2m[idx]),
+                  code: hJ.hourly.weathercode[idx] || 0,
+                  precip: hJ.hourly.precipitation[idx] || 0,
+                  isHistorical: true
+                };
+              });
+              setHourly(prev => ({ ...prev, [date]: map }));
+            }
+          } catch {}
+
           setData({ status: "ok", kind: "historical", maxC, minC, rainPct: code });
         }
       } catch {
@@ -1919,8 +1988,42 @@ function daysBetween(a: Date, b: Date) {
   return Math.round(ms / 86400000);
 }
 
+
+function getWeatherIcon(code: number) {
+  if (code === 0 || code === 1) return "☀️"; // clear
+  if (code === 2) return "⛅"; // partly cloudy
+  if (code === 3) return "☁️"; // overcast
+  if (code >= 45 && code <= 48) return "🌫️"; // fog
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return "🌧️"; // rain
+  if (code >= 71 && code <= 77) return "❄️"; // snow
+  if (code >= 95) return "⛈️"; // thunderstorm
+  return "🌤️";
+}
+
+function HourlyWeatherWidget({ date, hora }: { date: string, hora: string }) {
+  const { hourly } = useContext(WeatherDataContext);
+  if (!hourly[date]) return null;
+  
+  // Find closest hour
+  const [h, m] = hora.split(":").map(Number);
+  if (isNaN(h)) return null;
+  const closestHourStr = `${String(h).padStart(2, "0")}:00`;
+  const hw = hourly[date][closestHourStr];
+  
+  if (!hw) return null;
+  
+  return (
+    <div className="flex flex-col items-center justify-center shrink-0 w-8 opacity-80" title={hw.isHistorical ? "Média Histórica" : "Previsão"}>
+      <span className="text-[12px] leading-none mb-0.5">{getWeatherIcon(hw.code)}</span>
+      <span className="text-[8px] font-bold text-slate-500 tracking-tighter leading-none">{hw.temp}°</span>
+    </div>
+  );
+}
+
+
 function DayWeather({ date }: { date: string }) {
   const geo = useContext(GeoContext);
+  const { setHourly } = useContext(WeatherDataContext);
   const [data, setData] = useState<DayData>({ status: "loading" });
 
   const target = useMemo(() => {
@@ -1944,6 +2047,7 @@ function DayWeather({ date }: { date: string }) {
           // Forecast
           const iso = date;
           const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+            `&hourly=temperature_2m,weathercode,precipitation_probability` +
             `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
             `&timezone=auto&start_date=${iso}&end_date=${iso}`;
           const res = await fetch(url);
@@ -1965,6 +2069,7 @@ function DayWeather({ date }: { date: string }) {
           const results = await Promise.all(years.map(async (yr) => {
             const iso = `${yr}-${m}-${d}`;
             const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}` +
+              `&hourly=temperature_2m,weathercode,precipitation` +
               `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
               `&timezone=auto&start_date=${iso}&end_date=${iso}`;
             const r = await fetch(url);
