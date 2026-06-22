@@ -66,9 +66,12 @@ export const Route = createFileRoute("/rb/$slug")({
       <div><h1 className="text-2xl font-semibold">Road Book não encontrado</h1></div>
     </div>
   ),
-  errorComponent: () => (
+  errorComponent: ({ error }: { error: any }) => (
     <div className="min-h-screen flex items-center justify-center p-8 text-center">
-      <p className="text-muted-foreground">Erro ao carregar.</p>
+      <div>
+        <p className="text-muted-foreground font-semibold">Erro ao carregar.</p>
+        <p className="text-xs text-red-500 mt-2 font-mono">{error?.message || String(error)}</p>
+      </div>
     </div>
   ),
   component: PublicPage,
@@ -97,8 +100,24 @@ function getHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: nu
   return R * c;
 }
 
+function getDistanceFmt(d: number) {
+  if (d < 1000) return `${Math.round(d)}m`;
+  return `${(d / 1000).toFixed(1)}km`;
+}
+
+function getWalkingTime(d: number) {
+  const time = Math.round((d * 1.25) / 80); // 80m/min
+  return time <= 1 ? "1 min" : `${time} min`;
+}
+
+function getCarTime(d: number) {
+  const time = Math.round((d * 1.25) / 400) + 1; // 400m/min + 1min overhead
+  return time <= 1 ? "1 min" : `${time} min`;
+}
+
 function PublicPage() {
   const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
   const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p) => {
     const k = p.data || "—"; (acc[k] ||= []).push(p); return acc;
@@ -628,6 +647,7 @@ function PublicPage() {
               teatroCoords={opState.teatroCoords}
               places={opState.places}
               customPlaces={opState.customPlaces}
+              outrosLocais={r.automacoes?.outros_locais || []}
             />
           )}
         </Section>
@@ -697,55 +717,40 @@ function PublicPage() {
       </main>
 
       {/* PRINT-ONLY WORD DOCUMENT DESIGN */}
-      <div className="hidden print:block w-full text-black bg-white font-serif antialiased leading-relaxed max-w-[21cm] mx-auto" style={{ fontFamily: "Georgia, serif" }}>
+      <div className="hidden print:block w-full text-slate-900 bg-slate-50 antialiased max-w-[21cm] mx-auto" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
         
         {/* PAGE 1: DIARY SCHEDULE */}
-        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
           <div>
-            {/* Header Logos */}
-            <div className="flex justify-between items-center border-b pb-4 mb-6">
-              {/* Seven Logo SVG */}
-              <div className="flex items-center gap-2">
-                <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="25" cy="25" r="22" fill="#000" />
-                  <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
-                  <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-                  <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
-                  <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
-                  <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
-                </svg>
-              </div>
-              {/* A Maçã Logo */}
-              <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
-            </div>
+            <PrintHeader title={r.espetaculo} />
 
             {/* Document Title */}
-            <div className="text-center my-8">
-              <h2 className="text-2xl font-bold tracking-tight">Programação — {r.cidade} ({r.estado || ""})</h2>
-              {r.festival && <p className="text-sm uppercase tracking-widest text-muted-foreground mt-1">{r.festival}</p>}
+            <div className="text-center my-4">
+              <h2 className="text-lg font-black tracking-widest uppercase text-slate-800">Programação Diária</h2>
+              {r.festival && <p className="text-xs uppercase tracking-widest text-[#991b1b] font-bold mt-1">{r.festival}</p>}
               {(r.data_inicial || r.data_final) && (
-                <p className="text-sm font-medium mt-1">
-                  {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
+                <p className="text-xs font-semibold text-slate-500 mt-1 bg-slate-100 px-3 py-1 rounded-full inline-block">
+                  📅 {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
                 </p>
               )}
             </div>
 
             {/* Programacao List */}
-            <div className="space-y-6 mt-6">
+            <div className="space-y-4 mt-6">
               {dias.map((date) => (
-                <div key={date} className="break-inside-avoid">
-                  <h3 className="text-base font-bold border-b pb-1 mb-2 uppercase tracking-wide flex items-center justify-between">
+                <div key={date} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm break-inside-avoid">
+                  <h3 className="text-sm font-bold border-b pb-1.5 mb-2.5 uppercase tracking-wide flex items-center justify-between text-slate-800">
                     <span>{fmtDate(date)} {r.automacoes?.timeline_overrides?.[date] && `— ${r.automacoes.timeline_overrides[date]}`}</span>
                     <PrintDayWeather date={date} />
                   </h3>
                   <div className="space-y-2">
                     {groups[date].map((p, i) => (
-                      <div key={i} className="flex gap-4 text-sm py-1">
-                        <span className="font-mono font-semibold w-24 shrink-0">{progHora(p)}</span>
+                      <div key={i} className="flex gap-4 text-xs py-0.5">
+                        <span className="font-mono font-bold text-[#991b1b] w-24 shrink-0">{progHora(p)}</span>
                         <div className="flex-1">
-                          <span className="font-bold">{progTitle(p)}</span>
-                          {p.local && <span className="text-muted-foreground ml-2">({p.local})</span>}
-                          {p.observacao && <p className="text-xs text-muted-foreground italic mt-0.5">{p.observacao}</p>}
+                          <span className="font-bold text-slate-900">{progTitle(p)}</span>
+                          {p.local && <span className="text-slate-500 ml-1.5 font-medium">({p.local})</span>}
+                          {p.observacao && <p className="text-[10px] text-slate-400 italic mt-0.5">{p.observacao}</p>}
                         </div>
                       </div>
                     ))}
@@ -756,181 +761,181 @@ function PublicPage() {
           </div>
 
           <div>
-            {/* Weather overview for print */}
-            <div className="mt-8 border-t border-gray-200 pt-4 mb-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3 font-sans">Previsão do Tempo</h4>
-              <div className="flex gap-6 flex-wrap">
-                {r.cidade && <PrintWeatherSummaryCard city={r.cidade} date={dias[0] || ""} />}
-                {r.voo_ida.aeroporto_origem && (
-                  <PrintWeatherSummaryCard city={r.voo_ida.aeroporto_origem} date={dias[0] || ""} />
-                )}
+            {/* Weather & QR Code card */}
+            <div className="grid grid-cols-3 gap-6 border-t border-slate-200 pt-5 mt-6 mb-4 items-end">
+              <div className="col-span-2 space-y-3">
+                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-sans">Previsão do Tempo</h4>
+                <div className="flex gap-4 flex-wrap">
+                  {r.cidade && <PrintWeatherSummaryCard city={r.cidade} date={dias[0] || ""} />}
+                  {r.voo_ida.aeroporto_origem && (
+                    <PrintWeatherSummaryCard city={r.voo_ida.aeroporto_origem} date={dias[0] || ""} />
+                  )}
+                </div>
+              </div>
+
+              {/* QR Code and link */}
+              <div className="border border-slate-200 p-3 rounded-lg bg-white shadow-sm flex items-center gap-3 w-fit ml-auto">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`}
+                  alt="QR Code"
+                  className="size-16 object-contain border p-1 bg-white rounded shadow-sm"
+                />
+                <div className="text-left font-sans text-[9px] max-w-[120px] leading-normal">
+                  <div className="font-bold text-slate-800">Versão Online</div>
+                  <div className="text-slate-400 mt-0.5">Escaneie para acessar o guia atualizado no celular.</div>
+                </div>
               </div>
             </div>
 
             {/* Page Footer */}
-            <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
-              <span className="font-sans">Road Book · Seven Produções Artísticas</span>
-              <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
-                1
-              </div>
-            </div>
+            <PrintFooter pageNum={1} currentUrl={currentUrl} />
           </div>
         </div>
 
         {/* PAGE 2: AIR TRAVEL & HOTEL */}
-        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
           <div>
-            {/* Header Logos */}
-            <div className="flex justify-between items-center border-b pb-4 mb-6">
-              <div className="flex items-center gap-2">
-                <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="25" cy="25" r="22" fill="#000" />
-                  <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
-                  <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-                  <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
-                  <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
-                  <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
-                </svg>
-              </div>
-              <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
-            </div>
+            <PrintHeader title="Logística e Hospedagem" />
 
             {/* Flights info */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Informações sobre transporte Aéreo</h2>
+            <div className="space-y-4">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">✈️ Transporte Aéreo</h2>
               
-              {/* Flight Ida */}
-              {(r.voo_ida.numero || r.voo_ida.aeroporto_origem) && (
-                <div className="space-y-2">
-                  <h3 className="text-base font-bold">Voo de Ida</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {r.voo_ida.numero && <div><span className="font-semibold">Voo:</span> {r.voo_ida.numero}</div>}
-                    {r.voo_ida.localizador && <div><span className="font-semibold">Localizador:</span> {r.voo_ida.localizador}</div>}
-                    {r.voo_ida.data && <div><span className="font-semibold">Data:</span> {fmtDate(r.voo_ida.data)}</div>}
-                    {r.voo_ida.hora && <div><span className="font-semibold">Horário:</span> {r.voo_ida.hora}</div>}
-                    {r.voo_ida.aeroporto_origem && <div><span className="font-semibold">Origem:</span> {r.voo_ida.aeroporto_origem}</div>}
-                    {r.voo_ida.aeroporto_destino && <div><span className="font-semibold">Destino:</span> {r.voo_ida.aeroporto_destino}</div>}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Flight Ida */}
+                {(r.voo_ida.numero || r.voo_ida.aeroporto_origem) && (
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500" />
+                    <div className="pl-2 space-y-1 text-xs">
+                      <div className="font-bold text-blue-600 uppercase tracking-wide text-[10px]">Voo de Ida</div>
+                      <div className="text-slate-800 font-semibold"><span className="text-slate-400 font-normal">Voo:</span> {r.voo_ida.numero} | <span className="text-slate-400 font-normal">Loc:</span> {r.voo_ida.localizador}</div>
+                      <div><span className="text-slate-400">Data:</span> {fmtDate(r.voo_ida.data)} às {r.voo_ida.hora}</div>
+                      <div><span className="text-slate-400">Origem:</span> {r.voo_ida.aeroporto_origem}</div>
+                      <div><span className="text-slate-400">Destino:</span> {r.voo_ida.aeroporto_destino}</div>
+                      {r.voo_ida.terminal && <div><span className="text-slate-400">Terminal:</span> {r.voo_ida.terminal} {r.voo_ida.portao && `| Portão: ${r.voo_ida.portao}`}</div>}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Flight Volta */}
-              {(r.voo_volta.numero || r.voo_volta.aeroporto_origem) && (
-                <div className="space-y-2 border-t pt-4">
-                  <h3 className="text-base font-bold">Voo de Volta</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    {r.voo_volta.numero && <div><span className="font-semibold">Voo:</span> {r.voo_volta.numero}</div>}
-                    {r.voo_volta.localizador && <div><span className="font-semibold">Localizador:</span> {r.voo_volta.localizador}</div>}
-                    {r.voo_volta.data && <div><span className="font-semibold">Data:</span> {fmtDate(r.voo_volta.data)}</div>}
-                    {r.voo_volta.hora && <div><span className="font-semibold">Horário:</span> {r.voo_volta.hora}</div>}
-                    {r.voo_volta.aeroporto_origem && <div><span className="font-semibold">Origem:</span> {r.voo_volta.aeroporto_origem}</div>}
-                    {r.voo_volta.aeroporto_destino && <div><span className="font-semibold">Destino:</span> {r.voo_volta.aeroporto_destino}</div>}
+                {/* Flight Volta */}
+                {(r.voo_volta.numero || r.voo_volta.aeroporto_origem) && (
+                  <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500" />
+                    <div className="pl-2 space-y-1 text-xs">
+                      <div className="font-bold text-emerald-600 uppercase tracking-wide text-[10px]">Voo de Volta</div>
+                      <div className="text-slate-800 font-semibold"><span className="text-slate-400 font-normal">Voo:</span> {r.voo_volta.numero} | <span className="text-slate-400 font-normal">Loc:</span> {r.voo_volta.localizador}</div>
+                      <div><span className="text-slate-400">Data:</span> {fmtDate(r.voo_volta.data)} às {r.voo_volta.hora}</div>
+                      <div><span className="text-slate-400">Origem:</span> {r.voo_volta.aeroporto_origem}</div>
+                      <div><span className="text-slate-400">Destino:</span> {r.voo_volta.aeroporto_destino}</div>
+                      {r.voo_volta.terminal && <div><span className="text-slate-400">Terminal:</span> {r.voo_volta.terminal} {r.voo_volta.portao && `| Portão: ${r.voo_volta.portao}`}</div>}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Hotel info */}
-            <div className="space-y-6 mt-8 border-t pt-6">
-              <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Informações Sobre Hotel</h2>
-              {r.hotel_nome && (
-                <div className="space-y-2 text-sm">
-                  <h3 className="text-base font-bold">{r.hotel_nome}</h3>
-                  {r.hotel_endereco && <div><span className="font-semibold">Endereço:</span> {r.hotel_endereco}</div>}
-                  {r.hotel_telefone && <div><span className="font-semibold">Telefone:</span> {r.hotel_telefone}</div>}
-                  {r.hotel_checkin && <div><span className="font-semibold">Check-in:</span> {fmtDate(r.hotel_checkin)} {r.hotel_checkin_hora && `às ${r.hotel_checkin_hora}`}</div>}
-                  {r.hotel_checkout && <div><span className="font-semibold">Check-out:</span> {fmtDate(r.hotel_checkout)} {r.hotel_checkout_hora && `às ${r.hotel_checkout_hora}`}</div>}
-                </div>
-              )}
+            <div className="space-y-4 mt-6">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">🏨 Hospedagem (Hotel)</h2>
+              
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#991b1b]" />
+                <div className="pl-2 space-y-3">
+                  {r.hotel_nome && (
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="col-span-2"><span className="font-bold text-slate-800 text-sm">{r.hotel_nome}</span></div>
+                      {r.hotel_endereco && <div className="col-span-2"><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{r.hotel_endereco}</span></div>}
+                      {r.hotel_telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{r.hotel_telefone}</span></div>}
+                      {r.hotel_site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{r.hotel_site}</span></div>}
+                      {r.hotel_checkin && <div><span className="font-semibold text-slate-400">Check-in:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkin)} {r.hotel_checkin_hora && `às ${r.hotel_checkin_hora}`}</span></div>}
+                      {r.hotel_checkout && <div><span className="font-semibold text-slate-400">Check-out:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkout)} {r.hotel_checkout_hora && `às ${r.hotel_checkout_hora}`}</span></div>}
+                    </div>
+                  )}
 
-              {/* Rooming List */}
-              {r.quartos && r.quartos.length > 0 && (
-                <div className="mt-4 border-t pt-4">
-                  <h3 className="text-base font-bold mb-2">Lista de Quartos</h3>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm font-sans">
-                    {r.quartos.map((q, idx) => (
-                      <div key={idx} className="flex justify-between border-b pb-0.5">
-                        <span className="text-gray-800">{q.pessoa || "—"}</span>
-                        <span className="font-mono font-semibold text-gray-500">{q.numero}</span>
+                  {/* Rooming List Table */}
+                  {r.quartos && r.quartos.length > 0 && (
+                    <div className="border-t pt-3">
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">Divisão de Quartos</h3>
+                      <table className="w-full text-xs font-sans border-collapse">
+                        <thead>
+                          <tr className="border-b text-slate-400 font-bold uppercase text-[9px] text-left">
+                            <th className="pb-1.5 font-semibold">Integrante</th>
+                            <th className="pb-1.5 font-semibold text-right">Quarto</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {r.quartos.map((q, idx) => (
+                            <tr key={idx} className="border-b last:border-0 border-slate-100 hover:bg-slate-50">
+                              <td className="py-1.5 text-slate-700 font-medium">{q.pessoa || "—"}</td>
+                              <td className="py-1.5 text-slate-900 font-bold text-right font-mono">{q.numero}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* Hotel-Teatro Commute */}
+                  {hotelTeatroDist !== null && (
+                    <div className="border-t pt-3 text-xs font-sans">
+                      <div className="font-bold text-slate-800">Deslocamento Hotel ➡️ Teatro</div>
+                      <div className="text-slate-600 mt-1 flex items-center gap-2 flex-wrap">
+                        <span>🚗 {getCarTime(hotelTeatroDist)} de carro ({getDistanceFmt(hotelTeatroDist)})</span>
+                        <span className="text-slate-300">|</span>
+                        <span>🚶 {getWalkingTime(hotelTeatroDist)} a pé</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Hotel-Teatro distance */}
-              {hotelTeatroDist !== null && (
-                <div className="mt-4 border-t pt-4 text-sm font-sans">
-                  <div className="font-bold text-gray-800">Deslocamento Hotel → Teatro</div>
-                  <div className="text-gray-600 mt-1">
-                    🚗 {getCarTime(hotelTeatroDist)} de carro ({getDistanceFmt(hotelTeatroDist)}) | 🚶 {getWalkingTime(hotelTeatroDist)} a pé
-                  </div>
-                  {r.hotel_endereco && r.teatro_endereco && (
-                    <div className="mt-2 text-xs">
-                      <a href={directionsUrl(r.hotel_endereco, r.teatro_endereco)} target="_blank" rel="noopener noreferrer" className="text-[#991b1b] underline font-semibold">
-                        📍 Abrir Rota no Google Maps
-                      </a>
                     </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
           {/* Page Footer */}
-          <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
-            <span className="font-sans">Road Book · Seven Produções Artísticas</span>
-            <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
-              2
-            </div>
-          </div>
+          <PrintFooter pageNum={2} currentUrl={currentUrl} />
         </div>
 
         {/* PAGE 3: THEATER */}
-        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
           <div>
-            {/* Header Logos */}
-            <div className="flex justify-between items-center border-b pb-4 mb-6">
-              <div className="flex items-center gap-2">
-                <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="25" cy="25" r="22" fill="#000" />
-                  <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
-                  <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-                  <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
-                  <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
-                  <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
-                </svg>
-              </div>
-              <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
-            </div>
+            <PrintHeader title="Local Principal (Teatro)" />
 
             {/* Teatro details */}
-            <div className="space-y-6">
-              <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Local Principal (Teatro)</h2>
-              {r.teatro_nome && (
-                <div className="space-y-2 text-sm">
-                  <h3 className="text-base font-bold">{r.teatro_nome}</h3>
-                  {r.teatro_endereco && <div><span className="font-semibold">Endereço:</span> {r.teatro_endereco}</div>}
-                  {r.teatro_telefone && <div><span className="font-semibold">Telefone:</span> {r.teatro_telefone}</div>}
-                  {r.teatro_site && <div><span className="font-semibold">Site:</span> {r.teatro_site}</div>}
-                  {r.teatro_observacoes && <div className="text-muted-foreground italic mt-2 whitespace-pre-line">Observações: {r.teatro_observacoes}</div>}
+            <div className="space-y-4">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">🏛️ Local Principal (Teatro)</h2>
+              
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#991b1b]" />
+                <div className="pl-2 space-y-3">
+                  {r.teatro_nome && (
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="col-span-2"><span className="font-bold text-slate-800 text-sm">{r.teatro_nome}</span></div>
+                      {r.teatro_endereco && <div className="col-span-2"><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{r.teatro_endereco}</span></div>}
+                      {r.teatro_telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{r.teatro_telefone}</span></div>}
+                      {r.teatro_site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{r.teatro_site}</span></div>}
+                      {r.teatro_observacoes && <div className="col-span-2 border-t pt-2 mt-2"><span className="font-semibold text-slate-400 block mb-0.5">Observações:</span> <p className="text-slate-600 whitespace-pre-line leading-relaxed italic">{r.teatro_observacoes}</p></div>}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
             {/* Teatro Photos Grid */}
             {r.teatro_fotos && r.teatro_fotos.length > 0 && (
               <div className="mt-8">
-                <h3 className="text-base font-bold border-b pb-1 mb-4 uppercase tracking-wide">Fotos do Teatro</h3>
+                <h3 className="text-sm font-bold border-b pb-1.5 mb-4 uppercase tracking-wide text-slate-500">📸 Fotos do Teatro</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {r.teatro_fotos.slice(0, 4).map((f, idx) => (
-                    <div key={idx} className="border border-gray-300 rounded p-1.5 bg-gray-50 flex flex-col items-center shadow-sm">
+                    <div key={idx} className="border border-slate-200 rounded-xl p-2 bg-white flex flex-col items-center shadow-sm break-inside-avoid">
                       {f.url ? (
-                        <img src={f.url} alt={f.nome} className="h-44 w-full object-cover rounded" />
+                        <img src={f.url} alt={f.nome} className="h-40 w-full object-cover rounded-lg" />
                       ) : (
-                        <div className="h-44 w-full bg-gray-200 rounded flex items-center justify-center text-xs text-muted-foreground">Sem imagem</div>
+                        <div className="h-40 w-full bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">Sem imagem</div>
                       )}
-                      {f.descricao && <p className="text-[10px] text-center text-gray-600 mt-1 font-sans italic">{f.descricao}</p>}
+                      <div className="w-full mt-2 px-1 flex items-center justify-between text-[10px]">
+                        <span className="font-bold text-slate-800 uppercase tracking-wider">{f.categoria || "Geral"}</span>
+                        {f.descricao && <span className="text-slate-400 italic font-medium">{f.descricao}</span>}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -939,69 +944,60 @@ function PublicPage() {
           </div>
 
           {/* Page Footer */}
-          <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
-            <span className="font-sans">Road Book · Seven Produções Artísticas</span>
-            <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
-              3
-            </div>
-          </div>
+          <PrintFooter pageNum={3} currentUrl={currentUrl} />
         </div>
 
         {/* PAGE 4: OTHER LOCATIONS */}
         {r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0 && (
-          <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+          <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
             <div>
-              {/* Header Logos */}
-              <div className="flex justify-between items-center border-b pb-4 mb-6">
-                <div className="flex items-center gap-2">
-                  <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="25" cy="25" r="22" fill="#000" />
-                    <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
-                    <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-                    <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
-                    <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
-                    <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
-                  </svg>
-                </div>
-                <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
-              </div>
+              <PrintHeader title="Outros Locais" />
 
               {/* Outros Locais Details */}
-              <div className="space-y-6">
-                <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Outros Locais da Turnê</h2>
+              <div className="space-y-4">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📍 Outros Locais da Turnê</h2>
+                
                 <div className="space-y-6">
                   {r.automacoes.outros_locais.map((ol, idx) => {
                     const geocoded = opState.customPlaces.find(cp => cp.address === ol.endereco);
                     const distanceVal = geocoded?.distance ?? 0;
 
                     return (
-                      <div key={idx} className="space-y-3 border-b pb-4 last:border-0 last:pb-0 break-inside-avoid">
-                        <div className="flex justify-between items-start gap-4">
-                          <h3 className="font-bold text-base">{ol.nome}</h3>
+                      <div key={idx} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden break-inside-avoid space-y-3">
+                        <div className="absolute top-0 left-0 w-1.5 h-full bg-fuchsia-500" />
+                        
+                        <div className="pl-2 flex justify-between items-start gap-4">
+                          <h3 className="font-extrabold text-slate-800 text-sm uppercase tracking-wide">{ol.nome}</h3>
                           {distanceVal > 0 && (
-                            <span className="text-xs text-muted-foreground font-sans font-semibold">
-                              ({distanceVal < 1000 ? `${Math.round(distanceVal)}m` : `${(distanceVal / 1000).toFixed(1)}km`} do hotel)
+                            <span className="text-[10px] bg-fuchsia-50 text-fuchsia-700 px-2 py-0.5 rounded-full font-bold font-sans">
+                              📍 {distanceVal < 1000 ? `${Math.round(distanceVal)}m` : `${(distanceVal / 1000).toFixed(1)}km`} do hotel
                             </span>
                           )}
                         </div>
-                        <div className="text-sm space-y-1">
-                          {ol.endereco && <div><span className="font-semibold">Endereço:</span> {ol.endereco}</div>}
-                          {ol.telefone && <div><span className="font-semibold">Telefone:</span> {ol.telefone}</div>}
-                          {ol.site && <div><span className="font-semibold">Site:</span> {ol.site}</div>}
-                          {ol.observacoes && <div className="italic text-muted-foreground mt-1">Observações: {ol.observacoes}</div>}
+                        
+                        <div className="pl-2 text-xs space-y-1.5">
+                          {ol.endereco && <div><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{ol.endereco}</span></div>}
+                          <div className="grid grid-cols-2 gap-4">
+                            {ol.telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{ol.telefone}</span></div>}
+                            {ol.site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{ol.site}</span></div>}
+                          </div>
+                          {ol.observacoes && <div className="border-t pt-2 mt-2"><span className="font-semibold text-slate-400 block mb-0.5">Observações:</span> <p className="text-slate-600 italic leading-relaxed">{ol.observacoes}</p></div>}
                         </div>
 
                         {/* Location Photos */}
                         {ol.fotos && ol.fotos.length > 0 && (
-                          <div className="grid grid-cols-2 gap-4 mt-3">
+                          <div className="grid grid-cols-2 gap-4 mt-3 pl-2">
                             {ol.fotos.slice(0, 2).map((f, fIdx) => (
-                              <div key={fIdx} className="border border-gray-300 rounded p-1 bg-gray-50 flex flex-col items-center shadow-sm">
+                              <div key={fIdx} className="border border-slate-100 rounded-lg p-1.5 bg-slate-50 flex flex-col items-center">
                                 {f.url ? (
-                                  <img src={f.url} alt={f.nome} className="h-32 w-full object-cover rounded" />
+                                  <img src={f.url} alt={f.nome} className="h-28 w-full object-cover rounded-md" />
                                 ) : (
-                                  <div className="h-32 w-full bg-gray-200 rounded flex items-center justify-center text-xs text-muted-foreground">Sem imagem</div>
+                                  <div className="h-28 w-full bg-slate-200 rounded-md flex items-center justify-center text-xs text-slate-400">Sem imagem</div>
                                 )}
-                                {f.descricao && <p className="text-[9px] text-center text-gray-600 mt-1 font-sans italic">{f.descricao}</p>}
+                                <div className="w-full mt-1.5 px-0.5 flex justify-between items-center text-[9px]">
+                                  <span className="font-bold text-slate-700 uppercase tracking-wide">{f.categoria || "Geral"}</span>
+                                  {f.descricao && <span className="text-slate-400 italic">{f.descricao}</span>}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -1014,12 +1010,101 @@ function PublicPage() {
             </div>
 
             {/* Page Footer */}
-            <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
-              <span className="font-sans">Road Book · Seven Produções Artísticas</span>
-              <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
-                4
+            <PrintFooter pageNum={4} currentUrl={currentUrl} />
+          </div>
+        )}
+
+        {/* PAGE 5: ADDITIONAL DETAILS (Contacts, Festival info, Documents) */}
+        {(r.producao_nome || r.producao_whatsapp || r.producao_telefone || r.receptivo_nome || r.receptivo_whatsapp || r.receptivo_telefone || r.outros_contatos.length > 0 || hasFestivalInfo || r.documentos.length > 0) && (
+          <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
+            <div>
+              <PrintHeader title="Informações Adicionais" />
+
+              <div className="space-y-6">
+                {/* Contatos Section */}
+                {(r.producao_nome || r.receptivo_nome || r.outros_contatos.length > 0) && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">👥 Contatos da Turnê</h3>
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      {(r.producao_nome || r.producao_telefone || r.producao_whatsapp) && (
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-slate-800" />
+                          <div className="pl-1.5 space-y-0.5">
+                            <div className="font-bold text-[10px] uppercase text-slate-400">Produção</div>
+                            <div className="font-bold text-slate-800">{r.producao_nome || "—"}</div>
+                            {r.producao_telefone && <div>Tel: <span className="text-slate-600">{r.producao_telefone}</span></div>}
+                            {r.producao_whatsapp && <div>WhatsApp: <span className="text-slate-600">{r.producao_whatsapp}</span></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {(r.receptivo_nome || r.receptivo_telefone || r.receptivo_whatsapp) && (
+                        <div className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-slate-800" />
+                          <div className="pl-1.5 space-y-0.5">
+                            <div className="font-bold text-[10px] uppercase text-slate-400">Receptivo Local</div>
+                            <div className="font-bold text-slate-800">{r.receptivo_nome || "—"}</div>
+                            {r.receptivo_telefone && <div>Tel: <span className="text-slate-600">{r.receptivo_telefone}</span></div>}
+                            {r.receptivo_whatsapp && <div>WhatsApp: <span className="text-slate-600">{r.receptivo_whatsapp}</span></div>}
+                          </div>
+                        </div>
+                      )}
+
+                      {r.outros_contatos.map((c, idx) => (
+                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm relative overflow-hidden">
+                          <div className="absolute top-0 left-0 w-1 h-full bg-slate-800" />
+                          <div className="pl-1.5 space-y-0.5">
+                            <div className="font-bold text-[10px] uppercase text-slate-400">{c.funcao || "Contato"}</div>
+                            <div className="font-bold text-slate-800">{c.nome || "—"}</div>
+                            {c.telefone && <div>Tel: <span className="text-slate-600">{c.telefone}</span></div>}
+                            {c.whatsapp && <div>WhatsApp: <span className="text-slate-600">{c.whatsapp}</span></div>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Festival / Comunicação Section */}
+                {hasFestivalInfo && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">🎪 Festival e Comunicação</h3>
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs space-y-2">
+                      {r.festival && <div className="font-bold text-slate-800 text-sm">{r.festival}</div>}
+                      <div className="grid grid-cols-2 gap-2 text-slate-700">
+                        {fiSite && <div><span className="font-semibold text-slate-400">Site:</span> {fiSite}</div>}
+                        {fiInstagram && <div><span className="font-semibold text-slate-400">Instagram:</span> {fiInstagram}</div>}
+                        {fi.redes && <div className="col-span-2"><span className="font-semibold text-slate-400">Outras Redes:</span> {fi.redes}</div>}
+                        {fi.programacao_oficial && <div className="col-span-2"><span className="font-semibold text-slate-400">Programação Oficial:</span> {fi.programacao_oficial}</div>}
+                        {fi.observacoes && <div className="col-span-2 border-t pt-2 mt-1 italic text-slate-500">Observações: {fi.observacoes}</div>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Documentos Section */}
+                {r.documentos && r.documentos.length > 0 && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📁 Documentos Técnicos</h3>
+                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs">
+                      <p className="text-slate-400 mb-2 italic">Acesse a versão online do Road Book para abrir e baixar estes arquivos:</p>
+                      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                        {r.documentos.map((doc, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-slate-700 border-b border-slate-50 pb-1">
+                            <span className="text-slate-400 font-bold shrink-0">·</span>
+                            <span className="truncate font-medium">{doc.nome}</span>
+                            <span className="text-[10px] text-slate-400 uppercase">({doc.tipo?.split("/")[1] || "PDF"})</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Page Footer */}
+            <PrintFooter pageNum={r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0 ? 5 : 4} currentUrl={currentUrl} />
           </div>
         )}
       </div>
@@ -1351,6 +1436,51 @@ function RedesLinks({ text }: { text: string }) {
     </p>
   );
 }
+function PrintHeader({ title }: { title: string }) {
+  return (
+    <div className="flex justify-between items-center border-b pb-4 mb-6">
+      {/* Seven Logo SVG - original logo restored */}
+      <div className="flex items-center gap-2">
+        <svg width="140" height="38" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="25" cy="25" r="22" fill="#000" />
+          <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
+          <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+          <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
+          <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
+          <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
+        </svg>
+      </div>
+      <div className="text-right font-sans">
+        <span className="block text-[8px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Guia de Turnê</span>
+        <span className="block text-xs font-black uppercase tracking-wide text-slate-700">{title}</span>
+      </div>
+      <img src="/logo-maca.png" alt="A Maçã Logo" className="h-9 w-auto object-contain" />
+    </div>
+  );
+}
+
+function PrintFooter({ pageNum, currentUrl }: { pageNum: number; currentUrl: string }) {
+  return (
+    <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-200/60 pt-3 mt-6">
+      <span className="font-sans font-semibold tracking-wider uppercase text-slate-400">Road Book · Seven Produções Artísticas</span>
+      <div className="flex items-center gap-4">
+        {/* Dynamic QR Code & URL always present on every page */}
+        <div className="flex items-center gap-2">
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(currentUrl)}`}
+            alt="QR Code Online"
+            className="size-6 object-contain border p-0.5 bg-white rounded shadow-sm"
+          />
+          <span className="text-[8px] underline text-slate-400/80 break-all max-w-[150px] truncate">{currentUrl}</span>
+        </div>
+        <div className="size-5 rounded-full bg-slate-800 text-white flex items-center justify-center font-sans text-[10px] font-bold shadow-sm shrink-0">
+          {pageNum}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function cleanCityName(s: string): string {
   if (!s) return "";
   return s.replace(/aeroporto\s+de/i, "")
@@ -1631,6 +1761,7 @@ function OperationalMap({
   teatroCoords,
   places,
   customPlaces = [],
+  outrosLocais = [],
 }: {
   hotelNome: string;
   teatroNome: string;
@@ -1638,6 +1769,7 @@ function OperationalMap({
   teatroCoords: [number, number] | null;
   places: PlaceDetail[];
   customPlaces?: CustomPlaceDetail[];
+  outrosLocais?: any[];
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -1751,6 +1883,12 @@ function OperationalMap({
       if (markers.getBounds().isValid()) {
         map.fitBounds(markers.getBounds().pad(0.1));
       }
+
+      setTimeout(() => {
+        if (active && mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 200);
     });
 
     return () => {
@@ -1762,20 +1900,6 @@ function OperationalMap({
     };
   }, [hotelCoords, teatroCoords, places, customPlaces]);
 
-  const getDistanceFmt = (d: number) => {
-    if (d < 1000) return `${Math.round(d)}m`;
-    return `${(d / 1000).toFixed(1)}km`;
-  };
-
-  const getWalkingTime = (d: number) => {
-    const time = Math.round((d * 1.25) / 80); // 80m/min
-    return time <= 1 ? "1 min" : `${time} min`;
-  };
-
-  const getCarTime = (d: number) => {
-    const time = Math.round((d * 1.25) / 400) + 1; // 400m/min + 1min overhead
-    return time <= 1 ? "1 min" : `${time} min`;
-  };
 
   const getTypeLabel = (t: string) => {
     if (t === "pharmacy") return "Farmácia";
@@ -1788,7 +1912,7 @@ function OperationalMap({
     if (p.assoc === "theater") return "próximo ao teatro";
     if (typeof p.assoc === "string" && p.assoc.startsWith("custom_")) {
       const idx = parseInt(p.assoc.split("_")[1]);
-      const name = r.automacoes?.outros_locais?.[idx]?.nome || "local";
+      const name = outrosLocais?.[idx]?.nome || "local";
       return `próximo a: ${name}`;
     }
     return "";

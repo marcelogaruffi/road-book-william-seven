@@ -18,10 +18,12 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
+    setErrorMsg(null);
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -36,7 +38,9 @@ function AuthPage() {
       }
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err.message ?? "Erro");
+      const msg = err.message || "Erro";
+      setErrorMsg(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -51,6 +55,11 @@ function AuthPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
+            {errorMsg && (
+              <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md border border-destructive/20 text-center font-medium">
+                ⚠️ {errorMsg === "Invalid login credentials" ? "E-mail ou senha incorretos." : errorMsg}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -62,7 +71,7 @@ function AuthPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Cadastrar"}
             </Button>
-            <button type="button" onClick={() => setMode(mode === "login" ? "signup" : "login")} className="text-sm text-muted-foreground hover:text-foreground w-full text-center">
+            <button type="button" onClick={() => { setMode(mode === "login" ? "signup" : "login"); setErrorMsg(null); }} className="text-sm text-muted-foreground hover:text-foreground w-full text-center">
               {mode === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
             </button>
           </form>

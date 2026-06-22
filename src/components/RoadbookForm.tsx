@@ -765,6 +765,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     <FotosCard
                       title={`Fotos de ${loc.nome || "este local"}`}
                       categorias={["Fachada", "Palco", "Plateia", "Camarim", "Acesso de carga", "Bilheteria", "Entrada do público", "Área técnica", "Outros"] as unknown as readonly string[]}
+                      customCategory={true}
                       uploading={uploading}
                       fotos={loc.fotos ?? []}
                       onUpload={(e) => {
@@ -871,10 +872,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function FotosCard({
-  title, categorias, uploading, fotos, onUpload, onUpdate, onRemove,
+  title, categorias, customCategory, uploading, fotos, onUpload, onUpdate, onRemove,
 }: {
   title: string;
   categorias: readonly string[];
+  customCategory?: boolean;
   uploading: boolean;
   fotos: Foto[];
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -905,14 +907,22 @@ function FotosCard({
                 </div>
                 <div>
                   <Label className="text-xs">Categoria</Label>
-                  <Select value={categorias.includes(f.categoria) ? f.categoria : "Outros"} onValueChange={(v) => onUpdate(i, { categoria: v, descricao: v === "Outros" ? (f.descricao ?? "") : "" })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {categorias.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  {customCategory ? (
+                    <Input
+                      value={f.categoria || ""}
+                      onChange={(e) => onUpdate(i, { categoria: e.target.value })}
+                      placeholder="Ex: Palco, Camarim, Oficinas..."
+                    />
+                  ) : (
+                    <Select value={categorias.includes(f.categoria) ? f.categoria : "Outros"} onValueChange={(v) => onUpdate(i, { categoria: v, descricao: v === "Outros" ? (f.descricao ?? "") : "" })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {categorias.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
-                {f.categoria === "Outros" && (
+                {!customCategory && f.categoria === "Outros" && (
                   <div>
                     <Label className="text-xs">Descrição</Label>
                     <Input value={f.descricao ?? ""} onChange={(e) => onUpdate(i, { descricao: e.target.value })} placeholder="Ex.: Piscina, Restaurante, Hall..." />
