@@ -493,8 +493,11 @@ function PublicPage() {
                   <DayWeather date={date} />
                   <div className="rounded-lg border divide-y bg-card mt-2">
                     {groups[date].map((p, i) => (
-                      <div key={i} className="p-3 flex gap-3">
-                        <div className="text-xs font-mono tabular-nums shrink-0 w-20 text-primary pt-0.5">{progHora(p)}</div>
+                      <div key={i} className="p-3 flex gap-3 items-start">
+                        <div className="flex flex-col gap-1 shrink-0 w-20 text-primary pt-0.5">
+                          <span className="text-xs font-mono tabular-nums font-bold">{progHora(p)}</span>
+                          <HourWeather date={date} time={progHora(p)} />
+                        </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start gap-2 flex-wrap">
                             <span className="font-medium">{progTitle(p)}</span>
@@ -782,8 +785,11 @@ function PublicPage() {
                   </h3>
                   <div className="space-y-2">
                     {groups[date].map((p, i) => (
-                      <div key={i} className="flex gap-4 text-xs py-0.5">
-                        <span className="font-mono font-bold text-[#991b1b] w-24 shrink-0">{progHora(p)}</span>
+                      <div key={i} className="flex gap-4 text-xs py-0.5 items-start">
+                        <div className="flex flex-col gap-0.5 w-24 shrink-0">
+                          <span className="font-mono font-bold text-[#991b1b]">{progHora(p)}</span>
+                          <HourWeather date={date} time={progHora(p)} />
+                        </div>
                         <div className="flex-1">
                           <span className="font-bold text-slate-900">{progTitle(p)}</span>
                           {p.local && <span className="text-slate-500 ml-1.5 font-medium">({p.local})</span>}
@@ -1624,7 +1630,145 @@ function PrintDayWeather({ date }: { date: string }) {
   }, [date, geo]);
 
   if (!weatherText || weatherText === "...") return null;
-  return <span className="text-xs text-muted-foreground ml-3 font-normal font-sans">({weatherText})</span>;
+  return <span className="text-xs text-muted-foreground ml-3 font-normal font-sans">(({weatherText}))</span>;
+}
+
+// ============ Hourly Weather Cache & Component ============
+const hourlyWeatherCache: { [date: string]: Promise<{ temp: number[]; code: number[] }> } = {};
+
+function fetchHourlyWeather(latitude: number, longitude: number, date: string): Promise<{ temp: number[]; code: number[] }> {
+  if (hourlyWeatherCache[date]) return hourlyWeatherCache[date];
+
+  const promise = (async () => {
+    const [y, m, d] = date.split("-").map(Number);
+    const target = new Date(Date.UTC(y, m - 1, d));
+    const today = new Date();
+    const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const diff = daysBetween(todayUTC, target);
+
+    if (diff >= -1 && diff <= 15) {
+      // Forecast
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
+        `&hourly=temperature_2m,weathercode` +
+        `&timezone=auto&start_date=${date}&end_date=${date}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("http forecast hourly " + res.status);
+      const j = await res.json();
+      const temp = j?.hourly?.temperature_2m ?? [];
+      const code = j?.hourly?.weathercode ?? [];
+      return { temp, code };
+    } else {
+      // Historical average: last 5 years, same month/day
+      const mm = String(target.getUTCMonth() + 1).padStart(2, "0");
+      const dd = String(target.getUTCDate()).padStart(2, "0");
+      const baseYear = todayUTC.getUTCFullYear() - 1;
+      const years = [0, 1, 2, 3, 4].map((i) => baseYear - i);
+
+      const results = await Promise.all(years.map(async (yr) => {
+        const iso = `${yr}-${mm}-${dd}`;
+        const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}` +
+          `&hourly=temperature_2m,weathercode` +
+          `&timezone=auto&start_date=${iso}&end_date=${iso}`;
+        const r = await fetch(url);
+        if (!r.ok) return null;
+        const jj = await r.json();
+        return {
+          temp: jj?.hourly?.temperature_2m ?? [],
+          code: jj?.hourly?.weathercode ?? [],
+        };
+      }));
+
+      const temp: number[] = Array(24).fill(0);
+      const code: number[] = Array(24).fill(0);
+
+      for (let hour = 0; hour < 24; hour++) {
+        const tempsForHour = results
+          .map(r => r?.temp?.[hour])
+          .filter(t => typeof t === "number") as number[];
+        const codesForHour = results
+          .map(r => r?.code?.[hour])
+          .filter(c => typeof c === "number") as number[];
+
+        if (tempsForHour.length > 0) {
+          temp[hour] = Math.round(tempsForHour.reduce((a, b) => a + b, 0) / tempsForHour.length);
+        } else {
+          temp[hour] = NaN;
+        }
+
+        if (codesForHour.length > 0) {
+          code[hour] = codesForHour[0];
+        } else {
+          code[hour] = 0;
+        }
+      }
+
+      return { temp, code };
+    }
+  })();
+
+  hourlyWeatherCache[date] = promise;
+  return promise;
+}
+
+function getWeatherEmoji(code: number) {
+  if (code === 0) return "☀️"; // Clear
+  if (code === 1 || code === 2) return "⛅"; // Partly cloudy
+  if (code === 3) return "☁️"; // Overcast
+  if (code === 45 || code === 48) return "🌫️"; // Fog
+  if (code === 51 || code === 53 || code === 55) return "🌦️"; // Drizzle
+  if (code === 61 || code === 63 || code === 65) return "🌧️"; // Rain
+  if (code === 71 || code === 73 || code === 75) return "❄️"; // Snow
+  if (code === 80 || code === 81 || code === 82) return "🌧️"; // Rain showers
+  if (code === 95 || code === 96 || code === 99) return "⛈️"; // Thunderstorm
+  return "☀️";
+}
+
+function HourWeather({ date, time }: { date: string; time: string }) {
+  const geo = useContext(GeoContext);
+  const [data, setData] = useState<{ temp: number; code: number } | null>(null);
+  const [status, setStatus] = useState<"loading" | "error" | "ok">("loading");
+
+  useEffect(() => {
+    if (geo.status === "loading") { setStatus("loading"); return; }
+    if (geo.status === "error") { setStatus("error"); return; }
+    if (!time) { setStatus("error"); return; }
+
+    let cancel = false;
+    (async () => {
+      try {
+        const { latitude, longitude } = geo.place;
+        const res = await fetchHourlyWeather(latitude, longitude, date);
+        if (cancel) return;
+
+        const hourMatch = time.match(/^(\d{1,2})/);
+        const hour = hourMatch ? parseInt(hourMatch[1], 10) : 12;
+
+        const tempVal = res.temp[hour];
+        const codeVal = res.code[hour];
+
+        if (typeof tempVal === "number" && !isNaN(tempVal)) {
+          setData({ temp: tempVal, code: codeVal ?? 0 });
+          setStatus("ok");
+        } else {
+          setStatus("error");
+        }
+      } catch {
+        if (!cancel) setStatus("error");
+      }
+    })();
+
+    return () => { cancel = true; };
+  }, [date, time, geo]);
+
+  if (status === "loading") return <span className="text-[10px] text-muted-foreground/50">...</span>;
+  if (status === "error" || !data) return null;
+
+  return (
+    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/80 font-sans font-medium bg-muted/40 px-1.5 py-0.5 rounded shadow-sm shrink-0 border border-muted-foreground/10">
+      <span>{getWeatherEmoji(data.code)}</span>
+      <span>{data.temp}°C</span>
+    </span>
+  );
 }
 
 // ============ Weather (Open-Meteo, free, no key) ============
