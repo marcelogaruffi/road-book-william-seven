@@ -762,17 +762,40 @@ function PublicPage() {
         {/* PAGE 1: DIARY SCHEDULE */}
         <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative bg-slate-50">
           <div>
-            <PrintHeader title={r.espetaculo} />
+            <PrintHeader title={r.espetaculo} isFirstPage={true} />
 
-            {/* Document Title */}
-            <div className="text-center my-4">
-              <h2 className="text-lg font-black tracking-widest uppercase text-slate-800">Programação Diária</h2>
-              {r.festival && <p className="text-xs uppercase tracking-widest text-[#991b1b] font-bold mt-1">{r.festival}</p>}
-              {(r.data_inicial || r.data_final) && (
-                <p className="text-xs font-semibold text-slate-500 mt-1 bg-slate-100 px-3 py-1 rounded-full inline-block">
-                  📅 {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
-                </p>
-              )}
+            {/* Document Title & QR Code aligned */}
+            <div className="flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm mb-6">
+              <div className="text-left font-sans">
+                <h2 className="text-xl font-black tracking-widest uppercase text-slate-800">Programação Diária</h2>
+                {r.festival && <p className="text-xs uppercase tracking-widest text-[#991b1b] font-bold mt-1">{r.festival}</p>}
+                {(r.data_inicial || r.data_final) && (
+                  <p className="text-xs font-semibold text-slate-500 mt-1">
+                    📅 {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-100 shrink-0">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(currentUrl)}`}
+                  alt="QR Code"
+                  className="size-12 object-contain border p-0.5 bg-white rounded shadow-sm"
+                />
+                <div className="text-left font-sans text-[8px] max-w-[180px] leading-normal text-slate-700">
+                  <div className="font-extrabold text-[#991b1b] uppercase tracking-wider text-[7.5px] mb-0.5">Programação atualizada em tempo real no link:</div>
+                  <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold text-slate-500 hover:text-slate-700 break-all block">{currentUrl}</a>
+                </div>
+              </div>
+            </div>
+
+            {/* Weather Row */}
+            <div className="border-t border-slate-200/60 pt-4 mb-6">
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-sans mb-3">Previsão do Tempo na Turnê ({r.cidade})</h4>
+              <div className="flex gap-2">
+                {dias.map(d => (
+                  <PrintWeatherForecastCard key={d} date={d} />
+                ))}
+              </div>
             </div>
 
             {/* Programacao List */}
@@ -804,33 +827,6 @@ function PublicPage() {
           </div>
 
           <div>
-            {/* Weather & QR Code card */}
-            <div className="grid grid-cols-3 gap-6 border-t border-slate-200 pt-5 mt-6 mb-4 items-end">
-              <div className="col-span-2 space-y-3">
-                <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-sans">Previsão do Tempo</h4>
-                <div className="flex gap-4 flex-wrap">
-                  {r.cidade && <PrintWeatherSummaryCard city={r.cidade} date={dias[0] || ""} />}
-                  {r.voo_ida.aeroporto_origem && (
-                    <PrintWeatherSummaryCard city={r.voo_ida.aeroporto_origem} date={dias[0] || ""} />
-                  )}
-                </div>
-              </div>
-
-              {/* QR Code and link */}
-              <div className="border border-slate-200 p-3 rounded-lg bg-white shadow-sm flex items-center gap-3 w-fit ml-auto">
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(currentUrl)}`}
-                  alt="QR Code"
-                  className="size-16 object-contain border p-1 bg-white rounded shadow-sm"
-                />
-                <div className="text-left font-sans text-[9px] max-w-[120px] leading-normal">
-                  <div className="font-bold text-slate-800">Versão Online</div>
-                  <div className="text-slate-400 mt-0.5">Escaneie para acessar o guia atualizado no celular.</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Page Footer */}
             <PrintFooter pageNum={1} currentUrl={currentUrl} />
           </div>
         </div>
@@ -926,6 +922,25 @@ function PublicPage() {
                         <span>🚗 {getCarTime(hotelTeatroDist)} de carro ({getDistanceFmt(hotelTeatroDist)})</span>
                         <span className="text-slate-300">|</span>
                         <span>🚶 {getWalkingTime(hotelTeatroDist)} a pé</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Boarding Passes (Cartões de Embarque) */}
+                  {((r.voo_ida.cartoes_embarque?.length ?? 0) > 0 || (r.voo_volta.cartoes_embarque?.length ?? 0) > 0) && (
+                    <div className="border-t pt-3 mt-3 break-inside-avoid">
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        {[...(r.voo_ida.cartoes_embarque ?? []), ...(r.voo_volta.cartoes_embarque ?? [])].map((c, cIdx) => (
+                          <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center">
+                            {c.url ? (
+                              <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
+                            ) : (
+                              <div className="h-24 w-full bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400">Cartão de Embarque</div>
+                            )}
+                            <span className="text-[9px] font-bold text-slate-600 mt-1">{c.nome || "Bilhete"}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1479,9 +1494,21 @@ function RedesLinks({ text }: { text: string }) {
     </p>
   );
 }
-function PrintHeader({ title }: { title: string }) {
+function PrintHeader({ title, isFirstPage = false }: { title: string; isFirstPage?: boolean }) {
+  if (isFirstPage) {
+    return (
+      <div className="flex justify-between items-center border-b pb-6 mb-8 pt-4">
+        <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
+        <div className="text-center font-sans">
+          <span className="block text-[10px] font-extrabold uppercase tracking-[0.25em] text-slate-400">Guia de Turnê</span>
+          <span className="block text-2xl font-black uppercase tracking-wide text-slate-800 leading-tight">{title}</span>
+        </div>
+        <img src="/logo-maca.png" alt="A Maçã Logo" className="h-16 w-auto object-contain" />
+      </div>
+    );
+  }
   return (
-    <div className="flex justify-between items-center border-b pb-4 mb-6">
+    <div className="flex justify-between items-center border-b pb-3 mb-4">
       <img src="/logo-seven.png" alt="Seven Produções" className="h-9 w-auto object-contain" />
       <div className="text-right font-sans">
         <span className="block text-[8px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Guia de Turnê</span>
@@ -1630,7 +1657,7 @@ function PrintDayWeather({ date }: { date: string }) {
   }, [date, geo]);
 
   if (!weatherText || weatherText === "...") return null;
-  return <span className="text-xs text-muted-foreground ml-3 font-normal font-sans">(({weatherText}))</span>;
+  return <span className="text-xs text-muted-foreground ml-3 font-normal font-sans">({weatherText})</span>;
 }
 
 // ============ Hourly Weather Cache & Component ============
@@ -1768,6 +1795,100 @@ function HourWeather({ date, time }: { date: string; time: string }) {
       <span>{getWeatherEmoji(data.code)}</span>
       <span>{data.temp}°C</span>
     </span>
+  );
+}
+
+function getDayOfWeekAbbrev(dateStr: string) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  const dayNames = ["dom.", "seg.", "ter.", "qua.", "qui.", "sex.", "sáb."];
+  return dayNames[date.getUTCDay()];
+}
+
+function PrintWeatherForecastCard({ date }: { date: string }) {
+  const geo = useContext(GeoContext);
+  const [data, setData] = useState<DayData>({ status: "loading" });
+
+  const target = useMemo(() => {
+    const [y, m, d] = (date || "").split("-").map(Number);
+    if (!y || !m || !d) return null;
+    return new Date(Date.UTC(y, m - 1, d));
+  }, [date]);
+
+  useEffect(() => {
+    if (geo.status !== "ok" || !target) return;
+    let cancel = false;
+    (async () => {
+      const { latitude, longitude } = geo.place;
+      const today = new Date();
+      const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+      const diff = daysBetween(todayUTC, target);
+      try {
+        if (diff >= -1 && diff <= 15) {
+          const iso = date;
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&start_date=${iso}&end_date=${iso}`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error();
+          const j = await res.json();
+          if (cancel) return;
+          setData({
+            status: "ok", kind: "forecast",
+            maxC: Math.round(j?.daily?.temperature_2m_max?.[0] ?? NaN),
+            minC: Math.round(j?.daily?.temperature_2m_min?.[0] ?? NaN),
+            rainPct: j?.daily?.weathercode?.[0] ?? 0,
+          });
+        } else {
+          const mStr = String(target.getUTCMonth() + 1).padStart(2, "0");
+          const dStr = String(target.getUTCDate()).padStart(2, "0");
+          const baseYear = todayUTC.getUTCFullYear() - 1;
+          const years = [0, 1, 2, 3, 4].map((i) => baseYear - i);
+          const results = await Promise.all(years.map(async (yr) => {
+            const iso = `${yr}-${mStr}-${dStr}`;
+            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=auto&start_date=${iso}&end_date=${iso}`;
+            const r = await fetch(url);
+            if (!r.ok) return null;
+            const jj = await r.json();
+            return {
+              max: jj?.daily?.temperature_2m_max?.[0],
+              min: jj?.daily?.temperature_2m_min?.[0],
+              code: jj?.daily?.weathercode?.[0],
+            };
+          }));
+          if (cancel) return;
+          const valid = results.filter((x): x is { max: number; min: number; code: number } =>
+            !!x && typeof x.max === "number" && typeof x.min === "number");
+          if (valid.length === 0) throw new Error();
+          const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
+          const maxC = Math.round(avg(valid.map((v) => v.max)));
+          const minC = Math.round(avg(valid.map((v) => v.min)));
+          const code = valid[0]?.code ?? 0;
+          setData({ status: "ok", kind: "historical", maxC, minC, rainPct: code });
+        }
+      } catch {
+        if (!cancel) setData({ status: "error", message: "Erro" });
+      }
+    })();
+    return () => { cancel = true; };
+  }, [date, geo, target]);
+
+  if (data.status === "loading") {
+    return (
+      <div className="flex-1 min-w-[50px] border border-slate-200/60 rounded-lg p-2 bg-slate-50/50 flex flex-col items-center justify-center text-[9px] text-slate-400 font-sans">
+        <span>{getDayOfWeekAbbrev(date)}</span>
+        <span className="animate-pulse">...</span>
+      </div>
+    );
+  }
+  if (data.status === "error") return null;
+
+  return (
+    <div className="flex-1 min-w-[50px] border border-slate-200 rounded-lg p-2 bg-white flex flex-col items-center justify-center font-sans shadow-sm text-center">
+      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1">{getDayOfWeekAbbrev(date)}</span>
+      <span className="text-xl mb-1">{getWeatherEmoji(data.rainPct)}</span>
+      <span className="text-[10px] font-black text-slate-700 tracking-tighter">
+        {isFinite(data.maxC) ? `${data.maxC}°` : "—"} {isFinite(data.minC) ? `${data.minC}°` : "—"}
+      </span>
+    </div>
   );
 }
 
