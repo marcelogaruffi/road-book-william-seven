@@ -103,9 +103,18 @@ export type Voo = {
 };
 export const emptyVoo: Voo = { passageiros: [], cartoes_embarque: [] };
 
+export type OutroLocal = {
+  nome: string;
+  endereco: string;
+  telefone?: string;
+  site?: string;
+  observacoes?: string;
+  fotos?: Foto[];
+};
+
 export type Automacoes = {
   timeline_overrides?: Record<string, string>;
-  outros_locais?: { nome: string; endereco: string }[];
+  outros_locais?: OutroLocal[];
 };
 
 export type RoadbookData = {

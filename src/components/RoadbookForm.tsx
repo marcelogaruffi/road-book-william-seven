@@ -298,10 +298,10 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     const list = d.automacoes?.outros_locais ?? [];
     up("automacoes", {
       ...d.automacoes,
-      outros_locais: [...list, { nome: "", endereco: "" }]
+      outros_locais: [...list, { nome: "", endereco: "", telefone: "", site: "", observacoes: "", fotos: [] }]
     });
   }
-  function updateOutroLocal(i: number, patch: Partial<{ nome: string; endereco: string }>) {
+  function updateOutroLocal(i: number, patch: Partial<OutroLocal>) {
     const list = d.automacoes?.outros_locais ?? [];
     const updated = list.map((item, idx) => idx === i ? { ...item, ...patch } : item);
     up("automacoes", {
@@ -315,6 +315,95 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     up("automacoes", {
       ...d.automacoes,
       outros_locais: updated
+    });
+  }
+
+  async function uploadFotosForOutroLocal(localIndex: number, files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (!uid) throw new Error("Sessão expirada");
+      const rbId = d.id ?? "draft";
+      const novos: Foto[] = [];
+      
+      const list = d.automacoes?.outros_locais ?? [];
+      const local = list[localIndex];
+      const existingCount = local?.fotos?.length ?? 0;
+
+      let idx = existingCount + 1;
+      for (const f of Array.from(files)) {
+        if (!f.type.startsWith("image/")) continue;
+        const ext = f.name.split('.').pop() || 'jpg';
+        const sequentialName = `foto-${idx}.${ext}`;
+        const path = `${uid}/${rbId}/outro_local_${localIndex}/${Date.now()}-${sequentialName}`;
+        const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
+        if (error) throw error;
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
+        novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: signed?.signedUrl });
+        idx++;
+      }
+
+      const updatedLocais = list.map((item, idx) => {
+        if (idx === localIndex) {
+          return {
+            ...item,
+            fotos: [...(item.fotos ?? []), ...novos]
+          };
+        }
+        return item;
+      });
+
+      up("automacoes", {
+        ...d.automacoes,
+        outros_locais: updatedLocais
+      });
+      toast.success(`${novos.length} foto(s) enviada(s)`);
+    } catch (err: any) {
+      toast.error(err.message ?? "Erro no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  function updateFotoForOutroLocal(localIndex: number, photoIndex: number, patch: Partial<Foto>) {
+    const list = d.automacoes?.outros_locais ?? [];
+    const updatedLocais = list.map((item, idx) => {
+      if (idx === localIndex) {
+        const updatedFotos = (item.fotos ?? []).map((f, pIdx) => pIdx === photoIndex ? { ...f, ...patch } : f);
+        return {
+          ...item,
+          fotos: updatedFotos
+        };
+      }
+      return item;
+    });
+    up("automacoes", {
+      ...d.automacoes,
+      outros_locais: updatedLocais
+    });
+  }
+
+  async function removeFotoForOutroLocal(localIndex: number, photoIndex: number) {
+    const list = d.automacoes?.outros_locais ?? [];
+    const local = list[localIndex];
+    const foto = local?.fotos?.[photoIndex];
+    if (!foto) return;
+    try { if (foto.path) await supabase.storage.from("roadbook-docs").remove([foto.path]); } catch {}
+
+    const updatedLocais = list.map((item, idx) => {
+      if (idx === localIndex) {
+        return {
+          ...item,
+          fotos: (item.fotos ?? []).filter((_, pIdx) => pIdx !== photoIndex)
+        };
+      }
+      return item;
+    });
+    up("automacoes", {
+      ...d.automacoes,
+      outros_locais: updatedLocais
     });
   }
 
@@ -367,10 +456,10 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           <TabsTrigger value="geral">Geral</TabsTrigger>
           <TabsTrigger value="hotel">Hotel</TabsTrigger>
           <TabsTrigger value="teatro">Teatro</TabsTrigger>
+          <TabsTrigger value="outros_locais">Outros Locais</TabsTrigger>
           <TabsTrigger value="contatos">Contatos</TabsTrigger>
           <TabsTrigger value="programacao">Programação</TabsTrigger>
           <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
-          <TabsTrigger value="outros_locais">Outros Locais</TabsTrigger>
           <TabsTrigger value="voos">Voos</TabsTrigger>
           <TabsTrigger value="festival">Festival</TabsTrigger>
           <TabsTrigger value="docs">Documentos</TabsTrigger>
@@ -611,8 +700,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                 <Plus className="size-4 mr-1" />Adicionar local
               </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground mb-2">
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
                 Adicione outros locais relevantes da turnê (ex: salas de oficina, locais de debate, etc.). 
                 Eles serão listados na página pública e plotados no Mapa Operacional.
               </p>
@@ -620,29 +709,70 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                 <p className="text-sm text-muted-foreground italic">Nenhum local cadastrado.</p>
               )}
               {(d.automacoes?.outros_locais ?? []).map((loc, i) => (
-                <div key={i} className="grid sm:grid-cols-12 gap-3 items-end border rounded-md p-4 bg-background">
-                  <div className="sm:col-span-4">
-                    <Label className="text-xs font-semibold">Nome do Local</Label>
-                    <Input
-                      value={loc.nome}
-                      onChange={(e) => updateOutroLocal(i, { nome: e.target.value })}
-                      placeholder="Ex: Espaço de Oficinas, Sesc..."
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="sm:col-span-7">
-                    <Label className="text-xs font-semibold">Endereço Completo</Label>
-                    <Input
-                      value={loc.endereco}
-                      onChange={(e) => updateOutroLocal(i, { endereco: e.target.value })}
-                      placeholder="Ex: Rua das Flores, 123 - Centro, Cidade - UF"
-                      className="mt-1"
-                    />
-                  </div>
-                  <div className="sm:col-span-1 flex sm:justify-end">
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeOutroLocal(i)}>
-                      <Trash2 className="size-4" />
+                <div key={i} className="border rounded-md p-4 bg-background space-y-4">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h4 className="text-sm font-semibold text-primary">Local #{i + 1}: {loc.nome || "Novo Local"}</h4>
+                    <Button type="button" variant="ghost" size="sm" onClick={() => removeOutroLocal(i)} className="text-red-500 hover:text-red-700 hover:bg-red-50">
+                      <Trash2 className="size-4 mr-1" /> Remover Local
                     </Button>
+                  </div>
+                  
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <Field label="Nome do Local *">
+                      <Input
+                        value={loc.nome}
+                        onChange={(e) => updateOutroLocal(i, { nome: e.target.value })}
+                        placeholder="Ex: Espaço de Oficinas, Sesc..."
+                      />
+                    </Field>
+                    <Field label="Telefone">
+                      <Input
+                        value={loc.telefone ?? ""}
+                        onChange={(e) => updateOutroLocal(i, { telefone: e.target.value })}
+                        placeholder="Ex: (51) 3224-1000"
+                      />
+                    </Field>
+                    <div className="sm:col-span-2">
+                      <Field label="Endereço Completo *">
+                        <Input
+                          value={loc.endereco}
+                          onChange={(e) => updateOutroLocal(i, { endereco: e.target.value })}
+                          placeholder="Ex: Rua das Flores, 123 - Centro, Porto Alegre - RS"
+                        />
+                      </Field>
+                    </div>
+                    <Field label="Site">
+                      <Input
+                        value={loc.site ?? ""}
+                        onChange={(e) => updateOutroLocal(i, { site: e.target.value })}
+                        placeholder="https://"
+                      />
+                    </Field>
+                    <div />
+                    <div className="sm:col-span-2">
+                      <Field label="Observações">
+                        <Textarea
+                          rows={2}
+                          value={loc.observacoes ?? ""}
+                          onChange={(e) => updateOutroLocal(i, { observacoes: e.target.value })}
+                          placeholder="Ex: Acesso pela rampa lateral, camarim amplo..."
+                        />
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <FotosCard
+                      title={`Fotos de ${loc.nome || "este local"}`}
+                      categorias={["Fachada", "Palco", "Plateia", "Camarim", "Acesso de carga", "Bilheteria", "Entrada do público", "Área técnica", "Outros"] as unknown as readonly string[]}
+                      uploading={uploading}
+                      fotos={loc.fotos ?? []}
+                      onUpload={(e) => {
+                        uploadFotosForOutroLocal(i, e.target.files).finally(() => { e.target.value = ""; });
+                      }}
+                      onUpdate={(photoIndex, patch) => updateFotoForOutroLocal(i, photoIndex, patch)}
+                      onRemove={(photoIndex) => removeFotoForOutroLocal(i, photoIndex)}
+                    />
                   </div>
                 </div>
               ))}

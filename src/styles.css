@@ -142,3 +142,36 @@
     color: var(--color-foreground);
   }
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  body {
+    margin: 0;
+    padding: 0;
+    background: white !important;
+    background-color: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .no-print, header, nav, button, .leaflet-control-container, main, footer {
+    display: none !important;
+  }
+  .print-page {
+    page-break-after: always;
+    page-break-inside: avoid;
+    height: 29.7cm;
+    width: 21cm;
+    padding: 1.5cm 2cm;
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: white !important;
+    color: black !important;
+  }
+}

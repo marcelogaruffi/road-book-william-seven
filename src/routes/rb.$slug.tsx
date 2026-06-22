@@ -159,18 +159,34 @@ function PublicPage() {
     customPlaces: [],
   });
 
+  const hotelTeatroDist = useMemo(() => {
+    if (!opState.hotelCoords || !opState.teatroCoords) return null;
+    return getHaversineDistance(opState.hotelCoords[0], opState.hotelCoords[1], opState.teatroCoords[0], opState.teatroCoords[1]);
+  }, [opState.hotelCoords, opState.teatroCoords]);
+
   useEffect(() => {
     let cancel = false;
     (async () => {
       const hotelAddr = r.hotel_endereco;
       const teatroAddr = r.teatro_endereco;
 
+      const getGeocodeQuery = (addr: string) => {
+        const query = addr.trim();
+        const city = r.cidade?.trim() || "";
+        const state = r.estado?.trim() || "";
+        const suffix = `${city}${state ? `, ${state}` : ""}`.trim();
+        if (!suffix) return query;
+        if (query.toLowerCase().includes(city.toLowerCase())) return query;
+        return `${query}, ${suffix}`;
+      };
+
       let hCoords: [number, number] | null = null;
       let tCoords: [number, number] | null = null;
 
       try {
         if (hotelAddr?.trim()) {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(hotelAddr.trim())}&format=json&limit=1`, {
+          const q = getGeocodeQuery(hotelAddr);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
             headers: { "User-Agent": "RoadBookApp/1.0" }
           });
           const data = await res.json();
@@ -180,7 +196,8 @@ function PublicPage() {
 
       try {
         if (teatroAddr?.trim()) {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(teatroAddr.trim())}&format=json&limit=1`, {
+          const q = getGeocodeQuery(teatroAddr);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
             headers: { "User-Agent": "RoadBookApp/1.0" }
           });
           const data = await res.json();
@@ -192,12 +209,19 @@ function PublicPage() {
 
       const foundPlaces: PlaceDetail[] = [];
 
-      const findNearestAmenity = async (q: string, lat: number, lon: number, type: "pharmacy" | "supermarket" | "hospital", assoc: "hotel" | "theater" | "general") => {
+      const findNearestAmenities = async (
+        q: string,
+        lat: number,
+        lon: number,
+        type: "pharmacy" | "supermarket" | "hospital",
+        assoc: "hotel" | "theater" | "general",
+        limit: number = 2
+      ) => {
         const radii = [3, 5, 10, 15, 20]; // expanding radiuses in km
         for (const radius of radii) {
           try {
             const latDiff = radius / 111.0;
-            const cosLat = Math.cos(lat * Math.PI / 180.0);
+            const cosLat = Math.cos((lat * Math.PI) / 180.0);
             const lonDiff = radius / (111.0 * (cosLat !== 0 ? cosLat : 1.0));
             const lonMin = lon - lonDiff;
             const lonMax = lon + lonDiff;
@@ -205,55 +229,54 @@ function PublicPage() {
             const latMax = lat + latDiff;
 
             const viewbox = `${lonMin},${latMax},${lonMax},${latMin}`;
-            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&lat=${lat}&lon=${lon}&addressdetails=1&viewbox=${viewbox}&bounded=1`;
-            
+            const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=10&lat=${lat}&lon=${lon}&addressdetails=1&viewbox=${viewbox}&bounded=1`;
+
             const res = await fetch(url, { headers: { "User-Agent": "RoadBookApp/1.0" } });
             const data = await res.json();
-            
+
             if (data && Array.isArray(data) && data.length > 0) {
-              let bestPlace: any = null;
-              let bestDist = Infinity;
-              
+              const items: PlaceDetail[] = [];
               for (const item of data) {
                 const pLat = parseFloat(item.lat);
                 const pLon = parseFloat(item.lon);
                 const dist = getHaversineDistance(lat, lon, pLat, pLon);
-                if (dist < bestDist && dist <= radius * 1000) {
-                  bestDist = dist;
-                  bestPlace = {
+                if (dist <= radius * 1000) {
+                  items.push({
                     name: item.display_name.split(",")[0] || q,
                     address: item.display_name,
                     lat: pLat,
                     lon: pLon,
                     distance: dist,
                     type,
-                    assoc
-                  };
+                    assoc,
+                  });
                 }
               }
-              
-              if (bestPlace) return bestPlace;
+              items.sort((a, b) => a.distance - b.distance);
+              if (items.length > 0) {
+                return items.slice(0, limit);
+              }
             }
           } catch {}
-          await new Promise(resolve => setTimeout(resolve, 150));
+          await new Promise((resolve) => setTimeout(resolve, 150));
         }
-        return null;
+        return [];
       };
 
       if (hCoords) {
-        const ph = await findNearestAmenity("farmacia", hCoords[0], hCoords[1], "pharmacy", "hotel");
-        if (ph) foundPlaces.push(ph);
-        const sh = await findNearestAmenity("supermercado", hCoords[0], hCoords[1], "supermarket", "hotel");
-        if (sh) foundPlaces.push(sh);
-        const hosp = await findNearestAmenity("hospital", hCoords[0], hCoords[1], "hospital", "general");
-        if (hosp) foundPlaces.push(hosp);
+        const phs = await findNearestAmenities("farmacia", hCoords[0], hCoords[1], "pharmacy", "hotel", 2);
+        foundPlaces.push(...phs);
+        const shs = await findNearestAmenities("supermercado", hCoords[0], hCoords[1], "supermarket", "hotel", 2);
+        foundPlaces.push(...shs);
+        const hosp = await findNearestAmenities("hospital", hCoords[0], hCoords[1], "hospital", "general", 1);
+        foundPlaces.push(...hosp);
       }
 
       if (tCoords) {
-        const pt = await findNearestAmenity("farmacia", tCoords[0], tCoords[1], "pharmacy", "theater");
-        if (pt) foundPlaces.push(pt);
-        const st = await findNearestAmenity("supermercado", tCoords[0], tCoords[1], "supermarket", "theater");
-        if (st) foundPlaces.push(st);
+        const pts = await findNearestAmenities("farmacia", tCoords[0], tCoords[1], "pharmacy", "theater", 2);
+        foundPlaces.push(...pts);
+        const sts = await findNearestAmenities("supermercado", tCoords[0], tCoords[1], "supermarket", "theater", 2);
+        foundPlaces.push(...sts);
       }
 
       if (cancel) return;
@@ -264,7 +287,8 @@ function PublicPage() {
       for (const loc of outrosLocais) {
         if (loc.endereco?.trim()) {
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(loc.endereco.trim())}&format=json&limit=1`, {
+            const q = getGeocodeQuery(loc.endereco);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
               headers: { "User-Agent": "RoadBookApp/1.0" }
             });
             const data = await res.json();
@@ -282,8 +306,19 @@ function PublicPage() {
               });
             }
           } catch {}
-          await new Promise(resolve => setTimeout(resolve, 150));
+          await new Promise((resolve) => setTimeout(resolve, 200));
         }
+      }
+
+      if (cancel) return;
+
+      // Query nearest pharmacy and supermarket for each custom location
+      for (let i = 0; i < customPlaces.length; i++) {
+        const cp = customPlaces[i];
+        const pLocs = await findNearestAmenities("farmacia", cp.lat, cp.lon, "pharmacy", `custom_${i}` as any, 2);
+        foundPlaces.push(...pLocs);
+        const sLocs = await findNearestAmenities("supermercado", cp.lat, cp.lon, "supermarket", `custom_${i}` as any, 2);
+        foundPlaces.push(...sLocs);
       }
 
       if (cancel) return;
@@ -296,7 +331,9 @@ function PublicPage() {
         customPlaces: customPlaces,
       });
     })();
-    return () => { cancel = true; };
+    return () => {
+      cancel = true;
+    };
   }, [r.hotel_endereco, r.teatro_endereco, r.automacoes?.outros_locais]);
 
   const geo = useGeocode(r.cidade, r.estado);
@@ -305,21 +342,31 @@ function PublicPage() {
     <GeoContext.Provider value={geo}>
     <div className="min-h-screen bg-background">
       {/* CAPA */}
-      <header className="border-b bg-gradient-to-b from-card to-background">
-        <div className="max-w-3xl mx-auto px-5 py-10">
-          {r.festival && <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">{r.festival}</p>}
-          <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">{r.espetaculo}</h1>
-          <p className="mt-3 text-muted-foreground flex items-center gap-1.5"><MapPin className="size-4" />{r.cidade}{r.estado ? `/${r.estado}` : ""}</p>
-          {(r.data_inicial || r.data_final) && (
-            <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
-              <CalendarDays className="size-4" />
-              {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
-            </p>
-          )}
+      <header className="border-b bg-gradient-to-b from-card to-background no-print">
+        <div className="max-w-3xl mx-auto px-5 py-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            {r.festival && <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">{r.festival}</p>}
+            <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">{r.espetaculo}</h1>
+            <p className="mt-3 text-muted-foreground flex items-center gap-1.5"><MapPin className="size-4" />{r.cidade}{r.estado ? `/${r.estado}` : ""}</p>
+            {(r.data_inicial || r.data_final) && (
+              <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
+                <CalendarDays className="size-4" />
+                {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="no-print inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-4 py-2.5 shadow-sm transition-colors w-fit shrink-0"
+          >
+            <FileText className="size-4" />
+            Gerar PDF / Imprimir
+          </button>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-5 py-8 space-y-10">
+      <main className="max-w-3xl mx-auto px-5 py-8 space-y-10 no-print">
         {/* RESUMO */}
         {r.resumo_executivo && (
           <Section title="Resumo executivo" icon={<Sparkles className="size-4" />}>
@@ -491,65 +538,81 @@ function PublicPage() {
           </Section>
         )}
 
-        {/* VOOS */}
-        <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={setLightbox} />
-
         {/* OUTROS LOCAIS */}
         {r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0 && (
           <Section title="Outros Locais" icon={<MapPin className="size-4" />}>
-            <div className="rounded-lg border bg-card divide-y">
-              {opState.customPlaces.map((p, idx) => (
-                <div key={idx} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
-                  <div>
-                    <h4 className="font-semibold text-foreground">{p.name}</h4>
-                    <p className="text-muted-foreground text-xs mt-0.5">{p.address}</p>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    {p.distance > 0 && (
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {p.distance < 1000 ? `${Math.round(p.distance)}m` : `${(p.distance / 1000).toFixed(1)}km`} do hotel
-                      </span>
-                    )}
-                    <a
-                      href={mapsUrl(p.address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-1 rounded-md border bg-background hover:bg-accent px-2.5 py-1 text-xs font-medium transition-colors"
-                    >
-                      <Navigation className="size-3" /> Mapa
-                    </a>
-                  </div>
-                </div>
-              ))}
-              {/* Fallback for places that couldn't be geocoded or if loading is still in progress */}
-              {opState.loading && (
-                <div className="p-4 text-xs text-muted-foreground italic animate-pulse">
-                  Carregando localizações...
-                </div>
-              )}
-              {!opState.loading && opState.customPlaces.length < r.automacoes.outros_locais.length && (
-                r.automacoes.outros_locais
-                  .filter(l => !opState.customPlaces.some(cp => cp.address === l.endereco))
-                  .map((l, idx) => (
-                    <div key={`fallback-${idx}`} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm opacity-80">
+            <div className="space-y-4">
+              {r.automacoes.outros_locais.map((l, idx) => {
+                const geocoded = opState.customPlaces.find(cp => cp.address === l.endereco);
+                const distanceVal = geocoded?.distance ?? 0;
+                const siteUrl = normalizeExternalUrl(l.site);
+
+                return (
+                  <div key={idx} className="rounded-lg border p-4 bg-card space-y-3">
+                    <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div>
-                        <h4 className="font-semibold text-foreground">{l.nome}</h4>
-                        <p className="text-muted-foreground text-xs mt-0.5">{l.endereco}</p>
+                        <h4 className="font-semibold text-base">{l.nome || `Local #${idx + 1}`}</h4>
+                        {l.endereco && <p className="text-sm text-muted-foreground mt-0.5">{l.endereco}</p>}
                       </div>
-                      <a
-                        href={mapsUrl(l.endereco)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-1 rounded-md border bg-background hover:bg-accent px-2.5 py-1 text-xs font-medium transition-colors shrink-0"
-                      >
-                        <Navigation className="size-3" /> Mapa
-                      </a>
+                      {distanceVal > 0 && (
+                        <span className="rounded-full bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1 shrink-0">
+                          📍 {distanceVal < 1000 ? `${Math.round(distanceVal)}m` : `${(distanceVal / 1000).toFixed(1)}km`} do hotel
+                        </span>
+                      )}
                     </div>
-                  ))
-              )}
+
+                    {(l.telefone || siteUrl) && (
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        {l.telefone && (
+                          <a href={`tel:${onlyDigits(l.telefone)}`} className="text-primary inline-flex items-center gap-1">
+                            <Phone className="size-3.5" />{l.telefone}
+                          </a>
+                        )}
+                        {siteUrl && (
+                          <a href={siteUrl} target="_blank" rel="noopener noreferrer" className="text-primary inline-flex items-center gap-1">
+                            <Globe className="size-3.5" />Site
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {l.observacoes && (
+                      <p className="text-sm text-muted-foreground whitespace-pre-line border-t pt-2 mt-2">
+                        {l.observacoes}
+                      </p>
+                    )}
+
+                    {l.endereco && (
+                      <div className="pt-2">
+                        <a
+                          href={mapsUrl([l.nome, l.endereco].filter(Boolean).join(", "))}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 rounded-md border bg-background hover:bg-accent text-xs font-semibold px-3 py-2 w-full transition-colors"
+                        >
+                          <Navigation className="size-3.5" />📍 Abrir no Google Maps
+                        </a>
+                      </div>
+                    )}
+
+                    {l.fotos && l.fotos.length > 0 && (
+                      <div className="border-t pt-3 mt-3">
+                        <PhotoGallery
+                          fotos={l.fotos}
+                          label={`Fotos de ${l.nome || "Local"}`}
+                          categorias={TEATRO_FOTO_CATEGORIAS}
+                          onOpen={setLightbox}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </Section>
         )}
+
+        {/* VOOS */}
+        <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={setLightbox} />
 
         {/* MAPA OPERACIONAL */}
         <Section title="Mapa Operacional" icon={<MapIcon className="size-4" />}>
@@ -632,6 +695,334 @@ function PublicPage() {
           Road Book · William Seven
         </footer>
       </main>
+
+      {/* PRINT-ONLY WORD DOCUMENT DESIGN */}
+      <div className="hidden print:block w-full text-black bg-white font-serif antialiased leading-relaxed max-w-[21cm] mx-auto" style={{ fontFamily: "Georgia, serif" }}>
+        
+        {/* PAGE 1: DIARY SCHEDULE */}
+        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+          <div>
+            {/* Header Logos */}
+            <div className="flex justify-between items-center border-b pb-4 mb-6">
+              {/* Seven Logo SVG */}
+              <div className="flex items-center gap-2">
+                <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="25" cy="25" r="22" fill="#000" />
+                  <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
+                  <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+                  <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
+                  <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
+                  <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
+                </svg>
+              </div>
+              {/* A Maçã Logo */}
+              <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
+            </div>
+
+            {/* Document Title */}
+            <div className="text-center my-8">
+              <h2 className="text-2xl font-bold tracking-tight">Programação — {r.cidade} ({r.estado || ""})</h2>
+              {r.festival && <p className="text-sm uppercase tracking-widest text-muted-foreground mt-1">{r.festival}</p>}
+              {(r.data_inicial || r.data_final) && (
+                <p className="text-sm font-medium mt-1">
+                  {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
+                </p>
+              )}
+            </div>
+
+            {/* Programacao List */}
+            <div className="space-y-6 mt-6">
+              {dias.map((date) => (
+                <div key={date} className="break-inside-avoid">
+                  <h3 className="text-base font-bold border-b pb-1 mb-2 uppercase tracking-wide flex items-center justify-between">
+                    <span>{fmtDate(date)} {r.automacoes?.timeline_overrides?.[date] && `— ${r.automacoes.timeline_overrides[date]}`}</span>
+                    <PrintDayWeather date={date} />
+                  </h3>
+                  <div className="space-y-2">
+                    {groups[date].map((p, i) => (
+                      <div key={i} className="flex gap-4 text-sm py-1">
+                        <span className="font-mono font-semibold w-24 shrink-0">{progHora(p)}</span>
+                        <div className="flex-1">
+                          <span className="font-bold">{progTitle(p)}</span>
+                          {p.local && <span className="text-muted-foreground ml-2">({p.local})</span>}
+                          {p.observacao && <p className="text-xs text-muted-foreground italic mt-0.5">{p.observacao}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            {/* Weather overview for print */}
+            <div className="mt-8 border-t border-gray-200 pt-4 mb-4">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 mb-3 font-sans">Previsão do Tempo</h4>
+              <div className="flex gap-6 flex-wrap">
+                {r.cidade && <PrintWeatherSummaryCard city={r.cidade} date={dias[0] || ""} />}
+                {r.voo_ida.aeroporto_origem && (
+                  <PrintWeatherSummaryCard city={r.voo_ida.aeroporto_origem} date={dias[0] || ""} />
+                )}
+              </div>
+            </div>
+
+            {/* Page Footer */}
+            <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
+              <span className="font-sans">Road Book · Seven Produções Artísticas</span>
+              <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
+                1
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* PAGE 2: AIR TRAVEL & HOTEL */}
+        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+          <div>
+            {/* Header Logos */}
+            <div className="flex justify-between items-center border-b pb-4 mb-6">
+              <div className="flex items-center gap-2">
+                <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="25" cy="25" r="22" fill="#000" />
+                  <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
+                  <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+                  <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
+                  <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
+                  <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
+                </svg>
+              </div>
+              <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
+            </div>
+
+            {/* Flights info */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Informações sobre transporte Aéreo</h2>
+              
+              {/* Flight Ida */}
+              {(r.voo_ida.numero || r.voo_ida.aeroporto_origem) && (
+                <div className="space-y-2">
+                  <h3 className="text-base font-bold">Voo de Ida</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {r.voo_ida.numero && <div><span className="font-semibold">Voo:</span> {r.voo_ida.numero}</div>}
+                    {r.voo_ida.localizador && <div><span className="font-semibold">Localizador:</span> {r.voo_ida.localizador}</div>}
+                    {r.voo_ida.data && <div><span className="font-semibold">Data:</span> {fmtDate(r.voo_ida.data)}</div>}
+                    {r.voo_ida.hora && <div><span className="font-semibold">Horário:</span> {r.voo_ida.hora}</div>}
+                    {r.voo_ida.aeroporto_origem && <div><span className="font-semibold">Origem:</span> {r.voo_ida.aeroporto_origem}</div>}
+                    {r.voo_ida.aeroporto_destino && <div><span className="font-semibold">Destino:</span> {r.voo_ida.aeroporto_destino}</div>}
+                  </div>
+                </div>
+              )}
+
+              {/* Flight Volta */}
+              {(r.voo_volta.numero || r.voo_volta.aeroporto_origem) && (
+                <div className="space-y-2 border-t pt-4">
+                  <h3 className="text-base font-bold">Voo de Volta</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    {r.voo_volta.numero && <div><span className="font-semibold">Voo:</span> {r.voo_volta.numero}</div>}
+                    {r.voo_volta.localizador && <div><span className="font-semibold">Localizador:</span> {r.voo_volta.localizador}</div>}
+                    {r.voo_volta.data && <div><span className="font-semibold">Data:</span> {fmtDate(r.voo_volta.data)}</div>}
+                    {r.voo_volta.hora && <div><span className="font-semibold">Horário:</span> {r.voo_volta.hora}</div>}
+                    {r.voo_volta.aeroporto_origem && <div><span className="font-semibold">Origem:</span> {r.voo_volta.aeroporto_origem}</div>}
+                    {r.voo_volta.aeroporto_destino && <div><span className="font-semibold">Destino:</span> {r.voo_volta.aeroporto_destino}</div>}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Hotel info */}
+            <div className="space-y-6 mt-8 border-t pt-6">
+              <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Informações Sobre Hotel</h2>
+              {r.hotel_nome && (
+                <div className="space-y-2 text-sm">
+                  <h3 className="text-base font-bold">{r.hotel_nome}</h3>
+                  {r.hotel_endereco && <div><span className="font-semibold">Endereço:</span> {r.hotel_endereco}</div>}
+                  {r.hotel_telefone && <div><span className="font-semibold">Telefone:</span> {r.hotel_telefone}</div>}
+                  {r.hotel_checkin && <div><span className="font-semibold">Check-in:</span> {fmtDate(r.hotel_checkin)} {r.hotel_checkin_hora && `às ${r.hotel_checkin_hora}`}</div>}
+                  {r.hotel_checkout && <div><span className="font-semibold">Check-out:</span> {fmtDate(r.hotel_checkout)} {r.hotel_checkout_hora && `às ${r.hotel_checkout_hora}`}</div>}
+                </div>
+              )}
+
+              {/* Rooming List */}
+              {r.quartos && r.quartos.length > 0 && (
+                <div className="mt-4 border-t pt-4">
+                  <h3 className="text-base font-bold mb-2">Lista de Quartos</h3>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm font-sans">
+                    {r.quartos.map((q, idx) => (
+                      <div key={idx} className="flex justify-between border-b pb-0.5">
+                        <span className="text-gray-800">{q.pessoa || "—"}</span>
+                        <span className="font-mono font-semibold text-gray-500">{q.numero}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Hotel-Teatro distance */}
+              {hotelTeatroDist !== null && (
+                <div className="mt-4 border-t pt-4 text-sm font-sans">
+                  <div className="font-bold text-gray-800">Deslocamento Hotel → Teatro</div>
+                  <div className="text-gray-600 mt-1">
+                    🚗 {getCarTime(hotelTeatroDist)} de carro ({getDistanceFmt(hotelTeatroDist)}) | 🚶 {getWalkingTime(hotelTeatroDist)} a pé
+                  </div>
+                  {r.hotel_endereco && r.teatro_endereco && (
+                    <div className="mt-2 text-xs">
+                      <a href={directionsUrl(r.hotel_endereco, r.teatro_endereco)} target="_blank" rel="noopener noreferrer" className="text-[#991b1b] underline font-semibold">
+                        📍 Abrir Rota no Google Maps
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Page Footer */}
+          <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
+            <span className="font-sans">Road Book · Seven Produções Artísticas</span>
+            <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
+              2
+            </div>
+          </div>
+        </div>
+
+        {/* PAGE 3: THEATER */}
+        <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+          <div>
+            {/* Header Logos */}
+            <div className="flex justify-between items-center border-b pb-4 mb-6">
+              <div className="flex items-center gap-2">
+                <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="25" cy="25" r="22" fill="#000" />
+                  <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
+                  <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+                  <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
+                  <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
+                  <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
+                </svg>
+              </div>
+              <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
+            </div>
+
+            {/* Teatro details */}
+            <div className="space-y-6">
+              <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Local Principal (Teatro)</h2>
+              {r.teatro_nome && (
+                <div className="space-y-2 text-sm">
+                  <h3 className="text-base font-bold">{r.teatro_nome}</h3>
+                  {r.teatro_endereco && <div><span className="font-semibold">Endereço:</span> {r.teatro_endereco}</div>}
+                  {r.teatro_telefone && <div><span className="font-semibold">Telefone:</span> {r.teatro_telefone}</div>}
+                  {r.teatro_site && <div><span className="font-semibold">Site:</span> {r.teatro_site}</div>}
+                  {r.teatro_observacoes && <div className="text-muted-foreground italic mt-2 whitespace-pre-line">Observações: {r.teatro_observacoes}</div>}
+                </div>
+              )}
+            </div>
+
+            {/* Teatro Photos Grid */}
+            {r.teatro_fotos && r.teatro_fotos.length > 0 && (
+              <div className="mt-8">
+                <h3 className="text-base font-bold border-b pb-1 mb-4 uppercase tracking-wide">Fotos do Teatro</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {r.teatro_fotos.slice(0, 4).map((f, idx) => (
+                    <div key={idx} className="border border-gray-300 rounded p-1.5 bg-gray-50 flex flex-col items-center shadow-sm">
+                      {f.url ? (
+                        <img src={f.url} alt={f.nome} className="h-44 w-full object-cover rounded" />
+                      ) : (
+                        <div className="h-44 w-full bg-gray-200 rounded flex items-center justify-center text-xs text-muted-foreground">Sem imagem</div>
+                      )}
+                      {f.descricao && <p className="text-[10px] text-center text-gray-600 mt-1 font-sans italic">{f.descricao}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Page Footer */}
+          <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
+            <span className="font-sans">Road Book · Seven Produções Artísticas</span>
+            <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
+              3
+            </div>
+          </div>
+        </div>
+
+        {/* PAGE 4: OTHER LOCATIONS */}
+        {r.automacoes?.outros_locais && r.automacoes.outros_locais.length > 0 && (
+          <div className="print-page p-12 flex flex-col justify-between min-h-[29.7cm] relative">
+            <div>
+              {/* Header Logos */}
+              <div className="flex justify-between items-center border-b pb-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <svg width="150" height="42" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="25" cy="25" r="22" fill="#000" />
+                    <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
+                    <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
+                    <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
+                    <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
+                    <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
+                  </svg>
+                </div>
+                <img src="/logo-maca.png" alt="A Maçã Logo" className="h-14 w-auto object-contain font-sans" />
+              </div>
+
+              {/* Outros Locais Details */}
+              <div className="space-y-6">
+                <h2 className="text-xl font-bold border-b pb-2 uppercase tracking-wide">Outros Locais da Turnê</h2>
+                <div className="space-y-6">
+                  {r.automacoes.outros_locais.map((ol, idx) => {
+                    const geocoded = opState.customPlaces.find(cp => cp.address === ol.endereco);
+                    const distanceVal = geocoded?.distance ?? 0;
+
+                    return (
+                      <div key={idx} className="space-y-3 border-b pb-4 last:border-0 last:pb-0 break-inside-avoid">
+                        <div className="flex justify-between items-start gap-4">
+                          <h3 className="font-bold text-base">{ol.nome}</h3>
+                          {distanceVal > 0 && (
+                            <span className="text-xs text-muted-foreground font-sans font-semibold">
+                              ({distanceVal < 1000 ? `${Math.round(distanceVal)}m` : `${(distanceVal / 1000).toFixed(1)}km`} do hotel)
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm space-y-1">
+                          {ol.endereco && <div><span className="font-semibold">Endereço:</span> {ol.endereco}</div>}
+                          {ol.telefone && <div><span className="font-semibold">Telefone:</span> {ol.telefone}</div>}
+                          {ol.site && <div><span className="font-semibold">Site:</span> {ol.site}</div>}
+                          {ol.observacoes && <div className="italic text-muted-foreground mt-1">Observações: {ol.observacoes}</div>}
+                        </div>
+
+                        {/* Location Photos */}
+                        {ol.fotos && ol.fotos.length > 0 && (
+                          <div className="grid grid-cols-2 gap-4 mt-3">
+                            {ol.fotos.slice(0, 2).map((f, fIdx) => (
+                              <div key={fIdx} className="border border-gray-300 rounded p-1 bg-gray-50 flex flex-col items-center shadow-sm">
+                                {f.url ? (
+                                  <img src={f.url} alt={f.nome} className="h-32 w-full object-cover rounded" />
+                                ) : (
+                                  <div className="h-32 w-full bg-gray-200 rounded flex items-center justify-center text-xs text-muted-foreground">Sem imagem</div>
+                                )}
+                                {f.descricao && <p className="text-[9px] text-center text-gray-600 mt-1 font-sans italic">{f.descricao}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Page Footer */}
+            <div className="flex justify-between items-center text-xs text-muted-foreground border-t pt-4">
+              <span className="font-sans">Road Book · Seven Produções Artísticas</span>
+              <div className="absolute bottom-6 right-12 size-8 rounded-full bg-[#991b1b] text-white flex items-center justify-center font-sans text-sm font-bold shadow-sm">
+                4
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* LIGHTBOX */}
       {lightbox && (
@@ -960,6 +1351,124 @@ function RedesLinks({ text }: { text: string }) {
     </p>
   );
 }
+function cleanCityName(s: string): string {
+  if (!s) return "";
+  return s.replace(/aeroporto\s+de/i, "")
+          .replace(/aeroporto/i, "")
+          .replace(/internacional/i, "")
+          .replace(/\([A-Z]{3}\)/g, "")
+          .split("-")[0]
+          .split(",")[0]
+          .trim();
+}
+
+function PrintWeatherSummaryCard({ city, date }: { city: string; date: string }) {
+  const [weather, setWeather] = useState<{ max: number; min: number; rain: number; wind: number } | null>(null);
+
+  useEffect(() => {
+    if (!city || !date) return;
+    let cancel = false;
+    (async () => {
+      try {
+        const cleaned = cleanCityName(city);
+        const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1&language=pt&format=json`;
+        const geoRes = await fetch(geoUrl);
+        const geoData = await geoRes.json();
+        const p = geoData?.results?.[0];
+        if (!p) return;
+
+        const { latitude, longitude } = p;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max&timezone=auto&start_date=${date}&end_date=${date}`;
+        const res = await fetch(url);
+        const j = await res.json();
+        if (cancel) return;
+
+        setWeather({
+          max: Math.round(j?.daily?.temperature_2m_max?.[0] ?? 0),
+          min: Math.round(j?.daily?.temperature_2m_min?.[0] ?? 0),
+          rain: Math.round(j?.daily?.precipitation_probability_max?.[0] ?? 0),
+          wind: Math.round(j?.daily?.wind_speed_10m_max?.[0] ?? 0),
+        });
+      } catch {}
+    })();
+    return () => { cancel = true; };
+  }, [city, date]);
+
+  if (!weather) return null;
+
+  return (
+    <div className="border border-gray-300 p-4 rounded bg-white text-xs w-48 font-sans shadow-sm leading-normal">
+      <div className="font-bold border-b border-gray-200 pb-1 mb-2 text-sm text-gray-800">{cleanCityName(city)}</div>
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-2xl font-bold text-gray-900">{weather.max}°C</span>
+        <span className="text-sm text-gray-500 font-semibold">{weather.min}°C</span>
+      </div>
+      <div className="text-gray-600 space-y-1 font-medium">
+        <div>🌧️ Chuva: {weather.rain}%</div>
+        <div>💨 Vento: {weather.wind} km/h</div>
+      </div>
+    </div>
+  );
+}
+
+function PrintDayWeather({ date }: { date: string }) {
+  const geo = useContext(GeoContext);
+  const [weatherText, setWeatherText] = useState<string>("...");
+
+  useEffect(() => {
+    if (geo.status !== "ok" || !date) return;
+    let cancel = false;
+    (async () => {
+      try {
+        const { latitude, longitude } = geo.place;
+        const [y, m, d] = date.split("-").map(Number);
+        const target = new Date(Date.UTC(y, m - 1, d));
+        const today = new Date();
+        const todayUTC = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+        const diff = daysBetween(todayUTC, target);
+
+        if (diff >= -1 && diff <= 15) {
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&start_date=${date}&end_date=${date}`;
+          const res = await fetch(url);
+          const j = await res.json();
+          if (cancel) return;
+          const max = Math.round(j?.daily?.temperature_2m_max?.[0] ?? 0);
+          const min = Math.round(j?.daily?.temperature_2m_min?.[0] ?? 0);
+          const rain = Math.round(j?.daily?.precipitation_probability_max?.[0] ?? 0);
+          setWeatherText(`${max}°C / ${min}°C · ${rain}% chuva`);
+        } else {
+          const mm = String(target.getUTCMonth() + 1).padStart(2, "0");
+          const dd = String(target.getUTCDate()).padStart(2, "0");
+          const baseYear = todayUTC.getUTCFullYear() - 1;
+          const years = [0, 1, 2, 3, 4].map(y => baseYear - y);
+          const results = await Promise.all(years.map(async (yr) => {
+            const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&start_date=${yr}-${mm}-${dd}&end_date=${yr}-${mm}-${dd}`;
+            const r = await fetch(url);
+            if (!r.ok) return null;
+            const jj = await r.json();
+            return { max: jj?.daily?.temperature_2m_max?.[0], min: jj?.daily?.temperature_2m_min?.[0], precip: jj?.daily?.precipitation_sum?.[0] };
+          }));
+          if (cancel) return;
+          const valid = results.filter((x): x is any => !!x);
+          if (valid.length > 0) {
+            const max = Math.round(valid.reduce((acc, v) => acc + v.max, 0) / valid.length);
+            const min = Math.round(valid.reduce((acc, v) => acc + v.min, 0) / valid.length);
+            const rainShare = valid.filter(v => v.precip > 1).length / valid.length;
+            setWeatherText(`Clima Histórico: ${max}°C / ${min}°C · ${Math.round(rainShare * 100)}% chuva`);
+          } else {
+            setWeatherText("");
+          }
+        }
+      } catch {
+        setWeatherText("");
+      }
+    })();
+    return () => { cancel = true; };
+  }, [date, geo]);
+
+  if (!weatherText || weatherText === "...") return null;
+  return <span className="text-xs text-muted-foreground ml-3 font-normal font-sans">({weatherText})</span>;
+}
 
 // ============ Weather (Open-Meteo, free, no key) ============
 // Per-day weather:
@@ -1161,28 +1670,54 @@ function OperationalMap({
 
       const markers = L.featureGroup();
 
-      const createMarkerIcon = (color: string) => {
+      const hotelSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M2 22v-3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/><path d="M2 19V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v14"/><path d="M6 8h4"/><path d="M6 12h10"/></svg>`;
+      const theaterSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M2 10s3-3 3-8h14s0 5 3 8v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10z"/><path d="M2 10h20"/></svg>`;
+      const pharmacySvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="size-4"><path d="M12 5v14M5 12h14"/></svg>`;
+      const supermarketSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`;
+      const hospitalSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" class="size-4"><path d="M4 4v16M20 4v16M4 12h16"/></svg>`;
+      const notebookSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5V4.5z"/><path d="M6 6h10M6 10h10"/></svg>`;
+      const brainSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M9.5 2C13.5 2 17 5 17 9.5c0 2.2-.8 3.5-1.5 4.5-.7 1-1 2-1 3v2c0 1.1-.9 2-2 2h-2c-1.1 0-2-.9-2-2v-2c0-1-.3-2-1-3C6.8 13 6 11.7 6 9.5 6 5 9.5 2 9.5 2Z" /><path d="M9.5 5a2 2 0 0 1 2 2v2M8.5 7.5a1 1 0 0 1 1-1" /></svg>`;
+      const exchangeSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="size-4"><path d="M17 8a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v5a4 4 0 0 0 4 4h1l-2 3 4-3h3a4 4 0 0 0 4-4V8Z" /><path d="M23 11v4a3 3 0 0 1-3 3h-2l-3 2.5V18h-1c-.8 0-1.5-.3-2-1" /></svg>`;
+      const defaultSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="size-4"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>`;
+
+      const createMarkerIcon = (color: string, type: string) => {
+        let iconSvg = defaultSvg;
+        if (type === "hotel") iconSvg = hotelSvg;
+        else if (type === "theater") iconSvg = theaterSvg;
+        else if (type === "pharmacy") iconSvg = pharmacySvg;
+        else if (type === "supermarket") iconSvg = supermarketSvg;
+        else if (type === "hospital") iconSvg = hospitalSvg;
+        else if (type === "oficina") iconSvg = notebookSvg;
+        else if (type === "pensamento") iconSvg = brainSvg;
+        else if (type === "intercambio") iconSvg = exchangeSvg;
+
         return L.divIcon({
           html: `
-            <svg class="size-6 drop-shadow-md" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
-            </svg>
+            <div style="position: relative; width: 36px; height: 42px;">
+              <svg width="36" height="42" viewBox="0 0 36 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.35));">
+                <path d="M18 0C8.06 0 0 8.06 0 18C0 29.25 18 42 18 42C18 42 36 29.25 36 18C36 8.06 27.94 0 18 0Z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
+                <circle cx="18" cy="18" r="13" fill="#ffffff" fill-opacity="0.95"/>
+              </svg>
+              <div style="position: absolute; top: 8px; left: 10px; color: ${color}; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">
+                ${iconSvg}
+              </div>
+            </div>
           `,
           className: "custom-leaflet-icon",
-          iconSize: [24, 24],
-          iconAnchor: [12, 24],
-          popupAnchor: [0, -24],
+          iconSize: [36, 42],
+          iconAnchor: [18, 42],
+          popupAnchor: [0, -42],
         });
       };
 
       if (hotelCoords) {
-        L.marker(hotelCoords, { icon: createMarkerIcon("#3b82f6") }) // Blue
+        L.marker(hotelCoords, { icon: createMarkerIcon("#3b82f6", "hotel") }) // Blue
           .bindPopup(`<b>Hotel:</b> ${hotelNome}`)
           .addTo(markers);
       }
 
       if (teatroCoords) {
-        L.marker(teatroCoords, { icon: createMarkerIcon("#ef4444") }) // Red
+        L.marker(teatroCoords, { icon: createMarkerIcon("#ef4444", "theater") }) // Red
           .bindPopup(`<b>Teatro:</b> ${teatroNome}`)
           .addTo(markers);
       }
@@ -1192,13 +1727,21 @@ function OperationalMap({
         if (p.type === "supermarket") color = "#f59e0b"; // Yellow/Orange
         if (p.type === "hospital") color = "#8b5cf6"; // Purple
 
-        L.marker([p.lat, p.lon], { icon: createMarkerIcon(color) })
+        L.marker([p.lat, p.lon], { icon: createMarkerIcon(color, p.type) })
           .bindPopup(`<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : "Hospital"}`)
           .addTo(markers);
       });
 
+      const getCustomIconType = (name: string) => {
+        const n = name.toLowerCase();
+        if (n.includes("oficina")) return "oficina";
+        if (n.includes("pensamento")) return "pensamento";
+        if (n.includes("intercâmbio") || n.includes("intercambio")) return "intercambio";
+        return "default";
+      };
+
       customPlaces.forEach(p => {
-        L.marker([p.lat, p.lon], { icon: createMarkerIcon("#d946ef") }) // Fuchsia for custom locations
+        L.marker([p.lat, p.lon], { icon: createMarkerIcon("#d946ef", getCustomIconType(p.name)) }) // Fuchsia for custom locations
           .bindPopup(`<b>${p.name}</b><br/>${p.address}`)
           .addTo(markers);
       });
@@ -1243,6 +1786,11 @@ function OperationalMap({
   const getAssocLabel = (p: PlaceDetail) => {
     if (p.assoc === "hotel") return "próximo ao hotel";
     if (p.assoc === "theater") return "próximo ao teatro";
+    if (typeof p.assoc === "string" && p.assoc.startsWith("custom_")) {
+      const idx = parseInt(p.assoc.split("_")[1]);
+      const name = r.automacoes?.outros_locais?.[idx]?.nome || "local";
+      return `próximo a: ${name}`;
+    }
     return "";
   };
 
