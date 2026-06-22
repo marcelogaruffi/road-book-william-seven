@@ -26,8 +26,7 @@ const GeoContext = createContext<GeoState>({ status: "loading" });
 export const Route = createFileRoute("/rb/$slug")({
   ssr: false,
   loader: async ({ params }) => {
-    const { data, error } = await supabase
-      .from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();
+    const { data, error } = await supabase.rpc("get_roadbook_by_slug", { p_slug: params.slug }).maybeSingle();
     if (error) throw error;
     if (!data) throw notFound();
     const rb = rowToRoadbook(data);
@@ -574,7 +573,7 @@ function PublicPage() {
 
         {/* LOCAL PRINCIPAL */}
         {(r.teatro_nome || r.teatro_endereco || r.teatro_telefone || teatroSite || r.teatro_observacoes || r.teatro_fotos.length > 0) && (
-          <Section title="Local Principal" icon={<Theater className="size-4" />}>
+          <Section title="Teatro" icon={<Theater className="size-4" />}>
             <div className="rounded-lg border p-4 bg-card space-y-3">
               {r.teatro_nome && <p className="font-semibold">{r.teatro_nome}</p>}
               {r.teatro_endereco && <p className="text-sm text-muted-foreground">{r.teatro_endereco}</p>}
@@ -887,6 +886,25 @@ function PublicPage() {
                     </div>
                   </div>
                 )}
+                  {/* Boarding Passes (Cartões de Embarque) */}
+                  {((r.voo_ida.cartoes_embarque?.length ?? 0) > 0 || (r.voo_volta.cartoes_embarque?.length ?? 0) > 0) && (
+                    <div className="border-t pt-3 mt-3 break-inside-avoid col-span-2">
+                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque</h3>
+                      <div className="grid grid-cols-2 gap-4">
+                        {[...(r.voo_ida.cartoes_embarque ?? []), ...(r.voo_volta.cartoes_embarque ?? [])].map((c, cIdx) => (
+                          <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center">
+                            {c.url ? (
+                              <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
+                            ) : (
+                              <div className="h-24 w-full bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400">Cartão de Embarque</div>
+                            )}
+                            <span className="text-[9px] font-bold text-slate-600 mt-1">{c.nome || "Bilhete"}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
               </div>
             </div>
 
@@ -953,7 +971,7 @@ function PublicPage() {
               <div className="mt-8">
                 <h3 className="text-sm font-bold border-b pb-1.5 mb-4 uppercase tracking-wide text-slate-500">📸 Fotos do Teatro</h3>
                 <div className="grid grid-cols-2 gap-4">
-                  {r.teatro_fotos.slice(0, 4).map((f, idx) => (
+                  {r.teatro_fotos.map((f, idx) => (
                     <div key={idx} className="border border-slate-200 rounded-xl p-2 bg-white flex flex-col items-center shadow-sm break-inside-avoid">
                       {f.url ? (
                         <img src={f.url} alt={f.nome} className="h-40 w-full object-cover rounded-lg" />
@@ -1015,7 +1033,7 @@ function PublicPage() {
                         {/* Location Photos */}
                         {ol.fotos && ol.fotos.length > 0 && (
                           <div className="grid grid-cols-2 gap-4 mt-3 pl-2">
-                            {ol.fotos.slice(0, 2).map((f, fIdx) => (
+                            {ol.fotos.map((f, fIdx) => (
                               <div key={fIdx} className="border border-slate-100 rounded-lg p-1.5 bg-slate-50 flex flex-col items-center">
                                 {f.url ? (
                                   <img src={f.url} alt={f.nome} className="h-28 w-full object-cover rounded-md" />

@@ -143,7 +143,7 @@
   }
 }
 
-@media print {
+@media print {\n  body { counter-reset: page; }\n  .print-page-number::after { counter-increment: page; content: counter(page); }
   @page {
     size: A4;
     margin: 0;
