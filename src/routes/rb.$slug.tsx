@@ -12,18 +12,7 @@ import {
   normalizeExternalUrl, mapsUrl,
   type ProgItem, type Documento, type Quarto, type OutroContato, type Foto, type Voo,
 } from "@/lib/roadbook-types";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
-// Fix Leaflet marker icons in Vite build
-if (typeof window !== "undefined") {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-    iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-    shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-  });
-}
 
 type GeoPlace = { latitude: number; longitude: number; name: string; admin1?: string };
 type GeoState =
@@ -1028,67 +1017,85 @@ function OperationalMap({
   places: PlaceDetail[];
 }) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
+  const mapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
     if (!mapRef.current || (!hotelCoords && !teatroCoords)) return;
 
-    const center = hotelCoords || teatroCoords || [0, 0];
-    
-    const map = L.map(mapRef.current, { zoomControl: true }).setView(center, 14);
-    mapInstanceRef.current = map;
+    let active = true;
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(map);
+    import("leaflet").then((LModule) => {
+      const L = LModule.default || LModule;
+      if (!active || !mapRef.current) return;
 
-    const markers = L.featureGroup();
-
-    const createMarkerIcon = (color: string) => {
-      return L.divIcon({
-        html: `
-          <svg class="size-6 drop-shadow-md" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
-          </svg>
-        `,
-        className: "custom-leaflet-icon",
-        iconSize: [24, 24],
-        iconAnchor: [12, 24],
-        popupAnchor: [0, -24],
+      // Fix default marker icon URLs
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
+        iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
+        shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
       });
-    };
 
-    if (hotelCoords) {
-      L.marker(hotelCoords, { icon: createMarkerIcon("#3b82f6") }) // Blue
-        .bindPopup(`<b>Hotel:</b> ${hotelNome}`)
-        .addTo(markers);
-    }
+      const center = hotelCoords || teatroCoords || [0, 0];
+      
+      const map = L.map(mapRef.current, { zoomControl: true }).setView(center, 14);
+      mapInstanceRef.current = map;
 
-    if (teatroCoords) {
-      L.marker(teatroCoords, { icon: createMarkerIcon("#ef4444") }) // Red
-        .bindPopup(`<b>Teatro:</b> ${teatroNome}`)
-        .addTo(markers);
-    }
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(map);
 
-    places.forEach(p => {
-      let color = "#10b981"; // Green for Pharmacy
-      if (p.type === "supermarket") color = "#f59e0b"; // Yellow/Orange
-      if (p.type === "hospital") color = "#8b5cf6"; // Purple
+      const markers = L.featureGroup();
 
-      L.marker([p.lat, p.lon], { icon: createMarkerIcon(color) })
-        .bindPopup(`<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : "Hospital"}`)
-        .addTo(markers);
+      const createMarkerIcon = (color: string) => {
+        return L.divIcon({
+          html: `
+            <svg class="size-6 drop-shadow-md" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="${color}" stroke="#ffffff" stroke-width="1.5"/>
+            </svg>
+          `,
+          className: "custom-leaflet-icon",
+          iconSize: [24, 24],
+          iconAnchor: [12, 24],
+          popupAnchor: [0, -24],
+        });
+      };
+
+      if (hotelCoords) {
+        L.marker(hotelCoords, { icon: createMarkerIcon("#3b82f6") }) // Blue
+          .bindPopup(`<b>Hotel:</b> ${hotelNome}`)
+          .addTo(markers);
+      }
+
+      if (teatroCoords) {
+        L.marker(teatroCoords, { icon: createMarkerIcon("#ef4444") }) // Red
+          .bindPopup(`<b>Teatro:</b> ${teatroNome}`)
+          .addTo(markers);
+      }
+
+      places.forEach(p => {
+        let color = "#10b981"; // Green for Pharmacy
+        if (p.type === "supermarket") color = "#f59e0b"; // Yellow/Orange
+        if (p.type === "hospital") color = "#8b5cf6"; // Purple
+
+        L.marker([p.lat, p.lon], { icon: createMarkerIcon(color) })
+          .bindPopup(`<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : "Hospital"}`)
+          .addTo(markers);
+      });
+
+      markers.addTo(map);
+
+      if (markers.getBounds().isValid()) {
+        map.fitBounds(markers.getBounds().pad(0.1));
+      }
     });
 
-    markers.addTo(map);
-
-    if (markers.getBounds().isValid()) {
-      map.fitBounds(markers.getBounds().pad(0.1));
-    }
-
     return () => {
-      map.remove();
-      mapInstanceRef.current = null;
+      active = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
     };
   }, [hotelCoords, teatroCoords, places]);
 
