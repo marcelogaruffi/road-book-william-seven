@@ -84,6 +84,38 @@ function fmtDate(d: string | null | undefined) {
 }
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
+function AppleNumber({ number, className = "size-8" }: { number: number; className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Stem */}
+      <path d="M50 25 C48 15, 55 5, 60 5 C57 12, 53 18, 50 25" stroke="#78350f" strokeWidth="4" strokeLinecap="round" />
+      {/* Leaf */}
+      <path d="M50 18 C58 12, 70 12, 72 15 C70 23, 58 23, 50 18" fill="#15803d" />
+      {/* Apple Body */}
+      <path 
+        d="M50 27 
+           C40 25, 20 28, 15 48 
+           C10 65, 25 88, 50 92 
+           C75 88, 90 65, 85 48 
+           C80 28, 60 25, 50 27 Z" 
+        fill="#dc2626" 
+      />
+      {/* Number text overlay */}
+      <text 
+        x="50" 
+        y="62" 
+        textAnchor="middle" 
+        fill="#ffffff" 
+        fontSize="26" 
+        fontWeight="bold" 
+        fontFamily="sans-serif"
+      >
+        {number}
+      </text>
+    </svg>
+  );
+}
+
 
 function getHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371e3; // metres
@@ -362,26 +394,33 @@ function PublicPage() {
     <div className="min-h-screen bg-background">
       {/* CAPA */}
       <header className="border-b bg-gradient-to-b from-card to-background no-print">
-        <div className="max-w-3xl mx-auto px-5 py-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            {r.festival && <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">{r.festival}</p>}
-            <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">{r.espetaculo}</h1>
-            <p className="mt-3 text-muted-foreground flex items-center gap-1.5"><MapPin className="size-4" />{r.cidade}{r.estado ? `/${r.estado}` : ""}</p>
-            {(r.data_inicial || r.data_final) && (
-              <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
-                <CalendarDays className="size-4" />
-                {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
-              </p>
-            )}
+        <div className="max-w-3xl mx-auto px-5 pt-8 pb-10">
+          {/* Logo Bar */}
+          <div className="flex justify-between items-center mb-6 pb-4 border-b border-muted/60">
+            <img src="/logo-seven.png" alt="Seven Produções" className="h-10 w-auto object-contain" />
+            <img src="/logo-maca.png" alt="A Maçã Logo" className="h-10 w-auto object-contain" />
           </div>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="no-print inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-4 py-2.5 shadow-sm transition-colors w-fit shrink-0"
-          >
-            <FileText className="size-4" />
-            Gerar PDF / Imprimir
-          </button>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              {r.festival && <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">{r.festival}</p>}
+              <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">{r.espetaculo}</h1>
+              <p className="mt-3 text-muted-foreground flex items-center gap-1.5"><MapPin className="size-4" />{r.cidade}{r.estado ? `/${r.estado}` : ""}</p>
+              {(r.data_inicial || r.data_final) && (
+                <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
+                  <CalendarDays className="size-4" />
+                  {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="no-print inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-4 py-2.5 shadow-sm transition-colors w-fit shrink-0"
+            >
+              <FileText className="size-4" />
+              Gerar PDF / Imprimir
+            </button>
+          </div>
         </div>
       </header>
 
@@ -401,7 +440,7 @@ function PublicPage() {
               <div className="hidden md:block">
                 <div className="relative flex justify-between items-start">
                   {/* Horizontal line */}
-                  <div className="absolute top-[37px] left-0 right-0 h-0.5 bg-muted z-0" />
+                  <div className="absolute top-[48px] left-0 right-0 h-0.5 bg-muted z-0" />
                   
                   {dias.map((d, index) => {
                     const summary = r.automacoes?.timeline_overrides?.[d] || getDaySummary(groups[d]);
@@ -410,9 +449,7 @@ function PublicPage() {
                         <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                           {fmtDate(d).substring(0, 5)}
                         </span>
-                        <div className="size-6 rounded-full border-2 border-primary bg-card flex items-center justify-center font-bold text-xs text-primary shadow-sm">
-                          {index + 1}
-                        </div>
+                        <AppleNumber number={index + 1} className="size-12 shrink-0 z-10" />
                         <span className="text-xs font-medium text-foreground mt-3 max-w-[120px] break-words">
                           {summary}
                         </span>
@@ -427,10 +464,10 @@ function PublicPage() {
                 {dias.map((d, index) => {
                   const summary = r.automacoes?.timeline_overrides?.[d] || getDaySummary(groups[d]);
                   return (
-                    <div key={d} className="relative pl-8 flex items-start gap-3">
-                      {/* Vertical line circle */}
-                      <div className="absolute left-1 top-1.5 size-4 rounded-full border-2 border-primary bg-background flex items-center justify-center" />
-                      <div className="flex flex-col">
+                    <div key={d} className="relative pl-10 flex items-start gap-3 min-h-[36px]">
+                      {/* Vertical line apple icon */}
+                      <AppleNumber number={index + 1} className="absolute -left-1 top-0.5 size-8 shrink-0 z-10" />
+                      <div className="flex flex-col pt-0.5">
                         <span className="text-xs font-mono text-muted-foreground font-semibold">
                           {fmtDate(d)}
                         </span>
@@ -1439,17 +1476,7 @@ function RedesLinks({ text }: { text: string }) {
 function PrintHeader({ title }: { title: string }) {
   return (
     <div className="flex justify-between items-center border-b pb-4 mb-6">
-      {/* Seven Logo SVG - original logo restored */}
-      <div className="flex items-center gap-2">
-        <svg width="140" height="38" viewBox="0 0 180 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="25" cy="25" r="22" fill="#000" />
-          <path d="M12 12h24l-14 26h-6l11-20h-15v-6z" fill="#f59e0b" />
-          <path d="M25 3A22 22 0 0 0 3 25" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
-          <text x="56" y="20" font-family="'Helvetica Neue', sans-serif" font-weight="800" font-size="14" fill="#000" letter-spacing="0.1em">SEVEN</text>
-          <text x="56" y="32" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">PRODUÇÕES</text>
-          <text x="56" y="42" font-family="'Helvetica Neue', sans-serif" font-weight="600" font-size="8" fill="#4b5563" letter-spacing="0.05em">ARTÍSTICAS</text>
-        </svg>
-      </div>
+      <img src="/logo-seven.png" alt="Seven Produções" className="h-9 w-auto object-contain" />
       <div className="text-right font-sans">
         <span className="block text-[8px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Guia de Turnê</span>
         <span className="block text-xs font-black uppercase tracking-wide text-slate-700">{title}</span>
