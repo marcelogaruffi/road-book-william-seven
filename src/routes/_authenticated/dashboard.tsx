@@ -134,10 +134,11 @@ function Dashboard() {
                   </p>
                 </div>
                 <div className="flex gap-2 shrink-0 flex-wrap">
-                  <Button variant="outline" size="sm" asChild><a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4" /></a></Button>
-                  <Button variant="outline" size="sm" asChild><Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4" /></Link></Button>
+                  <Button variant="outline" size="sm" asChild title="Ver"><a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4" /></a></Button>
+                  <Button variant="outline" size="sm" asChild title="Gerar PDF Oficial"><a href={`/print/${r.slug}`} target="_blank" rel="noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-printer"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg></a></Button>
+                  <Button variant="outline" size="sm" asChild title="Editar"><Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4" /></Link></Button>
                   <Button variant="outline" size="sm" onClick={() => setDup(r)} title="Duplicar"><Copy className="size-4" /></Button>
-                  <Button variant="outline" size="sm" onClick={() => onDelete(r.id)}><Trash2 className="size-4" /></Button>
+                  <Button variant="outline" size="sm" onClick={() => onDelete(r.id)} title="Excluir"><Trash2 className="size-4" /></Button>
                 </div>
               </Card>
             ))}

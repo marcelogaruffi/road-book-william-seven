@@ -23,7 +23,7 @@ const GeoContext = createContext<GeoState>({ status: "loading" });
 
 
 
-export const Route = createFileRoute("/rb/$slug")({
+export const Route = createFileRoute("/_authenticated/print/$slug")({
   ssr: false,
   loader: async ({ params }) => {
     const { data, error } = await supabase.from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();

@@ -19,6 +19,7 @@ import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated/tour.$id'
 import { Route as AuthenticatedRoadbookNewRouteImport } from './routes/_authenticated/roadbook.new'
 import { Route as AuthenticatedRoadbookIdRouteImport } from './routes/_authenticated/roadbook.$id'
+import { Route as AuthenticatedPrintSlugRouteImport } from './routes/_authenticated/print.$slug'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -70,6 +71,11 @@ const AuthenticatedRoadbookIdRoute = AuthenticatedRoadbookIdRouteImport.update({
   path: '/roadbook/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPrintSlugRoute = AuthenticatedPrintSlugRouteImport.update({
+  id: '/print/$slug',
+  path: '/print/$slug',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
+  '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
   '/tour/$id': typeof AuthenticatedTourIdRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
+  '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
   '/tour/$id': typeof AuthenticatedTourIdRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
+  '/_authenticated/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/_authenticated/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/_authenticated/roadbook/new': typeof AuthenticatedRoadbookNewRoute
   '/_authenticated/tour/$id': typeof AuthenticatedTourIdRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/rb/$slug'
     | '/turne/$slug'
+    | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
     | '/tour/$id'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/rb/$slug'
     | '/turne/$slug'
+    | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
     | '/tour/$id'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/rb/$slug'
     | '/turne/$slug'
+    | '/_authenticated/print/$slug'
     | '/_authenticated/roadbook/$id'
     | '/_authenticated/roadbook/new'
     | '/_authenticated/tour/$id'
@@ -223,11 +235,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRoadbookIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/print/$slug': {
+      id: '/_authenticated/print/$slug'
+      path: '/print/$slug'
+      fullPath: '/print/$slug'
+      preLoaderRoute: typeof AuthenticatedPrintSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
   AuthenticatedRoadbookNewRoute: typeof AuthenticatedRoadbookNewRoute
   AuthenticatedTourIdRoute: typeof AuthenticatedTourIdRoute
@@ -236,6 +256,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,
   AuthenticatedRoadbookNewRoute: AuthenticatedRoadbookNewRoute,
   AuthenticatedTourIdRoute: AuthenticatedTourIdRoute,
