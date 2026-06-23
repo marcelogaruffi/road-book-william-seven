@@ -37,11 +37,11 @@ export const Route = createFileRoute("/rb/$slug")({
       return supabase.storage.from("roadbook-docs").getPublicUrl(path).data.publicUrl;
     };
 
-    rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: getUrl(f.path) || f.url }));
-    rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: getUrl(f.path) || f.url }));
-    rb.documentos = rb.documentos.map((d) => ({ ...d, url: getUrl(d.path) || d.url }));
-    rb.voo_ida.cartoes_embarque = (rb.voo_ida.cartoes_embarque ?? []).map((c) => ({ ...c, url: getUrl(c.path) || c.url }));
-    rb.voo_volta.cartoes_embarque = (rb.voo_volta.cartoes_embarque ?? []).map((c) => ({ ...c, url: getUrl(c.path) || c.url }));
+    rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: f.url || getUrl(f.path) }));
+    rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: f.url || getUrl(f.path) }));
+    rb.documentos = rb.documentos.map((d) => ({ ...d, url: d.url || getUrl(d.path) }));
+    rb.voo_ida.cartoes_embarque = (rb.voo_ida.cartoes_embarque ?? []).map((c) => ({ ...c, url: c.url || getUrl(c.path) }));
+    rb.voo_volta.cartoes_embarque = (rb.voo_volta.cartoes_embarque ?? []).map((c) => ({ ...c, url: c.url || getUrl(c.path) }));
 
     return rb;
   },
@@ -972,7 +972,7 @@ function PublicPage() {
                         <div className="h-40 w-full bg-slate-100 rounded-lg flex items-center justify-center text-xs text-slate-400">Sem imagem</div>
                       )}
                       <div className="w-full mt-2 px-1 flex items-center justify-between text-[10px]">
-                        <span className="font-bold text-slate-800 uppercase tracking-wider">{f.categoria || "Geral"}</span>
+                        <span className="font-bold text-slate-800 uppercase tracking-wider">Foto {idx + 1}</span>
                         {f.descricao && <span className="text-slate-400 italic font-medium">{f.descricao}</span>}
                       </div>
                     </div>
@@ -1361,10 +1361,9 @@ function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; lab
   const normalizedPhotos = useMemo(() => {
     return fotos.map(f => {
       const isOutros = !categorias.includes(f.categoria) || f.categoria === "Outros";
-      const displayCategory = isOutros && f.descricao ? f.descricao.trim() : f.categoria;
       return {
         ...f,
-        displayCategory: displayCategory || "Outros"
+        displayCategory: `Foto ${i + 1}`
       };
     });
   }, [fotos, categorias]);
