@@ -1359,7 +1359,7 @@ function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; lab
 
   // Map photos to normalize categories
   const normalizedPhotos = useMemo(() => {
-    return fotos.map(f => {
+    return fotos.map((f, i) => {
       const isOutros = !categorias.includes(f.categoria) || f.categoria === "Outros";
       return {
         ...f,
