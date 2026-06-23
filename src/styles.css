@@ -160,6 +160,11 @@
   .no-print, header, nav, button, .leaflet-control-container, main, footer {
     display: none !important;
   }
+  
+  /* Esconder o Lovable Badge na impressão */
+  a[href*="lovable.dev"], #lovable-badge, .lovable-badge, [class*="lovable"] {
+    display: none !important;
+  }
   .print-page {
     min-height: 29.7cm;
     width: 21cm;
