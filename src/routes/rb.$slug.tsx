@@ -76,7 +76,7 @@ function fmtDate(d: string | null | undefined) {
 }
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
-function AppleNumber({ number, className = "size-8" }: { number: number; className?: string }) {
+function AppleNumber({ number, className = "size-8" }: { number?: number | string; className?: string }) {
   return (
     <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Stem */}
@@ -93,17 +93,19 @@ function AppleNumber({ number, className = "size-8" }: { number: number; classNa
         fill="#dc2626" 
       />
       {/* Number text overlay */}
-      <text 
-        x="50" 
-        y="62" 
-        textAnchor="middle" 
-        fill="#ffffff" 
-        fontSize="26" 
-        fontWeight="bold" 
-        fontFamily="sans-serif"
-      >
-        {number}
-      </text>
+      {number !== undefined && number !== "" && (
+        <text 
+          x="50" 
+          y="62" 
+          textAnchor="middle" 
+          fill="#ffffff" 
+          fontSize="26" 
+          fontWeight="bold" 
+          fontFamily="sans-serif"
+        >
+          {number}
+        </text>
+      )}
     </svg>
   );
 }
@@ -881,20 +883,42 @@ function PublicPage() {
                 )}
                   {/* Boarding Passes (Cartões de Embarque) */}
                   {((r.voo_ida.cartoes_embarque?.length ?? 0) > 0 || (r.voo_volta.cartoes_embarque?.length ?? 0) > 0) && (
-                    <div className="border-t pt-3 mt-3 break-inside-avoid col-span-2">
-                      <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        {[...(r.voo_ida.cartoes_embarque ?? []), ...(r.voo_volta.cartoes_embarque ?? [])].map((c, cIdx) => (
-                          <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center">
-                            {c.url ? (
-                              <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
-                            ) : (
-                              <div className="h-24 w-full bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400">Cartão de Embarque</div>
-                            )}
-                            <span className="text-[9px] font-bold text-slate-600 mt-1">{c.nome || "Bilhete"}</span>
+                    <div className="border-t pt-3 mt-3 col-span-2 space-y-4">
+                      {(r.voo_ida.cartoes_embarque?.length ?? 0) > 0 && (
+                        <div>
+                          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque — Ida</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            {r.voo_ida.cartoes_embarque!.map((c, cIdx) => (
+                              <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center break-inside-avoid">
+                                {c.url ? (
+                                  <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
+                                ) : (
+                                  <div className="h-24 w-full bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400">Cartão de Embarque</div>
+                                )}
+                                <span className="text-[9px] font-bold text-slate-600 mt-1">{c.nome || "Bilhete"}</span>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+                      
+                      {(r.voo_volta.cartoes_embarque?.length ?? 0) > 0 && (
+                        <div>
+                          <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque — Volta</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            {r.voo_volta.cartoes_embarque!.map((c, cIdx) => (
+                              <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center break-inside-avoid">
+                                {c.url ? (
+                                  <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
+                                ) : (
+                                  <div className="h-24 w-full bg-slate-200 rounded-lg flex items-center justify-center text-[10px] text-slate-400">Cartão de Embarque</div>
+                                )}
+                                <span className="text-[9px] font-bold text-slate-600 mt-1">{c.nome || "Bilhete"}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -1045,6 +1069,29 @@ function PublicPage() {
                     );
                   })}
                 </div>
+
+                {/* Apoio places (Farmácia, Hospital, Mercado) */}
+                {opState.places.length > 0 && (
+                  <div className="space-y-4 mt-6">
+                    <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📍 Locais de Apoio</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                      {opState.places.map((p, idx) => (
+                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm break-inside-avoid relative overflow-hidden">
+                          <div className={`absolute top-0 left-0 w-1.5 h-full ${p.type === "pharmacy" ? "bg-[#10b981]" : p.type === "supermarket" ? "bg-[#f59e0b]" : "bg-[#8b5cf6]"}`} />
+                          <div className="pl-1.5">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">
+                                {p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Mercado" : "Hospital"} {p.assoc === "hotel" ? "(Perto do Hotel)" : p.assoc === "theater" ? "(Perto do Teatro)" : ""}
+                              </span>
+                            </div>
+                            <h4 className="font-bold text-slate-800 text-xs mb-0.5">{p.name}</h4>
+                            <p className="text-[10px] text-slate-500">{p.address}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -1491,34 +1538,24 @@ function PrintHeader({ title, isFirstPage = false }: { title: string; isFirstPag
     );
   }
   return (
-    <div className="flex justify-between items-center border-b pb-3 mb-4">
-      <img src="/logo-seven.png" alt="Seven Produções" className="h-9 w-auto object-contain" />
+    <div className="flex justify-between items-center border-b pb-4 mb-6">
+      <img src="/logo-seven.png" alt="Seven Produções" className="h-12 w-auto object-contain" />
       <div className="text-right font-sans">
-        <span className="block text-[8px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Guia de Turnê</span>
-        <span className="block text-xs font-black uppercase tracking-wide text-slate-700">{title}</span>
+        <span className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Guia de Turnê</span>
+        <span className="block text-base font-black uppercase tracking-wide text-slate-700">{title}</span>
       </div>
-      <img src="/logo-maca.png" alt="A Maçã Logo" className="h-9 w-auto object-contain" />
+      <img src="/logo-maca.png" alt="A Maçã Logo" className="h-12 w-auto object-contain" />
     </div>
   );
 }
 
-function PrintFooter({ pageNum, currentUrl }: { pageNum: number; currentUrl: string }) {
+function PrintFooter() {
   return (
     <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-200/60 pt-3 mt-6">
       <span className="font-sans font-semibold tracking-wider uppercase text-slate-400">Road Book · Seven Produções Artísticas</span>
-      <div className="flex items-center gap-4">
-        {/* Dynamic QR Code & URL always present on every page */}
-        <div className="flex items-center gap-2">
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(currentUrl)}`}
-            alt="QR Code Online"
-            className="size-6 object-contain border p-0.5 bg-white rounded shadow-sm"
-          />
-          <span className="text-[8px] underline text-slate-400/80 break-all max-w-[150px] truncate">{currentUrl}</span>
-        </div>
-        <div className="size-5 rounded-full bg-slate-800 text-white flex items-center justify-center font-sans text-[10px] font-bold shadow-sm shrink-0">
-          {pageNum}
-        </div>
+      <div className="flex items-center justify-center relative size-7 shrink-0">
+        <AppleNumber className="absolute inset-0 size-full opacity-90 drop-shadow-sm" />
+        <span className="relative z-10 text-[10px] font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] leading-none pt-[3px] print-page-number"></span>
       </div>
     </div>
   );
