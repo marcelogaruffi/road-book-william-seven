@@ -35,7 +35,7 @@ function Dashboard() {
   async function load() {
     setLoading(true);
     const [{ data: rb, error: e1 }, { data: tr, error: e2 }] = await Promise.all([
-      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id").order("created_at", { ascending: false }),
+      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id").order("data_inicial", { ascending: true }),
       supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
     ]);
     if (e1) toast.error(e1.message);

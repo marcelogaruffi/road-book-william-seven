@@ -2,7 +2,8 @@ export type ProgItem = {
   data: string;
   hora_inicio: string;
   hora_fim?: string;
-  hora?: string; // legacy
+  hora?: string;
+  horario_chegada?: string; // legacy
   titulo?: string;
   atividade?: string; // legacy
   tipo?: ProgTipo;
@@ -45,7 +46,7 @@ export type FestivalInfo = {
   observacoes?: string;
   fotos?: Foto[];
 };
-export type Documento = { nome: string; path: string; tipo: string; url?: string };
+export type Documento = { nome: string; path: string; tipo: string; url?: string; descricao?: string; };
 
 // Categories shared (theatre) — keep export name for backwards compat
 export const FOTO_CATEGORIAS = [
@@ -96,10 +97,13 @@ export type Voo = {
   localizador?: string;
   data?: string;
   hora?: string;
+  horario_chegada?: string;
   portao?: string;
   terminal?: string;
+  outras_informacoes?: string;
   passageiros?: Passageiro[];
   cartoes_embarque?: CartaoEmbarque[];
+  outras_informacoes_fotos?: Foto[];
 };
 export const emptyVoo: Voo = { passageiros: [], cartoes_embarque: [] };
 

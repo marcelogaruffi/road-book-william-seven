@@ -936,7 +936,7 @@ function PublicPage() {
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div className="col-span-2"><span className="font-bold text-slate-800 text-sm">{r.hotel_nome}</span></div>
                       {r.hotel_endereco && <div className="col-span-2"><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{r.hotel_endereco}</span></div>}
-                      {r.hotel_telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{r.hotel_telefone}</span></div>}
+                      {r.hotel_telefone && <div><span className="font-semibold text-slate-400">E-mail:</span> <span className="text-slate-700">{r.hotel_telefone}</span></div>}
                       {r.hotel_site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{r.hotel_site}</span></div>}
                       {r.hotel_checkin && <div><span className="font-semibold text-slate-400">Check-in:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkin)} {r.hotel_checkin_hora && `às ${r.hotel_checkin_hora}`}</span></div>}
                       {r.hotel_checkout && <div><span className="font-semibold text-slate-400">Check-out:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkout)} {r.hotel_checkout_hora && `às ${r.hotel_checkout_hora}`}</span></div>}
@@ -1041,7 +1041,7 @@ function PublicPage() {
                         <div className="pl-2 text-xs space-y-1.5">
                           {ol.endereco && <div><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{ol.endereco}</span></div>}
                           <div className="grid grid-cols-2 gap-4">
-                            {ol.telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{ol.telefone}</span></div>}
+                            {ol.telefone && <div><span className="font-semibold text-slate-400">E-mail:</span> <span className="text-slate-700">{ol.telefone}</span></div>}
                             {ol.site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{ol.site}</span></div>}
                           </div>
                           {ol.observacoes && <div className="border-t pt-2 mt-2"><span className="font-semibold text-slate-400 block mb-0.5">Observações:</span> <p className="text-slate-600 italic leading-relaxed">{ol.observacoes}</p></div>}
@@ -1118,7 +1118,7 @@ function PublicPage() {
                           <div className="pl-1.5 space-y-0.5">
                             <div className="font-bold text-[10px] uppercase text-slate-400">Produção</div>
                             <div className="font-bold text-slate-800">{r.producao_nome || "—"}</div>
-                            {r.producao_telefone && <div>Tel: <span className="text-slate-600">{r.producao_telefone}</span></div>}
+                            {r.producao_telefone && <div>E-mail: <span className="text-slate-600">{r.producao_telefone}</span></div>}
                             {r.producao_whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(r.producao_whatsapp)}`} target="_blank" className="text-slate-600 underline">{r.producao_whatsapp}</a></div>}
                           </div>
                         </div>
@@ -1130,7 +1130,7 @@ function PublicPage() {
                           <div className="pl-1.5 space-y-0.5">
                             <div className="font-bold text-[10px] uppercase text-slate-400">Receptivo Local</div>
                             <div className="font-bold text-slate-800">{r.receptivo_nome || "—"}</div>
-                            {r.receptivo_telefone && <div>Tel: <span className="text-slate-600">{r.receptivo_telefone}</span></div>}
+                            {r.receptivo_telefone && <div>E-mail: <span className="text-slate-600">{r.receptivo_telefone}</span></div>}
                             {r.receptivo_whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(r.receptivo_whatsapp)}`} target="_blank" className="text-slate-600 underline">{r.receptivo_whatsapp}</a></div>}
                           </div>
                         </div>
@@ -1142,7 +1142,7 @@ function PublicPage() {
                           <div className="pl-1.5 space-y-0.5">
                             <div className="font-bold text-[10px] uppercase text-slate-400">{c.funcao || "Contato"}</div>
                             <div className="font-bold text-slate-800">{c.nome || "—"}</div>
-                            {c.telefone && <div>Tel: <span className="text-slate-600">{c.telefone}</span></div>}
+                            {c.telefone && <div>E-mail: <span className="text-slate-600">{c.telefone}</span></div>}
                             {c.whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(c.whatsapp)}`} target="_blank" className="text-slate-600 underline">{c.whatsapp}</a></div>}
                           </div>
                         </div>
@@ -1169,23 +1169,43 @@ function PublicPage() {
                 )}
 
                 {/* Documentos Section */}
-                {r.documentos && r.documentos.length > 0 && (
-                  <div className="space-y-3">
-                    <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📁 Documentos Técnicos</h3>
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs">
-                      <p className="text-slate-400 mb-2 italic">Acesse a versão online do Road Book para abrir e baixar estes arquivos:</p>
-                      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
-                        {r.documentos.map((doc, idx) => (
-                          <div key={idx} className="flex items-center gap-2 text-slate-700 border-b border-slate-50 pb-1">
-                            <span className="text-slate-400 font-bold shrink-0">·</span>
-                            <span className="truncate font-medium">{doc.nome}</span>
-                            <span className="text-[10px] text-slate-400 uppercase">({doc.tipo?.split("/")[1] || "PDF"})</span>
+                {r.documentos && r.documentos.length > 0 && (() => {
+                  const fotos = r.documentos.filter(d => d.tipo?.startsWith("image/"));
+                  const pdfs = r.documentos.filter(d => !d.tipo?.startsWith("image/"));
+                  return (
+                    <div className="space-y-6">
+                      {fotos.length > 0 && (
+                        <div className="space-y-3 break-inside-avoid">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📸 Galeria de Documentos</h3>
+                          <div className="grid grid-cols-3 gap-2">
+                            {fotos.map((f, idx) => (
+                              <div key={idx} className="aspect-square rounded border overflow-hidden">
+                                <img src={f.url} alt={f.nome} className="w-full h-full object-cover" />
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      )}
+                      {pdfs.length > 0 && (
+                        <div className="space-y-3 break-inside-avoid">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📁 Documentos Técnicos</h3>
+                          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs">
+                            <p className="text-slate-400 mb-2 italic">Acesse a versão online do Road Book para abrir e baixar estes arquivos:</p>
+                            <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                              {pdfs.map((doc, idx) => (
+                                <div key={idx} className="flex items-center gap-2 text-slate-700 border-b border-slate-50 pb-1">
+                                  <span className="text-slate-400 font-bold shrink-0">·</span>
+                                  <span className="truncate font-medium">{doc.nome}</span>
+                                  <span className="text-[10px] text-slate-400 uppercase">({doc.tipo?.split("/")[1]?.toUpperCase() || "PDF"})</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
 
@@ -1258,7 +1278,7 @@ function ContactCard({ label, name, telefone, whatsapp }: { label: string; name:
       
       {telefone && (
         <div className="text-sm flex items-center gap-2">
-          <span className="text-muted-foreground text-xs">Telefone:</span>
+          <span className="text-muted-foreground text-xs">E-mail:</span>
           <a href={`tel:${tel}`} className="text-primary hover:underline font-mono">{telefone}</a>
         </div>
       )}
@@ -1318,7 +1338,8 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
         {voo.numero && <InfoCell label="Voo" value={voo.numero} />}
         {voo.localizador && <InfoCell label="Localizador" value={voo.localizador} />}
         {voo.data && <InfoCell label="Data" value={fmtDate(voo.data)} />}
-        {voo.hora && <InfoCell label="Hora" value={voo.hora} />}
+        {voo.hora && <InfoCell label="Hora de Partida" value={voo.hora} />}
+        {voo.horario_chegada && <InfoCell label="Horário de Chegada" value={voo.horario_chegada} />}
         {voo.terminal && <InfoCell label="Terminal" value={voo.terminal} />}
         {voo.portao && <InfoCell label="Portão" value={voo.portao} />}
       </div>
@@ -1386,6 +1407,18 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
           </div>
         </div>
       )}
+        {(voo.outras_informacoes_fotos?.length ?? 0) > 0 && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="font-semibold text-sm mb-3">Outras informações (fotos)</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {voo.outras_informacoes_fotos!.map((f, idx_f) => (
+                <a key={idx_f} href={f.url} target="_blank" rel="noreferrer" className="block relative aspect-video rounded overflow-hidden border">
+                  <img src={f.url} alt={f.nome} className="w-full h-full object-cover" />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
     </div>
   );
 }

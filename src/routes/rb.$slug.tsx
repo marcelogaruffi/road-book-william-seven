@@ -161,10 +161,26 @@ function PublicPage() {
   const hasFestivalInfo = !!(r.festival || fiSite || fiInstagram || fi.redes || fi.programacao_oficial || fi.observacoes);
 
   // Lightbox & Viewer
-  const [lightbox, setLightbox] = useState<any | null>(null);
+  const [lightbox, setLightbox] = useState<{ item: any; allItems?: any[]; index?: number } | null>(null);
   useEffect(() => {
     if (!lightbox) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setLightbox(null); };
+    const onKey = (e: KeyboardEvent) => { 
+      if (e.key === "Escape") setLightbox(null);
+      if (e.key === "ArrowRight" && lightbox.allItems && lightbox.allItems.length > 1) {
+         setLightbox(prev => {
+            if (!prev || !prev.allItems) return prev;
+            const nextIdx = (prev.index! + 1) % prev.allItems.length;
+            return { item: prev.allItems[nextIdx], allItems: prev.allItems, index: nextIdx };
+         });
+      }
+      if (e.key === "ArrowLeft" && lightbox.allItems && lightbox.allItems.length > 1) {
+         setLightbox(prev => {
+            if (!prev || !prev.allItems) return prev;
+            const prevIdx = (prev.index! - 1 + prev.allItems.length) % prev.allItems.length;
+            return { item: prev.allItems[prevIdx], allItems: prev.allItems, index: prevIdx };
+         });
+      }
+    };
     document.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -562,7 +578,7 @@ function PublicPage() {
                 ))}
               </div>
             )}
-            <PhotoGallery fotos={r.hotel_fotos} label="Fotos do hotel" categorias={HOTEL_FOTO_CATEGORIAS} onOpen={setLightbox} />
+            <PhotoGallery fotos={r.hotel_fotos} label="Fotos do hotel" categorias={HOTEL_FOTO_CATEGORIAS} onOpen={(f, all, i) => setLightbox({ item: f, allItems: all, index: i })} />
           </Section>
         )}
 
@@ -587,7 +603,7 @@ function PublicPage() {
                 </a>
               )}
             </div>
-            <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" categorias={TEATRO_FOTO_CATEGORIAS} onOpen={setLightbox} />
+            <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" categorias={TEATRO_FOTO_CATEGORIAS} onOpen={(f, all, i) => setLightbox({ item: f, allItems: all, index: i })} />
           </Section>
         )}
 
@@ -653,7 +669,7 @@ function PublicPage() {
                           fotos={l.fotos}
                           label={`Fotos de ${l.nome || "Local"}`}
                           categorias={TEATRO_FOTO_CATEGORIAS}
-                          onOpen={setLightbox}
+                          onOpen={(f, all, i) => setLightbox({ item: f, allItems: all, index: i })}
                         />
                       </div>
                     )}
@@ -665,7 +681,7 @@ function PublicPage() {
         )}
 
         {/* VOOS */}
-        <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={setLightbox} />
+        <FlightSection ida={r.voo_ida} volta={r.voo_volta} onOpenImage={(f, all, i) => setLightbox({ item: f, allItems: all, index: i })} />
 
         {/* MAPA OPERACIONAL */}
         <Section title="Mapa Operacional" icon={<MapIcon className="size-4" />}>
@@ -721,29 +737,58 @@ function PublicPage() {
               {fi.programacao_oficial && <ProgramacaoOficial text={fi.programacao_oficial} />}
               {fi.observacoes && <p className="text-muted-foreground whitespace-pre-line">{fi.observacoes}</p>}
             </div>
-            <PhotoGallery fotos={r.festival_info?.fotos ?? []} label="Fotos do festival" categorias={["Fachada", "Apresentação", "Divulgação", "Outros"]} onOpen={setLightbox} />
+            <PhotoGallery fotos={r.festival_info?.fotos ?? []} label="Fotos do festival" categorias={["Fachada", "Apresentação", "Divulgação", "Outros"]} onOpen={(f, all, i) => setLightbox({ item: f, allItems: all, index: i })} />
           </Section>
         )}
 
         {/* DOCUMENTOS */}
-        {r.documentos.length > 0 && (
-          <Section title="Documentos" icon={<FileText className="size-4" />}>
-            <div className="rounded-lg border bg-card divide-y">
-              {r.documentos.map((doc: Documento, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setLightbox({ url: doc.url ?? "", nome: doc.nome, tipo: doc.tipo })}
-                  className="p-3 flex items-center gap-3 hover:bg-accent transition-colors w-full text-left"
-                >
-                  <FileText className="size-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm truncate flex-1">{doc.nome}</span>
-                  <span className="text-xs text-muted-foreground">{doc.tipo?.split("/")[1] ?? "PDF"}</span>
-                </button>
-              ))}
+        {r.documentos.length > 0 && (() => {
+          const fotos = r.documentos.filter(d => d.tipo?.startsWith("image/")).map(d => ({ ...d, categoria: "Documento" }));
+          const pdfs = r.documentos.filter(d => !d.tipo?.startsWith("image/"));
+          return (
+            <div className="space-y-6">
+              {fotos.length > 0 && (
+                <Section title="Galeria de Documentos" icon={<Image className="size-4" />}>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {fotos.map((f: any, i) => (
+                      <button key={i} type="button" onClick={() => setLightbox({ item: f, allItems: fotos, index: i })} className="relative aspect-square rounded-lg overflow-hidden border hover:opacity-90 transition-opacity">
+                        <img src={f.url} alt={f.nome} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+              )}
+              {pdfs.length > 0 && (
+                <Section title="Documentos Técnicos (PDFs e outros)" icon={<FileText className="size-4" />}>
+                  <div className="rounded-lg border bg-card divide-y">
+                    {pdfs.map((doc: Documento, i) => (
+                      <a
+                        key={i}
+                        href={doc.url ?? "#"}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-3 flex items-center gap-3 hover:bg-accent transition-colors w-full text-left block"
+                      >
+                        <FileText className="size-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm truncate flex-1 flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                          {doc.descricao ? (
+                            <>
+                              <span className="font-medium">{doc.descricao}</span>
+                              <span className="text-muted-foreground text-xs hidden sm:inline">({doc.nome})</span>
+                            </>
+                          ) : (
+                            <span>{doc.nome}</span>
+                          )}
+                        </span>
+                        <span className="text-xs text-muted-foreground font-mono">{doc.tipo?.split("/")[1]?.toUpperCase() ?? "PDF"}</span>
+                      </a>
+                    ))}
+                  </div>
+                </Section>
+              )}
             </div>
-          </Section>
-        )}
+          );
+        })()}
 
         <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground">
           Road Book · William Seven
@@ -936,7 +981,7 @@ function PublicPage() {
                     <div className="grid grid-cols-2 gap-4 text-xs">
                       <div className="col-span-2"><span className="font-bold text-slate-800 text-sm">{r.hotel_nome}</span></div>
                       {r.hotel_endereco && <div className="col-span-2"><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{r.hotel_endereco}</span></div>}
-                      {r.hotel_telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{r.hotel_telefone}</span></div>}
+                      {r.hotel_telefone && <div><span className="font-semibold text-slate-400">E-mail:</span> <span className="text-slate-700">{r.hotel_telefone}</span></div>}
                       {r.hotel_site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{r.hotel_site}</span></div>}
                       {r.hotel_checkin && <div><span className="font-semibold text-slate-400">Check-in:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkin)} {r.hotel_checkin_hora && `às ${r.hotel_checkin_hora}`}</span></div>}
                       {r.hotel_checkout && <div><span className="font-semibold text-slate-400">Check-out:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkout)} {r.hotel_checkout_hora && `às ${r.hotel_checkout_hora}`}</span></div>}
@@ -1041,7 +1086,7 @@ function PublicPage() {
                         <div className="pl-2 text-xs space-y-1.5">
                           {ol.endereco && <div><span className="font-semibold text-slate-400">Endereço:</span> <span className="text-slate-700">{ol.endereco}</span></div>}
                           <div className="grid grid-cols-2 gap-4">
-                            {ol.telefone && <div><span className="font-semibold text-slate-400">Telefone:</span> <span className="text-slate-700">{ol.telefone}</span></div>}
+                            {ol.telefone && <div><span className="font-semibold text-slate-400">E-mail:</span> <span className="text-slate-700">{ol.telefone}</span></div>}
                             {ol.site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{ol.site}</span></div>}
                           </div>
                           {ol.observacoes && <div className="border-t pt-2 mt-2"><span className="font-semibold text-slate-400 block mb-0.5">Observações:</span> <p className="text-slate-600 italic leading-relaxed">{ol.observacoes}</p></div>}
@@ -1118,7 +1163,7 @@ function PublicPage() {
                           <div className="pl-1.5 space-y-0.5">
                             <div className="font-bold text-[10px] uppercase text-slate-400">Produção</div>
                             <div className="font-bold text-slate-800">{r.producao_nome || "—"}</div>
-                            {r.producao_telefone && <div>Tel: <span className="text-slate-600">{r.producao_telefone}</span></div>}
+                            {r.producao_telefone && <div>E-mail: <span className="text-slate-600">{r.producao_telefone}</span></div>}
                             {r.producao_whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(r.producao_whatsapp)}`} target="_blank" className="text-slate-600 underline">{r.producao_whatsapp}</a></div>}
                           </div>
                         </div>
@@ -1130,7 +1175,7 @@ function PublicPage() {
                           <div className="pl-1.5 space-y-0.5">
                             <div className="font-bold text-[10px] uppercase text-slate-400">Receptivo Local</div>
                             <div className="font-bold text-slate-800">{r.receptivo_nome || "—"}</div>
-                            {r.receptivo_telefone && <div>Tel: <span className="text-slate-600">{r.receptivo_telefone}</span></div>}
+                            {r.receptivo_telefone && <div>E-mail: <span className="text-slate-600">{r.receptivo_telefone}</span></div>}
                             {r.receptivo_whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(r.receptivo_whatsapp)}`} target="_blank" className="text-slate-600 underline">{r.receptivo_whatsapp}</a></div>}
                           </div>
                         </div>
@@ -1142,7 +1187,7 @@ function PublicPage() {
                           <div className="pl-1.5 space-y-0.5">
                             <div className="font-bold text-[10px] uppercase text-slate-400">{c.funcao || "Contato"}</div>
                             <div className="font-bold text-slate-800">{c.nome || "—"}</div>
-                            {c.telefone && <div>Tel: <span className="text-slate-600">{c.telefone}</span></div>}
+                            {c.telefone && <div>E-mail: <span className="text-slate-600">{c.telefone}</span></div>}
                             {c.whatsapp && <div>WhatsApp: <a href={`https://wa.me/${onlyDigits(c.whatsapp)}`} target="_blank" className="text-slate-600 underline">{c.whatsapp}</a></div>}
                           </div>
                         </div>
@@ -1199,33 +1244,67 @@ function PublicPage() {
       </table>
 
       {/* LIGHTBOX */}
-      {lightbox && (
+      {lightbox && lightbox.item && (
         <div
           role="dialog"
           aria-modal="true"
           onClick={() => setLightbox(null)}
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in"
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in group/lb"
         >
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setLightbox(null); }}
             aria-label="Fechar"
-            className="absolute top-4 right-4 text-white/80 hover:text-white p-2 rounded-full bg-white/10"
+            className="absolute top-4 right-4 text-white/80 hover:text-white p-2 rounded-full bg-white/10 z-10"
           >
             <X className="size-5" />
           </button>
-          {lightbox.url && (
-            lightbox.tipo?.startsWith("application/pdf") || lightbox.nome?.toLowerCase().endsWith(".pdf") ? (
+          
+          {lightbox.allItems && lightbox.allItems.length > 1 && (
+             <>
+                <button 
+                  type="button" 
+                  onClick={(e) => {
+                     e.stopPropagation();
+                     setLightbox(prev => {
+                        if (!prev || !prev.allItems) return prev;
+                        const prevIdx = (prev.index! - 1 + prev.allItems.length) % prev.allItems.length;
+                        return { item: prev.allItems[prevIdx], allItems: prev.allItems, index: prevIdx };
+                     });
+                  }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-black/50 rounded-full transition-all z-10 md:opacity-0 md:group-hover/lb:opacity-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                </button>
+                <button 
+                  type="button" 
+                  onClick={(e) => {
+                     e.stopPropagation();
+                     setLightbox(prev => {
+                        if (!prev || !prev.allItems) return prev;
+                        const nextIdx = (prev.index! + 1) % prev.allItems.length;
+                        return { item: prev.allItems[nextIdx], allItems: prev.allItems, index: nextIdx };
+                     });
+                  }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-black/50 rounded-full transition-all z-10 md:opacity-0 md:group-hover/lb:opacity-100"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </button>
+             </>
+          )}
+
+          {lightbox.item.url && (
+            lightbox.item.tipo?.startsWith("application/pdf") || lightbox.item.nome?.toLowerCase().endsWith(".pdf") ? (
               <iframe
-                src={lightbox.url}
-                title={lightbox.nome}
+                src={lightbox.item.url}
+                title={lightbox.item.nome}
                 onClick={(e) => e.stopPropagation()}
                 className="w-full h-full max-w-4xl max-h-[85vh] bg-white rounded-md shadow-2xl border-none"
               />
             ) : (
               <img
-                src={lightbox.url}
-                alt={lightbox.nome}
+                src={lightbox.item.url}
+                alt={lightbox.item.nome}
                 onClick={(e) => e.stopPropagation()}
                 className="max-w-full max-h-full object-contain rounded shadow-2xl"
               />
@@ -1258,7 +1337,7 @@ function ContactCard({ label, name, telefone, whatsapp }: { label: string; name:
       
       {telefone && (
         <div className="text-sm flex items-center gap-2">
-          <span className="text-muted-foreground text-xs">Telefone:</span>
+          <span className="text-muted-foreground text-xs">E-mail:</span>
           <a href={`tel:${tel}`} className="text-primary hover:underline font-mono">{telefone}</a>
         </div>
       )}
@@ -1289,7 +1368,7 @@ function hasFlight(v: Voo): boolean {
   return !!(v.aeroporto_origem || v.aeroporto_destino || v.numero || v.localizador || v.data || v.hora || v.portao || v.terminal || (v.passageiros?.length ?? 0) > 0 || (v.cartoes_embarque?.length ?? 0) > 0);
 }
 
-function FlightSection({ ida, volta, onOpenImage }: { ida: Voo; volta: Voo; onOpenImage: (item: any) => void }) {
+function FlightSection({ ida, volta, onOpenImage }: { ida: Voo; volta: Voo; onOpenImage: (item: any, all: any[], index: number) => void }) {
   if (!hasFlight(ida) && !hasFlight(volta)) return null;
   return (
     <Section title="Transporte Aéreo" icon={<Plane className="size-4" />}>
@@ -1301,7 +1380,7 @@ function FlightSection({ ida, volta, onOpenImage }: { ida: Voo; volta: Voo; onOp
   );
 }
 
-function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOpenImage: (item: any) => void }) {
+function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOpenImage: (item: any, all: any[], index: number) => void }) {
   const pax = voo.passageiros ?? [];
   const passes = voo.cartoes_embarque ?? [];
   return (
@@ -1318,7 +1397,8 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
         {voo.numero && <InfoCell label="Voo" value={voo.numero} />}
         {voo.localizador && <InfoCell label="Localizador" value={voo.localizador} />}
         {voo.data && <InfoCell label="Data" value={fmtDate(voo.data)} />}
-        {voo.hora && <InfoCell label="Hora" value={voo.hora} />}
+        {voo.hora && <InfoCell label="Hora de Partida" value={voo.hora} />}
+        {voo.horario_chegada && <InfoCell label="Horário de Chegada" value={voo.horario_chegada} />}
         {voo.terminal && <InfoCell label="Terminal" value={voo.terminal} />}
         {voo.portao && <InfoCell label="Portão" value={voo.portao} />}
       </div>
@@ -1347,7 +1427,7 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
                   <button
                     key={i}
                     type="button"
-                    onClick={() => onOpenImage({ url: c.url, nome: c.nome, tipo: c.tipo })}
+                    onClick={() => onOpenImage({ url: c.url, nome: c.nome, tipo: c.tipo }, passes, i)}
                     className="aspect-[3/4] overflow-hidden rounded-md border bg-muted"
                   >
                     <img src={c.url} alt={c.nome} className="w-full h-full object-cover" loading="lazy" />
@@ -1360,7 +1440,7 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
                   <button
                     key={i}
                     type="button"
-                    onClick={() => onOpenImage({ url: c.url, nome: c.nome, tipo: c.tipo })}
+                    onClick={() => onOpenImage({ url: c.url, nome: c.nome, tipo: c.tipo }, passes, i)}
                     className="flex flex-col items-center justify-center gap-1.5 aspect-[3/4] rounded-md border bg-background p-2 text-center hover:bg-accent"
                   >
                     <FileText className="size-6 text-primary" />
@@ -1386,6 +1466,29 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
           </div>
         </div>
       )}
+      {voo.outras_informacoes && (
+        <div className="text-sm mt-3 pt-3 border-t">
+          <div className="font-semibold mb-1 text-[10px] uppercase tracking-wider text-muted-foreground">Outras informações</div>
+          <div className="whitespace-pre-wrap">{voo.outras_informacoes}</div>
+        </div>
+      )}
+      {(voo.outras_informacoes_fotos?.length ?? 0) > 0 && (
+          <div className="mt-4 pt-4 border-t">
+            <div className="font-semibold text-[10px] uppercase tracking-wider text-muted-foreground mb-3">Outras informações (fotos)</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {voo.outras_informacoes_fotos!.map((f, idx_f) => (
+                <button 
+                  key={idx_f} 
+                  type="button" 
+                  onClick={() => onOpenImage(f, voo.outras_informacoes_fotos || [], idx_f)} 
+                  className="block relative aspect-video rounded overflow-hidden border bg-muted hover:opacity-90 transition-opacity"
+                >
+                  <img src={f.url} alt={f.nome} className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
     </div>
   );
 }
@@ -1399,7 +1502,7 @@ function InfoCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; label: string; categorias: readonly string[]; onOpen: (f: Foto) => void }) {
+function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; label: string; categorias: readonly string[]; onOpen: (f: Foto, all: any[], index: number) => void }) {
   if (!fotos || fotos.length === 0) return null;
 
   const [activeCategory, setActiveCategory] = useState<string>("Todas");
@@ -1460,7 +1563,7 @@ function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; lab
           <button
             key={i}
             type="button"
-            onClick={() => onOpen(f)}
+            onClick={() => onOpen(f, filteredPhotos, i)}
             className="group relative aspect-square overflow-hidden rounded-lg border bg-muted focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {f.url ? (

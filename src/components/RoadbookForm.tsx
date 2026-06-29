@@ -134,7 +134,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/${kind}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
         novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: signed?.signedUrl });
         idx++;
       }
@@ -219,6 +219,44 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       [side]: { ...s[side], passageiros: (s[side].passageiros ?? []).filter((_, idx) => idx !== i) },
     }));
   }
+  async function uploadOutrasFotos(side: "voo_ida" | "voo_volta", files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (!uid) throw new Error("Sessão expirada");
+      const rbId = d.id ?? "draft";
+      const novos: Foto[] = [];
+      let idx = (d[side].outras_informacoes_fotos ?? []).length + 1;
+      for (const f of Array.from(files)) {
+        const ext = f.name.split('.').pop() || '';
+        const sequentialName = `outras-fotos-${idx}${ext ? '.' + ext : ''}`;
+        const path = `${uid}/${rbId}/voos/${side}/outras/${Date.now()}-${sequentialName}`;
+        const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
+        if (error) throw error;
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
+        novos.push({ path, nome: sequentialName, categoria: "Outras", url: signed?.signedUrl });
+        idx++;
+      }
+      setD((s) => ({ ...s, [side]: { ...s[side], outras_informacoes_fotos: [...(s[side].outras_informacoes_fotos ?? []), ...novos] } }));
+      toast.success(`${novos.length} foto(s) enviada(s)`);
+    } catch (err: any) {
+      toast.error(err.message ?? "Erro no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
+  async function removeOutrasFotos(side: "voo_ida" | "voo_volta", i: number) {
+    const doc = d[side].outras_informacoes_fotos?.[i];
+    if (!doc) return;
+    setD((s) => {
+      const newFotos = [...(s[side].outras_informacoes_fotos ?? [])];
+      newFotos.splice(i, 1);
+      return { ...s, [side]: { ...s[side], outras_informacoes_fotos: newFotos } };
+    });
+    await supabase.storage.from("roadbook-docs").remove([doc.path]);
+  }
   async function uploadBoardingPasses(side: "voo_ida" | "voo_volta", files: FileList | null) {
     if (!files || files.length === 0) return;
     setUploading(true);
@@ -235,7 +273,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/boarding/${side}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
         novos.push({ path, nome: sequentialName, tipo: f.type || "application/octet-stream", url: signed?.signedUrl });
         idx++;
       }
@@ -274,8 +312,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: pub } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
-        novos.push({ nome: sequentialName, path, tipo: f.type || "application/octet-stream", url: pub.publicUrl });
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
+        novos.push({ nome: sequentialName, path, tipo: f.type || "application/octet-stream", url: signed?.signedUrl });
         idx++;
       }
       setD((s) => ({ ...s, documentos: [...s.documentos, ...novos] }));
@@ -291,6 +329,10 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     const doc = d.documentos[i];
     try { if (doc.path) await supabase.storage.from("roadbook-docs").remove([doc.path]); } catch {}
     setD((s) => ({ ...s, documentos: s.documentos.filter((_, idx) => idx !== i) }));
+  }
+
+  function updateDoc(i: number, patch: Partial<Documento>) {
+    setD((s) => ({ ...s, documentos: s.documentos.map((dc, idx) => idx === i ? { ...dc, ...patch } : dc) }));
   }
 
   // OUTROS LOCAIS
@@ -340,7 +382,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/outro_local_${localIndex}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 60 * 60 * 24 * 7);
+        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
         novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: signed?.signedUrl });
         idx++;
       }
@@ -564,8 +606,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Produção — Nome"><Input value={d.producao_nome} onChange={(e) => up("producao_nome", e.target.value)} /></Field>
               <Field label="Receptivo — Nome"><Input value={d.receptivo_nome} onChange={(e) => up("receptivo_nome", e.target.value)} /></Field>
-              <Field label="Produção — Telefone"><Input value={d.producao_telefone} onChange={(e) => up("producao_telefone", e.target.value)} /></Field>
-              <Field label="Receptivo — Telefone"><Input value={d.receptivo_telefone} onChange={(e) => up("receptivo_telefone", e.target.value)} /></Field>
+              <Field label="Produção — E-mail"><Input value={d.producao_telefone} onChange={(e) => up("producao_telefone", e.target.value)} /></Field>
+              <Field label="Receptivo — E-mail"><Input value={d.receptivo_telefone} onChange={(e) => up("receptivo_telefone", e.target.value)} /></Field>
               <Field label="Produção — WhatsApp"><Input value={d.producao_whatsapp} onChange={(e) => up("producao_whatsapp", e.target.value)} placeholder="55 11 99999-9999" /></Field>
               <Field label="Receptivo — WhatsApp"><Input value={d.receptivo_whatsapp} onChange={(e) => up("receptivo_whatsapp", e.target.value)} placeholder="55 11 99999-9999" /></Field>
             </CardContent>
@@ -792,6 +834,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             onRemovePax={(i) => removePassageiro("voo_ida", i)}
             onUploadPasses={(e) => uploadBoardingPasses("voo_ida", e.target.files).finally(() => { e.target.value = ""; })}
             onRemovePass={(i) => removeBoardingPass("voo_ida", i)}
+            onUploadOutrasFotos={(e) => uploadOutrasFotos("voo_ida", e.target.files).finally(() => { e.target.value = ""; })}
+            onRemoveOutrasFotos={(i) => removeOutrasFotos("voo_ida", i)}
           />
           <VooCard
             title="Voo de volta"
@@ -803,6 +847,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             onRemovePax={(i) => removePassageiro("voo_volta", i)}
             onUploadPasses={(e) => uploadBoardingPasses("voo_volta", e.target.files).finally(() => { e.target.value = ""; })}
             onRemovePass={(i) => removeBoardingPass("voo_volta", i)}
+            onUploadOutrasFotos={(e) => uploadOutrasFotos("voo_volta", e.target.files).finally(() => { e.target.value = ""; })}
+            onRemoveOutrasFotos={(i) => removeOutrasFotos("voo_volta", i)}
           />
         </TabsContent>
 
@@ -839,16 +885,54 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                 </span>
               </label>
             </CardHeader>
-            <CardContent className="space-y-2">
-              {d.documentos.length === 0 && <p className="text-sm text-muted-foreground">Nenhum arquivo.</p>}
-              {d.documentos.map((doc, i) => (
-                <div key={i} className="flex items-center gap-3 border rounded-md p-3">
-                  <FileText className="size-4 text-muted-foreground shrink-0" />
-                  <span className="text-sm truncate flex-1">{doc.nome}</span>
-                  {doc.url && <a href={doc.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><ExternalLink className="size-4" /></a>}
-                  <Button type="button" variant="ghost" size="icon" onClick={() => removeDoc(i)}><Trash2 className="size-4" /></Button>
-                </div>
-              ))}
+            <CardContent className="space-y-4">
+              {(() => {
+                const fotos = d.documentos.map((doc, i) => ({ doc, i })).filter(x => x.doc.tipo?.startsWith("image/"));
+                const pdfs = d.documentos.map((doc, i) => ({ doc, i })).filter(x => !x.doc.tipo?.startsWith("image/"));
+                return (
+                  <div className="space-y-6">
+                    {fotos.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold mb-3 border-b pb-1">Galeria de Fotos</h4>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                          {fotos.map(({ doc, i }) => (
+                            <div key={i} className="relative group rounded-md overflow-hidden border aspect-video shadow-sm">
+                              <img src={doc.url} alt={doc.nome} className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => removeDoc(i)} className="absolute top-2 right-2 bg-black/60 hover:bg-red-500 text-white rounded p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {pdfs.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold mb-3 border-b pb-1">PDFs e Outros Documentos</h4>
+                        <div className="space-y-2">
+                          {pdfs.map(({ doc, i }) => (
+                            <div key={i} className="flex flex-col gap-2 border rounded-md p-3 bg-slate-50/50">
+                              <div className="flex items-center gap-3">
+                                <FileText className="size-4 text-muted-foreground shrink-0" />
+                                <span className="text-sm truncate flex-1 font-medium">{doc.nome}</span>
+                                {doc.url && <a href={doc.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground bg-white border rounded p-1.5 shadow-sm"><ExternalLink className="size-4" /></a>}
+                                <Button type="button" variant="ghost" size="icon" onClick={() => removeDoc(i)} className="hover:bg-red-100 hover:text-red-600"><Trash2 className="size-4" /></Button>
+                              </div>
+                              <Input 
+                                placeholder="Descreva este documento (Ex: Ingressos do Show, Voucher)" 
+                                value={doc.descricao || ""} 
+                                onChange={(e) => updateDoc(i, { descricao: e.target.value })}
+                                className="h-8 text-sm"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {d.documentos.length === 0 && <p className="text-sm text-muted-foreground italic">Nenhum arquivo adicionado.</p>}
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>
@@ -932,13 +1016,14 @@ function FotosCard({
             ))}
           </div>
         )}
+
       </CardContent>
     </Card>
   );
 }
 
 function VooCard({
-  title, voo, uploading, onChange, onAddPax, onUpdatePax, onRemovePax, onUploadPasses, onRemovePass,
+  title, voo, uploading, onChange, onAddPax, onUpdatePax, onRemovePax, onUploadPasses, onRemovePass, onUploadOutrasFotos, onRemoveOutrasFotos,
 }: {
   title: string;
   voo: Voo;
@@ -949,6 +1034,8 @@ function VooCard({
   onRemovePax: (i: number) => void;
   onUploadPasses: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemovePass: (i: number) => void;
+  onUploadOutrasFotos: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveOutrasFotos: (i: number) => void;
 }) {
   const pax = voo.passageiros ?? [];
   const passes = voo.cartoes_embarque ?? [];
@@ -963,8 +1050,14 @@ function VooCard({
           <Field label="Localizador / Reserva"><Input value={voo.localizador ?? ""} onChange={(e) => onChange({ localizador: e.target.value })} placeholder="Ex.: ABC123" /></Field>
           <Field label="Data de partida"><Input type="date" value={voo.data ?? ""} onChange={(e) => onChange({ data: e.target.value })} /></Field>
           <Field label="Hora de partida"><Input type="time" value={voo.hora ?? ""} onChange={(e) => onChange({ hora: e.target.value })} /></Field>
+          <Field label="Horário de Chegada"><Input type="time" value={voo.horario_chegada ?? ""} onChange={(e) => onChange({ horario_chegada: e.target.value })} /></Field>
           <Field label="Portão de embarque"><Input value={voo.portao ?? ""} onChange={(e) => onChange({ portao: e.target.value })} /></Field>
           <Field label="Terminal"><Input value={voo.terminal ?? ""} onChange={(e) => onChange({ terminal: e.target.value })} /></Field>
+        </div>
+        <div className="mt-4">
+          <Field label="Outras informações (texto)">
+            <Textarea value={voo.outras_informacoes ?? ""} onChange={(e) => onChange({ outras_informacoes: e.target.value })} placeholder="Informações adicionais..." />
+          </Field>
         </div>
 
         <div>
@@ -1007,6 +1100,29 @@ function VooCard({
                 <span className="text-sm truncate flex-1">{c.nome}</span>
                 {c.url && <a href={c.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground"><ExternalLink className="size-4" /></a>}
                 <Button type="button" variant="ghost" size="icon" onClick={() => onRemovePass(i)}><Trash2 className="size-4" /></Button>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-4 mt-4 border-t">
+          <div className="flex items-center justify-between mb-2">
+            <Label>Outras informações (fotos)</Label>
+            <label className="inline-flex">
+              <input type="file" multiple accept="image/*" className="hidden" onChange={onUploadOutrasFotos} disabled={uploading} />
+              <span className={"inline-flex items-center gap-2 text-sm border rounded-md px-3 py-1.5 cursor-pointer hover:bg-accent " + (uploading ? "opacity-50" : "")}>
+                <Upload className="size-4" />{uploading ? "Enviando..." : "Enviar Fotos"}
+              </span>
+            </label>
+          </div>
+          {(voo.outras_informacoes_fotos?.length ?? 0) === 0 && <p className="text-sm text-muted-foreground">Nenhuma foto adicionada.</p>}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {(voo.outras_informacoes_fotos ?? []).map((f, i) => (
+              <div key={i} className="relative group rounded overflow-hidden border aspect-video">
+                <img src={f.url} alt={f.nome} className="w-full h-full object-cover" />
+                <button type="button" onClick={() => onRemoveOutrasFotos(i)} className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Trash2 className="size-3" />
+                </button>
               </div>
             ))}
           </div>
