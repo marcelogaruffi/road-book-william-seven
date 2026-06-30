@@ -43,11 +43,12 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
 
   // ============ PROGRAMACAO grouped by day ============
   const dayGroups = useMemo(() => {
-    const map = new Map<string, ProgItem[]>();
-    d.programacao.forEach((p) => {
+    // group programacao by data
+    const map = new Map<string, { item: ProgItem, globalIndex: number }[]>();
+    d.programacao.forEach((p, i) => {
       const k = p.data || "";
       if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push(p);
+      map.get(k)!.push({ item: p, globalIndex: i });
     });
     // sort: empty last
     const keys = Array.from(map.keys()).sort((a, b) => {
@@ -104,11 +105,11 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   function removeDay(dataKey: string) {
     setD((s) => ({ ...s, programacao: s.programacao.filter((p) => p.data !== dataKey) }));
   }
-  function updateProgItem(item: ProgItem, patch: Partial<ProgItem>) {
-    setD((s) => ({ ...s, programacao: s.programacao.map((p) => p === item ? { ...p, ...patch } : p) }));
+  function updateProgItem(index: number, patch: Partial<ProgItem>) {
+    setD((s) => ({ ...s, programacao: s.programacao.map((p, i) => i === index ? { ...p, ...patch } : p) }));
   }
-  function removeProgItem(item: ProgItem) {
-    setD((s) => ({ ...s, programacao: s.programacao.filter((p) => p !== item) }));
+  function removeProgItem(index: number) {
+    setD((s) => ({ ...s, programacao: s.programacao.filter((_, i) => i !== index) }));
   }
 
   // QUARTOS
@@ -681,22 +682,22 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                   </div>
                   <div className="space-y-2">
                     {g.itens.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma atividade. Adicione a primeira.</p>}
-                    {g.itens.map((p, idx) => (
-                      <div key={idx} className="grid sm:grid-cols-12 gap-2 items-start border rounded-md p-3 bg-background">
-                        <div className="sm:col-span-2"><Label className="text-xs">Início</Label><Input type="time" value={p.hora_inicio || p.hora || ""} onChange={(e) => updateProgItem(p, { hora_inicio: e.target.value })} /></div>
-                        <div className="sm:col-span-2"><Label className="text-xs">Fim</Label><Input type="time" value={p.hora_fim ?? ""} onChange={(e) => updateProgItem(p, { hora_fim: e.target.value })} /></div>
-                        <div className="sm:col-span-4"><Label className="text-xs">Título</Label><Input value={p.titulo || p.atividade || ""} onChange={(e) => updateProgItem(p, { titulo: e.target.value, atividade: undefined })} /></div>
+                    {g.itens.map(({ item: p, globalIndex }) => (
+                      <div key={globalIndex} className="grid sm:grid-cols-12 gap-2 items-start border rounded-md p-3 bg-background">
+                        <div className="sm:col-span-2"><Label className="text-xs">Início</Label><Input type="time" value={p.hora_inicio || p.hora || ""} onChange={(e) => updateProgItem(globalIndex, { hora_inicio: e.target.value })} /></div>
+                        <div className="sm:col-span-2"><Label className="text-xs">Fim</Label><Input type="time" value={p.hora_fim ?? ""} onChange={(e) => updateProgItem(globalIndex, { hora_fim: e.target.value })} /></div>
+                        <div className="sm:col-span-4"><Label className="text-xs">Título</Label><Input value={p.titulo || p.atividade || ""} onChange={(e) => updateProgItem(globalIndex, { titulo: e.target.value, atividade: undefined })} /></div>
                         <div className="sm:col-span-3"><Label className="text-xs">Tipo</Label>
-                          <Select value={p.tipo ?? "Outro"} onValueChange={(v) => updateProgItem(p, { tipo: v as any })}>
+                          <Select value={p.tipo ?? "Outro"} onValueChange={(v) => updateProgItem(globalIndex, { tipo: v as any })}>
                             <SelectTrigger><SelectValue /></SelectTrigger>
                             <SelectContent>
                               {PROG_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="sm:col-span-1 flex sm:justify-end"><Button type="button" variant="ghost" size="icon" onClick={() => removeProgItem(p)}><Trash2 className="size-4" /></Button></div>
-                        <div className="sm:col-span-6"><Label className="text-xs">Local</Label><Input value={p.local} onChange={(e) => updateProgItem(p, { local: e.target.value })} /></div>
-                        <div className="sm:col-span-6"><Label className="text-xs">Observação</Label><Textarea rows={1} value={p.observacao} onChange={(e) => updateProgItem(p, { observacao: e.target.value })} /></div>
+                        <div className="sm:col-span-1 flex sm:justify-end"><Button type="button" variant="ghost" size="icon" onClick={() => removeProgItem(globalIndex)}><Trash2 className="size-4" /></Button></div>
+                        <div className="sm:col-span-6"><Label className="text-xs">Local</Label><Input value={p.local} onChange={(e) => updateProgItem(globalIndex, { local: e.target.value })} /></div>
+                        <div className="sm:col-span-6"><Label className="text-xs">Observação</Label><Textarea rows={1} value={p.observacao} onChange={(e) => updateProgItem(globalIndex, { observacao: e.target.value })} /></div>
                       </div>
                     ))}
                   </div>
@@ -720,7 +721,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                 <p className="text-sm text-muted-foreground">Adicione dias com atividades na aba Programação primeiro.</p>
               )}
               {dayGroups.filter(g => g.data).map((g) => {
-                const autoSummary = getDaySummary(g.itens);
+                const autoSummary = getDaySummary(g.itens.map(x => x.item));
                 const override = d.automacoes?.timeline_overrides?.[g.data] ?? "";
                 return (
                   <div key={g.data} className="grid sm:grid-cols-12 gap-3 items-center border rounded-md p-4 bg-background">
