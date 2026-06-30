@@ -530,7 +530,7 @@ function PublicPage() {
 
 
         {/* HOSPEDAGEM */}
-        {(r.hotel_nome || r.hotel_endereco || r.hotel_telefone || hotelSite || r.hotel_checkin || r.hotel_checkout || r.quartos.length > 0 || r.hotel_fotos.length > 0) && (
+        {(r.hotel_nome || r.hotel_endereco || r.hotel_telefone || hotelSite || r.hotel_checkin || r.hotel_checkout || r.quartos.length > 0 || r.hotel_fotos.length > 0 || r.hotel_wifi || r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_observacoes) && (
           <Section title="Hospedagem" icon={<Hotel className="size-4" />}>
             <div className="rounded-lg border p-4 bg-card space-y-3">
               {r.hotel_nome && <p className="font-semibold">{r.hotel_nome}</p>}
