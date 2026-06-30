@@ -40,6 +40,14 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const [items, setItems] = useState<Roadbook[]>([]);
+  
+  const fmtDate = (d?: string | null) => {
+    if (!d) return "";
+    const [y, m, day] = d.split('-');
+    if (day) return `${day}/${m}/${y}`;
+    return d;
+  };
+
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
   const [dup, setDup] = useState<Roadbook | null>(null);
