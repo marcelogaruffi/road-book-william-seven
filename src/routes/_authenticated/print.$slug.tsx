@@ -132,12 +132,12 @@ function getDistanceFmt(d: number) {
 }
 
 function getWalkingTime(d: number) {
-  const time = Math.round((d * 1.25) / 80); // 80m/min
+  const time = Math.round((d * 1.3) / 80) + 1; // 80m/min (approx 4.8km/h)
   return time <= 1 ? "1 min" : `${time} min`;
 }
 
 function getCarTime(d: number) {
-  const time = Math.round((d * 1.25) / 400) + 1; // 400m/min + 1min overhead
+  const time = Math.round((d * 1.5) / 300) + 2; // 300m/min + 2min overhead (approx 18km/h)
   return time <= 1 ? "1 min" : `${time} min`;
 }
 

@@ -132,12 +132,12 @@ function getDistanceFmt(d: number) {
 }
 
 function getWalkingTime(d: number) {
-  const time = Math.round((d * 1.25) / 80); // 80m/min
+  const time = Math.round((d * 1.3) / 80) + 1; // 80m/min (approx 4.8km/h)
   return time <= 1 ? "1 min" : `${time} min`;
 }
 
 function getCarTime(d: number) {
-  const time = Math.round((d * 1.25) / 400) + 1; // 400m/min + 1min overhead
+  const time = Math.round((d * 1.5) / 300) + 2; // 300m/min + 2min overhead (approx 18km/h)
   return time <= 1 ? "1 min" : `${time} min`;
 }
 
@@ -712,15 +712,29 @@ function PublicPage() {
               Carregando localizações e estabelecimentos próximos...
             </div>
           ) : (
-            <OperationalMap
-              hotelNome={r.hotel_nome || "Hotel"}
-              teatroNome={r.teatro_nome || "Teatro"}
-              hotelCoords={opState.hotelCoords}
-              teatroCoords={opState.teatroCoords}
-              places={opState.places}
-              customPlaces={opState.customPlaces}
-              outrosLocais={r.automacoes?.outros_locais || []}
-            />
+            <div className="space-y-4">
+              {hotelTeatroDist !== null && (
+                <div className="rounded-md bg-muted/50 p-3 text-sm flex items-center justify-between">
+                  <div className="font-semibold text-foreground flex items-center gap-2">
+                    <MapPin className="size-4 text-primary" />
+                    Distância Hotel ➡️ Teatro
+                  </div>
+                  <div className="flex items-center gap-3 text-muted-foreground font-medium">
+                    <span>🚗 {getCarTime(hotelTeatroDist)} ({getDistanceFmt(hotelTeatroDist)})</span>
+                    <span>🚶 {getWalkingTime(hotelTeatroDist)}</span>
+                  </div>
+                </div>
+              )}
+              <OperationalMap
+                hotelNome={r.hotel_nome || "Hotel"}
+                teatroNome={r.teatro_nome || "Teatro"}
+                hotelCoords={opState.hotelCoords}
+                teatroCoords={opState.teatroCoords}
+                places={opState.places}
+                customPlaces={opState.customPlaces}
+                outrosLocais={r.automacoes?.outros_locais || []}
+              />
+            </div>
           )}
         </Section>
 
