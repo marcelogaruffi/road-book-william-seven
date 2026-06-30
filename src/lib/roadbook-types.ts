@@ -119,7 +119,8 @@ export type OutroLocal = {
 export type Automacoes = {
   timeline_overrides?: Record<string, string>;
   outros_locais?: OutroLocal[];
-  hotel_extras?: {
+  hotel_extras?: ProgItem[];
+  info_hotel?: {
     observacoes?: string;
     cafe_inicio?: string;
     cafe_fim?: string;
@@ -236,7 +237,7 @@ export function rowToRoadbook(row: any): RoadbookData {
     receptivo_nome: row.receptivo_nome ?? "",
     receptivo_telefone: row.receptivo_telefone ?? "",
     receptivo_whatsapp: row.receptivo_whatsapp ?? "",
-    programacao: (Array.isArray(row.programacao) ? row.programacao : []) as ProgItem[],
+    programacao: (Array.isArray(row.automacoes?.hotel_extras) ? row.automacoes.hotel_extras : (Array.isArray(row.programacao) ? row.programacao : [])) as ProgItem[],
     quartos: (Array.isArray(row.quartos) ? row.quartos : []) as Quarto[],
     outros_contatos: (Array.isArray(row.outros_contatos) ? row.outros_contatos : []) as OutroContato[],
     festival_info: (row.festival_info && typeof row.festival_info === "object" ? row.festival_info : {}) as FestivalInfo,
@@ -246,10 +247,10 @@ export function rowToRoadbook(row: any): RoadbookData {
     voo_ida: voo(row.voo_ida),
     voo_volta: voo(row.voo_volta),
     automacoes: (row.automacoes && typeof row.automacoes === "object" ? row.automacoes : {}) as Automacoes,
-    hotel_observacoes: ((row.automacoes as Automacoes)?.hotel_extras?.observacoes) || "",
-    hotel_cafe_inicio: ((row.automacoes as Automacoes)?.hotel_extras?.cafe_inicio) || "",
-    hotel_cafe_fim: ((row.automacoes as Automacoes)?.hotel_extras?.cafe_fim) || "",
-    hotel_wifi: ((row.automacoes as Automacoes)?.hotel_extras?.wifi) || "",
+    hotel_observacoes: ((row.automacoes as Automacoes)?.info_hotel?.observacoes) || "",
+    hotel_cafe_inicio: ((row.automacoes as Automacoes)?.info_hotel?.cafe_inicio) || "",
+    hotel_cafe_fim: ((row.automacoes as Automacoes)?.info_hotel?.cafe_fim) || "",
+    hotel_wifi: ((row.automacoes as Automacoes)?.info_hotel?.wifi) || "",
   };
 }
 
@@ -294,7 +295,8 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     voo_volta: d.voo_volta as any,
     automacoes: {
       ...(typeof d.automacoes === 'object' ? d.automacoes : {}),
-      hotel_extras: {
+      hotel_extras: Array.isArray(d.programacao) ? d.programacao : [],
+      info_hotel: {
         observacoes: d.hotel_observacoes,
         cafe_inicio: d.hotel_cafe_inicio,
         cafe_fim: d.hotel_cafe_fim,
