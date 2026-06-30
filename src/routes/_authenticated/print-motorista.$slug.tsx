@@ -31,6 +31,17 @@ export const Route = createFileRoute("/_authenticated/print-motorista/$slug")({
   component: DriverPrintPage,
 });
 
+
+function AppleNumber({ className = "size-8" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 25 C48 15, 55 5, 60 5 C57 12, 53 18, 50 25" stroke="#78350f" strokeWidth="4" strokeLinecap="round" />
+      <path d="M50 18 C58 12, 70 12, 72 15 C70 23, 58 23, 50 18" fill="#15803d" />
+      <path d="M50 27 C40 25, 20 28, 15 48 C10 65, 25 88, 50 92 C75 88, 90 65, 85 48 C80 28, 60 25, 50 27 Z" fill="#dc2626" />
+    </svg>
+  );
+}
+
 function fmtDate(d: string | null | undefined) {
   if (!d) return "";
   const [y, m, day] = d.split("-");
@@ -62,7 +73,12 @@ function DriverPrintPage() {
               
               {/* HEADER */}
               <div className="mb-10 text-center border-b-2 border-slate-900 pb-6">
-                <p className="uppercase tracking-[0.3em] text-slate-500 text-xs font-semibold mb-2">William Seven - Roteiro de Motorista</p>
+                <p className="uppercase tracking-[0.3em] text-slate-500 text-sm font-bold mb-4">Roteiro de viagem</p>
+                <div className="flex justify-center mb-2">
+                  <AppleNumber className="size-10" />
+                </div>
+                <p className="uppercase tracking-[0.2em] text-slate-900 text-sm font-black mb-6">William Seven</p>
+                
                 <h1 className="text-4xl font-black tracking-tight uppercase text-slate-900 mb-2">{rb.espetaculo}</h1>
                 <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-lg text-slate-700 font-medium">
                   {rb.cidade && <span className="flex items-center gap-1.5"><MapPin className="size-5" />{rb.cidade}{rb.estado ? `/${rb.estado}` : ""}</span>}
@@ -74,25 +90,6 @@ function DriverPrintPage() {
                   )}
                 </div>
               </div>
-
-              {/* CONTATOS RELEVANTES */}
-              {rb.outros_contatos && rb.outros_contatos.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-2 mb-4 flex items-center gap-2">
-                    <Users className="size-5" /> Contatos da Produção
-                  </h2>
-                  <div className="grid grid-cols-2 gap-4">
-                    {rb.outros_contatos.map((c, i) => (
-                      <div key={i} className="text-sm bg-slate-50 p-3 rounded border">
-                        <div className="font-bold text-slate-900">{c.nome}</div>
-                        <div className="text-slate-600 text-xs mb-1">{c.funcao}</div>
-                        {c.telefone && <div>Tel: {c.telefone}</div>}
-                        {c.whatsapp && <div>Whats: {c.whatsapp}</div>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {/* PROGRAMAÇÃO DO DIA */}
               <div className="mb-8">
