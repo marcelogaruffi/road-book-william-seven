@@ -541,6 +541,29 @@ function PublicPage() {
                   )}
                 </div>
               )}
+              
+              {(r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_wifi || r.hotel_observacoes) && (
+                <div className="pt-2 mt-2 border-t space-y-2">
+                  {(r.hotel_cafe_inicio || r.hotel_cafe_fim) && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Café da manhã:</span>
+                      {r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}
+                    </div>
+                  )}
+                  {r.hotel_wifi && (
+                    <div className="flex flex-col text-sm">
+                      <span className="font-medium">Wi-Fi:</span>
+                      <span className="text-muted-foreground whitespace-pre-wrap">{r.hotel_wifi}</span>
+                    </div>
+                  )}
+                  {r.hotel_observacoes && (
+                    <div className="flex flex-col text-sm">
+                      <span className="font-medium">Observações:</span>
+                      <span className="text-muted-foreground whitespace-pre-wrap">{r.hotel_observacoes}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               {(r.hotel_endereco || r.hotel_nome) && (
                 <a
                   href={mapsUrl([r.hotel_nome, r.hotel_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
@@ -921,28 +944,7 @@ function PublicPage() {
                       )}
                     </div>
                   )}
-                  {(r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_wifi || r.hotel_observacoes) && (
-                    <div className="pt-3 mt-3 border-t border-slate-200 space-y-2">
-                      {(r.hotel_cafe_inicio || r.hotel_cafe_fim) && (
-                        <div className="flex items-center gap-2 text-sm text-slate-600">
-                          <span className="font-bold text-slate-800">Café da manhã:</span>
-                          {r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}
-                        </div>
-                      )}
-                      {r.hotel_wifi && (
-                        <div className="flex flex-col text-sm">
-                          <span className="font-bold text-slate-800">Wi-Fi:</span>
-                          <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_wifi}</span>
-                        </div>
-                      )}
-                      {r.hotel_observacoes && (
-                        <div className="flex flex-col text-sm">
-                          <span className="font-bold text-slate-800">Observações do Hotel:</span>
-                          <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_observacoes}</span>
-                        </div>
-                      )}
-                    </div>
-                  )}
+
 
               </div>
             </div>
@@ -962,6 +964,29 @@ function PublicPage() {
                       {r.hotel_site && <div><span className="font-semibold text-slate-400">Site:</span> <span className="text-slate-700">{r.hotel_site}</span></div>}
                       {r.hotel_checkin && <div><span className="font-semibold text-slate-400">Check-in:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkin)} {r.hotel_checkin_hora && `às ${r.hotel_checkin_hora}`}</span></div>}
                       {r.hotel_checkout && <div><span className="font-semibold text-slate-400">Check-out:</span> <span className="text-slate-700">{fmtDate(r.hotel_checkout)} {r.hotel_checkout_hora && `às ${r.hotel_checkout_hora}`}</span></div>}
+                    </div>
+                  )}
+                  
+                  {(r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_wifi || r.hotel_observacoes) && (
+                    <div className="pt-3 mt-3 border-t border-slate-200 space-y-2">
+                      {(r.hotel_cafe_inicio || r.hotel_cafe_fim) && (
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <span className="font-bold text-slate-800">Café da manhã:</span>
+                          {r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}
+                        </div>
+                      )}
+                      {r.hotel_wifi && (
+                        <div className="flex flex-col text-sm">
+                          <span className="font-bold text-slate-800">Wi-Fi:</span>
+                          <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_wifi}</span>
+                        </div>
+                      )}
+                      {r.hotel_observacoes && (
+                        <div className="flex flex-col text-sm">
+                          <span className="font-bold text-slate-800">Observações:</span>
+                          <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_observacoes}</span>
+                        </div>
+                      )}
                     </div>
                   )}
 
