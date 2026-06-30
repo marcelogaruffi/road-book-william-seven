@@ -472,27 +472,36 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       return;
     }
     setSaving(true);
+    console.log("=== INICIO DO FLUXO DE GRAVAÇÃO ===");
     try {
-      const { data: userRes } = await supabase.auth.getUser();
+      const { data: userRes, error: authError } = await supabase.auth.getUser();
+      console.log("1. Autenticação:", { user: userRes?.user?.id, error: authError });
       const userId = userRes.user?.id;
       if (!userId) throw new Error("Sessão expirada");
 
       const baseSlug = makeRoadbookSlug(d.espetaculo, d.cidade);
       const payload = roadbookToPayload(d, userId);
+      console.log("2. Payload Gerado:", JSON.stringify(payload, null, 2));
 
       if (d.id) {
-        const { error } = await supabase.from("roadbooks").update(payload).eq("id", d.id);
+        console.log(`3. Executando UPDATE no roadbook ID: ${d.id}`);
+        const { data, error, status } = await supabase.from("roadbooks").update(payload).eq("id", d.id).select();
+        console.log("4. Resposta Supabase UPDATE:", { status, data, error });
         if (error) throw error;
         toast.success("Salvo!");
       } else {
+        console.log("3. Executando INSERT de novo roadbook");
         let inserted: { id: string; slug: string } | null = null;
         for (let attempt = 0; attempt < 5; attempt++) {
           const trySlug = attempt === 0 ? baseSlug : `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
-          const { data: row, error } = await supabase
+          console.log(`  Tentativa ${attempt + 1} de INSERT com slug: ${trySlug}`);
+          const { data: row, error, status } = await supabase
             .from("roadbooks")
             .insert({ ...payload, slug: trySlug })
             .select("id,slug")
             .single();
+          
+          console.log(`  Resposta INSERT Tentativa ${attempt + 1}:`, { status, row, error });
           if (!error && row) { inserted = row as any; break; }
           if (error && !`${error.message}`.toLowerCase().includes("duplicate")) throw error;
           if (attempt === 4) throw error ?? new Error("Não foi possível gerar slug");
