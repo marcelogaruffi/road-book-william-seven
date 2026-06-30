@@ -119,6 +119,12 @@ export type OutroLocal = {
 export type Automacoes = {
   timeline_overrides?: Record<string, string>;
   outros_locais?: OutroLocal[];
+  hotel_extras?: {
+    observacoes?: string;
+    cafe_inicio?: string;
+    cafe_fim?: string;
+    wifi?: string;
+  };
 };
 
 export type RoadbookData = {
@@ -140,6 +146,10 @@ export type RoadbookData = {
   hotel_checkout: string;
   hotel_checkin_hora: string;
   hotel_checkout_hora: string;
+  hotel_observacoes: string;
+  hotel_cafe_inicio: string;
+  hotel_cafe_fim: string;
+  hotel_wifi: string;
   teatro_nome: string;
   teatro_endereco: string;
   teatro_telefone: string;
@@ -171,6 +181,7 @@ export const emptyRoadbook: RoadbookData = {
   hotel_nome: "", hotel_endereco: "", hotel_telefone: "", hotel_site: "",
   hotel_checkin: "", hotel_checkout: "",
   hotel_checkin_hora: "", hotel_checkout_hora: "",
+  hotel_observacoes: "", hotel_cafe_inicio: "", hotel_cafe_fim: "", hotel_wifi: "",
   teatro_nome: "", teatro_endereco: "", teatro_telefone: "", teatro_site: "",
   teatro_observacoes: "",
   producao_nome: "", producao_telefone: "", producao_whatsapp: "",

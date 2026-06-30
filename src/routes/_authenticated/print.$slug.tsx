@@ -921,6 +921,28 @@ function PublicPage() {
                       )}
                     </div>
                   )}
+                  {(r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_wifi || r.hotel_observacoes) && (
+                    <div className="pt-3 mt-3 border-t border-slate-200 space-y-2">
+                      {(r.hotel_cafe_inicio || r.hotel_cafe_fim) && (
+                        <div className="flex items-center gap-2 text-sm text-slate-600">
+                          <span className="font-bold text-slate-800">Café da manhã:</span>
+                          {r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}
+                        </div>
+                      )}
+                      {r.hotel_wifi && (
+                        <div className="flex flex-col text-sm">
+                          <span className="font-bold text-slate-800">Wi-Fi:</span>
+                          <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_wifi}</span>
+                        </div>
+                      )}
+                      {r.hotel_observacoes && (
+                        <div className="flex flex-col text-sm">
+                          <span className="font-bold text-slate-800">Observações do Hotel:</span>
+                          <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_observacoes}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
               </div>
             </div>

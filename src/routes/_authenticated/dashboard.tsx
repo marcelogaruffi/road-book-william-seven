@@ -2,6 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+
 import { Card } from "@/components/ui/card";
 import { Plus, ExternalLink, Pencil, Trash2, Copy, Route as RouteIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -139,7 +151,23 @@ function Dashboard() {
                   <Button variant="outline" size="sm" asChild title="Roteiro Motoristas"><a href={`/print-motorista/${r.slug}`} target="_blank" rel="noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-car"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></a></Button>
                   <Button variant="outline" size="sm" asChild title="Editar"><Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4" /></Link></Button>
                   <Button variant="outline" size="sm" onClick={() => setDup(r)} title="Duplicar"><Copy className="size-4" /></Button>
-                  <Button variant="outline" size="sm" onClick={() => onDelete(r.id)} title="Excluir"><Trash2 className="size-4" /></Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="outline" size="sm" title="Excluir"><Trash2 className="size-4" /></Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Excluir Road Book</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja excluir o road book <strong>{r.espetaculo}</strong>? Esta ação não pode ser desfeita.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onDelete(r.id)} className="bg-red-600 hover:bg-red-700">Excluir</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               </Card>
             ))}

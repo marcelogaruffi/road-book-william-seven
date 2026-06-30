@@ -20,7 +20,7 @@ function AuthedLayout() {
   }
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b">
+      <header className="border-b print:hidden">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/dashboard" className="font-semibold tracking-tight">
             Road Book <span className="text-muted-foreground">William Seven</span>
@@ -28,7 +28,7 @@ function AuthedLayout() {
           <Button variant="ghost" size="sm" onClick={signOut}>Sair</Button>
         </div>
       </header>
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-6 py-8 print:p-0 print:max-w-none print:m-0">
         <Outlet />
       </main>
     </div>

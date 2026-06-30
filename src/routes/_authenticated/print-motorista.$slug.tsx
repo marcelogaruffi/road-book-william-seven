@@ -65,8 +65,8 @@ function DriverPrintPage() {
   }, [rb.programacao]);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
-      <table className="w-full text-slate-900 bg-white antialiased max-w-[21cm] mx-auto" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+    <div className="min-h-screen bg-slate-50 font-sans print:bg-white print:min-h-0">
+      <table className="w-full text-slate-900 bg-white antialiased max-w-[21cm] mx-auto print:w-full print:max-w-none" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
         <tbody>
           <tr>
             <td className="p-8">
@@ -102,7 +102,7 @@ function DriverPrintPage() {
                 ) : (
                   <div className="space-y-8">
                     {dayGroups.map((group, idx) => (
-                      <div key={idx} className="break-inside-avoid">
+                      <div key={idx}>
                         <div className="bg-slate-900 text-white p-3 rounded flex items-center justify-between mb-4 shadow-sm print:bg-slate-900 print:text-white print:exact-colors" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                           <span className="font-bold text-lg">{fmtDate(group.data) || "Sem data"}</span>
                           <span className="text-sm font-medium opacity-90">{getDaySummary(group.itens)}</span>

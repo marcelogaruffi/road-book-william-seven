@@ -636,7 +636,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Programação por dia</CardTitle>
-              <Button type="button" size="sm" onClick={addDay}><Plus className="size-4 mr-1" />Adicionar dia</Button>
+                            <Button type="button" size="sm" onClick={addDay}><Plus className="size-4 mr-1" />Adicionar dia</Button>
+              <Button type="button" size="sm" variant="outline" onClick={sortProgramacao}><Clock className="size-4 mr-1" />Ordenar Horários</Button>
             </CardHeader>
             <CardContent className="space-y-6">
               {dayGroups.length === 0 && <p className="text-sm text-muted-foreground">Nenhum dia. Clique em "Adicionar dia" para começar.</p>}

@@ -557,6 +557,28 @@ function PublicPage() {
                   )}
                 </div>
               )}
+              {(r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_wifi || r.hotel_observacoes) && (
+                <div className="pt-2 mt-2 border-t space-y-2">
+                  {(r.hotel_cafe_inicio || r.hotel_cafe_fim) && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="font-medium text-foreground">Café da manhã:</span>
+                      {r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}
+                    </div>
+                  )}
+                  {r.hotel_wifi && (
+                    <div className="flex flex-col text-sm">
+                      <span className="font-medium">Wi-Fi:</span>
+                      <span className="text-muted-foreground whitespace-pre-wrap">{r.hotel_wifi}</span>
+                    </div>
+                  )}
+                  {r.hotel_observacoes && (
+                    <div className="flex flex-col text-sm">
+                      <span className="font-medium">Observações:</span>
+                      <span className="text-muted-foreground whitespace-pre-wrap">{r.hotel_observacoes}</span>
+                    </div>
+                  )}
+                </div>
+              )}
               {(r.hotel_endereco || r.hotel_nome) && (
                 <a
                   href={mapsUrl([r.hotel_nome, r.hotel_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
