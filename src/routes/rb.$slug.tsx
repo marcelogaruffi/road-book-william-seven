@@ -558,23 +558,23 @@ function PublicPage() {
                 </div>
               )}
               {(r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_wifi || r.hotel_observacoes) && (
-                <div className="pt-2 mt-2 border-t space-y-2">
+                <div className="pt-2 mt-2 border-t space-y-2 text-slate-800">
                   {(r.hotel_cafe_inicio || r.hotel_cafe_fim) && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">Café da manhã:</span>
-                      {r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}
+                    <div className="flex items-center gap-2 text-sm text-slate-800">
+                      <span className="font-bold">Café da manhã:</span>
+                      <span className="font-medium">{r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}</span>
                     </div>
                   )}
                   {r.hotel_wifi && (
-                    <div className="flex flex-col text-sm">
-                      <span className="font-medium">Wi-Fi:</span>
-                      <span className="text-muted-foreground whitespace-pre-wrap">{r.hotel_wifi}</span>
+                    <div className="flex flex-col text-sm text-slate-800">
+                      <span className="font-bold">Wi-Fi:</span>
+                      <span className="whitespace-pre-wrap font-medium">{r.hotel_wifi}</span>
                     </div>
                   )}
                   {r.hotel_observacoes && (
-                    <div className="flex flex-col text-sm">
-                      <span className="font-medium">Observações:</span>
-                      <span className="text-muted-foreground whitespace-pre-wrap">{r.hotel_observacoes}</span>
+                    <div className="flex flex-col text-sm text-slate-800">
+                      <span className="font-bold">Observações:</span>
+                      <span className="whitespace-pre-wrap font-medium">{r.hotel_observacoes}</span>
                     </div>
                   )}
                 </div>
