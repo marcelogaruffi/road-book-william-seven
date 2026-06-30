@@ -71,6 +71,21 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     return d.data_inicial || new Date().toISOString().split("T")[0];
   }
 
+  function sortProgramacao() {
+    setD(s => ({
+      ...s,
+      programacao: [...s.programacao].sort((a, b) => {
+        const da = a.data || "9999-99-99";
+        const db = b.data || "9999-99-99";
+        if (da !== db) return da.localeCompare(db);
+        const ha = a.hora_inicio || "99:99";
+        const hb = b.hora_inicio || "99:99";
+        return ha.localeCompare(hb);
+      })
+    }));
+    toast.success("Horários ordenados!");
+  }
+
   function addDay() {
     const nextDate = getNextDayDate();
     setD((s) => ({
