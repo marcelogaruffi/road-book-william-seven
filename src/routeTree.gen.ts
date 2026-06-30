@@ -20,6 +20,7 @@ import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedRoadbookNewRouteImport } from './routes/_authenticated/roadbook.new'
 import { Route as AuthenticatedRoadbookIdRouteImport } from './routes/_authenticated/roadbook.$id'
 import { Route as AuthenticatedPrintSlugRouteImport } from './routes/_authenticated/print.$slug'
+import { Route as AuthenticatedPrintMotoristaSlugRouteImport } from './routes/_authenticated/print-motorista.$slug'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -76,6 +77,12 @@ const AuthenticatedPrintSlugRoute = AuthenticatedPrintSlugRouteImport.update({
   path: '/print/$slug',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPrintMotoristaSlugRoute =
+  AuthenticatedPrintMotoristaSlugRouteImport.update({
+    id: '/print-motorista/$slug',
+    path: '/print-motorista/$slug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
+  '/print-motorista/$slug': typeof AuthenticatedPrintMotoristaSlugRoute
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
@@ -95,6 +103,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
+  '/print-motorista/$slug': typeof AuthenticatedPrintMotoristaSlugRoute
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
@@ -109,6 +118,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
+  '/_authenticated/print-motorista/$slug': typeof AuthenticatedPrintMotoristaSlugRoute
   '/_authenticated/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/_authenticated/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/_authenticated/roadbook/new': typeof AuthenticatedRoadbookNewRoute
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/rb/$slug'
     | '/turne/$slug'
+    | '/print-motorista/$slug'
     | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/rb/$slug'
     | '/turne/$slug'
+    | '/print-motorista/$slug'
     | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
@@ -148,6 +160,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/rb/$slug'
     | '/turne/$slug'
+    | '/_authenticated/print-motorista/$slug'
     | '/_authenticated/print/$slug'
     | '/_authenticated/roadbook/$id'
     | '/_authenticated/roadbook/new'
@@ -242,11 +255,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrintSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/print-motorista/$slug': {
+      id: '/_authenticated/print-motorista/$slug'
+      path: '/print-motorista/$slug'
+      fullPath: '/print-motorista/$slug'
+      preLoaderRoute: typeof AuthenticatedPrintMotoristaSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedPrintMotoristaSlugRoute: typeof AuthenticatedPrintMotoristaSlugRoute
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
   AuthenticatedRoadbookNewRoute: typeof AuthenticatedRoadbookNewRoute
@@ -256,6 +277,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedPrintMotoristaSlugRoute: AuthenticatedPrintMotoristaSlugRoute,
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,
   AuthenticatedRoadbookNewRoute: AuthenticatedRoadbookNewRoute,
