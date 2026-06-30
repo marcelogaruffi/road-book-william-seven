@@ -246,6 +246,10 @@ export function rowToRoadbook(row: any): RoadbookData {
     voo_ida: voo(row.voo_ida),
     voo_volta: voo(row.voo_volta),
     automacoes: (row.automacoes && typeof row.automacoes === "object" ? row.automacoes : {}) as Automacoes,
+    hotel_observacoes: ((row.automacoes as Automacoes)?.hotel_extras?.observacoes) || "",
+    hotel_cafe_inicio: ((row.automacoes as Automacoes)?.hotel_extras?.cafe_inicio) || "",
+    hotel_cafe_fim: ((row.automacoes as Automacoes)?.hotel_extras?.cafe_fim) || "",
+    hotel_wifi: ((row.automacoes as Automacoes)?.hotel_extras?.wifi) || "",
   };
 }
 
