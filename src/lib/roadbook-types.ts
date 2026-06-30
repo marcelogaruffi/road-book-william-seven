@@ -288,7 +288,15 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     hotel_fotos: d.hotel_fotos as any,
     voo_ida: d.voo_ida as any,
     voo_volta: d.voo_volta as any,
-    automacoes: d.automacoes as any,
+    automacoes: {
+      ...(typeof d.automacoes === 'object' ? d.automacoes : {}),
+      hotel_extras: {
+        observacoes: d.hotel_observacoes,
+        cafe_inicio: d.hotel_cafe_inicio,
+        cafe_fim: d.hotel_cafe_fim,
+        wifi: d.hotel_wifi,
+      }
+    } as any,
   };
 }
 
