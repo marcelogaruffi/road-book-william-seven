@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, CalendarDays, Clock, Users } from "lucide-react";
+import { MapPin, CalendarDays, Clock, Users, Hotel } from "lucide-react";
 import {
   rowToRoadbook, progTitle, progHora, TIPO_COLORS, getDaySummary,
   type ProgItem, type OutroContato
@@ -90,6 +90,47 @@ function DriverPrintPage() {
                   )}
                 </div>
               </div>
+
+              {/* HOSPEDAGEM (HOTEL) */}
+              {(r.hotel_nome || r.hotel_endereco || r.hotel_telefone || r.hotel_checkin || r.hotel_checkout || r.hotel_wifi || r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_observacoes) && (
+                <div className="mb-8 break-inside-avoid">
+                  <h2 className="text-lg font-bold uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-2 mb-4 flex items-center gap-2">
+                    <Hotel className="size-5" /> Hospedagem
+                  </h2>
+                  <div className="bg-slate-50 border border-slate-200 rounded p-4 text-sm space-y-3">
+                    {r.hotel_nome && <div className="font-bold text-base text-slate-800">{r.hotel_nome}</div>}
+                    {r.hotel_endereco && <div className="text-slate-600">📍 {r.hotel_endereco}</div>}
+                    
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      {r.hotel_checkin && <div><span className="font-semibold">Check-in:</span> {fmtDate(r.hotel_checkin)} {r.hotel_checkin_hora && `às ${r.hotel_checkin_hora}`}</div>}
+                      {r.hotel_checkout && <div><span className="font-semibold">Check-out:</span> {fmtDate(r.hotel_checkout)} {r.hotel_checkout_hora && `às ${r.hotel_checkout_hora}`}</div>}
+                    </div>
+
+                    {(r.hotel_cafe_inicio || r.hotel_cafe_fim || r.hotel_wifi || r.hotel_observacoes) && (
+                      <div className="pt-3 mt-3 border-t border-slate-200 space-y-2">
+                        {(r.hotel_cafe_inicio || r.hotel_cafe_fim) && (
+                          <div className="flex items-center gap-2 text-slate-700">
+                            <span className="font-bold">Café da manhã:</span>
+                            {r.hotel_cafe_inicio} {r.hotel_cafe_fim && `às ${r.hotel_cafe_fim}`}
+                          </div>
+                        )}
+                        {r.hotel_wifi && (
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-700">Wi-Fi:</span>
+                            <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_wifi}</span>
+                          </div>
+                        )}
+                        {r.hotel_observacoes && (
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-700">Observações:</span>
+                            <span className="text-slate-600 whitespace-pre-wrap">{r.hotel_observacoes}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* PROGRAMAÇÃO DO DIA */}
               <div className="mb-8">

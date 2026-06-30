@@ -141,7 +141,7 @@ function Dashboard() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {r.festival ? `${r.festival} · ` : ""}
-                    {r.data_inicial ?? ""}{r.data_final ? ` → ${r.data_final}` : ""}
+                    {fmtDate(r.data_inicial)}{r.data_final ? ` → ${fmtDate(r.data_final)}` : ""}
                     {" · "}/rb/{r.slug}
                   </p>
                 </div>
