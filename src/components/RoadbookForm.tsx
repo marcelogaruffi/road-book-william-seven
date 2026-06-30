@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Plus, Upload, FileText, ExternalLink, Plane } from "lucide-react";
+import { Trash2, Plus, Upload, FileText, ExternalLink, Plane, Clock } from "lucide-react";
 import { makeRoadbookSlug } from "@/lib/slug";
 import {
   type RoadbookData, type ProgItem, type Quarto, type OutroContato, type Documento,
