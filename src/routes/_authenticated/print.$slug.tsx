@@ -142,8 +142,7 @@ function getCarTime(d: number) {
 }
 
 function PublicPage() {
-  const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
-  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+  const currentUrl = typeof window !== "undefined" ? window.location.href.replace("/print-turne/", "/turne-completa/") : "";
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
   const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p) => {
     const k = p.data || "—"; (acc[k] ||= []).push(p); return acc;
@@ -387,7 +386,8 @@ function PublicPage() {
     <GeoContext.Provider value={geo}>
     <div className="min-h-screen bg-background">
       {/* CAPA */}
-      <header className="border-b bg-gradient-to-b from-card to-background no-print">
+      {isFirst && (
+        <header className="border-b bg-gradient-to-b from-card to-background no-print">
         <div className="max-w-3xl mx-auto px-5 pt-8 pb-10">
           {/* Logo Bar */}
           <div className="flex justify-between items-center mb-6 pb-4 border-b border-muted/60">
@@ -417,7 +417,15 @@ function PublicPage() {
           </div>
         </div>
       </header>
-
+      )}
+      {!isFirst && (
+        <div className="max-w-3xl mx-auto px-5 pt-8 pb-4 no-print border-b bg-card">
+          <h2 className="text-2xl font-semibold tracking-tight text-primary flex items-center gap-2">
+            <MapPin className="size-5" />
+            {r.cidade}{r.estado ? `/${r.estado}` : ""}
+          </h2>
+        </div>
+      )}
       <main className="max-w-3xl mx-auto px-5 py-8 space-y-10 no-print">
         {/* RESUMO */}
         {r.resumo_executivo && (
@@ -775,6 +783,7 @@ function PublicPage() {
 
       {/* PRINT-ONLY WORD DOCUMENT DESIGN */}
       <table className="hidden print:table w-full text-slate-900 bg-white antialiased max-w-[21cm] mx-auto" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+        {isFirst && (
         <thead className="table-header-group">
           <tr>
             <td className="px-12 pt-8 pb-4 border-b-0 bg-white">
@@ -782,6 +791,7 @@ function PublicPage() {
             </td>
           </tr>
         </thead>
+        )}
         <tfoot className="table-footer-group">
           <tr>
             <td className="px-12 pb-8 bg-white">
@@ -801,7 +811,7 @@ function PublicPage() {
             {/* Document Title & QR Code aligned */}
             <div className="flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm mb-6">
               <div className="text-left font-sans">
-                <h2 className="text-xl font-black tracking-widest uppercase text-slate-800">Programação Diária</h2>
+                <h2 className="text-xl font-black tracking-widest uppercase text-slate-800">Programação Diária {isFirst ? "" : `— ${r.cidade}`}</h2>
                 {r.festival && <p className="text-xs uppercase tracking-widest text-[#991b1b] font-bold mt-1">{r.festival}</p>}
                 {(r.data_inicial || r.data_final) && (
                   <p className="text-xs font-semibold text-slate-500 mt-1">
@@ -809,6 +819,7 @@ function PublicPage() {
                   </p>
                 )}
               </div>
+              {isFirst && (
               <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-100 shrink-0">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(currentUrl)}`}
@@ -820,6 +831,7 @@ function PublicPage() {
                   <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold text-slate-500 hover:text-slate-700 break-all block">{currentUrl}</a>
                 </div>
               </div>
+            )}
             </div>
 
             {/* Weather Row */}
@@ -2413,3 +2425,8 @@ function OperationalMap({
   );
 }
 
+
+function PrintPage() {
+  const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
+  return <PrintRoadbookView r={r} />;
+}

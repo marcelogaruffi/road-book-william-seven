@@ -141,8 +141,7 @@ function getCarTime(d: number) {
   return time <= 1 ? "1 min" : `${time} min`;
 }
 
-function PublicPage() {
-  const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
+export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }: { r: ReturnType<typeof rowToRoadbook>; isFirst?: boolean; isConcatenated?: boolean }) {
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
   const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p) => {
@@ -403,7 +402,8 @@ function PublicPage() {
     <GeoContext.Provider value={geo}>
     <div className="min-h-screen bg-background">
       {/* CAPA */}
-      <header className="border-b bg-gradient-to-b from-card to-background no-print">
+      {isFirst && (
+        <header className="border-b bg-gradient-to-b from-card to-background no-print">
         <div className="max-w-3xl mx-auto px-5 pt-8 pb-10">
           {/* Logo Bar */}
           <div className="flex justify-between items-center mb-6 pb-4 border-b border-muted/60">
@@ -432,7 +432,23 @@ function PublicPage() {
             </button>
           </div>
         </div>
-      </header>
+        </header>
+      )}
+
+      {!isFirst && (
+        <div className="max-w-3xl mx-auto px-5 pt-8 pb-4 no-print border-b bg-card">
+          <h2 className="text-2xl font-semibold tracking-tight text-primary flex items-center gap-2">
+            <MapPin className="size-5" />
+            {r.cidade}{r.estado ? `/${r.estado}` : ""}
+          </h2>
+          {(r.data_inicial || r.data_final) && (
+            <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
+              <CalendarDays className="size-4" />
+              {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
+            </p>
+          )}
+        </div>
+      )}
 
       <main className="max-w-3xl mx-auto px-5 py-8 space-y-10 no-print">
         {/* RESUMO */}
@@ -2472,3 +2488,8 @@ function OperationalMap({
   );
 }
 
+
+function PublicPage() {
+  const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
+  return <PublicRoadbookView r={r} />;
+}

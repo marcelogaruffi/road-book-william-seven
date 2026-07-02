@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, CalendarDays, ExternalLink, Route as RouteIcon } from "lucide-react";
+import { MapPin, CalendarDays, ExternalLink, Route as RouteIcon, FileText } from "lucide-react";
 
 type Tour = { id: string; slug: string; nome: string; espetaculo: string | null; producao: string | null };
 type City = {
@@ -62,7 +62,15 @@ function Page() {
       </header>
 
       <main className="max-w-3xl mx-auto px-5 py-8 space-y-6">
-        <h2 className="text-lg font-semibold">Cidades</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Cidades</h2>
+          {cities.length > 0 && (
+            <a href={`/turne-completa/${tour.slug}`} className="inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-4 py-2 shadow-sm transition-colors">
+              <FileText className="size-4" />
+              Ver turnê completa
+            </a>
+          )}
+        </div>
         {cities.length === 0 ? (
           <p className="text-muted-foreground text-sm">Nenhuma cidade adicionada à turnê.</p>
         ) : (
