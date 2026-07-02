@@ -72,7 +72,9 @@ export const Route = createFileRoute("/_authenticated/print/$slug")({
 function fmtDate(d: string | null | undefined) {
   if (!d) return "";
   const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y}`;
+  const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
+  const dow = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][dateObj.getDay()];
+  return `${day}/${m}/${y} (${dow})`;
 }
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 

@@ -72,7 +72,9 @@ export const Route = createFileRoute("/rb/$slug")({
 function fmtDate(d: string | null | undefined) {
   if (!d) return "";
   const [y, m, day] = d.split("-");
-  return `${day}/${m}/${y}`;
+  const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(day));
+  const dow = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"][dateObj.getDay()];
+  return `${day}/${m}/${y} (${dow})`;
 }
 function onlyDigits(s: string) { return s.replace(/\D/g, ""); }
 
@@ -428,7 +430,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
               className="no-print inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-4 py-2.5 shadow-sm transition-colors w-fit shrink-0"
             >
               <Printer className="size-4" />
-              Imprimir Página
+              Gerar PDF
             </button>
           </div>
         </div>
