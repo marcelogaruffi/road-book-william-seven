@@ -811,7 +811,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
             {/* Document Title & QR Code aligned */}
             <div className="flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm mb-6">
               <div className="text-left font-sans">
-                <h2 className="text-xl font-black tracking-widest uppercase text-slate-800">Programação Diária {isFirst ? "" : `— ${r.cidade}`}</h2>
+                <h2 className="text-xl font-black tracking-widest uppercase text-slate-800">Programação Diária — {r.cidade}</h2>
                 {r.festival && <p className="text-xs uppercase tracking-widest text-[#991b1b] font-bold mt-1">{r.festival}</p>}
                 {(r.data_inicial || r.data_final) && (
                   <p className="text-xs font-semibold text-slate-500 mt-1">
@@ -847,7 +847,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
             {/* Programacao List */}
             <div className="space-y-4 mt-6">
               {dias.map((date) => (
-                <div key={date} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm break-inside-avoid">
+                <div key={date} className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm break-inside-auto">
                   <h3 className="text-sm font-bold border-b pb-1.5 mb-2.5 uppercase tracking-wide flex items-center justify-between text-slate-800">
                     <span>{fmtDate(date)} {r.automacoes?.timeline_overrides?.[date] && `— ${r.automacoes.timeline_overrides[date]}`}</span>
                     <PrintDayWeather date={date} />
@@ -924,7 +924,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
                           <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque — Ida</h3>
                           <div className="grid grid-cols-2 gap-4">
                             {r.voo_ida.cartoes_embarque!.map((c, cIdx) => (
-                              <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center break-inside-avoid">
+                              <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center break-inside-auto">
                                 {c.url ? (
                                   <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
                                 ) : (
@@ -942,7 +942,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
                           <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">🎫 Cartões de Embarque — Volta</h3>
                           <div className="grid grid-cols-2 gap-4">
                             {r.voo_volta.cartoes_embarque!.map((c, cIdx) => (
-                              <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center break-inside-avoid">
+                              <div key={cIdx} className="bg-slate-50 border border-slate-200/60 rounded-xl p-2 shadow-sm flex flex-col items-center break-inside-auto">
                                 {c.url ? (
                                   <img src={c.url} alt={c.nome || "Cartão de Embarque"} className="max-h-48 object-contain rounded-lg w-full" />
                                 ) : (
@@ -1048,7 +1048,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
                 <h3 className="text-sm font-bold border-b pb-1.5 mb-4 uppercase tracking-wide text-slate-500">📸 Fotos do Teatro</h3>
                 <div className="grid grid-cols-2 gap-4">
                   {r.teatro_fotos.map((f, idx) => (
-                    <div key={idx} className="border border-slate-200 rounded-xl p-2 bg-white flex flex-col items-center shadow-sm break-inside-avoid">
+                    <div key={idx} className="border border-slate-200 rounded-xl p-2 bg-white flex flex-col items-center shadow-sm break-inside-auto">
                       {f.url ? (
                         <img src={f.url} alt={f.nome} className="h-40 w-full object-cover rounded-lg" />
                       ) : (
@@ -1085,7 +1085,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
                     const distanceVal = geocoded?.distance ?? 0;
 
                     return (
-                      <div key={idx} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden break-inside-avoid space-y-3">
+                      <div key={idx} className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative overflow-hidden break-inside-auto space-y-3">
                         <div className="absolute top-0 left-0 w-1.5 h-full bg-fuchsia-500" />
                         
                         <div className="pl-2 flex justify-between items-start gap-4">
@@ -1135,7 +1135,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
                     <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📍 Locais de Apoio</h2>
                     <div className="grid grid-cols-2 gap-4">
                       {opState.places.map((p, idx) => (
-                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm break-inside-avoid relative overflow-hidden">
+                        <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm break-inside-auto relative overflow-hidden">
                           <div className={`absolute top-0 left-0 w-1.5 h-full ${p.type === "pharmacy" ? "bg-[#10b981]" : p.type === "supermarket" ? "bg-[#f59e0b]" : "bg-[#8b5cf6]"}`} />
                           <div className="pl-1.5">
                             <div className="flex items-center gap-1.5 mb-1">
@@ -1234,7 +1234,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
                   return (
                     <div className="space-y-6">
                       {fotos.length > 0 && (
-                        <div className="space-y-3 break-inside-avoid">
+                        <div className="space-y-3 break-inside-auto">
                           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📸 Galeria de Documentos</h3>
                           <div className="grid grid-cols-3 gap-2">
                             {fotos.map((f, idx) => (
@@ -1246,7 +1246,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
                         </div>
                       )}
                       {pdfs.length > 0 && (
-                        <div className="space-y-3 break-inside-avoid">
+                        <div className="space-y-3 break-inside-auto">
                           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📁 Documentos Técnicos</h3>
                           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs">
                             <p className="text-slate-400 mb-2 italic">Acesse a versão online do Road Book para abrir e baixar estes arquivos:</p>
