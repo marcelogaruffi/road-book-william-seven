@@ -157,7 +157,7 @@
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
-  .no-print, header, nav, button, .leaflet-control-container, main, footer {
+  .no-print, header, nav, button, .leaflet-control-container, footer {
     display: none !important;
   }
   
