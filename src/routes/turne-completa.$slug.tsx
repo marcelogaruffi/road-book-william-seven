@@ -54,16 +54,7 @@ function TurneCompleta() {
 
   return (
     <div className="bg-background">
-      <div className="fixed top-4 right-4 z-50 no-print">
-        <a 
-          href={`/print-turne/${tour.slug}`}
-          target="_blank"
-          className="inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-5 py-2.5 shadow-lg transition-transform hover:scale-105"
-        >
-          <Printer className="size-4" />
-          Imprimir / PDF da Turnê
-        </a>
-      </div>
+
       <div className="flex flex-col">
         {roadbooks.map((rb, idx) => (
           <div key={rb.id} className="relative">

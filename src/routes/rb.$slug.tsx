@@ -849,6 +849,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
 
       {/* PRINT-ONLY WORD DOCUMENT DESIGN */}
       <table className="hidden print:table w-full text-slate-900 bg-white antialiased max-w-[21cm] mx-auto" style={{ fontFamily: "system-ui, -apple-system, sans-serif" }}>
+        {isFirst && (
         <thead className="table-header-group">
           <tr>
             <td className="px-12 pt-8 pb-4 border-b-0 bg-white">
@@ -856,6 +857,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
             </td>
           </tr>
         </thead>
+        )}
         <tfoot className="table-footer-group">
           <tr>
             <td className="px-12 pb-8 bg-white">
@@ -875,7 +877,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
             {/* Document Title & QR Code aligned */}
             <div className="flex justify-between items-center bg-white border border-slate-200 p-4 rounded-xl shadow-sm mb-6">
               <div className="text-left font-sans">
-                <h2 className="text-xl font-black tracking-widest uppercase text-slate-800">Programação Diária</h2>
+                <h2 className="text-xl font-black tracking-widest uppercase text-slate-800">Programação Diária {isFirst ? "" : `— ${r.cidade}`}</h2>
                 {r.festival && <p className="text-xs uppercase tracking-widest text-[#991b1b] font-bold mt-1">{r.festival}</p>}
                 {(r.data_inicial || r.data_final) && (
                   <p className="text-xs font-semibold text-slate-500 mt-1">
@@ -883,6 +885,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                   </p>
                 )}
               </div>
+              {isFirst && (
               <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-100 shrink-0">
                 <img
                   src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(currentUrl)}`}
@@ -894,11 +897,12 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                   <a href={currentUrl} target="_blank" rel="noopener noreferrer" className="underline font-bold text-slate-500 hover:text-slate-700 break-all block">{currentUrl}</a>
                 </div>
               </div>
+            )}
             </div>
 
             {/* Weather Row */}
             <div className="border-t border-slate-200/60 pt-4 mb-6">
-              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-sans mb-3">Previsão do Tempo na Turnê ({r.cidade})</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-sans mb-3">Previsão do Tempo na Turnê ({r.cidade}{r.estado ? `/${r.estado}` : ""})</h4>
               <div className="flex gap-2">
                 {dias.map(d => (
                   <PrintWeatherForecastCard key={d} date={d} />

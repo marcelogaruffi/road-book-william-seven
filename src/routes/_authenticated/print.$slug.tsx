@@ -141,7 +141,7 @@ function getCarTime(d: number) {
   return time <= 1 ? "1 min" : `${time} min`;
 }
 
-function PublicPage() {
+export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }: { r: ReturnType<typeof rowToRoadbook>; isFirst?: boolean; isConcatenated?: boolean }) {
   const currentUrl = typeof window !== "undefined" ? window.location.href.replace("/print-turne/", "/turne-completa/") : "";
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
   const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p) => {
@@ -836,7 +836,7 @@ function PublicPage() {
 
             {/* Weather Row */}
             <div className="border-t border-slate-200/60 pt-4 mb-6">
-              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-sans mb-3">Previsão do Tempo na Turnê ({r.cidade})</h4>
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-sans mb-3">Previsão do Tempo na Turnê ({r.cidade}{r.estado ? `/${r.estado}` : ""})</h4>
               <div className="flex gap-2">
                 {dias.map(d => (
                   <PrintWeatherForecastCard key={d} date={d} />
@@ -2427,6 +2427,10 @@ function OperationalMap({
 
 
 function PrintPage() {
+  return <PrintRoadbookView r={r} />;
+}
+
+function PublicPage() {
   const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
   return <PrintRoadbookView r={r} />;
 }
