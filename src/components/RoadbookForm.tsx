@@ -565,7 +565,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <CardHeader><CardTitle>Hotel</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Nome"><Input value={d.hotel_nome} onChange={(e) => up("hotel_nome", e.target.value)} /></Field>
-              <Field label="Telefone"><Input value={d.hotel_telefone} onChange={(e) => up("hotel_telefone", e.target.value)} onBlur={(e) => up("hotel_telefone", formatPhone(e.target.value))} /></Field>
+              <Field label="E-mail"><Input type="email" value={d.hotel_telefone} onChange={(e) => up("hotel_telefone", e.target.value)} /></Field>
               <div className="sm:col-span-2"><Field label="Endereço"><Input value={d.hotel_endereco} onChange={(e) => up("hotel_endereco", e.target.value)} /></Field></div>
               <Field label="Site"><Input value={d.hotel_site} onChange={(e) => up("hotel_site", e.target.value)} placeholder="https://" /></Field>
               <div />
@@ -637,8 +637,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Produção — Nome"><Input value={d.producao_nome} onChange={(e) => up("producao_nome", e.target.value)} /></Field>
               <Field label="Receptivo — Nome"><Input value={d.receptivo_nome} onChange={(e) => up("receptivo_nome", e.target.value)} /></Field>
-              <Field label="Produção — Telefone"><Input value={d.producao_telefone} onChange={(e) => up("producao_telefone", e.target.value)} onBlur={(e) => up("producao_telefone", formatPhone(e.target.value))} /></Field>
-              <Field label="Receptivo — Telefone"><Input value={d.receptivo_telefone} onChange={(e) => up("receptivo_telefone", e.target.value)} onBlur={(e) => up("receptivo_telefone", formatPhone(e.target.value))} /></Field>
+              <Field label="Produção — E-mail"><Input type="email" value={d.producao_telefone} onChange={(e) => up("producao_telefone", e.target.value)} /></Field>
+              <Field label="Receptivo — E-mail"><Input type="email" value={d.receptivo_telefone} onChange={(e) => up("receptivo_telefone", e.target.value)} /></Field>
               <Field label="Produção — WhatsApp"><Input value={d.producao_whatsapp} onChange={(e) => up("producao_whatsapp", e.target.value)} onBlur={(e) => up("producao_whatsapp", formatPhone(e.target.value))} placeholder="55 11 99999-9999" /></Field>
               <Field label="Receptivo — WhatsApp"><Input value={d.receptivo_whatsapp} onChange={(e) => up("receptivo_whatsapp", e.target.value)} onBlur={(e) => up("receptivo_whatsapp", formatPhone(e.target.value))} placeholder="55 11 99999-9999" /></Field>
             </CardContent>
@@ -654,7 +654,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                 <div key={i} className="grid sm:grid-cols-12 gap-2 items-end border rounded-md p-3">
                   <div className="sm:col-span-3"><Label className="text-xs">Nome</Label><Input value={c.nome} onChange={(e) => updateContato(i, { nome: e.target.value })} /></div>
                   <div className="sm:col-span-3"><Label className="text-xs">Função</Label><Input value={c.funcao} onChange={(e) => updateContato(i, { funcao: e.target.value })} /></div>
-                  <div className="sm:col-span-2"><Label className="text-xs">Telefone</Label><Input value={c.telefone ?? ""} onChange={(e) => updateContato(i, { telefone: e.target.value })} onBlur={(e) => updateContato(i, { telefone: formatPhone(e.target.value) })} /></div>
+                  <div className="sm:col-span-2"><Label className="text-xs">E-mail</Label><Input type="email" value={c.telefone ?? ""} onChange={(e) => updateContato(i, { telefone: e.target.value })} /></div>
                   <div className="sm:col-span-3"><Label className="text-xs">WhatsApp</Label><Input value={c.whatsapp} onChange={(e) => updateContato(i, { whatsapp: e.target.value })} onBlur={(e) => updateContato(i, { whatsapp: formatPhone(e.target.value) })} placeholder="55 11 99999-9999" /></div>
                   <div className="sm:col-span-1 flex sm:justify-end"><Button type="button" variant="ghost" size="icon" onClick={() => removeContato(i)}><Trash2 className="size-4" /></Button></div>
                 </div>
@@ -799,11 +799,12 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                         placeholder="Ex: Espaço de Oficinas, Sesc..."
                       />
                     </Field>
-                    <Field label="Telefone">
+                    <Field label="E-mail">
                       <Input
+                        type="email"
                         value={loc.telefone ?? ""}
-                        onChange={(e) => updateOutroLocal(i, { telefone: e.target.value })} onBlur={(e) => updateOutroLocal(i, { telefone: formatPhone(e.target.value) })}
-                        placeholder="Ex: (51) 3224-1000"
+                        onChange={(e) => updateOutroLocal(i, { telefone: e.target.value })}
+                        placeholder="Ex: contato@espaco.com.br"
                       />
                     </Field>
                     <div className="sm:col-span-2">
