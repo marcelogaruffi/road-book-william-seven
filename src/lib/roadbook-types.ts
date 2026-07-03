@@ -12,15 +12,15 @@ export type ProgItem = {
 };
 
 export const PROG_TIPOS = [
-  "Viagem",
-  "Oficina",
-  "Espetáculo",
-  "Montagem",
+  "Alimentação",
   "Desmontagem",
   "Entrevista",
-  "Alimentação",
+  "Espetáculo",
   "Livre",
+  "Montagem",
+  "Oficina",
   "Outro",
+  "Viagem",
 ] as const;
 export type ProgTipo = (typeof PROG_TIPOS)[number];
 
@@ -50,34 +50,34 @@ export type Documento = { nome: string; path: string; tipo: string; url?: string
 
 // Categories shared (theatre) — keep export name for backwards compat
 export const FOTO_CATEGORIAS = [
-  "Fachada",
-  "Palco",
-  "Plateia",
-  "Camarim",
   "Acesso de carga",
   "Bilheteria",
+  "Camarim",
   "Entrada do público",
-  "Área técnica",
+  "Fachada",
   "Outros",
+  "Palco",
+  "Plateia",
+  "Área técnica",
 ] as const;
 export type FotoCategoria = string;
 
 export const TEATRO_FOTO_CATEGORIAS = FOTO_CATEGORIAS;
 
 export const HOTEL_FOTO_CATEGORIAS = [
-  "Fachada",
-  "Recepção",
-  "Café da manhã",
-  "Quarto",
-  "Banheiro",
-  "Hall / Lobby",
-  "Área de lazer",
   "Academia",
-  "Piscina",
-  "Restaurante",
+  "Área de lazer",
+  "Banheiro",
+  "Café da manhã",
   "Comodidades",
   "Estacionamento",
+  "Fachada",
+  "Hall / Lobby",
   "Outros",
+  "Piscina",
+  "Quarto",
+  "Recepção",
+  "Restaurante",
 ] as const;
 
 export type Foto = {
