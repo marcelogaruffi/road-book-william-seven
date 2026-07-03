@@ -192,27 +192,7 @@ function PublicoPage() {
       console.warn("Logo não carregado", e);
     }
 
-    if (logoBase64) {
-      const imageId = workbook.addImage({
-        base64: logoBase64,
-        extension: 'png',
-      });
-      worksheet.addImage(imageId, {
-        tl: { col: 0, row: 0 },
-        ext: { width: 140, height: 70 }
-      });
-      
-      // Merge cells for the title to be next to the image
-      worksheet.mergeCells('A1:C4');
-      worksheet.mergeCells('D1:H4');
-      worksheet.getCell('D1').value = 'Relatório de Público';
-      worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF4F46E5" } };
-      worksheet.getCell('D1').alignment = { vertical: 'middle', horizontal: 'left' };
-    }
-
-    const startRow = logoBase64 ? 6 : 1;
-
-    // Columns
+    // 1. Configurar as colunas (isso cria o cabeçalho na Linha 1)
     worksheet.columns = [
       { header: "#", key: "id", width: 5 },
       { header: "Cidade", key: "cidade", width: 25 },
@@ -224,11 +204,30 @@ function PublicoPage() {
       { header: "Público Majoritário", key: "majoritario", width: 35 }
     ];
 
-    // Se tiver logo, empurra a tabela para baixo para dar espaço (5 linhas)
-    const headerRowNumber = logoBase64 ? 6 : 1;
+    // 2. Se houver logo, precisamos empurrar a tabela (incluindo o cabeçalho) 5 linhas para baixo
     if (logoBase64) {
       worksheet.spliceRows(1, 0, [], [], [], [], []);
+      
+      // Agora as linhas 1 a 5 estão livres.
+      const imageId = workbook.addImage({
+        base64: logoBase64,
+        extension: 'png',
+      });
+      worksheet.addImage(imageId, {
+        tl: { col: 0, row: 0 },
+        ext: { width: 140, height: 70 }
+      });
+      
+      // Mesclar e preencher o título na parte vazia superior
+      worksheet.mergeCells('A1:C4');
+      worksheet.mergeCells('D1:H4');
+      worksheet.getCell('D1').value = 'Relatório de Público';
+      worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF4F46E5" } };
+      worksheet.getCell('D1').alignment = { vertical: 'middle', horizontal: 'left' };
     }
+
+    // 3. Estilizar a linha de cabeçalho da tabela
+    const headerRowNumber = logoBase64 ? 6 : 1;
 
     // Header styling
     worksheet.getRow(headerRowNumber).eachCell((cell) => {
