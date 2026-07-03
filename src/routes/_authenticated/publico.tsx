@@ -206,7 +206,7 @@ function PublicoPage() {
       worksheet.mergeCells('A1:C4');
       worksheet.mergeCells('D1:H4');
       worksheet.getCell('D1').value = 'Relatório de Público';
-      worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF0f172a" } };
+      worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF4F46E5" } };
       worksheet.getCell('D1').alignment = { vertical: 'middle', horizontal: 'left' };
     }
 
@@ -214,21 +214,26 @@ function PublicoPage() {
 
     // Columns
     worksheet.columns = [
-      { key: "id", width: 5 },
-      { key: "cidade", width: 25 },
-      { key: "espetaculo", width: 25 },
-      { key: "data", width: 12 },
-      { key: "horario", width: 10 },
-      { key: "atividade", width: 20 },
-      { key: "presente", width: 18 },
-      { key: "majoritario", width: 35 }
+      { header: "#", key: "id", width: 5 },
+      { header: "Cidade", key: "cidade", width: 25 },
+      { header: "Espetáculo", key: "espetaculo", width: 25 },
+      { header: "Data", key: "data", width: 12 },
+      { header: "Horário", key: "horario", width: 10 },
+      { header: "Atividade", key: "atividade", width: 20 },
+      { header: "Público presente", key: "presente", width: 18 },
+      { header: "Público Majoritário", key: "majoritario", width: 35 }
     ];
 
+    // Se tiver logo, empurra a tabela para baixo para dar espaço (5 linhas)
+    const headerRowNumber = logoBase64 ? 6 : 1;
+    if (logoBase64) {
+      worksheet.spliceRows(1, 0, [], [], [], [], []);
+    }
+
     // Header styling
-    worksheet.getRow(startRow).values = ["#", "Cidade", "Espetáculo", "Data", "Horário", "Atividade", "Público presente", "Público Majoritário"];
-    worksheet.getRow(startRow).eachCell((cell) => {
+    worksheet.getRow(headerRowNumber).eachCell((cell) => {
       cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0f172a" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4F46E5" } };
       cell.alignment = { vertical: "middle", horizontal: "center" };
       cell.border = {
         top: { style: "thin" }, left: { style: "thin" },
@@ -312,7 +317,7 @@ function PublicoPage() {
       body: tableData,
       theme: "grid",
       styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [15, 23, 42] }, // Slate-900 (dark color)
+      headStyles: { fillColor: [79, 70, 229] }, // Volta pra cor azul/indigo
       columnStyles: {
         0: { halign: 'center', cellWidth: 8 },
         6: { halign: 'center', cellWidth: 15 }
