@@ -199,18 +199,18 @@ function PublicoPage() {
       });
       worksheet.addImage(imageId, {
         tl: { col: 0, row: 0 },
-        ext: { width: 80, height: 40 }
+        ext: { width: 140, height: 70 }
       });
       
       // Merge cells for the title to be next to the image
-      worksheet.mergeCells('A1:C3');
-      worksheet.mergeCells('D1:H3');
+      worksheet.mergeCells('A1:C4');
+      worksheet.mergeCells('D1:H4');
       worksheet.getCell('D1').value = 'Relatório de Público';
       worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF0f172a" } };
       worksheet.getCell('D1').alignment = { vertical: 'middle', horizontal: 'left' };
     }
 
-    const startRow = logoBase64 ? 5 : 1;
+    const startRow = logoBase64 ? 6 : 1;
 
     // Columns
     worksheet.columns = [
