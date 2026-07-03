@@ -162,10 +162,69 @@ function PublicoPage() {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Público");
 
+    let logoBase64: string | undefined;
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => resolve(reader.result as string);
+      });
+    } catch (e) {
+      console.warn("Logo não carregado", e);
+    }
+
+    if (logoBase64) {
+      const imageId = workbook.addImage({
+        base64: logoBase64,
+        extension: 'png',
+      });
+      worksheet.addImage(imageId, {
+        tl: { col: 0, row: 0 },
+        ext: { width: 80, height: 40 }
+      });
+      
+      // Merge cells for the title to be next to the image
+      worksheet.mergeCells('A1:C3');
+      worksheet.mergeCells('D1:H3');
+      worksheet.getCell('D1').value = 'Relatório de Público';
+      worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF0f172a" } };
+      worksheet.getCell('D1').alignment = { vertical: 'middle', horizontal: 'left' };
+    }
+
+    const startRow = logoBase64 ? 5 : 1;
+
     // Columns
     worksheet.columns = [
       { header: "#", key: "id", width: 5 },
       { header: "Cidade", key: "cidade", width: 25 },
+      { header: "Espetáculo", key: "espetaculo", width: 25 },
+      { header: "Data", key: "data", width: 12 },
+      { header: "Horário", key: "horario", width: 10 },
+      { header: "Atividade", key: "atividade", width: 20 },
+      { header: "Público presente", key: "presente", width: 18 },
+      { header: "Público Majoritário", key: "majoritario", width: 35 }
+    ];
+
+    // Header styling
+    worksheet.getRow(startRow).values = ["#", "Cidade", "Espetáculo", "Data", "Horário", "Atividade", "Público presente", "Público Majoritário"];
+    worksheet.getRow(startRow).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF0f172a" } };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = {
+        top: { style: "thin" }, left: { style: "thin" },
+        bottom: { style: "thin" }, right: { style: "thin" }
+      };
+    });
+
+    // Rows
+    registros.forEach((r, i) => {
+      const row = worksheet.addRow({
+        id: i + 1,
+        cidade: `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
+        espetaculo: r.roadbooks?.espetaculo || "",
       { header: "Data", key: "data", width: 12 },
       { header: "Horário", key: "horario", width: 10 },
       { header: "Atividade", key: "atividade", width: 20 },
@@ -197,7 +256,7 @@ function PublicoPage() {
       });
       
       row.eachCell((cell, colNumber) => {
-        cell.alignment = { vertical: "middle", horizontal: colNumber === 6 || colNumber === 1 ? "center" : "left", wrapText: true };
+        cell.alignment = { vertical: "middle", horizontal: colNumber === 7 || colNumber === 1 ? "center" : "left", wrapText: true };
         cell.border = {
           top: { style: "thin", color: { argb: "FFEEEEEE" } }, left: { style: "thin", color: { argb: "FFEEEEEE" } },
           bottom: { style: "thin", color: { argb: "FFEEEEEE" } }, right: { style: "thin", color: { argb: "FFEEEEEE" } }
@@ -209,13 +268,31 @@ function PublicoPage() {
     saveAs(new Blob([buffer]), "Relatorio_Publico.xlsx");
   }
 
-  function exportPDF() {
+  async function exportPDF() {
     const doc = new jsPDF();
-    doc.text("Relatório de Público", 14, 15);
+    
+    let startY = 20;
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      const logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => resolve(reader.result as string);
+      });
+      doc.addImage(logoBase64, 'PNG', 14, 10, 30, 15);
+      doc.setFontSize(16);
+      doc.text("Relatório de Público", 50, 20);
+      startY = 35;
+    } catch (e) {
+      console.warn("Logo não carregado", e);
+      doc.text("Relatório de Público", 14, 15);
+    }
     
     const tableData = registros.map((r, i) => [
       i + 1,
       `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
+      r.roadbooks?.espetaculo || "",
       format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy"),
       r.horario.substring(0, 5) + "h",
       r.atividade,
@@ -224,15 +301,15 @@ function PublicoPage() {
     ]);
 
     autoTable(doc, {
-      startY: 20,
-      head: [["#", "Cidade", "Data", "Horário", "Atividade", "Público presente", "Público Majoritário"]],
+      startY: startY,
+      head: [["#", "Cidade", "Espetáculo", "Data", "Horário", "Atividade", "Presente", "Majoritário"]],
       body: tableData,
       theme: "grid",
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [79, 70, 229] }, // Primary color
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [15, 23, 42] }, // Slate-900 (dark color)
       columnStyles: {
-        0: { halign: 'center' },
-        5: { halign: 'center' }
+        0: { halign: 'center', cellWidth: 8 },
+        6: { halign: 'center', cellWidth: 15 }
       }
     });
 
@@ -243,7 +320,7 @@ function PublicoPage() {
     <div className="space-y-6 max-w-[100vw] overflow-x-hidden">
       <div className="flex items-center justify-between flex-wrap gap-4 px-2">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-100/50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-2xl shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800 hidden sm:flex">
+          <div className="p-3 bg-primary/10 text-primary rounded-2xl shadow-sm ring-1 ring-primary/20 hidden sm:flex">
              <Users className="size-6" />
           </div>
           <div>
@@ -369,6 +446,7 @@ function PublicoPage() {
               <TableRow className="border-slate-100 dark:border-white/5 hover:bg-transparent">
                 <TableHead className="w-16 text-center font-bold text-slate-500 py-4 rounded-tl-[2rem]">#</TableHead>
                 <TableHead className="font-bold text-slate-500 py-4">Cidade</TableHead>
+                <TableHead className="font-bold text-slate-500 py-4">Espetáculo</TableHead>
                 <TableHead className="font-bold text-slate-500 py-4">Data</TableHead>
                 <TableHead className="font-bold text-slate-500 py-4">Horário</TableHead>
                 <TableHead className="font-bold text-slate-500 py-4">Atividade</TableHead>
@@ -384,7 +462,7 @@ function PublicoPage() {
                 </TableRow>
               ) : registros.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-12 text-slate-400 font-medium border-0">Nenhum registro encontrado. Adicione o primeiro acima.</TableCell>
+                  <TableCell colSpan={9} className="text-center py-12 text-slate-400 font-medium border-0">Nenhum registro encontrado. Adicione o primeiro acima.</TableCell>
                 </TableRow>
               ) : (
                 registros.map((r, i) => (
@@ -392,6 +470,9 @@ function PublicoPage() {
                     <TableCell className="text-center font-bold text-slate-400">{i + 1}</TableCell>
                     <TableCell className="font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
                       {r.roadbooks?.cidade} {r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}
+                    </TableCell>
+                    <TableCell className="font-medium text-slate-600 dark:text-slate-300">
+                      {r.roadbooks?.espetaculo || "-"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap font-medium text-slate-600 dark:text-slate-300">{format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy")}</TableCell>
                     <TableCell className="font-medium text-slate-600 dark:text-slate-300">{r.horario.substring(0, 5)}h</TableCell>
