@@ -225,29 +225,6 @@ function PublicoPage() {
         id: i + 1,
         cidade: `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
         espetaculo: r.roadbooks?.espetaculo || "",
-      { header: "Data", key: "data", width: 12 },
-      { header: "Horário", key: "horario", width: 10 },
-      { header: "Atividade", key: "atividade", width: 20 },
-      { header: "Público presente", key: "presente", width: 18 },
-      { header: "Público Majoritário", key: "majoritario", width: 35 }
-    ];
-
-    // Header styling
-    worksheet.getRow(1).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4F46E5" } };
-      cell.alignment = { vertical: "middle", horizontal: "center" };
-      cell.border = {
-        top: { style: "thin" }, left: { style: "thin" },
-        bottom: { style: "thin" }, right: { style: "thin" }
-      };
-    });
-
-    // Rows
-    registros.forEach((r, i) => {
-      const row = worksheet.addRow({
-        id: i + 1,
-        cidade: `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
         data: format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy"),
         horario: r.horario.substring(0, 5) + "h",
         atividade: r.atividade,
