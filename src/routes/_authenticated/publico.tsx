@@ -149,6 +149,7 @@ function PublicoPage() {
 
   function handleEdit(r: any) {
     setEditingId(r.id);
+    setCidadeSelecionada(r.roadbooks?.cidade || "");
     setRoadbookId(r.roadbook_id);
     setData(r.data);
     setHorario(r.horario.substring(0, 5));
@@ -213,14 +214,14 @@ function PublicoPage() {
 
     // Columns
     worksheet.columns = [
-      { header: "#", key: "id", width: 5 },
-      { header: "Cidade", key: "cidade", width: 25 },
-      { header: "Espetáculo", key: "espetaculo", width: 25 },
-      { header: "Data", key: "data", width: 12 },
-      { header: "Horário", key: "horario", width: 10 },
-      { header: "Atividade", key: "atividade", width: 20 },
-      { header: "Público presente", key: "presente", width: 18 },
-      { header: "Público Majoritário", key: "majoritario", width: 35 }
+      { key: "id", width: 5 },
+      { key: "cidade", width: 25 },
+      { key: "espetaculo", width: 25 },
+      { key: "data", width: 12 },
+      { key: "horario", width: 10 },
+      { key: "atividade", width: 20 },
+      { key: "presente", width: 18 },
+      { key: "majoritario", width: 35 }
     ];
 
     // Header styling
@@ -273,13 +274,25 @@ function PublicoPage() {
         reader.readAsDataURL(blob);
         reader.onloadend = () => resolve(reader.result as string);
       });
-      doc.addImage(logoBase64, 'PNG', 14, 10, 30, 15);
+      
+      const img = new Image();
+      img.src = logoBase64;
+      await new Promise((res) => { img.onload = res; });
+      
+      const imgWidth = 40;
+      const imgHeight = (img.naturalHeight / img.naturalWidth) * imgWidth;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const x = (pageWidth - imgWidth) / 2;
+      
+      doc.addImage(logoBase64, 'PNG', x, 10, imgWidth, imgHeight);
       doc.setFontSize(16);
-      doc.text("Relatório de Público", 50, 20);
-      startY = 35;
+      doc.text("Relatório de Público", pageWidth / 2, 10 + imgHeight + 8, { align: 'center' });
+      startY = 10 + imgHeight + 15;
     } catch (e) {
       console.warn("Logo não carregado", e);
-      doc.text("Relatório de Público", 14, 15);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.setFontSize(16);
+      doc.text("Relatório de Público", pageWidth / 2, 15, { align: 'center' });
     }
     
     const tableData = registros.map((r, i) => [
