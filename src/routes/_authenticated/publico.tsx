@@ -35,12 +35,16 @@ function PublicoPage() {
 
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [cidadeSelecionada, setCidadeSelecionada] = useState("");
   const [roadbookId, setRoadbookId] = useState("");
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
   const [atividade, setAtividade] = useState("");
   const [publicoPresente, setPublicoPresente] = useState("");
   const [publicoMajoritario, setPublicoMajoritario] = useState<string[]>([]);
+
+  const cidadesUnicas = Array.from(new Set(roadbooks.map(rb => rb.cidade))).sort((a, b) => a.localeCompare(b));
+  const espetaculosDaCidade = roadbooks.filter(rb => rb.cidade === cidadeSelecionada);
 
   useEffect(() => {
     fetchData();
@@ -59,7 +63,7 @@ function PublicoPage() {
     // Fetch existing reports
     const { data: relData } = await supabase
       .from("relatorio_publico")
-      .select("*, roadbooks(cidade, estado)")
+      .select("*, roadbooks(cidade, estado, espetaculo)")
       .order("data", { ascending: true })
       .order("horario", { ascending: true });
     
@@ -88,7 +92,7 @@ function PublicoPage() {
         .from("relatorio_publico")
         .update(payload)
         .eq("id", editingId)
-        .select("*, roadbooks(cidade, estado)")
+        .select("*, roadbooks(cidade, estado, espetaculo)")
         .single();
 
       if (error) {
@@ -106,7 +110,7 @@ function PublicoPage() {
       const { data: inserted, error } = await supabase
         .from("relatorio_publico")
         .insert(payload)
-        .select("*, roadbooks(cidade, estado)")
+        .select("*, roadbooks(cidade, estado, espetaculo)")
         .single();
 
       if (error) {
@@ -119,6 +123,16 @@ function PublicoPage() {
         setPublicoPresente("");
         setPublicoMajoritario([]);
       }
+    }
+  }
+
+  function handleCidadeChange(cidade: string) {
+    setCidadeSelecionada(cidade);
+    const esp = roadbooks.filter(rb => rb.cidade === cidade);
+    if (esp.length === 1) {
+      setRoadbookId(esp[0].id);
+    } else {
+      setRoadbookId("");
     }
   }
 
@@ -147,6 +161,8 @@ function PublicoPage() {
 
   function handleCancelEdit() {
     setEditingId(null);
+    setCidadeSelecionada("");
+    setRoadbookId("");
     setHorario("");
     setPublicoPresente("");
     setPublicoMajoritario([]);
@@ -329,16 +345,32 @@ function PublicoPage() {
         </CardHeader>
         <CardContent className="pt-6 relative z-10">
           <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-5 items-end">
-            <div className="space-y-2 xl:col-span-2">
+            <div className="space-y-2 xl:col-span-1">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Cidade*</Label>
-              <Select value={roadbookId} onValueChange={setRoadbookId}>
+              <Select value={cidadeSelecionada} onValueChange={handleCidadeChange}>
                 <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10">
                   <SelectValue placeholder="Selecione a cidade..." />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl">
-                  {roadbooks.map(rb => (
+                  {cidadesUnicas.map(cid => (
+                    <SelectItem key={cid} value={cid} className="rounded-xl py-2.5">
+                      {cid}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2 xl:col-span-1">
+              <Label className="font-bold text-slate-700 dark:text-slate-300">Espetáculo*</Label>
+              <Select value={roadbookId} onValueChange={setRoadbookId} disabled={!cidadeSelecionada}>
+                <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10">
+                  <SelectValue placeholder="Espetáculo..." />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl">
+                  {espetaculosDaCidade.map(rb => (
                     <SelectItem key={rb.id} value={rb.id} className="rounded-xl py-2.5">
-                      {rb.cidade} {rb.estado ? `(${rb.estado})` : ""} - {rb.espetaculo}
+                      {rb.espetaculo}
                     </SelectItem>
                   ))}
                 </SelectContent>
