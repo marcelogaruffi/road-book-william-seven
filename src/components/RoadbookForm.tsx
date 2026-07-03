@@ -9,8 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Trash2, Plus, Upload, FileText, ExternalLink, Plane, Clock } from "lucide-react";
-import { makeRoadbookSlug } from "@/lib/slug";
+import {
+  Trash2, Plus, Upload, FileText, ExternalLink, Plane, Clock,
+  MapPin, Hotel, Theater, CalendarDays, Contact, Navigation, Shield, LayoutList, Palette, Settings2, FolderOpen, Sparkles
+} from "lucide-react";
 import {
   type RoadbookData, type ProgItem, type Quarto, type OutroContato, type Documento,
   type Foto, type Voo, type Passageiro, type CartaoEmbarque,
@@ -21,6 +23,7 @@ import {
 export type { RoadbookData, ProgItem } from "@/lib/roadbook-types";
 export { emptyRoadbook } from "@/lib/roadbook-types";
 import { formatPhone } from "@/lib/utils";
+import { makeRoadbookSlug } from "@/lib/slug";
 
 type TourOpt = { id: string; nome: string };
 
@@ -38,8 +41,45 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     })();
   }, []);
 
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        navigate({ to: "/dashboard" });
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [navigate]);
+
   function up<K extends keyof RoadbookData>(k: K, v: RoadbookData[K]) {
     setD((s) => ({ ...s, [k]: v }));
+  }
+
+  async function uploadLogoEspetaculo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const uid = userRes.user?.id;
+      if (!uid) throw new Error("Sessão expirada");
+      
+      const ext = file.name.split('.').pop() || 'png';
+      const filename = `logo-${Date.now()}.${ext}`;
+      const path = `${uid}/logos/${filename}`;
+      
+      const { error } = await supabase.storage.from("roadbook-docs").upload(path, file, { upsert: true, contentType: file.type });
+      if (error) throw error;
+      
+      const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
+      
+      up("espetaculo_logo_url", signed?.signedUrl);
+      toast.success("Logo enviado com sucesso!");
+    } catch (err: any) {
+      toast.error(err.message ?? "Erro no upload do logo");
+    } finally {
+      setUploading(false);
+    }
   }
 
   // ============ PROGRAMACAO grouped by day ============
@@ -520,24 +560,69 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <Tabs defaultValue="geral" className="w-full">
-        <TabsList className="flex flex-wrap h-auto justify-start">
-          <TabsTrigger value="geral">Geral</TabsTrigger>
-          <TabsTrigger value="hotel">Hotel</TabsTrigger>
-          <TabsTrigger value="teatro">Teatro</TabsTrigger>
-          <TabsTrigger value="outros_locais">Outros Locais</TabsTrigger>
-          <TabsTrigger value="contatos">Contatos</TabsTrigger>
-          <TabsTrigger value="programacao">Programação</TabsTrigger>
-          <TabsTrigger value="timeline">Linha do Tempo</TabsTrigger>
-          <TabsTrigger value="voos">Voos</TabsTrigger>
-          <TabsTrigger value="festival">Festival</TabsTrigger>
-          <TabsTrigger value="docs">Documentos</TabsTrigger>
-        </TabsList>
+        <div className="bg-slate-100/50 dark:bg-slate-800/30 p-2 rounded-3xl mb-8">
+          <TabsList className="flex flex-wrap h-auto justify-start gap-2 bg-transparent w-full">
+            <TabsTrigger value="geral" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <LayoutList className="size-4 mr-2" /> Geral
+            </TabsTrigger>
+            <TabsTrigger value="hotel" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <Hotel className="size-4 mr-2" /> Hotel
+            </TabsTrigger>
+            <TabsTrigger value="teatro" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <Theater className="size-4 mr-2" /> Teatro
+            </TabsTrigger>
+            <TabsTrigger value="outros_locais" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <MapPin className="size-4 mr-2" /> Outros Locais
+            </TabsTrigger>
+            <TabsTrigger value="contatos" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <Contact className="size-4 mr-2" /> Contatos
+            </TabsTrigger>
+            <TabsTrigger value="programacao" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <CalendarDays className="size-4 mr-2" /> Agenda
+            </TabsTrigger>
+            <TabsTrigger value="voos" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <Plane className="size-4 mr-2" /> Voos
+            </TabsTrigger>
+            <TabsTrigger value="festival" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <Sparkles className="size-4 mr-2" /> Festival
+            </TabsTrigger>
+            <TabsTrigger value="docs" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <FolderOpen className="size-4 mr-2" /> Documentos
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-        <TabsContent value="geral" className="mt-4">
-          <Card>
-            <CardHeader><CardTitle>Espetáculo</CardTitle></CardHeader>
-            <CardContent className="grid sm:grid-cols-2 gap-4">
-              <Field label="Espetáculo *"><Input required value={d.espetaculo} onChange={(e) => up("espetaculo", e.target.value)} /></Field>
+        <TabsContent value="geral" className="mt-0">
+          <Card className="rounded-3xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
+            <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6">
+              <CardTitle className="text-2xl font-black flex items-center gap-2"><LayoutList className="size-6 text-primary" /> Capa e Configurações</CardTitle>
+            </CardHeader>
+            <CardContent className="grid sm:grid-cols-2 gap-6">
+              <Field label="Espetáculo *">
+                <Input required value={d.espetaculo} onChange={(e) => up("espetaculo", e.target.value)} />
+              </Field>
+              <div className="flex flex-col gap-2">
+                <Label>Logo do Espetáculo</Label>
+                <div className="flex items-center gap-4 border rounded-md p-2">
+                  {d.espetaculo_logo_url ? (
+                    <div className="relative group size-12 bg-slate-50 dark:bg-slate-900 rounded-md border flex items-center justify-center overflow-hidden shrink-0">
+                      <img src={d.espetaculo_logo_url} className="max-h-full max-w-full object-contain" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-red-400" onClick={() => up("espetaculo_logo_url", "")}>
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="size-12 bg-slate-100 dark:bg-slate-800 rounded-md border border-dashed flex items-center justify-center shrink-0">
+                      <span className="text-[10px] text-slate-400 font-medium">Logo</span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <Input type="file" accept="image/*" onChange={uploadLogoEspetaculo} disabled={uploading} className="h-9 cursor-pointer text-xs" />
+                  </div>
+                </div>
+              </div>
               <Field label="Festival"><Input value={d.festival} onChange={(e) => up("festival", e.target.value)} /></Field>
               <Field label="Cidade *"><Input required value={d.cidade} onChange={(e) => up("cidade", e.target.value)} /></Field>
               <Field label="Estado"><Input value={d.estado} onChange={(e) => up("estado", e.target.value)} maxLength={2} /></Field>
@@ -559,11 +644,36 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               </div>
             </CardContent>
           </Card>
+          
+          <div className="mt-6">
+            <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
+              <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6">
+                <CardTitle className="text-xl font-black flex items-center gap-2"><Palette className="size-5 text-primary" /> Visual e Compartilhamento</CardTitle>
+              </CardHeader>
+              <CardContent className="grid sm:grid-cols-2 gap-6">
+                <Field label="Cor Principal">
+                    <div className="flex gap-2">
+                        <Input type="color" className="w-16 h-10 p-1" value={d.cor_tema || "#3b82f6"} onChange={(e) => up("cor_tema", e.target.value)} />
+                        <Input className="flex-1" placeholder="#3b82f6" value={d.cor_tema || ""} onChange={(e) => up("cor_tema", e.target.value)} />
+                    </div>
+                </Field>
+                <Field label="Modo Escuro (Padrão)">
+                    <Select value={d.dark_mode ? "true" : "false"} onValueChange={(v) => up("dark_mode", v === "true")}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="true">Escuro</SelectItem>
+                            <SelectItem value="false">Claro</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </Field>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
-        <TabsContent value="hotel" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader><CardTitle>Hotel</CardTitle></CardHeader>
+        <TabsContent value="hotel" className="mt-0 space-y-4">
+          <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
+            <CardHeader><CardTitle>Informações de Hospedagem</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Nome"><Input value={d.hotel_nome} onChange={(e) => up("hotel_nome", e.target.value)} /></Field>
               <Field label="Telefone"><Input value={d.hotel_telefone} onChange={(e) => up("hotel_telefone", formatPhone(e.target.value))} /></Field>
@@ -582,7 +692,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <div className="sm:col-span-2"><Field label="Observações do Hotel"><Textarea value={d.hotel_observacoes || ""} onChange={(e) => up("hotel_observacoes", e.target.value)} placeholder="Informações extras sobre o hotel, café, etc..." className="h-20" /></Field></div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Quartos</CardTitle>
               <Button type="button" size="sm" variant="outline" onClick={addQuarto}><Plus className="size-4 mr-1" />Adicionar</Button>
@@ -609,8 +719,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           />
         </TabsContent>
 
-        <TabsContent value="teatro" className="mt-4 space-y-4">
-          <Card>
+        <TabsContent value="teatro" className="mt-0 space-y-4">
+          <Card className="rounded-2xl">
             <CardHeader><CardTitle>Local Principal (Teatro)</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Nome"><Input value={d.teatro_nome} onChange={(e) => up("teatro_nome", e.target.value)} /></Field>
@@ -632,8 +742,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           />
         </TabsContent>
 
-        <TabsContent value="contatos" className="mt-4 space-y-4">
-          <Card>
+        <TabsContent value="contatos" className="mt-0 space-y-4">
+          <Card className="rounded-2xl">
             <CardHeader><CardTitle>Produção e Receptivo</CardTitle></CardHeader>
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Produção — Nome"><Input value={d.producao_nome} onChange={(e) => up("producao_nome", e.target.value)} /></Field>
@@ -644,7 +754,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <Field label="Receptivo — WhatsApp"><Input value={d.receptivo_whatsapp} onChange={(e) => up("receptivo_whatsapp", formatPhone(e.target.value))} placeholder="55 11 99999-9999" /></Field>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Outros contatos</CardTitle>
               <Button type="button" size="sm" variant="outline" onClick={addContato}><Plus className="size-4 mr-1" />Adicionar</Button>
@@ -664,65 +774,57 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="programacao" className="mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Programação por dia</CardTitle>
-                            <Button type="button" size="sm" onClick={addDay}><Plus className="size-4 mr-1" />Adicionar dia</Button>
-              <Button type="button" size="sm" variant="outline" onClick={sortProgramacao}><Clock className="size-4 mr-1" />Ordenar Horários</Button>
+        <TabsContent value="programacao" className="mt-0">
+          <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg border-primary/20">
+            <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6 flex flex-row items-center justify-between bg-primary/5 rounded-t-2xl">
+              <CardTitle className="text-2xl font-black flex items-center gap-2 text-primary"><CalendarDays className="size-6" /> Agenda & Programação</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {dayGroups.length === 0 && <p className="text-sm text-muted-foreground">Nenhum dia. Clique em "Adicionar dia" para começar.</p>}
+            <CardContent className="space-y-12">
+              {dayGroups.length === 0 && <p className="text-sm text-muted-foreground">Nenhum dia cadastrado.</p>}
               {dayGroups.map((g) => (
-                <div key={g.data || "__empty__"} className="border rounded-lg p-4 space-y-3 bg-card">
-                  <div className="flex items-end justify-between gap-3 flex-wrap">
-                    <div>
-                      <Label className="text-xs">Data do dia</Label>
-                      <Input
-                        type="date"
-                        value={g.data}
-                        onChange={(e) => updateDayDate(g.data, e.target.value)}
-                        className="w-48"
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button type="button" size="sm" variant="outline" onClick={() => addEvent(g.data)}><Plus className="size-4 mr-1" />Adicionar atividade</Button>
-                      <Button type="button" size="sm" variant="ghost" onClick={() => { if (confirm("Remover este dia e suas atividades?")) removeDay(g.data); }}><Trash2 className="size-4" /></Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    {g.itens.length === 0 && <p className="text-xs text-muted-foreground">Nenhuma atividade. Adicione a primeira.</p>}
-                    {g.itens.map(({ item: p, globalIndex }) => (
-                      <div key={globalIndex} className="grid sm:grid-cols-12 gap-2 items-start border rounded-md p-3 bg-background">
-                        <div className="sm:col-span-2"><Label className="text-xs">Início</Label><Input type="time" value={p.hora_inicio || p.hora || ""} onChange={(e) => updateProgItem(globalIndex, { hora_inicio: e.target.value })} /></div>
-                        <div className="sm:col-span-2"><Label className="text-xs">Fim</Label><Input type="time" value={p.hora_fim ?? ""} onChange={(e) => updateProgItem(globalIndex, { hora_fim: e.target.value })} /></div>
-                        <div className="sm:col-span-4"><Label className="text-xs">Título</Label><Input value={p.titulo || p.atividade || ""} onChange={(e) => updateProgItem(globalIndex, { titulo: e.target.value, atividade: undefined })} /></div>
-                        <div className="sm:col-span-3"><Label className="text-xs">Tipo</Label>
-                          <Select value={p.tipo ?? "Outro"} onValueChange={(v) => updateProgItem(globalIndex, { tipo: v as any })}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {PROG_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                  <div key={g.data} className="relative pl-6">
+                    <div className="absolute left-0 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-800"></div>
+                    
+                    <h3 className="font-black text-xl text-slate-800 dark:text-white mb-6 flex items-center gap-3 relative">
+                      <div className="absolute -left-[30px] w-4 h-4 rounded-full bg-primary ring-4 ring-white dark:ring-slate-900"></div>
+                      <span className="bg-primary text-white px-4 py-1.5 rounded-xl text-lg shadow-sm">
+                        {g.data ? new Date(g.data + "T00:00:00").toLocaleDateString("pt-BR") : "Sem data"}
+                      </span>
+                    </h3>
+                    <div className="space-y-4 mt-4">
+                      {g.itens.map(({ item: p, globalIndex }) => (
+                        <div key={globalIndex} className="relative flex items-start gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow group">
+                          <div className="grid sm:grid-cols-12 gap-2 w-full">
+                            <div className="sm:col-span-2"><Label className="text-xs">Início</Label><Input type="time" value={p.hora_inicio || p.hora || ""} onChange={(e) => updateProgItem(globalIndex, { hora_inicio: e.target.value })} /></div>
+                            <div className="sm:col-span-2"><Label className="text-xs">Fim</Label><Input type="time" value={p.hora_fim ?? ""} onChange={(e) => updateProgItem(globalIndex, { hora_fim: e.target.value })} /></div>
+                            <div className="sm:col-span-4"><Label className="text-xs">Título</Label><Input value={p.titulo || p.atividade || ""} onChange={(e) => updateProgItem(globalIndex, { titulo: e.target.value, atividade: undefined })} /></div>
+                            <div className="sm:col-span-3"><Label className="text-xs">Tipo</Label>
+                              <Select value={p.tipo ?? "Outro"} onValueChange={(v) => updateProgItem(globalIndex, { tipo: v as any })}>
+                                <SelectTrigger><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  {PROG_TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div className="sm:col-span-1 flex sm:justify-end"><Button type="button" variant="ghost" size="icon" onClick={() => removeProgItem(globalIndex)}><Trash2 className="size-4" /></Button></div>
+                            <div className="sm:col-span-6"><Label className="text-xs">Local</Label><Input value={p.local} onChange={(e) => updateProgItem(globalIndex, { local: e.target.value })} /></div>
+                            <div className="sm:col-span-6"><Label className="text-xs">Observação</Label><Textarea rows={1} value={p.observacao} onChange={(e) => updateProgItem(globalIndex, { observacao: e.target.value })} /></div>
+                          </div>
                         </div>
-                        <div className="sm:col-span-1 flex sm:justify-end"><Button type="button" variant="ghost" size="icon" onClick={() => removeProgItem(globalIndex)}><Trash2 className="size-4" /></Button></div>
-                        <div className="sm:col-span-6"><Label className="text-xs">Local</Label><Input value={p.local} onChange={(e) => updateProgItem(globalIndex, { local: e.target.value })} /></div>
-                        <div className="sm:col-span-6"><Label className="text-xs">Observação</Label><Textarea rows={1} value={p.observacao} onChange={(e) => updateProgItem(globalIndex, { observacao: e.target.value })} /></div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
               ))}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="timeline" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Personalizar Linha do Tempo</CardTitle>
+        <TabsContent value="timeline" className="mt-0">
+          <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
+            <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6">
+              <CardTitle className="text-2xl font-black flex items-center gap-2"><Clock className="size-6 text-primary" /> Linha do Tempo Estendida</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <p className="text-sm text-muted-foreground">
                 Por padrão, o título de cada dia na linha do tempo é gerado automaticamente com base nas atividades (ex: Viagem, Espetáculo). 
                 Aqui você pode visualizar o título gerado e, se necessário, definir um nome personalizado para substituir o automático.
@@ -767,22 +869,12 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="outros_locais" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>Outros Locais (Oficinas, Palestras, etc.)</CardTitle>
-              <Button type="button" size="sm" variant="outline" onClick={addOutroLocal}>
-                <Plus className="size-4 mr-1" />Adicionar local
-              </Button>
+        <TabsContent value="outros_locais" className="mt-0">
+          <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
+            <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6 flex flex-row items-center justify-between">
+              <CardTitle className="text-2xl font-black flex items-center gap-2"><MapPin className="size-6 text-primary" /> Outros Locais (Restaurantes, etc)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Adicione outros locais relevantes da turnê (ex: salas de oficina, locais de debate, etc.). 
-                Eles serão listados na página pública e plotados no Mapa Operacional.
-              </p>
-              {(!d.automacoes?.outros_locais || d.automacoes.outros_locais.length === 0) && (
-                <p className="text-sm text-muted-foreground italic">Nenhum local cadastrado.</p>
-              )}
               {(d.automacoes?.outros_locais ?? []).map((loc, i) => (
                 <div key={i} className="border rounded-md p-4 bg-background space-y-4">
                   <div className="flex items-center justify-between border-b pb-2">
@@ -856,7 +948,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="voos" className="mt-4 space-y-4">
+        <TabsContent value="voos" className="mt-0 space-y-4">
           <VooCard
             title="Voo de ida"
             voo={d.voo_ida}
@@ -885,15 +977,17 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           />
         </TabsContent>
 
-        <TabsContent value="festival" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader><CardTitle>Festival e Comunicação (opcional)</CardTitle></CardHeader>
-            <CardContent className="grid sm:grid-cols-2 gap-4">
-              <Field label="Site oficial"><Input value={d.festival_info.site ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, site: e.target.value })} placeholder="https://" /></Field>
-              <Field label="Instagram"><Input value={d.festival_info.instagram ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, instagram: e.target.value })} placeholder="@perfil" /></Field>
-              <div className="sm:col-span-2"><Field label="Outras redes sociais"><Input value={d.festival_info.redes ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, redes: e.target.value })} /></Field></div>
-              <div className="sm:col-span-2"><Field label="Programação oficial (URL ou texto)"><Textarea rows={3} value={d.festival_info.programacao_oficial ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, programacao_oficial: e.target.value })} /></Field></div>
-              <div className="sm:col-span-2"><Field label="Observações"><Textarea rows={3} value={d.festival_info.observacoes ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, observacoes: e.target.value })} /></Field></div>
+        <TabsContent value="festival" className="mt-0">
+          <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
+            <CardHeader><CardTitle className="text-2xl font-black flex items-center gap-2"><Sparkles className="size-6 text-primary" /> Informações do Festival</CardTitle></CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Field label="Site oficial"><Input value={d.festival_info.site ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, site: e.target.value })} placeholder="https://" /></Field>
+                <Field label="Instagram"><Input value={d.festival_info.instagram ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, instagram: e.target.value })} placeholder="@perfil" /></Field>
+                <div className="sm:col-span-2"><Field label="Outras redes sociais"><Input value={d.festival_info.redes ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, redes: e.target.value })} /></Field></div>
+                <div className="sm:col-span-2"><Field label="Programação oficial (URL ou texto)"><Textarea rows={3} value={d.festival_info.programacao_oficial ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, programacao_oficial: e.target.value })} /></Field></div>
+                <div className="sm:col-span-2"><Field label="Observações"><Textarea rows={3} value={d.festival_info.observacoes ?? ""} onChange={(e) => up("festival_info", { ...d.festival_info, observacoes: e.target.value })} /></Field></div>
+              </div>
             </CardContent>
           </Card>
           <FotosCard
@@ -907,8 +1001,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           />
         </TabsContent>
 
-        <TabsContent value="docs" className="mt-4">
-          <Card>
+        <TabsContent value="docs" className="mt-0">
+          <Card className="rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>Documentos (PDF, imagens)</CardTitle>
               <label className="inline-flex">

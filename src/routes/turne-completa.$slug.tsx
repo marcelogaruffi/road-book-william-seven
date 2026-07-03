@@ -58,13 +58,13 @@ function TurneCompleta() {
   const selectedRoadbooks = roadbooks.filter(r => selectedIds.includes(r.id));
 
   return (
-    <div className="bg-background">
+    <div className="min-h-screen bg-slate-50 dark:bg-background transition-colors duration-500">
       <div className="no-print max-w-3xl mx-auto px-5 pt-8 pb-4">
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 shadow-sm">
-          <h3 className="text-sm font-semibold mb-3">Selecione as cidades que deseja incluir no PDF:</h3>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm">
+          <h3 className="text-sm font-semibold mb-3 text-slate-800 dark:text-slate-200">Selecione as cidades que deseja incluir no PDF:</h3>
           <div className="flex flex-wrap gap-3">
             {roadbooks.map(r => (
-              <label key={r.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-100 p-1.5 rounded pr-3">
+              <label key={r.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 p-1.5 rounded pr-3 transition-colors">
                 <input 
                   type="checkbox" 
                   className="rounded border-slate-300 text-primary focus:ring-primary"

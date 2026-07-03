@@ -126,6 +126,7 @@ export type Automacoes = {
     cafe_fim?: string;
     wifi?: string;
   };
+  espetaculo_logo_url?: string;
 };
 
 export type RoadbookData = {
@@ -172,6 +173,7 @@ export type RoadbookData = {
   voo_ida: Voo;
   voo_volta: Voo;
   automacoes: Automacoes;
+  espetaculo_logo_url?: string;
 };
 
 export const emptyRoadbook: RoadbookData = {
@@ -251,6 +253,7 @@ export function rowToRoadbook(row: any): RoadbookData {
     hotel_cafe_inicio: ((row.automacoes as Automacoes)?.info_hotel?.cafe_inicio) || "",
     hotel_cafe_fim: ((row.automacoes as Automacoes)?.info_hotel?.cafe_fim) || "",
     hotel_wifi: ((row.automacoes as Automacoes)?.info_hotel?.wifi) || "",
+    espetaculo_logo_url: (row.automacoes as Automacoes)?.espetaculo_logo_url || "",
   };
 }
 
@@ -301,7 +304,8 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
         cafe_inicio: d.hotel_cafe_inicio,
         cafe_fim: d.hotel_cafe_fim,
         wifi: d.hotel_wifi,
-      }
+      },
+      espetaculo_logo_url: d.espetaculo_logo_url,
     } as any,
   };
 }

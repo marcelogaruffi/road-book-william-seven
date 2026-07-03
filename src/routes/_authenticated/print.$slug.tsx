@@ -391,11 +391,15 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
       {isFirst && (
         <header className="border-b bg-gradient-to-b from-card to-background no-print">
         <div className="max-w-3xl mx-auto px-5 pt-8 pb-10">
-          {/* Logo Bar */}
-          <div className="flex justify-between items-center mb-6 pb-4 border-b border-muted/60">
-            <img src="/logo-seven.png" alt="Seven Produções" className="h-10 w-auto object-contain" />
-            <img src="/logo-maca.png" alt="A Maçã Logo" className="h-10 w-auto object-contain" />
-          </div>
+          <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200">
+              <img src="/logo-seven.png" alt="Seven Produções" className="h-12 w-auto object-contain" />
+              {r.espetaculo_logo_url && (
+                <>
+                  <div className="w-px h-10 bg-slate-300"></div>
+                  <img src={r.espetaculo_logo_url} alt="Logo do Espetáculo" className="h-12 w-auto object-contain" />
+                </>
+              )}
+            </div>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               {r.festival && <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">{r.festival}</p>}
@@ -779,7 +783,8 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
         )}
 
         <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground">
-          Road Book · William Seven
+          Road Book · William Seven<br />
+          Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
         </footer>
       </main>
 
@@ -789,7 +794,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
         <thead className="table-header-group">
           <tr>
             <td className="px-12 pt-8 pb-4 border-b-0 bg-white">
-              <PrintHeader title={r.espetaculo} />
+              <PrintHeader title={r.espetaculo} logoUrl={r.espetaculo_logo_url} />
             </td>
           </tr>
         </thead>
@@ -1618,27 +1623,38 @@ function RedesLinks({ text }: { text: string }) {
     </p>
   );
 }
-function PrintHeader({ title, isFirstPage = false }: { title: string; isFirstPage?: boolean }) {
+function PrintHeader({ title, isFirstPage = false, logoUrl }: { title: string; isFirstPage?: boolean; logoUrl?: string }) {
   if (isFirstPage) {
     return (
-      <div className="flex justify-between items-center border-b pb-6 mb-8 pt-4">
-        <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
-        <div className="text-center font-sans">
+      <div className="flex flex-col items-center justify-center border-b pb-6 mb-8 pt-4 gap-4">
+        {logoUrl ? (
+          <div className="flex items-center justify-center gap-6">
+            <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
+            <div className="w-px h-12 bg-slate-300"></div>
+            <img src={logoUrl} alt="Logo do Espetáculo" className="h-16 w-auto object-contain" />
+          </div>
+        ) : (
+          <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
+        )}
+        <div className="text-center font-sans mt-2">
           <span className="block text-[10px] font-extrabold uppercase tracking-[0.25em] text-slate-400">Guia de Turnê</span>
           <span className="block text-2xl font-black uppercase tracking-wide text-slate-800 leading-tight">{title}</span>
         </div>
-        <img src="/logo-maca.png" alt="A Maçã Logo" className="h-16 w-auto object-contain" />
       </div>
     );
   }
   return (
     <div className="flex justify-between items-center border-b pb-4 mb-6">
       <img src="/logo-seven.png" alt="Seven Produções" className="h-12 w-auto object-contain" />
-      <div className="text-right font-sans">
+      <div className={`text-right font-sans ${logoUrl ? '' : 'flex-1'} ml-4`}>
         <span className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Guia de Turnê</span>
         <span className="block text-base font-black uppercase tracking-wide text-slate-700">{title}</span>
       </div>
-      <img src="/logo-maca.png" alt="A Maçã Logo" className="h-12 w-auto object-contain" />
+      {logoUrl && (
+        <div className="ml-6 border-l border-slate-200 pl-6">
+          <img src={logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
+        </div>
+      )}
     </div>
   );
 }

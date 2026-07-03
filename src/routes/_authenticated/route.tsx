@@ -1,34 +1,173 @@
 import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { 
+  ChevronLeft, ChevronRight, LayoutDashboard, Route as RouteIcon, 
+  Ticket, Settings, Sun, Moon, LogOut 
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+type Profile = {
+  id: string;
+  nome: string;
+  foto_url: string | null;
+  role: "admin" | "user";
+};
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) throw redirect({ to: "/auth" });
+    
+    // Buscar perfil do usuário
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", authData.user.id)
+      .single();
+
+    return { 
+      user: authData.user,
+      profile: profile as Profile | null
+    };
   },
   component: AuthedLayout,
 });
 
 function AuthedLayout() {
   const navigate = useNavigate();
+  const { user, profile } = Route.useRouteContext();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    if (document.documentElement.classList.contains("dark")) {
+      setTheme("dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (theme === "light") {
+      document.documentElement.classList.add("dark");
+      setTheme("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      setTheme("light");
+    }
+  };
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
+
+  const getInitials = (name?: string) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase();
+  };
+
+  const userName = profile?.nome || user.user_metadata?.full_name || "Usuário";
+  const userRole = profile?.role || "user";
+  const fotoUrl = profile?.foto_url;
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b print:hidden">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/dashboard" className="font-semibold tracking-tight">
-            Road Book <span className="text-muted-foreground">William Seven</span>
-          </Link>
-          <Button variant="ghost" size="sm" onClick={signOut}>Sair</Button>
+    <div className="flex min-h-screen bg-slate-50/50 dark:bg-background transition-colors duration-500">
+      {/* SIDEBAR RETRÁTIL */}
+      <aside 
+        className={`${sidebarOpen ? 'w-64' : 'w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
+      >
+        <div className="flex h-20 items-center justify-between px-4 border-b border-slate-200/60 dark:border-white/10">
+          {sidebarOpen ? (
+            <div className="flex items-center gap-3 overflow-hidden">
+              <Avatar className="size-9 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0">
+                <AvatarImage src={fotoUrl || undefined} alt={userName} className="object-cover" />
+                <AvatarFallback className="bg-gradient-to-tr from-primary to-purple-500 text-white font-bold rounded-xl text-sm">{getInitials(userName)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col min-w-0">
+                <span className="font-extrabold text-sm tracking-tight bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent truncate leading-tight">
+                  {userName}
+                </span>
+                <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider leading-tight">
+                  {userRole === 'admin' ? 'Master' : 'Convidado'}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <Avatar className="size-10 mx-auto rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0">
+              <AvatarImage src={fotoUrl || undefined} alt={userName} className="object-cover" />
+              <AvatarFallback className="bg-gradient-to-tr from-primary to-purple-500 text-white font-bold rounded-xl text-sm">{getInitials(userName)}</AvatarFallback>
+            </Avatar>
+          )}
+          
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className={`shrink-0 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 ${!sidebarOpen && 'absolute -right-4 top-6 bg-white dark:bg-card border shadow-sm z-50 h-8 w-8'}`}>
+            {sidebarOpen ? <ChevronLeft className="size-5" /> : <ChevronRight className="size-4" />}
+          </Button>
         </div>
-      </header>
-      <main className="max-w-6xl mx-auto px-6 py-8 print:p-0 print:max-w-none print:m-0">
+
+        <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2">
+          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold rounded-xl`}>
+             <Link to="/dashboard">
+               <LayoutDashboard className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+               {sidebarOpen && <span>Dashboard</span>}
+             </Link>
+          </Button>
+          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+             <Link to="/dashboard" hash="turnes">
+               <RouteIcon className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+               {sidebarOpen && <span>Turnês</span>}
+             </Link>
+          </Button>
+          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+             <Link to="/dashboard" hash="roadbooks">
+               <Ticket className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+               {sidebarOpen && <span>Road Books</span>}
+             </Link>
+          </Button>
+          
+          {user.email === 'marcelo.garuffi@gmail.com' && (
+            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+               <Link to="/users">
+                 <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Administrador</span>}
+               </Link>
+            </Button>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
+          <Button 
+            variant="ghost" 
+            onClick={signOut} 
+            className={`w-full ${sidebarOpen ? 'justify-start px-4' : 'justify-center px-0'} h-12 rounded-xl text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 dark:hover:text-red-400 font-medium transition-colors`}
+          >
+             <LogOut className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+             {sidebarOpen && <span>Sair da Conta</span>}
+          </Button>
+
+          <Button 
+            variant="outline" 
+            onClick={toggleTheme} 
+            className={`w-full ${sidebarOpen ? 'justify-start px-4' : 'justify-center px-0'} h-12 rounded-xl shadow-sm border-slate-200 dark:border-white/10 transition-all`}
+          >
+            {theme === "light" ? (
+              <>
+                <Moon className={`size-5 text-indigo-500 ${sidebarOpen ? 'mr-3' : ''}`} />
+                {sidebarOpen && <span className="font-medium text-slate-700">Modo Escuro</span>}
+              </>
+            ) : (
+              <>
+                <Sun className={`size-5 text-amber-500 ${sidebarOpen ? 'mr-3' : ''}`} />
+                {sidebarOpen && <span className="font-medium text-slate-200">Modo Claro</span>}
+              </>
+            )}
+          </Button>
+        </div>
+      </aside>
+
+      {/* CONTEÚDO PRINCIPAL */}
+      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'} p-8 xl:p-12 print:m-0 print:p-0`}>
         <Outlet />
       </main>
     </div>

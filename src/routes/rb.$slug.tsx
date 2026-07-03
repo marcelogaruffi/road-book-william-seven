@@ -5,7 +5,7 @@ import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
-  Navigation, Droplets, Plane, Clock, Map as MapIcon, Instagram, Printer
+  Navigation, Droplets, Plane, Clock, Map as MapIcon, Instagram, Printer, Moon, Sun
 } from "lucide-react";
 import {
   rowToRoadbook, progTitle, progHora, TIPO_COLORS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS,
@@ -68,6 +68,43 @@ export const Route = createFileRoute("/rb/$slug")({
   ),
   component: PublicPage,
 });
+
+function ThemeToggle() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("rb-theme");
+    if (saved === "dark" || (!saved && document.documentElement.classList.contains("dark"))) {
+      setTheme("dark");
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
+
+  const toggle = () => {
+    if (theme === "light") {
+      document.documentElement.classList.add("dark");
+      setTheme("dark");
+      localStorage.setItem("rb-theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      setTheme("light");
+      localStorage.setItem("rb-theme", "light");
+    }
+  };
+
+  return (
+    <button 
+      onClick={toggle}
+      className="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition-all no-print"
+    >
+      {theme === "light" ? (
+        <><Moon className="size-4" /> Modo Escuro</>
+      ) : (
+        <><Sun className="size-4" /> Modo Claro</>
+      )}
+    </button>
+  );
+}
 
 function fmtDate(d: string | null | undefined) {
   if (!d) return "";
@@ -402,46 +439,70 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
 
   return (
     <GeoContext.Provider value={geo}>
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50 dark:bg-background flex flex-col transition-colors duration-500 overflow-hidden relative">
+      <ThemeToggle />
+      {/* Background Decorativo */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0 no-print">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 dark:bg-primary/10 blur-[100px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500/20 dark:bg-purple-500/10 blur-[100px]"></div>
+      </div>
+
       {/* CAPA */}
       {isFirst && (
-        <header className="border-b bg-gradient-to-b from-card to-background no-print">
-        <div className="max-w-3xl mx-auto px-5 pt-8 pb-10">
-          {/* Logo Bar */}
-          <div className="flex justify-between items-center mb-6 pb-4 border-b border-muted/60">
-            <img src="/logo-seven.png" alt="Seven Produções" className="h-10 w-auto object-contain" />
-            <img src="/logo-maca.png" alt="A Maçã Logo" className="h-10 w-auto object-contain" />
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              {r.festival && <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">{r.festival}</p>}
-              <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight">{r.espetaculo}</h1>
-              <p className="mt-3 text-muted-foreground flex items-center gap-1.5"><MapPin className="size-4" />{r.cidade}{r.estado ? `/${r.estado}` : ""}</p>
+        <header className="pt-16 pb-12 relative z-10 px-5 text-center no-print">
+          <div className="max-w-3xl mx-auto space-y-4">
+            {/* Logo Bar */}
+            <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200 dark:border-white/10">
+              <img src="/logo-seven.png" alt="Seven Produções" className="h-12 w-auto object-contain dark:brightness-200" />
+              {r.espetaculo_logo_url && (
+                <>
+                  <div className="w-px h-10 bg-slate-300 dark:bg-white/20"></div>
+                  <img src={r.espetaculo_logo_url} alt={`${r.espetaculo} Logo`} className="h-12 w-auto object-contain dark:brightness-200" />
+                </>
+              )}
+            </div>
+            
+            {r.festival && (
+              <p className="text-xs uppercase tracking-[0.25em] text-primary font-bold flex items-center justify-center gap-1.5">
+                {r.festival}
+              </p>
+            )}
+            
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-800 dark:text-white bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+              {r.espetaculo}
+            </h1>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-6 mt-6">
+              <p className="text-lg font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                <MapPin className="size-5 text-slate-400" />{r.cidade}{r.estado ? ` / ${r.estado}` : ""}
+              </p>
               {(r.data_inicial || r.data_final) && (
-                <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
+                <p className="text-sm font-bold text-slate-400 flex items-center gap-2 bg-white/50 dark:bg-white/5 px-4 py-2 rounded-xl backdrop-blur-sm border border-slate-200/60 dark:border-white/10">
                   <CalendarDays className="size-4" />
                   {fmtDate(r.data_inicial)}{r.data_final && r.data_final !== r.data_inicial ? ` — ${fmtDate(r.data_final)}` : ""}
                 </p>
               )}
             </div>
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="no-print inline-flex items-center gap-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold px-4 py-2.5 shadow-sm transition-colors w-fit shrink-0"
-            >
-              <Printer className="size-4" />
-              Gerar PDF
-            </button>
+
+            <div className="pt-6">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary dark:bg-primary text-primary-foreground hover:bg-primary/90 dark:hover:bg-primary/80 text-sm font-bold px-6 py-3 shadow-lg dark:shadow-none transition-all hover:-translate-y-0.5"
+              >
+                <Printer className="size-4.5" />
+                Gerar PDF (Salvar ou Imprimir)
+              </button>
+            </div>
           </div>
-        </div>
         </header>
       )}
 
       {!isFirst && (
-        <div className="max-w-3xl mx-auto px-5 pt-8 pb-4 no-print border-b bg-card">
-          <h2 className="text-2xl font-semibold tracking-tight text-primary flex items-center gap-2">
-            <MapPin className="size-5" />
-            {r.cidade}{r.estado ? `/${r.estado}` : ""}
+        <div className="max-w-3xl mx-auto px-5 pt-8 pb-6 no-print border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-card/40 backdrop-blur-xl relative z-10 w-full mb-6 rounded-b-[2rem] shadow-sm">
+          <h2 className="text-2xl font-black tracking-tight text-primary flex items-center gap-2 justify-center">
+            <MapPin className="size-6" />
+            {r.cidade}{r.estado ? ` / ${r.estado}` : ""}
           </h2>
           {(r.data_inicial || r.data_final) && (
             <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
@@ -845,7 +906,8 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         })()}
 
         <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground">
-          Road Book · William Seven
+          Road Book · William Seven<br />
+          Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
         </footer>
       </main>
 
@@ -855,7 +917,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         <thead className="table-header-group">
           <tr>
             <td className="px-12 pt-8 pb-4 border-b-0 bg-white">
-              <PrintHeader title={r.espetaculo} />
+              <PrintHeader title={r.espetaculo} logoUrl={r.espetaculo_logo_url} />
             </td>
           </tr>
         </thead>
@@ -1685,27 +1747,50 @@ function RedesLinks({ text }: { text: string }) {
     </p>
   );
 }
-function PrintHeader({ title, isFirstPage = false }: { title: string; isFirstPage?: boolean }) {
+function DarkModeToggle() {
+  const [isDark, setIsDark] = useState(false);
+  useEffect(() => {
+    if (isDark) document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+  }, [isDark]);
+  return (
+    <button onClick={() => setIsDark(!isDark)} className="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-primary text-primary-foreground shadow-lg hover:scale-110 transition-transform">
+      {isDark ? <Sun className="size-5" /> : <Moon className="size-5" />}
+    </button>
+  );
+}
+function PrintHeader({ title, isFirstPage = false, logoUrl }: { title: string; isFirstPage?: boolean; logoUrl?: string }) {
   if (isFirstPage) {
     return (
-      <div className="flex justify-between items-center border-b pb-6 mb-8 pt-4">
-        <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
-        <div className="text-center font-sans">
+      <div className="flex flex-col items-center justify-center border-b pb-6 mb-8 pt-4 gap-4">
+        {logoUrl ? (
+          <div className="flex items-center justify-center gap-6">
+            <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
+            <div className="w-px h-12 bg-slate-300"></div>
+            <img src={logoUrl} alt="Logo do Espetáculo" className="h-16 w-auto object-contain" />
+          </div>
+        ) : (
+          <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
+        )}
+        <div className="text-center font-sans mt-2">
           <span className="block text-[10px] font-extrabold uppercase tracking-[0.25em] text-slate-400">Guia de Turnê</span>
           <span className="block text-2xl font-black uppercase tracking-wide text-slate-800 leading-tight">{title}</span>
         </div>
-        <img src="/logo-maca.png" alt="A Maçã Logo" className="h-16 w-auto object-contain" />
       </div>
     );
   }
   return (
     <div className="flex justify-between items-center border-b pb-4 mb-6">
       <img src="/logo-seven.png" alt="Seven Produções" className="h-12 w-auto object-contain" />
-      <div className="text-right font-sans">
+      <div className={`text-right font-sans ${logoUrl ? '' : 'flex-1'} ml-4`}>
         <span className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400">Guia de Turnê</span>
         <span className="block text-base font-black uppercase tracking-wide text-slate-700">{title}</span>
       </div>
-      <img src="/logo-maca.png" alt="A Maçã Logo" className="h-12 w-auto object-contain" />
+      {logoUrl && (
+        <div className="ml-6 border-l border-slate-200 pl-6">
+          <img src={logoUrl} alt="Logo" className="h-12 w-auto object-contain" />
+        </div>
+      )}
     </div>
   );
 }
