@@ -450,7 +450,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       {/* CAPA */}
       {isFirst && (
         <header className="pt-16 pb-12 relative z-10 px-5 text-center no-print">
-          <div className="max-w-3xl mx-auto space-y-4">
+          <div className="w-full max-w-3xl mx-auto space-y-4">
             {/* Logo Bar */}
             <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200 dark:border-white/10">
               <img src="/logo-seven.png" alt="Seven Produções" className="h-12 w-auto object-contain dark:brightness-200" />
@@ -499,7 +499,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       )}
 
       {!isFirst && (
-        <div className="max-w-3xl mx-auto px-5 pt-8 pb-6 no-print border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-card/40 backdrop-blur-xl relative z-10 w-full mb-6 rounded-b-[2rem] shadow-sm">
+        <div className="w-full max-w-3xl mx-auto px-5 pt-8 pb-6 no-print border-b border-slate-200 dark:border-white/10 bg-white/80 dark:bg-card/40 backdrop-blur-xl relative z-10 mb-6 rounded-b-[2rem] shadow-sm overflow-hidden">
           <h2 className="text-2xl font-black tracking-tight text-primary flex items-center gap-2 justify-center">
             <MapPin className="size-6" />
             {r.cidade}{r.estado ? ` / ${r.estado}` : ""}
@@ -513,7 +513,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         </div>
       )}
 
-      <main className="max-w-3xl mx-auto px-5 py-8 space-y-10 no-print">
+      <main className="w-full max-w-3xl mx-auto px-4 sm:px-5 py-8 space-y-10 no-print overflow-x-hidden">
         {/* RESUMO */}
         {r.resumo_executivo && (
           <Section title="Resumo executivo" icon={<Sparkles className="size-4" />}>
@@ -524,7 +524,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         {/* LINHA DO TEMPO DA TURNÊ */}
         {dias.length > 0 && (
           <Section title="Linha do Tempo da Turnê" icon={<Calendar className="size-4" />}>
-            <div className="rounded-lg border p-5 bg-card">
+            <div className="rounded-lg border p-4 sm:p-5 bg-card overflow-hidden break-words">
               {/* Desktop: Horizontal Timeline */}
               <div className="hidden md:block">
                 <div className="relative flex justify-between items-start">
@@ -875,7 +875,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
               )}
               {pdfs.length > 0 && (
                 <Section title="Documentos Técnicos (PDFs e outros)" icon={<FileText className="size-4" />}>
-                  <div className="rounded-lg border bg-card divide-y">
+                  <div className="rounded-lg border p-4 sm:p-5 bg-card overflow-hidden divide-y">
                     {pdfs.map((doc: Documento, i) => (
                       <a
                         key={i}
@@ -1451,7 +1451,7 @@ function ContactCard({ label, name, telefone, whatsapp }: { label: string; name:
   const wa = whatsapp ? onlyDigits(whatsapp) : "";
   const tel = telefone ? onlyDigits(telefone) : "";
   return (
-    <div className="rounded-lg border p-4 bg-card space-y-2">
+    <div className="rounded-lg border p-4 bg-card space-y-2 overflow-hidden break-words">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
       {name && <div className="font-semibold text-base text-card-foreground">{name}</div>}
       
@@ -1504,7 +1504,7 @@ function FlightCard({ title, voo, onOpenImage }: { title: string; voo: Voo; onOp
   const pax = voo.passageiros ?? [];
   const passes = voo.cartoes_embarque ?? [];
   return (
-    <div className="rounded-lg border p-4 bg-card space-y-3">
+    <div className="rounded-lg border p-4 bg-card space-y-3 overflow-hidden break-words">
       <div className="flex items-center gap-2"><Plane className="size-4 text-primary" /><h3 className="font-semibold">{title}</h3></div>
       {(voo.aeroporto_origem || voo.aeroporto_destino) && (
         <div className="flex items-center gap-2 text-sm">
