@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { FileDown, FileSpreadsheet, Plus, Trash2, ChevronDown, Users } from "lucide-react";
+import { FileDown, FileSpreadsheet, Plus, Trash2, ChevronDown, Users, Pencil, Check } from "lucide-react";
 import { format } from "date-fns";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -34,6 +34,7 @@ function PublicoPage() {
   const [loading, setLoading] = useState(true);
 
   // Form State
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [roadbookId, setRoadbookId] = useState("");
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
@@ -73,29 +74,51 @@ function PublicoPage() {
       return;
     }
 
-    const { data: inserted, error } = await supabase
-      .from("relatorio_publico")
-      .insert({
-        roadbook_id: roadbookId,
-        data,
-        horario,
-        atividade,
-        publico_presente: publicoPresente ? parseInt(publicoPresente) : null,
-        publico_majoritario: publicoMajoritario
-      })
-      .select("*, roadbooks(cidade, estado)")
-      .single();
+    const payload = {
+      roadbook_id: roadbookId,
+      data,
+      horario,
+      atividade,
+      publico_presente: publicoPresente ? parseInt(publicoPresente) : null,
+      publico_majoritario: publicoMajoritario
+    };
 
-    if (error) {
-      console.error(error);
-      toast.error("Erro ao salvar registro.");
-    } else if (inserted) {
-      toast.success("Registro adicionado com sucesso!");
-      setRegistros([...registros, inserted].sort((a, b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario)));
-      // Reset form but keep roadbook and date
-      setHorario("");
-      setPublicoPresente("");
-      setPublicoMajoritario([]);
+    if (editingId) {
+      const { data: updated, error } = await supabase
+        .from("relatorio_publico")
+        .update(payload)
+        .eq("id", editingId)
+        .select("*, roadbooks(cidade, estado)")
+        .single();
+
+      if (error) {
+        console.error(error);
+        toast.error("Erro ao atualizar registro.");
+      } else if (updated) {
+        toast.success("Registro atualizado com sucesso!");
+        setRegistros(registros.map(r => r.id === editingId ? updated : r).sort((a, b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario)));
+        setEditingId(null);
+        setHorario("");
+        setPublicoPresente("");
+        setPublicoMajoritario([]);
+      }
+    } else {
+      const { data: inserted, error } = await supabase
+        .from("relatorio_publico")
+        .insert(payload)
+        .select("*, roadbooks(cidade, estado)")
+        .single();
+
+      if (error) {
+        console.error(error);
+        toast.error("Erro ao salvar registro.");
+      } else if (inserted) {
+        toast.success("Registro adicionado com sucesso!");
+        setRegistros([...registros, inserted].sort((a, b) => a.data.localeCompare(b.data) || a.horario.localeCompare(b.horario)));
+        setHorario("");
+        setPublicoPresente("");
+        setPublicoMajoritario([]);
+      }
     }
   }
 
@@ -108,6 +131,25 @@ function PublicoPage() {
     } else {
       toast.error("Erro ao excluir.");
     }
+  }
+
+  function handleEdit(r: any) {
+    setEditingId(r.id);
+    setRoadbookId(r.roadbook_id);
+    setData(r.data);
+    setHorario(r.horario.substring(0, 5));
+    setAtividade(r.atividade);
+    setPublicoPresente(r.publico_presente ? r.publico_presente.toString() : "");
+    setPublicoMajoritario(r.publico_majoritario || []);
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleCancelEdit() {
+    setEditingId(null);
+    setHorario("");
+    setPublicoPresente("");
+    setPublicoMajoritario([]);
   }
 
   function togglePublico(opcao: string) {
@@ -147,7 +189,7 @@ function PublicoPage() {
       const row = worksheet.addRow({
         id: i + 1,
         cidade: `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
-        data: format(new Date(r.data), "dd/MM/yyyy"),
+        data: format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy"),
         horario: r.horario.substring(0, 5) + "h",
         atividade: r.atividade,
         presente: r.publico_presente || "",
@@ -174,7 +216,7 @@ function PublicoPage() {
     const tableData = registros.map((r, i) => [
       i + 1,
       `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
-      format(new Date(r.data), "dd/MM/yyyy"),
+      format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy"),
       r.horario.substring(0, 5) + "h",
       r.atividade,
       r.publico_presente || "",
@@ -221,8 +263,15 @@ function PublicoPage() {
 
       <Card className="border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-card/40 dark:backdrop-blur-xl dark:border dark:border-white/10 rounded-[2rem] overflow-hidden relative">
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none"></div>
-        <CardHeader className="relative z-10 border-b border-slate-100 dark:border-white/5 pb-5">
-          <CardTitle className="text-lg font-bold">Adicionar Registro</CardTitle>
+        <CardHeader className="relative z-10 border-b border-slate-100 dark:border-white/5 pb-5 flex flex-row items-center justify-between">
+          <CardTitle className="text-lg font-bold">
+            {editingId ? "Editar Registro" : "Adicionar Registro"}
+          </CardTitle>
+          {editingId && (
+            <Button type="button" variant="ghost" onClick={handleCancelEdit} className="h-8 px-3 text-slate-500 hover:text-slate-800">
+              Cancelar edição
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="pt-6 relative z-10">
           <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-5 items-end">
@@ -305,8 +354,8 @@ function PublicoPage() {
             </div>
 
             <div className="xl:col-span-7 flex justify-end mt-2 pt-2 border-t border-slate-100 dark:border-white/5">
-              <Button type="submit" className="w-full sm:w-auto h-11 rounded-xl font-bold shadow-lg shadow-primary/20 px-8">
-                <Plus className="size-4 mr-2" /> Adicionar Registro
+              <Button type="submit" className={`w-full sm:w-auto h-11 rounded-xl font-bold shadow-lg px-8 ${editingId ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20' : 'shadow-primary/20'}`}>
+                {editingId ? <><Check className="size-4 mr-2" /> Salvar Alterações</> : <><Plus className="size-4 mr-2" /> Adicionar Registro</>}
               </Button>
             </div>
           </form>
@@ -344,7 +393,7 @@ function PublicoPage() {
                     <TableCell className="font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">
                       {r.roadbooks?.cidade} {r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}
                     </TableCell>
-                    <TableCell className="whitespace-nowrap font-medium text-slate-600 dark:text-slate-300">{format(new Date(r.data), "dd/MM/yyyy")}</TableCell>
+                    <TableCell className="whitespace-nowrap font-medium text-slate-600 dark:text-slate-300">{format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy")}</TableCell>
                     <TableCell className="font-medium text-slate-600 dark:text-slate-300">{r.horario.substring(0, 5)}h</TableCell>
                     <TableCell className="font-semibold text-slate-700 dark:text-slate-300">{r.atividade}</TableCell>
                     <TableCell className="text-center font-black text-slate-800 dark:text-white text-lg">{r.publico_presente || "-"}</TableCell>
@@ -360,9 +409,14 @@ function PublicoPage() {
                       ) : <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell className="text-right pr-4">
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-xl opacity-0 group-hover:opacity-100 transition-all focus:opacity-100">
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(r)} className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-900/20 rounded-xl transition-colors">
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(r.id)} className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/20 rounded-xl transition-colors">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
