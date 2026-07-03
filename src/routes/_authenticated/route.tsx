@@ -39,7 +39,7 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const navigate = useNavigate();
   const { user, profile } = Route.useRouteContext();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
@@ -73,10 +73,18 @@ function AuthedLayout() {
   const fotoUrl = profile?.foto_url;
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50 dark:bg-background transition-colors duration-500">
+    <div className="flex min-h-screen bg-slate-50/50 dark:bg-background transition-colors duration-500 overflow-x-hidden">
+      {/* OVERLAY MOBILE */}
+      {sidebarOpen && (
+        <div 
+          className="md:hidden fixed inset-0 z-30 bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR RETRÁTIL */}
       <aside 
-        className={`${sidebarOpen ? 'w-64' : 'w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
+        className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/80 md:dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
       >
         <div className="flex h-20 items-center justify-between px-4 border-b border-slate-200/60 dark:border-white/10">
           {sidebarOpen ? (
@@ -101,7 +109,7 @@ function AuthedLayout() {
             </Avatar>
           )}
           
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className={`shrink-0 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 ${!sidebarOpen && 'absolute -right-4 top-6 bg-white dark:bg-card border shadow-sm z-50 h-8 w-8'}`}>
+          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className={`shrink-0 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 ${!sidebarOpen && 'hidden md:flex absolute -right-4 top-6 bg-white dark:bg-card border shadow-sm z-50 h-8 w-8'}`}>
             {sidebarOpen ? <ChevronLeft className="size-5" /> : <ChevronRight className="size-4" />}
           </Button>
         </div>
@@ -166,8 +174,20 @@ function AuthedLayout() {
         </div>
       </aside>
 
+      {/* MOBILE TOGGLE (quando fechado) */}
+      {!sidebarOpen && (
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={() => setSidebarOpen(true)} 
+          className="md:hidden fixed left-0 top-6 z-40 rounded-r-xl rounded-l-none border-l-0 shadow-md bg-white/80 dark:bg-slate-900/80 backdrop-blur-md h-10 w-8"
+        >
+          <ChevronRight className="size-5" />
+        </Button>
+      )}
+
       {/* CONTEÚDO PRINCIPAL */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'} p-8 xl:p-12 print:m-0 print:p-0`}>
+      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] overflow-x-hidden print:m-0 print:p-0`}>
         <Outlet />
       </main>
     </div>
