@@ -104,11 +104,7 @@ function IsolatedPrintPage() {
       
       {/* HEADER LIMPO E SECO */}
       <div style={{ borderBottom: '2px solid black', paddingBottom: '15px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {rb.espetaculo_logo_url ? (
-          <img src={rb.espetaculo_logo_url} alt={rb.espetaculo} style={{ height: '60px', objectFit: 'contain' }} />
-        ) : (
-          <div style={{ width: '60px' }}></div>
-        )}
+        <img src="/logo-seven.png" alt="Seven" style={{ height: '50px', objectFit: 'contain' }} />
         
         <div style={{ textAlign: 'center', flex: 1, padding: '0 20px' }}>
           <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#555', textTransform: 'uppercase', letterSpacing: '2px' }}>Roteiro Motorista</p>
@@ -122,7 +118,11 @@ function IsolatedPrintPage() {
           </p>
         </div>
         
-        <img src="/logo-seven.png" alt="Seven" style={{ height: '50px', objectFit: 'contain' }} />
+        {rb.espetaculo_logo_url ? (
+          <img src={rb.espetaculo_logo_url} alt={rb.espetaculo} style={{ height: '60px', objectFit: 'contain' }} />
+        ) : (
+          <div style={{ width: '60px' }}></div>
+        )}
       </div>
 
       {/* CONTEÚDO TABULAR SECO */}
