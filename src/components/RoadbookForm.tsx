@@ -695,7 +695,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Nome"><Input value={d.hotel_nome} onChange={(e) => up("hotel_nome", e.target.value)} /></Field>
               <Field label="Telefone"><Input value={d.hotel_telefone} onChange={(e) => up("hotel_telefone", formatPhone(e.target.value))} /></Field>
-              <div className="sm:col-span-2"><Field label="Endereço"><Input value={d.hotel_endereco} onChange={(e) => up("hotel_endereco", e.target.value)} /></Field></div>
+              <div className="sm:col-span-2"><Field label="Endereço"><div className="flex w-full items-center"><Input value={d.hotel_endereco} onChange={(e) => up("hotel_endereco", e.target.value)} /><Button type="button" variant="outline" size="icon" className="shrink-0 ml-2" onClick={() => openMapPicker("hotel", d.hotel_endereco)} title="Ajustar no Mapa"><MapPin className="size-4 text-red-500" /></Button></div></Field></div>
               <Field label="Site"><Input value={d.hotel_site} onChange={(e) => up("hotel_site", e.target.value)} placeholder="https://" /></Field>
               <div />
               <Field label="Data Check-in"><Input type="date" value={d.hotel_checkin} onChange={(e) => up("hotel_checkin", e.target.value)} /></Field>
@@ -743,7 +743,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <CardContent className="grid sm:grid-cols-2 gap-4">
               <Field label="Nome"><Input value={d.teatro_nome} onChange={(e) => up("teatro_nome", e.target.value)} /></Field>
               <Field label="Telefone"><Input value={d.teatro_telefone} onChange={(e) => up("teatro_telefone", formatPhone(e.target.value))} /></Field>
-              <div className="sm:col-span-2"><Field label="Endereço"><Input value={d.teatro_endereco} onChange={(e) => up("teatro_endereco", e.target.value)} /></Field></div>
+              <div className="sm:col-span-2"><Field label="Endereço"><div className="flex w-full items-center"><Input value={d.teatro_endereco} onChange={(e) => up("teatro_endereco", e.target.value)} /><Button type="button" variant="outline" size="icon" className="shrink-0 ml-2" onClick={() => openMapPicker("teatro", d.teatro_endereco)} title="Ajustar no Mapa"><MapPin className="size-4 text-red-500" /></Button></div></Field></div>
               <Field label="Site"><Input value={d.teatro_site} onChange={(e) => up("teatro_site", e.target.value)} placeholder="https://" /></Field>
               <div />
               <div className="sm:col-span-2"><Field label="Observações"><Textarea rows={3} value={d.teatro_observacoes} onChange={(e) => up("teatro_observacoes", e.target.value)} /></Field></div>
@@ -906,7 +906,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     <Input value={d.automacoes?.hospital_referencia_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, hospital_referencia_nome: e.target.value })} placeholder="Ex: Hospital das Clínicas" />
                   </Field>
                   <Field label="Hospital de Referência (Endereço)">
-                    <Input value={d.automacoes?.hospital_referencia_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, hospital_referencia_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                    <div className="flex w-full items-center"><Input value={d.automacoes?.hospital_referencia_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, hospital_referencia_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" /><Button type="button" variant="outline" size="icon" className="shrink-0 ml-2" onClick={() => openMapPicker("hospital_referencia", d.automacoes?.hospital_referencia_endereco || "")} title="Ajustar no Mapa"><MapPin className="size-4 text-red-500" /></Button></div>
                   </Field>
                 </div>
 
@@ -915,7 +915,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     <Input value={d.automacoes?.restaurante_hotel_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_hotel_nome: e.target.value })} placeholder="Nome do restaurante" />
                   </Field>
                   <Field label="Restaurante Perto do Hotel (Endereço)">
-                    <Input value={d.automacoes?.restaurante_hotel_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_hotel_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                    <div className="flex w-full items-center"><Input value={d.automacoes?.restaurante_hotel_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_hotel_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" /><Button type="button" variant="outline" size="icon" className="shrink-0 ml-2" onClick={() => openMapPicker("restaurante_hotel", d.automacoes?.restaurante_hotel_endereco || "")} title="Ajustar no Mapa"><MapPin className="size-4 text-red-500" /></Button></div>
                   </Field>
                 </div>
 
@@ -924,7 +924,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     <Input value={d.automacoes?.restaurante_teatro_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_teatro_nome: e.target.value })} placeholder="Nome do restaurante" />
                   </Field>
                   <Field label="Restaurante Perto do Teatro (Endereço)">
-                    <Input value={d.automacoes?.restaurante_teatro_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_teatro_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                    <div className="flex w-full items-center"><Input value={d.automacoes?.restaurante_teatro_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_teatro_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" /><Button type="button" variant="outline" size="icon" className="shrink-0 ml-2" onClick={() => openMapPicker("restaurante_teatro", d.automacoes?.restaurante_teatro_endereco || "")} title="Ajustar no Mapa"><MapPin className="size-4 text-red-500" /></Button></div>
                   </Field>
                 </div>
 
@@ -933,7 +933,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     <Input value={d.automacoes?.shopping_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, shopping_nome: e.target.value })} placeholder="Ex: Shopping Iguatemi" />
                   </Field>
                   <Field label="Shopping Center (Endereço)">
-                    <Input value={d.automacoes?.shopping_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, shopping_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                    <div className="flex w-full items-center"><Input value={d.automacoes?.shopping_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, shopping_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" /><Button type="button" variant="outline" size="icon" className="shrink-0 ml-2" onClick={() => openMapPicker("shopping", d.automacoes?.shopping_endereco || "")} title="Ajustar no Mapa"><MapPin className="size-4 text-red-500" /></Button></div>
                   </Field>
                 </div>
               </div>
