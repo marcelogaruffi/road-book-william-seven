@@ -146,6 +146,21 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   function removeDay(dataKey: string) {
     setD((s) => ({ ...s, programacao: s.programacao.filter((p) => p.data !== dataKey) }));
   }
+
+  function sortProgramacao() {
+    setD(s => ({
+      ...s,
+      programacao: [...s.programacao].sort((a, b) => {
+        const da = a.data || "9999-99-99";
+        const db = b.data || "9999-99-99";
+        if (da !== db) return da.localeCompare(db);
+        const ha = a.hora_inicio || a.hora || "99:99";
+        const hb = b.hora_inicio || b.hora || "99:99";
+        return ha.localeCompare(hb);
+      })
+    }));
+  }
+
   function updateProgItem(index: number, patch: Partial<ProgItem>) {
     setD((s) => ({ ...s, programacao: s.programacao.map((p, i) => i === index ? { ...p, ...patch } : p) }));
   }
@@ -777,8 +792,11 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         <TabsContent value="programacao" className="mt-0">
           <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg border-primary/20">
             <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6 flex flex-row items-center justify-between bg-primary/5 rounded-t-2xl">
-              <CardTitle className="text-2xl font-black flex items-center gap-2 text-primary"><CalendarDays className="size-6" /> Programação</CardTitle>
-              <Button type="button" size="sm" onClick={addDay} className="bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm"><Plus className="size-4 mr-1" /> Adicionar Dia</Button>
+              <CardTitle className="text-xl font-bold flex items-center gap-2"><CalendarDays className="size-5 text-primary"/> Programação por dia</CardTitle>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={sortProgramacao} className="rounded-xl shadow-sm"><Clock className="size-4 mr-1" /> Ordenar</Button>
+                <Button type="button" size="sm" onClick={addDay} className="bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm"><Plus className="size-4 mr-1" /> Adicionar Dia</Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-12">
               {dayGroups.length === 0 && <p className="text-sm text-muted-foreground">Nenhum dia cadastrado.</p>}

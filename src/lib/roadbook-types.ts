@@ -16,17 +16,25 @@ export const PROG_TIPOS = [
   "Desmontagem",
   "Entrevista",
   "Espetáculo",
+  "Hotel",
+  "Intercâmbio",
   "Livre",
   "Montagem",
   "Oficina",
   "Outro",
+  "Pensamento Giratório",
+  "Traslado",
   "Viagem",
 ] as const;
 export type ProgTipo = (typeof PROG_TIPOS)[number];
 
 export const TIPO_COLORS: Record<string, string> = {
   Viagem: "bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-500/30",
+  Traslado: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-500/30",
+  Hotel: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30",
   Oficina: "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30",
+  "Pensamento Giratório": "bg-pink-500/15 text-pink-700 dark:text-pink-300 border-pink-500/30",
+  Intercâmbio: "bg-lime-500/15 text-lime-700 dark:text-lime-300 border-lime-500/30",
   Espetáculo: "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30",
   Montagem: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30",
   Desmontagem: "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30",
