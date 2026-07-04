@@ -76,13 +76,12 @@ function DriverPrintPage() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-10 mb-8 shadow-xl relative overflow-hidden text-center">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-purple-500 to-primary"></div>
           
-          <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200/60 dark:border-slate-800/60">
+          <div className="flex justify-between items-center gap-6 mb-8 pb-8 border-b border-slate-200/60 dark:border-slate-800/60">
             <img src="/logo-seven.png" alt="Seven Produções" className="h-14 w-auto object-contain dark:brightness-200" />
-            {rb.espetaculo_logo_url && (
-              <>
-                <div className="w-px h-10 bg-slate-300 dark:bg-white/20"></div>
+            {rb.espetaculo_logo_url ? (
                 <img src={rb.espetaculo_logo_url} alt={`${rb.espetaculo} Logo`} className="h-14 w-auto object-contain dark:brightness-200" />
-              </>
+            ) : (
+                <div className="w-[100px]"></div>
             )}
           </div>
           
