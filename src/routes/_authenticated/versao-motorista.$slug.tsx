@@ -88,20 +88,37 @@ function fmtDate(d: string | null | undefined) {
 function DriverPrintPage() {
   const rb = Route.useLoaderData();
 
+  const [isPrinting, setIsPrinting] = useState(false);
+
   useEffect(() => {
     let wasDark = false;
-    const beforePrint = () => {
+    const handleBeforePrint = () => {
+      setIsPrinting(true);
       wasDark = document.documentElement.classList.contains("dark");
       if (wasDark) document.documentElement.classList.remove("dark");
     };
-    const afterPrint = () => {
+    const handleAfterPrint = () => {
+      setIsPrinting(false);
       if (wasDark) document.documentElement.classList.add("dark");
     };
-    window.addEventListener("beforeprint", beforePrint);
-    window.addEventListener("afterprint", afterPrint);
+
+    const mediaQueryList = window.matchMedia('print');
+    const handleMediaQueryChange = (mql: MediaQueryListEvent) => {
+      if (mql.matches) {
+        handleBeforePrint();
+      } else {
+        handleAfterPrint();
+      }
+    };
+
+    window.addEventListener("beforeprint", handleBeforePrint);
+    window.addEventListener("afterprint", handleAfterPrint);
+    mediaQueryList.addEventListener("change", handleMediaQueryChange);
+    
     return () => {
-      window.removeEventListener("beforeprint", beforePrint);
-      window.removeEventListener("afterprint", afterPrint);
+      window.removeEventListener("beforeprint", handleBeforePrint);
+      window.removeEventListener("afterprint", handleAfterPrint);
+      mediaQueryList.removeEventListener("change", handleMediaQueryChange);
     };
   }, []);
 
@@ -119,7 +136,7 @@ function DriverPrintPage() {
   }, [rb.programacao]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background transition-colors duration-500 font-sans print:bg-white print:min-h-0 relative">
+    <div className="min-h-screen bg-slate-50 dark:bg-background transition-colors duration-500 font-sans print:bg-white print:min-h-0 relative print:transition-none">
       <style>{`
         @media print {
           @page { margin: 0; }
@@ -131,12 +148,12 @@ function DriverPrintPage() {
           }
         }
       `}</style>
-      <ThemeToggle />
-      
       {/* =========================================================================
           VIEW DE TELA (Moderno, Escuro/Claro, Inspirado no rb.$slug.tsx)
           ========================================================================= */}
-      <div className="print:hidden relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      {!isPrinting && (
+        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <ThemeToggle />
         
         {/* Banner Superior Estilo rb.$slug.tsx */}
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-8 sm:p-10 mb-8 shadow-xl relative overflow-hidden text-center">
@@ -176,7 +193,13 @@ function DriverPrintPage() {
           </div>
 
           <div className="mt-8 flex justify-center">
-            <button onClick={() => window.print()} className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 dark:hover:bg-white transition transform hover:-translate-y-1">
+            <button 
+              onClick={() => {
+                setIsPrinting(true);
+                setTimeout(() => window.print(), 100);
+              }} 
+              className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 dark:hover:bg-white transition transform hover:-translate-y-1"
+            >
               Imprimir Roteiro
             </button>
           </div>
@@ -235,6 +258,7 @@ function DriverPrintPage() {
           )}
         </div>
       </div>
+      )}
 
       {/* =========================================================================
           VIEW DE IMPRESSÃO (Novo PDF construído do ZERO - 100% à prova de tema escuro)
