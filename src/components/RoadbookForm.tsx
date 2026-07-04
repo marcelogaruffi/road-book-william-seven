@@ -578,7 +578,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <Contact className="size-4 mr-2" /> Contatos
             </TabsTrigger>
             <TabsTrigger value="programacao" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
-              <CalendarDays className="size-4 mr-2" /> Agenda
+              <CalendarDays className="size-4 mr-2" /> Programação
             </TabsTrigger>
             <TabsTrigger value="voos" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
               <Plane className="size-4 mr-2" /> Voos
@@ -777,7 +777,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         <TabsContent value="programacao" className="mt-0">
           <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg border-primary/20">
             <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6 flex flex-row items-center justify-between bg-primary/5 rounded-t-2xl">
-              <CardTitle className="text-2xl font-black flex items-center gap-2 text-primary"><CalendarDays className="size-6" /> Agenda & Programação</CardTitle>
+              <CardTitle className="text-2xl font-black flex items-center gap-2 text-primary"><CalendarDays className="size-6" /> Programação</CardTitle>
+              <Button type="button" size="sm" onClick={addDay} className="bg-primary hover:bg-primary/90 text-white rounded-xl shadow-sm"><Plus className="size-4 mr-1" /> Adicionar Dia</Button>
             </CardHeader>
             <CardContent className="space-y-12">
               {dayGroups.length === 0 && <p className="text-sm text-muted-foreground">Nenhum dia cadastrado.</p>}
@@ -790,6 +791,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                       <span className="bg-primary text-white px-4 py-1.5 rounded-xl text-lg shadow-sm">
                         {g.data ? new Date(g.data + "T00:00:00").toLocaleDateString("pt-BR") : "Sem data"}
                       </span>
+                      <Button type="button" size="sm" variant="outline" onClick={() => addEvent(g.data)} className="ml-auto rounded-xl shadow-sm"><Plus className="size-4 mr-1" /> Nova Atividade</Button>
                     </h3>
                     <div className="space-y-4 mt-4">
                       {g.itens.map(({ item: p, globalIndex }) => (

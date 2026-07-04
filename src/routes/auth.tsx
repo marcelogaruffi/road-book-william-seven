@@ -15,7 +15,7 @@ import { Camera, Mail, Lock, User, Phone, KeyRound, UploadCloud, Sun, Moon, Arro
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Autenticação — Road Book William Seven" }] }),
+  head: () => ({ meta: [{ title: "Autenticação - Seven Produções Artísticas" }] }),
   component: AuthPage,
 });
 

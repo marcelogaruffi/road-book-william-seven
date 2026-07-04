@@ -192,72 +192,80 @@ function PublicoPage() {
       console.warn("Logo não carregado", e);
     }
 
-    // 1. Configurar as colunas (isso cria o cabeçalho na Linha 1)
-    worksheet.columns = [
-      { header: "#", key: "id", width: 5 },
-      { header: "Cidade", key: "cidade", width: 25 },
-      { header: "Espetáculo", key: "espetaculo", width: 25 },
-      { header: "Data", key: "data", width: 12 },
-      { header: "Horário", key: "horario", width: 10 },
-      { header: "Atividade", key: "atividade", width: 20 },
-      { header: "Público presente", key: "presente", width: 18 },
-      { header: "Público Majoritário", key: "majoritario", width: 35 }
-    ];
-
-    // 2. Se houver logo, precisamos empurrar a tabela (incluindo o cabeçalho) 5 linhas para baixo
+    // Calculate image dimensions first
+    let imgHeightExcel = 70;
+    const imgWidthExcel = 140;
     if (logoBase64) {
-      worksheet.spliceRows(1, 0, [], [], [], [], []);
-      
-      // Agora as linhas 1 a 5 estão livres.
+      const img = new Image();
+      img.src = logoBase64;
+      await new Promise((res) => { img.onload = res; });
+      imgHeightExcel = (img.naturalHeight / img.naturalWidth) * imgWidthExcel;
+    }
+
+    // Manual columns width
+    worksheet.getColumn(1).width = 5;
+    worksheet.getColumn(2).width = 25;
+    worksheet.getColumn(3).width = 25;
+    worksheet.getColumn(4).width = 12;
+    worksheet.getColumn(5).width = 10;
+    worksheet.getColumn(6).width = 20;
+    worksheet.getColumn(7).width = 15;
+    worksheet.getColumn(8).width = 35;
+
+    // Se houver logo, colocar no topo
+    const headerRowNumber = logoBase64 ? 6 : 1;
+    
+    if (logoBase64) {
       const imageId = workbook.addImage({
         base64: logoBase64,
         extension: 'png',
       });
       worksheet.addImage(imageId, {
         tl: { col: 0, row: 0 },
-        ext: { width: 140, height: 70 }
+        ext: { width: imgWidthExcel, height: imgHeightExcel }
       });
       
       // Mesclar e preencher o título na parte vazia superior
-      worksheet.mergeCells('A1:C4');
       worksheet.mergeCells('D1:H4');
       worksheet.getCell('D1').value = 'Relatório de Público';
-      worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF4F46E5" } };
+      worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF0f172a" } }; // text-slate-900
       worksheet.getCell('D1').alignment = { vertical: 'middle', horizontal: 'left' };
     }
 
-    // 3. Estilizar a linha de cabeçalho da tabela
-    const headerRowNumber = logoBase64 ? 6 : 1;
-
-    // Header styling
-    worksheet.getRow(headerRowNumber).eachCell((cell) => {
-      cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF4F46E5" } };
+    // Cabeçalho da tabela
+    const headerRow = worksheet.getRow(headerRowNumber);
+    headerRow.values = ["#", "Cidade", "Espetáculo", "Data", "Horário", "Atividade", "Público", "Tipo"];
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FF334155" } }; // text-slate-700
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } }; // bg-slate-100
       cell.alignment = { vertical: "middle", horizontal: "center" };
       cell.border = {
-        top: { style: "thin" }, left: { style: "thin" },
-        bottom: { style: "thin" }, right: { style: "thin" }
+        top: { style: "thin", color: { argb: "FFE2E8F0" } }, left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } }, right: { style: "thin", color: { argb: "FFE2E8F0" } }
       };
     });
 
     // Rows
-    registros.forEach((r, i) => {
-      const row = worksheet.addRow({
-        id: i + 1,
-        cidade: `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
-        espetaculo: r.roadbooks?.espetaculo || "",
-        data: format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy"),
-        horario: r.horario.substring(0, 5) + "h",
-        atividade: r.atividade,
-        presente: r.publico_presente || "",
-        majoritario: r.publico_majoritario?.join(", ") || ""
-      });
+    registros.forEach((r, index) => {
+      const rowData = [
+        index + 1,
+        `${r.roadbooks?.cidade || ""} ${r.roadbooks?.estado ? `(${r.roadbooks.estado})` : ""}`.trim(),
+        r.roadbooks?.espetaculo || "",
+        format(new Date(r.data + "T12:00:00"), "dd/MM/yyyy"),
+        r.horario.substring(0, 5) + "h",
+        r.atividade,
+        r.publico_presente || "",
+        r.publico_majoritario?.join(", ") || ""
+      ];
       
-      row.eachCell((cell, colNumber) => {
-        cell.alignment = { vertical: "middle", horizontal: colNumber === 7 || colNumber === 1 ? "center" : "left", wrapText: true };
+      const newRow = worksheet.addRow(rowData);
+      newRow.eachCell((cell) => {
+        cell.alignment = { vertical: "middle" };
         cell.border = {
-          top: { style: "thin", color: { argb: "FFEEEEEE" } }, left: { style: "thin", color: { argb: "FFEEEEEE" } },
-          bottom: { style: "thin", color: { argb: "FFEEEEEE" } }, right: { style: "thin", color: { argb: "FFEEEEEE" } }
+          top: { style: "thin", color: { argb: "FFE2E8F0" } },
+          left: { style: "thin", color: { argb: "FFE2E8F0" } },
+          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+          right: { style: "thin", color: { argb: "FFE2E8F0" } }
         };
       });
     });
@@ -312,14 +320,14 @@ function PublicoPage() {
 
     autoTable(doc, {
       startY: startY,
-      head: [["#", "Cidade", "Espetáculo", "Data", "Horário", "Atividade", "Presente", "Majoritário"]],
+      head: [["#", "Cidade", "Espetáculo", "Data", "Horário", "Atividade", "Público", "Tipo"]],
       body: tableData,
       theme: "grid",
-      styles: { fontSize: 8, cellPadding: 2 },
-      headStyles: { fillColor: [79, 70, 229] }, // Volta pra cor azul/indigo
+      styles: { fontSize: 8, cellPadding: 3, textColor: [51, 65, 85], lineColor: [226, 232, 240] }, // text-slate-700, border-slate-200
+      headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42] }, // bg-slate-100, text-slate-900
       columnStyles: {
-        0: { halign: 'center', cellWidth: 8 },
-        6: { halign: 'center', cellWidth: 15 }
+        0: { halign: 'center', cellWidth: 'wrap' },
+        6: { halign: 'center', cellWidth: 'wrap' }
       }
     });
 
@@ -361,8 +369,8 @@ function PublicoPage() {
           )}
         </CardHeader>
         <CardContent className="pt-6 relative z-10">
-          <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-5 items-end">
-            <div className="space-y-2 xl:col-span-1">
+          <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 items-end">
+            <div className="space-y-2 lg:col-span-1">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Cidade*</Label>
               <Select value={cidadeSelecionada} onValueChange={handleCidadeChange}>
                 <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10">
@@ -378,7 +386,7 @@ function PublicoPage() {
               </Select>
             </div>
 
-            <div className="space-y-2 xl:col-span-1">
+            <div className="space-y-2 lg:col-span-1">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Espetáculo*</Label>
               <Select value={roadbookId} onValueChange={setRoadbookId} disabled={!cidadeSelecionada}>
                 <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10">
@@ -394,17 +402,17 @@ function PublicoPage() {
               </Select>
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-1 relative">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Data*</Label>
-              <Input type="date" value={data} onChange={e => setData(e.target.value)} required className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 px-3 w-full" />
+              <Input type="date" value={data} onChange={e => setData(e.target.value)} required className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 px-4 w-full block appearance-none [&::-webkit-calendar-picker-indicator]:opacity-50 hover:[&::-webkit-calendar-picker-indicator]:opacity-100" />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-2 lg:col-span-1 relative">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Horário*</Label>
-              <Input type="time" value={horario} onChange={e => setHorario(e.target.value)} required className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 w-full" />
+              <Input type="time" value={horario} onChange={e => setHorario(e.target.value)} required className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 px-4 w-full block appearance-none [&::-webkit-calendar-picker-indicator]:opacity-50 hover:[&::-webkit-calendar-picker-indicator]:opacity-100" />
             </div>
 
-            <div className="space-y-2 xl:col-span-1">
+            <div className="space-y-2 lg:col-span-1">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Atividade*</Label>
               <Select value={atividade} onValueChange={setAtividade}>
                 <SelectTrigger className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10">
@@ -418,13 +426,13 @@ function PublicoPage() {
               </Select>
             </div>
 
-            <div className="space-y-2 xl:col-span-1">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Público Presente</Label>
+            <div className="space-y-2 lg:col-span-1">
+              <Label className="font-bold text-slate-700 dark:text-slate-300">Público</Label>
               <Input type="number" min="0" placeholder="Qtd" value={publicoPresente} onChange={e => setPublicoPresente(e.target.value)} className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 w-full" />
             </div>
 
-            <div className="space-y-2 xl:col-span-1">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Público Majoritário</Label>
+            <div className="space-y-2 lg:col-span-2">
+              <Label className="font-bold text-slate-700 dark:text-slate-300">Tipo</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-between font-normal h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10">
@@ -456,7 +464,7 @@ function PublicoPage() {
               </Popover>
             </div>
 
-            <div className="xl:col-span-7 flex justify-end mt-2 pt-2 border-t border-slate-100 dark:border-white/5">
+            <div className="lg:col-span-4 flex justify-end mt-2 pt-2 border-t border-slate-100 dark:border-white/5">
               <Button type="submit" className={`w-full sm:w-auto h-11 rounded-xl font-bold shadow-lg px-8 ${editingId ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20' : 'shadow-primary/20'}`}>
                 {editingId ? <><Check className="size-4 mr-2" /> Salvar Alterações</> : <><Plus className="size-4 mr-2" /> Adicionar Registro</>}
               </Button>
@@ -476,8 +484,8 @@ function PublicoPage() {
                 <TableHead className="font-bold text-slate-500 py-4">Data</TableHead>
                 <TableHead className="font-bold text-slate-500 py-4">Horário</TableHead>
                 <TableHead className="font-bold text-slate-500 py-4">Atividade</TableHead>
-                <TableHead className="text-center font-bold text-slate-500 py-4">Presente</TableHead>
-                <TableHead className="font-bold text-slate-500 py-4">Público Majoritário</TableHead>
+                <TableHead className="text-center font-bold text-slate-500 py-4">Público</TableHead>
+                <TableHead className="font-bold text-slate-500 py-4">Tipo</TableHead>
                 <TableHead className="w-16 rounded-tr-[2rem]"></TableHead>
               </TableRow>
             </TableHeader>

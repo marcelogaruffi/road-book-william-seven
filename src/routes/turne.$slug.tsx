@@ -23,7 +23,7 @@ export const Route = createFileRoute("/turne/$slug")({
     return { tour: tour as Tour, cities: (cities as City[]) ?? [] };
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.tour.nome} — Turnê` : "Turnê";
+    const title = loaderData ? `${loaderData.tour.nome} — Turnê - Seven Produções Artísticas` : "Turnê - Seven Produções Artísticas";
     return { meta: [
       { title }, { name: "description", content: `Road Book Geral da Turnê ${loaderData?.tour.nome ?? ""}` },
       { property: "og:title", content: title },
@@ -92,6 +92,23 @@ function fmtDate(d: string | null) {
 function Page() {
   const { tour, cities } = Route.useLoaderData() as { tour: Tour; cities: City[] };
   
+  useEffect(() => {
+    let wasDark = false;
+    const beforePrint = () => {
+      wasDark = document.documentElement.classList.contains("dark");
+      if (wasDark) document.documentElement.classList.remove("dark");
+    };
+    const afterPrint = () => {
+      if (wasDark) document.documentElement.classList.add("dark");
+    };
+    window.addEventListener("beforeprint", beforePrint);
+    window.addEventListener("afterprint", afterPrint);
+    return () => {
+      window.removeEventListener("beforeprint", beforePrint);
+      window.removeEventListener("afterprint", afterPrint);
+    };
+  }, []);
+
   let currentCity: City | undefined;
   let nextCity: City | undefined;
 
@@ -232,9 +249,9 @@ function Page() {
           </div>
         )}
 
-        <footer className="pt-12 pb-8 text-center text-xs font-medium text-slate-400 dark:text-slate-500">
-          Road Book · William Seven<br />
-          Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
+        <footer className="pt-12 pb-8 text-center text-[10px] font-medium text-slate-400 dark:text-slate-500 flex flex-col gap-1">
+          <span className="font-bold tracking-widest uppercase text-slate-500 text-[10px]">Gestão de Viagens e Turnês</span>
+          <span className="text-[10px]">Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
         </footer>
       </main>
     </div>

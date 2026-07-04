@@ -46,7 +46,7 @@ export const Route = createFileRoute("/_authenticated/print/$slug")({
     return rb;
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade}` : "Road Book";
+    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade} - Seven Produções Artísticas` : "Road Book - Seven Produções Artísticas";
     return { meta: [
       { title }, { name: "description", content: `Road Book ${title}` },
       { property: "og:title", content: title },
@@ -143,7 +143,7 @@ function getCarTime(d: number) {
   return time <= 1 ? "1 min" : `${time} min`;
 }
 
-export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }: { r: ReturnType<typeof rowToRoadbook>; isFirst?: boolean; isConcatenated?: boolean }) {
+export function PrintRoadbookView({ r, isFirst = true, isLast = true, fetchDelay = 0 }: { r: ReturnType<typeof rowToRoadbook>; isFirst?: boolean; isLast?: boolean; fetchDelay?: number }) {
   const currentUrl = typeof window !== "undefined" ? window.location.href.replace("/print-turne/", "/turne-completa/") : "";
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
   const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p) => {
@@ -212,7 +212,7 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
 
   useEffect(() => {
     let cancel = false;
-    (async () => {
+    const timer = setTimeout(async () => {
       const hotelAddr = r.hotel_endereco;
       const teatroAddr = r.teatro_endereco;
 
@@ -376,17 +376,23 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
         places: foundPlaces,
         customPlaces: customPlaces,
       });
-    })();
+    }, fetchDelay);
     return () => {
       cancel = true;
+      clearTimeout(timer);
     };
-  }, [r.hotel_endereco, r.teatro_endereco, r.automacoes?.outros_locais]);
+  }, [r.hotel_endereco, r.teatro_endereco, r.automacoes?.outros_locais, fetchDelay]);
 
   const geo = useGeocode(r.cidade, r.estado);
 
   return (
     <GeoContext.Provider value={geo}>
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50 dark:bg-background transition-colors duration-500 relative print:bg-white">
+      <style>{`
+        @media print {
+          body, html, .min-h-screen { background-color: white !important; }
+        }
+      `}</style>
       {/* CAPA */}
       {isFirst && (
         <header className="border-b bg-gradient-to-b from-card to-background no-print">
@@ -782,10 +788,12 @@ export function PrintRoadbookView({ r, isFirst = true, isConcatenated = false }:
           </Section>
         )}
 
-        <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground">
-          Road Book · William Seven<br />
-          Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
-        </footer>
+        {isLast && (
+          <footer className="mt-16 pb-8 text-center text-[10px] font-medium text-slate-400 no-print flex flex-col gap-1">
+            <span className="font-bold tracking-widest uppercase text-slate-500">Gestão de Viagens e Turnês - Seven produções artística</span>
+            <span>Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
+          </footer>
+        )}
       </main>
 
       {/* PRINT-ONLY WORD DOCUMENT DESIGN */}
@@ -1661,12 +1669,9 @@ function PrintHeader({ title, isFirstPage = false, logoUrl }: { title: string; i
 
 function PrintFooter() {
   return (
-    <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-200/60 pt-3 mt-6">
-      <span className="font-sans font-semibold tracking-wider uppercase text-slate-400">Road Book · Seven Produções Artísticas</span>
-      <div className="flex items-center justify-center relative size-7 shrink-0">
-        <AppleNumber className="absolute inset-0 size-full opacity-90 drop-shadow-sm" />
-        <span className="relative z-10 text-[10px] font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] leading-none pt-[3px] print-page-number"></span>
-      </div>
+    <div className="flex flex-col items-center justify-center text-[9px] text-slate-400 border-t border-slate-200/60 pt-4 mt-6 gap-1 text-center">
+      <span className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Viagens e Turnês - Seven produções artística</span>
+      <span className="font-sans font-medium text-slate-400">Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
     </div>
   );
 }
@@ -2450,5 +2455,29 @@ function PrintPage() {
 
 function PublicPage() {
   const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
-  return <PrintRoadbookView r={r} />;
+  
+  useEffect(() => {
+    document.title = "Road Book - Seven Produções Artísticas";
+    
+    let wasDark = false;
+    const beforePrint = () => {
+      wasDark = document.documentElement.classList.contains("dark");
+      if (wasDark) document.documentElement.classList.remove("dark");
+    };
+    const afterPrint = () => {
+      if (wasDark) document.documentElement.classList.add("dark");
+    };
+    window.addEventListener("beforeprint", beforePrint);
+    window.addEventListener("afterprint", afterPrint);
+    return () => {
+      window.removeEventListener("beforeprint", beforePrint);
+      window.removeEventListener("afterprint", afterPrint);
+    };
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20 print:bg-white print:pb-0">
+      <PrintRoadbookView r={r} isFirst={true} isLast={true} fetchDelay={0} />
+    </div>
+  );
 }

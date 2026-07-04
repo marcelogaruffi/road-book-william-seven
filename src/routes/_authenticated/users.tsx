@@ -37,7 +37,7 @@ type Invite = {
 };
 
 export const Route = createFileRoute("/_authenticated/users")({
-  head: () => ({ meta: [{ title: "Equipe e Convites — Road Book William Seven" }] }),
+  head: () => ({ meta: [{ title: "Equipe e Convites - Seven Produções Artísticas" }] }),
   component: UsersPage,
 });
 
