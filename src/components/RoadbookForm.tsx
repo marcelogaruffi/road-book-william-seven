@@ -895,6 +895,47 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               <CardTitle className="text-2xl font-black flex items-center gap-2"><MapPin className="size-6 text-primary" /> Outros Locais (Restaurantes, etc)</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-6 mb-8 border-b border-slate-100 dark:border-white/5 pb-8">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2"><MapPin className="size-5 text-primary"/> Locais Essenciais (Mapa)</h3>
+                
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label="Hospital de Referência (Nome)">
+                    <Input value={d.automacoes?.hospital_referencia_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, hospital_referencia_nome: e.target.value })} placeholder="Ex: Hospital das Clínicas" />
+                  </Field>
+                  <Field label="Hospital de Referência (Endereço)">
+                    <Input value={d.automacoes?.hospital_referencia_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, hospital_referencia_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                  </Field>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label="Restaurante Perto do Hotel (Nome)">
+                    <Input value={d.automacoes?.restaurante_hotel_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_hotel_nome: e.target.value })} placeholder="Nome do restaurante" />
+                  </Field>
+                  <Field label="Restaurante Perto do Hotel (Endereço)">
+                    <Input value={d.automacoes?.restaurante_hotel_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_hotel_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                  </Field>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label="Restaurante Perto do Teatro (Nome)">
+                    <Input value={d.automacoes?.restaurante_teatro_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_teatro_nome: e.target.value })} placeholder="Nome do restaurante" />
+                  </Field>
+                  <Field label="Restaurante Perto do Teatro (Endereço)">
+                    <Input value={d.automacoes?.restaurante_teatro_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, restaurante_teatro_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                  </Field>
+                </div>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <Field label="Shopping Center (Nome)">
+                    <Input value={d.automacoes?.shopping_nome || ""} onChange={e => up("automacoes", { ...d.automacoes, shopping_nome: e.target.value })} placeholder="Ex: Shopping Iguatemi" />
+                  </Field>
+                  <Field label="Shopping Center (Endereço)">
+                    <Input value={d.automacoes?.shopping_endereco || ""} onChange={e => up("automacoes", { ...d.automacoes, shopping_endereco: e.target.value })} placeholder="Endereço completo (obrigatório para o mapa)" />
+                  </Field>
+                </div>
+              </div>
+
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white">Mais Locais Extras</h3>
               {(d.automacoes?.outros_locais ?? []).map((loc, i) => (
                 <div key={i} className="border rounded-md p-4 bg-background space-y-4">
                   <div className="flex items-center justify-between border-b pb-2">

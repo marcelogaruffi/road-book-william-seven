@@ -363,19 +363,62 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         return [];
       };
 
+      
+      const autoFields = r.automacoes || {};
+
+      const geocodeEssential = async (endereco: string, name: string, type: "hospital" | "restaurant" | "shopping", assoc: string) => {
+        if (!endereco || !endereco.trim()) return;
+        try {
+          const q = getGeocodeQuery(endereco);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+            headers: { "User-Agent": "RoadBookApp/1.0" }
+          });
+          const data = await res.json();
+          if (data && data[0]) {
+            const locLat = parseFloat(data[0].lat);
+            const locLon = parseFloat(data[0].lon);
+            const baseCoords = hCoords || tCoords;
+            const dist = baseCoords ? getHaversineDistance(baseCoords[0], baseCoords[1], locLat, locLon) : 0;
+            foundPlaces.push({
+              name: name || (type === "hospital" ? "Hospital" : type === "restaurant" ? "Restaurante" : "Shopping"),
+              address: endereco,
+              lat: locLat,
+              lon: locLon,
+              distance: dist,
+              type,
+              assoc,
+            });
+          }
+        } catch {}
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      };
+
+      if (autoFields.hospital_referencia_endereco) {
+        await geocodeEssential(autoFields.hospital_referencia_endereco, autoFields.hospital_referencia_nome || "", "hospital", "general");
+      }
+      if (autoFields.restaurante_hotel_endereco) {
+        await geocodeEssential(autoFields.restaurante_hotel_endereco, autoFields.restaurante_hotel_nome || "", "restaurant", "hotel");
+      }
+      if (autoFields.restaurante_teatro_endereco) {
+        await geocodeEssential(autoFields.restaurante_teatro_endereco, autoFields.restaurante_teatro_nome || "", "restaurant", "theater");
+      }
+      if (autoFields.shopping_endereco) {
+        await geocodeEssential(autoFields.shopping_endereco, autoFields.shopping_nome || "", "shopping", "general");
+      }
+
+      if (cancel) return;
+
       if (hCoords) {
-        const phs = await findNearestAmenities("farmacia", hCoords[0], hCoords[1], "pharmacy", "hotel", 2);
+        const phs = await findNearestAmenities("farmacia", hCoords[0], hCoords[1], "pharmacy", "hotel", 1);
         foundPlaces.push(...phs);
-        const shs = await findNearestAmenities("supermercado", hCoords[0], hCoords[1], "supermarket", "hotel", 2);
+        const shs = await findNearestAmenities("supermercado", hCoords[0], hCoords[1], "supermarket", "hotel", 1);
         foundPlaces.push(...shs);
-        const hosp = await findNearestAmenities("hospital", hCoords[0], hCoords[1], "hospital", "general", 1);
-        foundPlaces.push(...hosp);
       }
 
       if (tCoords) {
-        const pts = await findNearestAmenities("farmacia", tCoords[0], tCoords[1], "pharmacy", "theater", 2);
+        const pts = await findNearestAmenities("farmacia", tCoords[0], tCoords[1], "pharmacy", "theater", 1);
         foundPlaces.push(...pts);
-        const sts = await findNearestAmenities("supermercado", tCoords[0], tCoords[1], "supermarket", "theater", 2);
+        const sts = await findNearestAmenities("supermercado", tCoords[0], tCoords[1], "supermarket", "theater", 1);
         foundPlaces.push(...sts);
       }
 
@@ -403,22 +446,12 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                 lat: locLat,
                 lon: locLon,
                 distance: dist,
+                categoria: loc.categoria,
               });
             }
           } catch {}
           await new Promise((resolve) => setTimeout(resolve, 200));
         }
-      }
-
-      if (cancel) return;
-
-      // Query nearest pharmacy and supermarket for each custom location
-      for (let i = 0; i < customPlaces.length; i++) {
-        const cp = customPlaces[i];
-        const pLocs = await findNearestAmenities("farmacia", cp.lat, cp.lon, "pharmacy", `custom_${i}` as any, 2);
-        foundPlaces.push(...pLocs);
-        const sLocs = await findNearestAmenities("supermercado", cp.lat, cp.lon, "supermarket", `custom_${i}` as any, 2);
-        foundPlaces.push(...sLocs);
       }
 
       if (cancel) return;

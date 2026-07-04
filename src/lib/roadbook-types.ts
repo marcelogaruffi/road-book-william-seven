@@ -128,6 +128,14 @@ export type OutroLocal = {
 export type Automacoes = {
   timeline_overrides?: Record<string, string>;
   outros_locais?: OutroLocal[];
+  hospital_referencia_nome?: string;
+  hospital_referencia_endereco?: string;
+  restaurante_hotel_nome?: string;
+  restaurante_hotel_endereco?: string;
+  restaurante_teatro_nome?: string;
+  restaurante_teatro_endereco?: string;
+  shopping_nome?: string;
+  shopping_endereco?: string;
   hotel_extras?: ProgItem[];
   info_hotel?: {
     observacoes?: string;
