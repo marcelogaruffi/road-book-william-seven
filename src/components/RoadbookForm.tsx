@@ -37,6 +37,29 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const [tours, setTours] = useState<TourOpt[]>([]);
   const [uploading, setUploading] = useState(false);
 
+  const [mapPickerOpen, setMapPickerOpen] = useState(false);
+  const [mapPickerKey, setMapPickerKey] = useState("");
+  const [mapPickerAddress, setMapPickerAddress] = useState("");
+  const [mapPickerInitialCoords, setMapPickerInitialCoords] = useState<[number, number] | undefined>(undefined);
+
+  function openMapPicker(key: string, address: string) {
+    if (!address.trim()) {
+      toast.error("Preencha o endereço primeiro para poder ajustar no mapa.");
+      return;
+    }
+    setMapPickerKey(key);
+    setMapPickerAddress(address);
+    setMapPickerInitialCoords(d.automacoes?.map_coords?.[key]);
+    setMapPickerOpen(true);
+  }
+
+  function handleSaveMapCoords(coords: [number, number]) {
+    const currentCoords = d.automacoes?.map_coords || {};
+    up("automacoes", { ...d.automacoes, map_coords: { ...currentCoords, [mapPickerKey]: coords } });
+    setMapPickerOpen(false);
+    toast.success("Coordenadas salvas com sucesso!");
+  }
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("tours").select("id,nome").order("nome");
