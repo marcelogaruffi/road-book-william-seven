@@ -52,40 +52,6 @@ function fmtDate(d: string | null | undefined) {
 function DriverPrintPage() {
   const rb = Route.useLoaderData();
 
-  const [isPrinting, setIsPrinting] = useState(false);
-
-  useEffect(() => {
-    let wasDark = false;
-    const handleBeforePrint = () => {
-      setIsPrinting(true);
-      wasDark = document.documentElement.classList.contains("dark");
-      if (wasDark) document.documentElement.classList.remove("dark");
-    };
-    const handleAfterPrint = () => {
-      setIsPrinting(false);
-      if (wasDark) document.documentElement.classList.add("dark");
-    };
-
-    const mediaQueryList = window.matchMedia('print');
-    const handleMediaQueryChange = (mql: MediaQueryListEvent) => {
-      if (mql.matches) {
-        handleBeforePrint();
-      } else {
-        handleAfterPrint();
-      }
-    };
-
-    window.addEventListener("beforeprint", handleBeforePrint);
-    window.addEventListener("afterprint", handleAfterPrint);
-    mediaQueryList.addEventListener("change", handleMediaQueryChange);
-    
-    return () => {
-      window.removeEventListener("beforeprint", handleBeforePrint);
-      window.removeEventListener("afterprint", handleAfterPrint);
-      mediaQueryList.removeEventListener("change", handleMediaQueryChange);
-    };
-  }, []);
-
   const dayGroups = useMemo(() => {
     const map = new Map<string, ProgItem[]>();
     rb.programacao.forEach((p) => {
@@ -100,23 +66,11 @@ function DriverPrintPage() {
   }, [rb.programacao]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background font-sans print:bg-white print:min-h-0 relative">
-      <style>{`
-        @media print {
-          @page { margin: 0; }
-          :root, html, body {
-            color-scheme: light !important;
-            margin: 0; 
-            padding: 1cm; 
-            background-color: white !important; 
-          }
-        }
-      `}</style>
+    <div className="min-h-screen bg-slate-50 dark:bg-background font-sans relative">
       {/* =========================================================================
           VIEW DE TELA (Moderno, Escuro/Claro, Inspirado no rb.$slug.tsx)
           ========================================================================= */}
-      {!isPrinting && (
-        <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         {/* Banner Superior Estilo rb.$slug.tsx */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-10 mb-8 shadow-xl relative overflow-hidden text-center">
@@ -158,8 +112,7 @@ function DriverPrintPage() {
           <div className="mt-8 flex justify-center">
             <button 
               onClick={() => {
-                setIsPrinting(true);
-                setTimeout(() => window.print(), 100);
+                window.open(`/motorista-print/${rb.slug}`, '_blank');
               }} 
               className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 dark:hover:bg-white transition transform hover:-translate-y-1"
             >
@@ -219,136 +172,6 @@ function DriverPrintPage() {
               </div>
             ))
           )}
-        </div>
-      </div>
-      )}
-
-      {/* =========================================================================
-          VIEW DE IMPRESSÃO (NOVO MODELO TABULAR 100% SECO)
-          ========================================================================= */}
-      <style>{`
-        @media print {
-          .motorista-print-wrapper {
-            display: block !important;
-            color: black !important;
-            background-color: white !important;
-            font-family: Arial, Helvetica, sans-serif !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: none !important;
-          }
-          
-          .motorista-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-          }
-          .motorista-table th, .motorista-table td {
-            border-bottom: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-            vertical-align: top;
-            page-break-inside: avoid;
-            break-inside: avoid;
-          }
-          .motorista-table th {
-            background-color: #f0f0f0 !important;
-            font-weight: bold;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .day-header {
-            background-color: #333 !important;
-            color: white !important;
-            padding: 10px 15px;
-            font-weight: bold;
-            font-size: 16px;
-            margin-top: 30px;
-            margin-bottom: 0px;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            page-break-after: avoid;
-            break-after: avoid;
-          }
-        }
-      `}</style>
-      
-      <div className="hidden print:block motorista-print-wrapper p-8">
-        
-        {/* HEADER LIMPO E SECO */}
-        <div style={{ borderBottom: '2px solid black', paddingBottom: '15px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          {rb.espetaculo_logo_url ? (
-            <img src={rb.espetaculo_logo_url} alt={rb.espetaculo} style={{ height: '60px', objectFit: 'contain' }} />
-          ) : (
-            <div style={{ width: '60px' }}></div>
-          )}
-          
-          <div style={{ textAlign: 'center', flex: 1, padding: '0 20px' }}>
-            <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#555', textTransform: 'uppercase', letterSpacing: '2px' }}>Roteiro Motorista</p>
-            <h1 style={{ margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900', textTransform: 'uppercase' }}>{rb.espetaculo}</h1>
-            <p style={{ margin: 0, fontSize: '14px', color: '#333' }}>
-              {rb.cidade && <span>{rb.cidade}{rb.estado ? `/${rb.estado}` : ""}</span>}
-              {rb.cidade && (rb.data_inicial || rb.data_final) && <span> • </span>}
-              {(rb.data_inicial || rb.data_final) && (
-                <span>{fmtDate(rb.data_inicial)} {rb.data_final && rb.data_final !== rb.data_inicial && ` a ${fmtDate(rb.data_final)}`}</span>
-              )}
-            </p>
-          </div>
-          
-          <img src="/logo-seven.png" alt="Seven" style={{ height: '50px', objectFit: 'contain' }} />
-        </div>
-
-        {/* CONTEÚDO TABULAR SECO */}
-        <div style={{ paddingBottom: '40px' }}>
-          {dayGroups.length === 0 ? (
-            <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#666' }}>Nenhuma programação cadastrada.</p>
-          ) : (
-            dayGroups.map((group, idx) => (
-              <div key={idx}>
-                <div className="day-header">
-                  {fmtDate(group.data) || "Sem data"} <span style={{ opacity: 0.8, fontSize: '12px', marginLeft: '10px', fontWeight: 'normal' }}>{getDaySummary(group.itens)}</span>
-                </div>
-                
-                <table className="motorista-table">
-                  <thead>
-                    <tr>
-                      <th style={{ width: '15%' }}>Horário</th>
-                      <th style={{ width: '15%' }}>Tipo</th>
-                      <th style={{ width: '70%' }}>Detalhes</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {group.itens.map((p, i) => (
-                      <tr key={i}>
-                        <td style={{ fontWeight: 'bold', fontSize: '16px' }}>{progHora(p)}</td>
-                        <td style={{ fontSize: '12px', textTransform: 'uppercase' }}>{p.tipo || "Outro"}</td>
-                        <td>
-                          <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '4px' }}>{progTitle(p)}</div>
-                          {p.local && (
-                            <div style={{ fontSize: '14px', color: '#333', marginBottom: '6px' }}>
-                              <span style={{ fontWeight: 'bold' }}>Local:</span> {p.local}
-                            </div>
-                          )}
-                          {p.observacao && (
-                            <div style={{ fontSize: '13px', color: '#444', backgroundColor: '#f9f9f9', padding: '8px', borderLeft: '3px solid #ccc', whiteSpace: 'pre-wrap' }}>
-                              {p.observacao}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))
-          )}
-        </div>
-
-        {/* FOOTER NO FINAL DO ARQUIVO (NÃO FIXO) */}
-        <div style={{ textAlign: 'center', fontSize: '10px', color: '#666', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
-          <strong style={{ display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Gestão de Viagens e Turnês</strong>
-          Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
         </div>
       </div>
     </div>
