@@ -1145,6 +1145,25 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         <Button type="button" variant="outline" onClick={() => navigate({ to: "/dashboard" })}>Cancelar</Button>
         <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar Road Book"}</Button>
       </div>
+
+      <Dialog open={mapPickerOpen} onOpenChange={setMapPickerOpen}>
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Ajustar Localização Exata</DialogTitle>
+            <DialogDescription>
+              O sistema tentará encontrar "{mapPickerAddress}". Arraste o pino para o local correto se estiver errado.
+            </DialogDescription>
+          </DialogHeader>
+          {mapPickerOpen && (
+            <LocationPickerMap
+              initialAddress={mapPickerAddress}
+              initialCoords={mapPickerInitialCoords}
+              onSave={handleSaveMapCoords}
+              onCancel={() => setMapPickerOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }
