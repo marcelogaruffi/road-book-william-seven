@@ -409,16 +409,16 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       if (cancel) return;
 
       if (hCoords) {
-        const phs = await findNearestAmenities("farmacia", hCoords[0], hCoords[1], "pharmacy", "hotel", 3);
+        const phs = await findNearestAmenities("farmacia", hCoords[0], hCoords[1], "pharmacy", "hotel", 1);
         foundPlaces.push(...phs);
-        const shs = await findNearestAmenities("supermercado", hCoords[0], hCoords[1], "supermarket", "hotel", 3);
+        const shs = await findNearestAmenities("supermercado", hCoords[0], hCoords[1], "supermarket", "hotel", 1);
         foundPlaces.push(...shs);
       }
 
       if (tCoords) {
-        const pts = await findNearestAmenities("farmacia", tCoords[0], tCoords[1], "pharmacy", "theater", 3);
+        const pts = await findNearestAmenities("farmacia", tCoords[0], tCoords[1], "pharmacy", "theater", 1);
         foundPlaces.push(...pts);
-        const sts = await findNearestAmenities("supermercado", tCoords[0], tCoords[1], "supermarket", "theater", 3);
+        const sts = await findNearestAmenities("supermercado", tCoords[0], tCoords[1], "supermarket", "theater", 1);
         foundPlaces.push(...sts);
       }
 
