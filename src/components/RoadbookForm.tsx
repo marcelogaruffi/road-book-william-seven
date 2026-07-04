@@ -904,7 +904,19 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     </Button>
                   </div>
                   
-                  <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    <Field label="Categoria">
+                      <Select value={loc.categoria || "Geral"} onValueChange={(v) => updateOutroLocal(i, { categoria: v })}>
+                        <SelectTrigger><SelectValue placeholder="Categoria" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Geral">Geral</SelectItem>
+                          <SelectItem value="Hospital de Referência">Hospital de Referência</SelectItem>
+                          <SelectItem value="Restaurante (Hotel)">Restaurante (Hotel)</SelectItem>
+                          <SelectItem value="Restaurante (Teatro)">Restaurante (Teatro)</SelectItem>
+                          <SelectItem value="Shopping Center">Shopping Center</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
                     <Field label="Nome do Local *">
                       <Input
                         value={loc.nome}
@@ -919,7 +931,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                         placeholder="Ex: (51) 3224-1000"
                       />
                     </Field>
-                    <div className="sm:col-span-2">
+                    <div className="sm:col-span-3">
                       <Field label="Endereço Completo *">
                         <Input
                           value={loc.endereco}

@@ -232,8 +232,8 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
     lat: number;
     lon: number;
     distance: number;
-    type: "pharmacy" | "supermarket" | "hospital";
-    assoc: "hotel" | "theater" | "general";
+    type: "pharmacy" | "supermarket" | "hospital" | "restaurant" | "shopping";
+    assoc: "hotel" | "theater" | "general" | string;
   }
 
   interface CustomPlaceDetail {
@@ -242,6 +242,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
     lat: number;
     lon: number;
     distance: number;
+    categoria?: string;
   }
 
   const [opState, setOpState] = useState<{
@@ -1242,11 +1243,11 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                     <div className="grid grid-cols-2 gap-4">
                       {opState.places.map((p, idx) => (
                         <div key={idx} className="bg-white border border-slate-200 rounded-xl p-3 shadow-sm break-inside-auto relative overflow-hidden">
-                          <div className={`absolute top-0 left-0 w-1.5 h-full ${p.type === "pharmacy" ? "bg-[#10b981]" : p.type === "supermarket" ? "bg-[#f59e0b]" : "bg-[#8b5cf6]"}`} />
+                          <div className={`absolute top-0 left-0 w-1.5 h-full ${p.type === "pharmacy" ? "bg-[#10b981]" : p.type === "supermarket" ? "bg-[#f59e0b]" : p.type === "restaurant" ? "bg-rose-500" : p.type === "shopping" ? "bg-sky-500" : "bg-[#8b5cf6]"}`} />
                           <div className="pl-1.5">
                             <div className="flex items-center gap-1.5 mb-1">
                               <span className="text-[9px] uppercase tracking-wider text-slate-400 font-bold">
-                                {p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Mercado" : "Hospital"} {p.assoc === "hotel" ? "(Perto do Hotel)" : p.assoc === "theater" ? "(Perto do Teatro)" : ""}
+                                {p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Mercado" : p.type === "restaurant" ? "Restaurante" : p.type === "shopping" ? "Shopping" : "Hospital"} {p.assoc === "hotel" ? "(Perto do Hotel)" : p.assoc === "theater" ? "(Perto do Teatro)" : ""}
                               </span>
                             </div>
                             <h4 className="font-bold text-slate-800 text-xs mb-0.5">{p.name}</h4>
@@ -2310,8 +2311,8 @@ interface PlaceDetail {
   lat: number;
   lon: number;
   distance: number;
-  type: "pharmacy" | "supermarket" | "hospital";
-  assoc: "hotel" | "theater" | "general";
+  type: "pharmacy" | "supermarket" | "hospital" | "restaurant" | "shopping";
+  assoc: "hotel" | "theater" | "general" | string;
 }
 
 function OperationalMap({
@@ -2434,16 +2435,18 @@ function OperationalMap({
       }
 
       places.forEach(p => {
-        let color = "#10b981"; // Green for Pharmacy
-        if (p.type === "supermarket") color = "#f59e0b"; // Yellow/Orange
-        if (p.type === "hospital") color = "#8b5cf6"; // Purple
+        let color = "#10b981";
+        if (p.type === "supermarket") color = "#f59e0b";
+        if (p.type === "hospital") color = "#8b5cf6";
+        if (p.type === "restaurant") color = "#f43f5e";
+        if (p.type === "shopping") color = "#0ea5e9";
 
         markersToRender.push({
           lat: p.lat,
           lon: p.lon,
           color,
           type: p.type,
-          popupHtml: `<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : "Hospital"}`,
+          popupHtml: `<b>${p.name}</b><br/>${p.type === "pharmacy" ? "Farmácia" : p.type === "supermarket" ? "Supermercado" : p.type === "restaurant" ? "Restaurante" : p.type === "shopping" ? "Shopping" : "Hospital"}`,
         });
       });
 
@@ -2517,6 +2520,8 @@ function OperationalMap({
   const getTypeLabel = (t: string) => {
     if (t === "pharmacy") return "Farmácia";
     if (t === "supermarket") return "Supermercado / Hortifruti";
+    if (t === "restaurant") return "Restaurante";
+    if (t === "shopping") return "Shopping Center";
     return "Hospital de referência";
   };
 
@@ -2549,7 +2554,7 @@ function OperationalMap({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className={`size-2.5 rounded-full ${
-                  p.type === "pharmacy" ? "bg-[#10b981]" : p.type === "supermarket" ? "bg-[#f59e0b]" : "bg-[#8b5cf6]"
+                  p.type === "pharmacy" ? "bg-[#10b981]" : p.type === "supermarket" ? "bg-[#f59e0b]" : p.type === "restaurant" ? "bg-rose-500" : p.type === "shopping" ? "bg-sky-500" : "bg-[#8b5cf6]"
                 }`} />
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                   {getTypeLabel(p.type)} {getAssocLabel(p)}

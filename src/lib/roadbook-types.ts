@@ -121,6 +121,7 @@ export type OutroLocal = {
   telefone?: string;
   site?: string;
   observacoes?: string;
+  categoria?: "Hospital de Referência" | "Restaurante (Hotel)" | "Restaurante (Teatro)" | "Shopping Center" | "Geral" | string;
   fotos?: Foto[];
 };
 
