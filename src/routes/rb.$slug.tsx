@@ -367,43 +367,63 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       const autoFields = r.automacoes || {};
 
       const geocodeEssential = async (endereco: string, name: string, type: "hospital" | "restaurant" | "shopping", assoc: string) => {
-        if (!endereco || !endereco.trim()) return;
-        try {
-          const q = getGeocodeQuery(endereco);
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
-            headers: { "User-Agent": "RoadBookApp/1.0" }
-          });
-          const data = await res.json();
-          if (data && data[0]) {
-            const locLat = parseFloat(data[0].lat);
-            const locLon = parseFloat(data[0].lon);
-            const baseCoords = hCoords || tCoords;
-            const dist = baseCoords ? getHaversineDistance(baseCoords[0], baseCoords[1], locLat, locLon) : 0;
-            foundPlaces.push({
-              name: name || (type === "hospital" ? "Hospital" : type === "restaurant" ? "Restaurante" : "Shopping"),
-              address: endereco,
-              lat: locLat,
-              lon: locLon,
-              distance: dist,
-              type,
-              assoc,
+        if (!endereco && !name) return; // skip if completely empty
+
+        let locLat: number | undefined;
+        let locLon: number | undefined;
+
+        if (endereco && endereco.trim()) {
+          try {
+            const q = getGeocodeQuery(endereco);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+              headers: { "User-Agent": "RoadBookApp/1.0" }
             });
+            const data = await res.json();
+            if (data && data[0]) {
+              locLat = parseFloat(data[0].lat);
+              locLon = parseFloat(data[0].lon);
+            }
+          } catch {}
+          await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+
+        // Fallback coordinates se não achar no mapa ou não preencheu endereço
+        if (locLat === undefined || locLon === undefined) {
+          const fallbackCoords = assoc === "hotel" ? hCoords : assoc === "theater" ? tCoords : (hCoords || tCoords);
+          if (fallbackCoords) {
+            locLat = fallbackCoords[0];
+            locLon = fallbackCoords[1];
+          } else {
+            locLat = 0;
+            locLon = 0;
           }
-        } catch {}
-        await new Promise((resolve) => setTimeout(resolve, 200));
+        }
+
+        const baseCoords = hCoords || tCoords;
+        const dist = baseCoords ? getHaversineDistance(baseCoords[0], baseCoords[1], locLat, locLon) : 0;
+        
+        foundPlaces.push({
+          name: name || (type === "hospital" ? "Hospital" : type === "restaurant" ? "Restaurante" : "Shopping"),
+          address: endereco || "Endereço não localizado no mapa",
+          lat: locLat,
+          lon: locLon,
+          distance: dist,
+          type,
+          assoc,
+        });
       };
 
-      if (autoFields.hospital_referencia_endereco) {
-        await geocodeEssential(autoFields.hospital_referencia_endereco, autoFields.hospital_referencia_nome || "", "hospital", "general");
+      if (autoFields.hospital_referencia_endereco || autoFields.hospital_referencia_nome) {
+        await geocodeEssential(autoFields.hospital_referencia_endereco || "", autoFields.hospital_referencia_nome || "", "hospital", "general");
       }
-      if (autoFields.restaurante_hotel_endereco) {
-        await geocodeEssential(autoFields.restaurante_hotel_endereco, autoFields.restaurante_hotel_nome || "", "restaurant", "hotel");
+      if (autoFields.restaurante_hotel_endereco || autoFields.restaurante_hotel_nome) {
+        await geocodeEssential(autoFields.restaurante_hotel_endereco || "", autoFields.restaurante_hotel_nome || "", "restaurant", "hotel");
       }
-      if (autoFields.restaurante_teatro_endereco) {
-        await geocodeEssential(autoFields.restaurante_teatro_endereco, autoFields.restaurante_teatro_nome || "", "restaurant", "theater");
+      if (autoFields.restaurante_teatro_endereco || autoFields.restaurante_teatro_nome) {
+        await geocodeEssential(autoFields.restaurante_teatro_endereco || "", autoFields.restaurante_teatro_nome || "", "restaurant", "theater");
       }
-      if (autoFields.shopping_endereco) {
-        await geocodeEssential(autoFields.shopping_endereco, autoFields.shopping_nome || "", "shopping", "general");
+      if (autoFields.shopping_endereco || autoFields.shopping_nome) {
+        await geocodeEssential(autoFields.shopping_endereco || "", autoFields.shopping_nome || "", "shopping", "general");
       }
 
       if (cancel) return;
