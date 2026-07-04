@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TurneSlugRouteImport } from './routes/turne.$slug'
 import { Route as TurneCompletaSlugRouteImport } from './routes/turne-completa.$slug'
 import { Route as RbSlugRouteImport } from './routes/rb.$slug'
+import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -52,6 +53,11 @@ const TurneCompletaSlugRoute = TurneCompletaSlugRouteImport.update({
 const RbSlugRoute = RbSlugRouteImport.update({
   id: '/rb/$slug',
   path: '/rb/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MotoristaPrintSlugRoute = MotoristaPrintSlugRouteImport.update({
+  id: '/motorista-print/$slug',
+  path: '/motorista-print/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
@@ -160,6 +169,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/publico'
     | '/users'
+    | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
     | '/turne/$slug'
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/publico'
     | '/users'
+    | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
     | '/turne/$slug'
@@ -193,6 +204,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/publico'
     | '/_authenticated/users'
+    | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
     | '/turne/$slug'
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  MotoristaPrintSlugRoute: typeof MotoristaPrintSlugRoute
   RbSlugRoute: typeof RbSlugRoute
   TurneCompletaSlugRoute: typeof TurneCompletaSlugRoute
   TurneSlugRoute: typeof TurneSlugRoute
@@ -255,6 +268,13 @@ declare module '@tanstack/react-router' {
       path: '/rb/$slug'
       fullPath: '/rb/$slug'
       preLoaderRoute: typeof RbSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/motorista-print/$slug': {
+      id: '/motorista-print/$slug'
+      path: '/motorista-print/$slug'
+      fullPath: '/motorista-print/$slug'
+      preLoaderRoute: typeof MotoristaPrintSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users': {
@@ -354,6 +374,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  MotoristaPrintSlugRoute: MotoristaPrintSlugRoute,
   RbSlugRoute: RbSlugRoute,
   TurneCompletaSlugRoute: TurneCompletaSlugRoute,
   TurneSlugRoute: TurneSlugRoute,

@@ -1,4 +1,4 @@
-﻿import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/motorista-print/$slug")({
 function fmtDate(d: string | null | undefined) {
   if (!d) return "";
   const [y, m, day] = d.split("-");
-  return ${day}//;
+  return `${day}/${m}/${y}`;
 }
 
 function IsolatedPrintPage() {
@@ -49,9 +49,25 @@ function IsolatedPrintPage() {
 
   return (
     <div style={{ fontFamily: "Arial, Helvetica, sans-serif", color: "black", backgroundColor: "white", padding: "20px" }}>
-      <style>{\
-        @page { margin: 1cm; }
-        body { margin: 0; background-color: white !important; }
+      <style>{`
+        @page { margin: 0; }
+        body { 
+          margin: 0; 
+          padding: 1.5cm; /* Compensa a margem 0 da page */
+          background-color: white !important; 
+        }
+        @media print {
+          @page {
+            margin: 0;
+            size: auto;
+          }
+          body {
+            margin: 0;
+            padding: 1.5cm;
+          }
+          #print-header { display: block; position: fixed; top: 1cm; left: 1.5cm; right: 1.5cm; font-size: 10px; color: #888; border-bottom: 1px solid #ccc; }
+          #print-footer { display: block; position: fixed; bottom: 1cm; left: 1.5cm; right: 1.5cm; font-size: 10px; color: #888; border-top: 1px solid #ccc; text-align: center; }
+        }
         .motorista-table {
           width: 100%;
           border-collapse: collapse;
@@ -84,7 +100,7 @@ function IsolatedPrintPage() {
           page-break-after: avoid;
           break-after: avoid;
         }
-      \}</style>
+      `}</style>
       
       {/* HEADER LIMPO E SECO */}
       <div style={{ borderBottom: '2px solid black', paddingBottom: '15px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -98,10 +114,10 @@ function IsolatedPrintPage() {
           <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#555', textTransform: 'uppercase', letterSpacing: '2px' }}>Roteiro Motorista</p>
           <h1 style={{ margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900', textTransform: 'uppercase' }}>{rb.espetaculo}</h1>
           <p style={{ margin: 0, fontSize: '14px', color: '#333' }}>
-            {rb.cidade && <span>{rb.cidade}{rb.estado ? \/\\ : ""}</span>}
+            {rb.cidade && <span>{rb.cidade}{rb.estado ? `/${rb.estado}` : ""}</span>}
             {rb.cidade && (rb.data_inicial || rb.data_final) && <span> • </span>}
             {(rb.data_inicial || rb.data_final) && (
-              <span>{fmtDate(rb.data_inicial)} {rb.data_final && rb.data_final !== rb.data_inicial && \ a \\}</span>
+              <span>{fmtDate(rb.data_inicial)} {rb.data_final && rb.data_final !== rb.data_inicial && ` a ${fmtDate(rb.data_final)}`}</span>
             )}
           </p>
         </div>

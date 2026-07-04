@@ -1798,10 +1798,12 @@ function PrintHeader({ title, isFirstPage = false, logoUrl }: { title: string; i
 function PrintFooter() {
   return (
     <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-200/60 pt-3 mt-6">
-      <span className="font-sans font-semibold tracking-wider uppercase text-slate-400">Road Book · Seven Produções Artísticas</span>
-      <div className="flex items-center justify-center relative size-7 shrink-0">
-        <AppleNumber className="absolute inset-0 size-full opacity-90 drop-shadow-sm" />
-        <span className="relative z-10 text-[10px] font-bold text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] leading-none pt-[3px] print-page-number"></span>
+      <div className="flex flex-col gap-0.5">
+        <strong className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Viagens e Turnês</strong>
+        <span className="font-sans font-medium text-slate-400">Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
+      </div>
+      <div className="flex items-center justify-center relative size-7 shrink-0 bg-slate-200 rounded-full">
+        <span className="relative z-10 text-[10px] font-bold text-slate-600 leading-none print-page-number"></span>
       </div>
     </div>
   );
