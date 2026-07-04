@@ -282,28 +282,36 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
 
       let hCoords: [number, number] | null = null;
       let tCoords: [number, number] | null = null;
+      const autoFields = r.automacoes || {};
+      if (autoFields.map_coords?.hotel) {
+        hCoords = autoFields.map_coords.hotel as [number, number];
+      } else {
+        try {
+          if (hotelAddr?.trim()) {
+            const q = getGeocodeQuery(hotelAddr);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+              headers: { "User-Agent": "RoadBookApp/1.0" }
+            });
+            const data = await res.json();
+            if (data && data[0]) hCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+          }
+        } catch {}
+      }
 
-      try {
-        if (hotelAddr?.trim()) {
-          const q = getGeocodeQuery(hotelAddr);
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
-            headers: { "User-Agent": "RoadBookApp/1.0" }
-          });
-          const data = await res.json();
-          if (data && data[0]) hCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        }
-      } catch {}
-
-      try {
-        if (teatroAddr?.trim()) {
-          const q = getGeocodeQuery(teatroAddr);
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
-            headers: { "User-Agent": "RoadBookApp/1.0" }
-          });
-          const data = await res.json();
-          if (data && data[0]) tCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        }
-      } catch {}
+      if (autoFields.map_coords?.teatro) {
+        tCoords = autoFields.map_coords.teatro as [number, number];
+      } else {
+        try {
+          if (teatroAddr?.trim()) {
+            const q = getGeocodeQuery(teatroAddr);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+              headers: { "User-Agent": "RoadBookApp/1.0" }
+            });
+            const data = await res.json();
+            if (data && data[0]) tCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+          }
+        } catch {}
+      }
 
       if (cancel) return;
 
@@ -363,16 +371,16 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         return [];
       };
 
-      
-      const autoFields = r.automacoes || {};
-
-      const geocodeEssential = async (endereco: string, name: string, type: "hospital" | "restaurant" | "shopping", assoc: string) => {
+      const geocodeEssential = async (endereco: string, name: string, type: "hospital" | "restaurant" | "shopping", assoc: string, mapKey: string) => {
         if (!endereco && !name) return; // skip if completely empty
 
         let locLat: number | undefined;
         let locLon: number | undefined;
 
-        if (endereco && endereco.trim()) {
+        if (autoFields.map_coords?.[mapKey]) {
+          locLat = autoFields.map_coords[mapKey][0];
+          locLon = autoFields.map_coords[mapKey][1];
+        } else if (endereco && endereco.trim()) {
           try {
             const q = getGeocodeQuery(endereco);
             const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
@@ -414,16 +422,16 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       };
 
       if (autoFields.hospital_referencia_endereco || autoFields.hospital_referencia_nome) {
-        await geocodeEssential(autoFields.hospital_referencia_endereco || "", autoFields.hospital_referencia_nome || "", "hospital", "general");
+        await geocodeEssential(autoFields.hospital_referencia_endereco || "", autoFields.hospital_referencia_nome || "", "hospital", "general", "hospital_referencia");
       }
       if (autoFields.restaurante_hotel_endereco || autoFields.restaurante_hotel_nome) {
-        await geocodeEssential(autoFields.restaurante_hotel_endereco || "", autoFields.restaurante_hotel_nome || "", "restaurant", "hotel");
+        await geocodeEssential(autoFields.restaurante_hotel_endereco || "", autoFields.restaurante_hotel_nome || "", "restaurant", "hotel", "restaurante_hotel");
       }
       if (autoFields.restaurante_teatro_endereco || autoFields.restaurante_teatro_nome) {
-        await geocodeEssential(autoFields.restaurante_teatro_endereco || "", autoFields.restaurante_teatro_nome || "", "restaurant", "theater");
+        await geocodeEssential(autoFields.restaurante_teatro_endereco || "", autoFields.restaurante_teatro_nome || "", "restaurant", "theater", "restaurante_teatro");
       }
       if (autoFields.shopping_endereco || autoFields.shopping_nome) {
-        await geocodeEssential(autoFields.shopping_endereco || "", autoFields.shopping_nome || "", "shopping", "general");
+        await geocodeEssential(autoFields.shopping_endereco || "", autoFields.shopping_nome || "", "shopping", "general", "shopping");
       }
 
       if (cancel) return;
@@ -447,30 +455,42 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       // Geocode custom "Outros Locais"
       const customPlaces: CustomPlaceDetail[] = [];
       const outrosLocais = r.automacoes?.outros_locais ?? [];
-      for (const loc of outrosLocais) {
+      for (let i = 0; i < outrosLocais.length; i++) {
+        const loc = outrosLocais[i];
         if (loc.endereco?.trim()) {
-          try {
-            const q = getGeocodeQuery(loc.endereco);
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
-              headers: { "User-Agent": "RoadBookApp/1.0" }
-            });
-            const data = await res.json();
-            if (data && data[0]) {
-              const locLat = parseFloat(data[0].lat);
-              const locLon = parseFloat(data[0].lon);
-              const baseCoords = hCoords || tCoords;
-              const dist = baseCoords ? getHaversineDistance(baseCoords[0], baseCoords[1], locLat, locLon) : 0;
-              customPlaces.push({
-                name: loc.nome || "Local",
-                address: loc.endereco,
-                lat: locLat,
-                lon: locLon,
-                distance: dist,
-                categoria: loc.categoria,
+          let locLat: number | undefined;
+          let locLon: number | undefined;
+
+          if (autoFields.map_coords?.[`outro_local_${i}`]) {
+            locLat = autoFields.map_coords[`outro_local_${i}`][0];
+            locLon = autoFields.map_coords[`outro_local_${i}`][1];
+          } else {
+            try {
+              const q = getGeocodeQuery(loc.endereco);
+              const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, {
+                headers: { "User-Agent": "RoadBookApp/1.0" }
               });
-            }
-          } catch {}
-          await new Promise((resolve) => setTimeout(resolve, 200));
+              const data = await res.json();
+              if (data && data[0]) {
+                locLat = parseFloat(data[0].lat);
+                locLon = parseFloat(data[0].lon);
+              }
+            } catch {}
+            await new Promise((resolve) => setTimeout(resolve, 200));
+          }
+
+          if (locLat !== undefined && locLon !== undefined) {
+            const baseCoords = hCoords || tCoords;
+            const dist = baseCoords ? getHaversineDistance(baseCoords[0], baseCoords[1], locLat, locLon) : 0;
+            customPlaces.push({
+              name: loc.nome || "Local",
+              address: loc.endereco,
+              lat: locLat,
+              lon: locLon,
+              distance: dist,
+              categoria: loc.categoria,
+            });
+          }
         }
       }
 

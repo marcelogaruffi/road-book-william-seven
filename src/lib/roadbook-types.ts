@@ -128,6 +128,7 @@ export type OutroLocal = {
 export type Automacoes = {
   timeline_overrides?: Record<string, string>;
   outros_locais?: OutroLocal[];
+  map_coords?: Record<string, [number, number]>;
   hospital_referencia_nome?: string;
   hospital_referencia_endereco?: string;
   restaurante_hotel_nome?: string;

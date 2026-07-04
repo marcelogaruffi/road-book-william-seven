@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { LocationPickerMap } from "./LocationPickerMap";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
 import {
   Trash2, Plus, Upload, FileText, ExternalLink, Plane, Clock,
   MapPin, Hotel, Theater, CalendarDays, Contact, Navigation, Shield, LayoutList, Palette, Settings2, FolderOpen, Sparkles
