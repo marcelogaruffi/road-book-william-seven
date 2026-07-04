@@ -47,9 +47,12 @@ function ThemeToggle() {
 
   useEffect(() => {
     const saved = localStorage.getItem("rb-theme");
-    if (saved === "dark" || (!saved && document.documentElement.classList.contains("dark"))) {
+    if (saved === "dark") {
       setTheme("dark");
       document.documentElement.classList.add("dark");
+    } else {
+      setTheme("light");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
@@ -136,7 +139,7 @@ function DriverPrintPage() {
   }, [rb.programacao]);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-background transition-colors duration-500 font-sans print:bg-white print:min-h-0 relative print:transition-none">
+    <div className="min-h-screen bg-slate-50 dark:bg-background font-sans print:bg-white print:min-h-0 relative">
       <style>{`
         @media print {
           @page { margin: 0; }
@@ -278,8 +281,6 @@ function DriverPrintPage() {
           
           /* Força as divs para não quebrarem bizarramente no meio da página */
           .motorista-day-section {
-            page-break-inside: avoid;
-            break-inside: avoid;
             margin-bottom: 2rem !important;
           }
           .motorista-item {
@@ -288,14 +289,12 @@ function DriverPrintPage() {
           }
           
           .motorista-footer {
-            position: fixed;
-            bottom: 0;
-            width: 100%;
             text-align: center;
             font-size: 9px;
             color: #94a3b8 !important; /* slate-400 */
             border-top: 1px solid #e2e8f0;
             padding-top: 0.5rem;
+            margin-top: 2rem;
           }
         }
       `}</style>
