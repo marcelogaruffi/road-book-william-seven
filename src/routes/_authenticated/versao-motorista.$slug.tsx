@@ -224,129 +224,131 @@ function DriverPrintPage() {
       )}
 
       {/* =========================================================================
-          VIEW DE IMPRESSÃO (Novo PDF construído do ZERO - 100% à prova de tema escuro)
+          VIEW DE IMPRESSÃO (NOVO MODELO TABULAR 100% SECO)
           ========================================================================= */}
       <style>{`
         @media print {
           .motorista-print-wrapper {
             display: block !important;
-            color: #0f172a !important; /* slate-900 */
+            color: black !important;
             background-color: white !important;
-            font-family: system-ui, -apple-system, sans-serif !important;
+            font-family: Arial, Helvetica, sans-serif !important;
             padding: 0 !important;
             margin: 0 !important;
             width: 100% !important;
             max-width: none !important;
           }
           
-          /* Força as divs para não quebrarem bizarramente no meio da página */
-          .motorista-day-section {
-            margin-bottom: 2rem !important;
+          .motorista-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
           }
-          .motorista-item {
+          .motorista-table th, .motorista-table td {
+            border-bottom: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
             page-break-inside: avoid;
             break-inside: avoid;
           }
-          
-          .motorista-footer {
-            text-align: center;
-            font-size: 9px;
-            color: #94a3b8 !important; /* slate-400 */
-            border-top: 1px solid #e2e8f0;
-            padding-top: 0.5rem;
-            margin-top: 2rem;
+          .motorista-table th {
+            background-color: #f0f0f0 !important;
+            font-weight: bold;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .day-header {
+            background-color: #333 !important;
+            color: white !important;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 30px;
+            margin-bottom: 0px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            page-break-after: avoid;
+            break-after: avoid;
           }
         }
       `}</style>
       
       <div className="hidden print:block motorista-print-wrapper p-8">
         
-        {/* HEADER LIMPO E MODERNO DO PAPEL */}
-        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-6 mb-10" style={{ borderBottomColor: '#0f172a' }}>
-          <img src="/logo-seven.png" alt="Seven Produções" className="h-16 w-auto object-contain" />
-          <div className="text-center flex-1 mx-4">
-            <p className="uppercase tracking-[0.3em] text-slate-500 text-xs font-bold mb-1" style={{ color: '#64748b' }}>Roteiro de viagem Motorista</p>
-            <h1 className="text-3xl font-black tracking-tight uppercase text-slate-900 mb-2" style={{ color: '#0f172a' }}>{rb.espetaculo}</h1>
-            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-base text-slate-700 font-medium" style={{ color: '#334155' }}>
-              {rb.cidade && <span className="flex items-center gap-1.5"><MapPin className="size-4" />{rb.cidade}{rb.estado ? `/${rb.estado}` : ""}</span>}
-              {(rb.data_inicial || rb.data_final) && (
-                <span className="flex items-center gap-1.5">
-                  <CalendarDays className="size-4" />
-                  {fmtDate(rb.data_inicial)} {rb.data_final && rb.data_final !== rb.data_inicial && ` a ${fmtDate(rb.data_final)}`}
-                </span>
-              )}
-            </div>
-          </div>
+        {/* HEADER LIMPO E SECO */}
+        <div style={{ borderBottom: '2px solid black', paddingBottom: '15px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           {rb.espetaculo_logo_url ? (
-            <div className="ml-4 border-l-2 border-slate-200 pl-4" style={{ borderLeftColor: '#e2e8f0' }}>
-              <img src={rb.espetaculo_logo_url} alt={rb.espetaculo} className="h-16 w-auto object-contain" />
-            </div>
+            <img src={rb.espetaculo_logo_url} alt={rb.espetaculo} style={{ height: '60px', objectFit: 'contain' }} />
           ) : (
-            <div className="w-16"></div>
+            <div style={{ width: '60px' }}></div>
           )}
+          
+          <div style={{ textAlign: 'center', flex: 1, padding: '0 20px' }}>
+            <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#555', textTransform: 'uppercase', letterSpacing: '2px' }}>Roteiro Motorista</p>
+            <h1 style={{ margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900', textTransform: 'uppercase' }}>{rb.espetaculo}</h1>
+            <p style={{ margin: 0, fontSize: '14px', color: '#333' }}>
+              {rb.cidade && <span>{rb.cidade}{rb.estado ? `/${rb.estado}` : ""}</span>}
+              {rb.cidade && (rb.data_inicial || rb.data_final) && <span> • </span>}
+              {(rb.data_inicial || rb.data_final) && (
+                <span>{fmtDate(rb.data_inicial)} {rb.data_final && rb.data_final !== rb.data_inicial && ` a ${fmtDate(rb.data_final)}`}</span>
+              )}
+            </p>
+          </div>
+          
+          <img src="/logo-seven.png" alt="Seven" style={{ height: '50px', objectFit: 'contain' }} />
         </div>
 
-        {/* CONTEÚDO DO PAPEL */}
-        <div className="mb-12">
+        {/* CONTEÚDO TABULAR SECO */}
+        <div style={{ paddingBottom: '40px' }}>
           {dayGroups.length === 0 ? (
-            <p className="text-slate-500 italic text-center">Nenhuma programação cadastrada.</p>
+            <p style={{ textAlign: 'center', fontStyle: 'italic', color: '#666' }}>Nenhuma programação cadastrada.</p>
           ) : (
-            <div className="space-y-10">
-              {dayGroups.map((group, idx) => (
-                <div key={idx} className="motorista-day-section">
-                  {/* Título do Dia (Barra Escura) */}
-                  <div className="flex items-center justify-between p-3 rounded mb-5" style={{ backgroundColor: '#0f172a', color: 'white', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-                    <span className="font-bold text-lg">{fmtDate(group.data) || "Sem data"}</span>
-                    <span className="text-sm font-medium opacity-90">{getDaySummary(group.itens)}</span>
-                  </div>
-                  
-                  {/* Linha do Tempo Estilizada */}
-                  <div className="pl-2 ml-2 border-l-2 border-slate-300 space-y-4" style={{ borderLeftColor: '#cbd5e1' }}>
-                    {group.itens.map((p, i) => {
-                      return (
-                        <div key={i} className="relative pl-6 pb-2 motorista-item">
-                          {/* Ponto da Linha */}
-                          <div className="absolute left-[-5px] top-1.5 size-2 rounded-full border-2 border-white" style={{ backgroundColor: '#94a3b8', borderColor: 'white' }}></div>
-                          
-                          <div className="flex items-baseline gap-3 mb-1">
-                            <div className="font-mono text-sm font-bold min-w-[120px]" style={{ color: '#475569' }}>
-                              {progHora(p)}
+            dayGroups.map((group, idx) => (
+              <div key={idx}>
+                <div className="day-header">
+                  {fmtDate(group.data) || "Sem data"} <span style={{ opacity: 0.8, fontSize: '12px', marginLeft: '10px', fontWeight: 'normal' }}>{getDaySummary(group.itens)}</span>
+                </div>
+                
+                <table className="motorista-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '15%' }}>Horário</th>
+                      <th style={{ width: '15%' }}>Tipo</th>
+                      <th style={{ width: '70%' }}>Detalhes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.itens.map((p, i) => (
+                      <tr key={i}>
+                        <td style={{ fontWeight: 'bold', fontSize: '16px' }}>{progHora(p)}</td>
+                        <td style={{ fontSize: '12px', textTransform: 'uppercase' }}>{p.tipo || "Outro"}</td>
+                        <td>
+                          <div style={{ fontWeight: 'bold', fontSize: '16px', marginBottom: '4px' }}>{progTitle(p)}</div>
+                          {p.local && (
+                            <div style={{ fontSize: '14px', color: '#333', marginBottom: '6px' }}>
+                              <span style={{ fontWeight: 'bold' }}>Local:</span> {p.local}
                             </div>
-                            <div className="font-bold text-base" style={{ color: '#0f172a' }}>
-                              {progTitle(p)}
-                            </div>
-                          </div>
-                          
-                          <div className="flex flex-wrap gap-2 items-center mt-1 mb-2">
-                            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded border" style={{ borderColor: 'currentColor', color: '#334155' }}>
-                              {p.tipo || "Outro"}
-                            </span>
-                            {p.local && <span className="text-sm font-medium flex items-center gap-1" style={{ color: '#475569' }}>📍 {p.local}</span>}
-                          </div>
-                          
+                          )}
                           {p.observacao && (
-                            <div className="text-sm mt-1.5 p-2 rounded whitespace-pre-wrap leading-snug" style={{ backgroundColor: '#f8fafc', color: '#334155', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                            <div style={{ fontSize: '13px', color: '#444', backgroundColor: '#f9f9f9', padding: '8px', borderLeft: '3px solid #ccc', whiteSpace: 'pre-wrap' }}>
                               {p.observacao}
                             </div>
                           )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))
           )}
         </div>
 
-        {/* FOOTER FIXO (Impresso no rodapé) */}
-        <div className="motorista-footer">
-          <span className="block font-sans font-bold tracking-widest uppercase mb-1" style={{ color: '#64748b' }}>
-            Gestão de Viagens e Turnês
-          </span>
-          <span className="block font-sans font-medium" style={{ color: '#94a3b8' }}>
-            Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
-          </span>
+        {/* FOOTER NO FINAL DO ARQUIVO (NÃO FIXO) */}
+        <div style={{ textAlign: 'center', fontSize: '10px', color: '#666', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
+          <strong style={{ display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Gestão de Viagens e Turnês</strong>
+          Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
         </div>
       </div>
     </div>
