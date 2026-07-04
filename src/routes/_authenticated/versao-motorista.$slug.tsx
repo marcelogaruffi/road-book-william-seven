@@ -42,45 +42,6 @@ function AppleNumber({ className = "size-8" }: { className?: string }) {
   );
 }
 
-function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("rb-theme");
-    if (saved === "dark") {
-      setTheme("dark");
-      document.documentElement.classList.add("dark");
-    } else {
-      setTheme("light");
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
-
-  const toggle = () => {
-    if (theme === "light") {
-      document.documentElement.classList.add("dark");
-      setTheme("dark");
-      localStorage.setItem("rb-theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      setTheme("light");
-      localStorage.setItem("rb-theme", "light");
-    }
-  };
-
-  return (
-    <button 
-      onClick={toggle}
-      className="fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800 shadow-lg text-sm font-bold text-slate-600 dark:text-slate-300 hover:text-primary transition-all no-print"
-    >
-      {theme === "light" ? (
-        <><Moon className="size-4" /> Modo Escuro</>
-      ) : (
-        <><Sun className="size-4" /> Modo Claro</>
-      )}
-    </button>
-  );
-}
 
 function fmtDate(d: string | null | undefined) {
   if (!d) return "";
@@ -156,7 +117,6 @@ function DriverPrintPage() {
           ========================================================================= */}
       {!isPrinting && (
         <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <ThemeToggle />
         
         {/* Banner Superior Estilo rb.$slug.tsx */}
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-8 sm:p-10 mb-8 shadow-xl relative overflow-hidden text-center">
