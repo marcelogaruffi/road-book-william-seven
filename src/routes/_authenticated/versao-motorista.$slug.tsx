@@ -119,7 +119,7 @@ function DriverPrintPage() {
         <div className="relative z-10 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         
         {/* Banner Superior Estilo rb.$slug.tsx */}
-        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-8 sm:p-10 mb-8 shadow-xl relative overflow-hidden text-center">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-10 mb-8 shadow-xl relative overflow-hidden text-center">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-purple-500 to-primary"></div>
           
           <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200/60 dark:border-slate-800/60">
@@ -176,7 +176,7 @@ function DriverPrintPage() {
             </div>
           ) : (
             dayGroups.map((group, idx) => (
-              <div key={idx} className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200/60 dark:border-slate-800/60 rounded-3xl overflow-hidden shadow-lg">
+              <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-lg">
                 <div className="bg-slate-100 dark:bg-slate-950 p-6 border-b border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
                   <h2 className="text-2xl font-black text-slate-800 dark:text-white flex items-center gap-3">
                     <CalendarDays className="size-6 text-primary" />
