@@ -370,7 +370,7 @@ function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label>Nível de Acesso</Label>
-              {editUser.role === 'dev' ? (
+              {editUser?.role === 'dev' ? (
                 <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
                   🔒 O nível do Desenvolvedor não pode ser modificado.
                 </div>
