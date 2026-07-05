@@ -1,3 +1,24 @@
+export type FinancasReceita = {
+  id?: string;
+  roadbook_id?: string;
+  contratante: string;
+  valor: number;
+  status: "pendente" | "recebido";
+  comprovante_url?: string;
+  created_at?: string;
+};
+
+export type FinancasDespesa = {
+  id?: string;
+  roadbook_id?: string;
+  tipo: "cache_equipe" | "aereo" | "van" | "diaria" | "deslocamento_extra" | "outro";
+  descricao: string;
+  valor: number;
+  status: "pendente" | "pago";
+  nota_fiscal_url?: string;
+  created_at?: string;
+};
+
 export type ProgItem = {
   data: string;
   hora_inicio: string;
@@ -145,6 +166,8 @@ export type Automacoes = {
     wifi?: string;
   };
   espetaculo_logo_url?: string;
+  financas_receitas?: FinancasReceita[];
+  financas_despesas?: FinancasDespesa[];
 };
 
 export type RoadbookData = {
@@ -192,6 +215,8 @@ export type RoadbookData = {
   voo_volta: Voo;
   automacoes: Automacoes;
   espetaculo_logo_url?: string;
+  financas_receitas?: FinancasReceita[];
+  financas_despesas?: FinancasDespesa[];
 };
 
 export const emptyRoadbook: RoadbookData = {
@@ -217,6 +242,8 @@ export const emptyRoadbook: RoadbookData = {
   voo_ida: { ...emptyVoo },
   voo_volta: { ...emptyVoo },
   automacoes: {},
+  financas_receitas: [],
+  financas_despesas: [],
 };
 
 export function rowToRoadbook(row: any): RoadbookData {
@@ -272,6 +299,8 @@ export function rowToRoadbook(row: any): RoadbookData {
     hotel_cafe_fim: ((row.automacoes as Automacoes)?.info_hotel?.cafe_fim) || "",
     hotel_wifi: ((row.automacoes as Automacoes)?.info_hotel?.wifi) || "",
     espetaculo_logo_url: (row.automacoes as Automacoes)?.espetaculo_logo_url || "",
+    financas_receitas: Array.isArray(row.financas_receitas) ? row.financas_receitas : [],
+    financas_despesas: Array.isArray(row.financas_despesas) ? row.financas_despesas : [],
   };
 }
 
