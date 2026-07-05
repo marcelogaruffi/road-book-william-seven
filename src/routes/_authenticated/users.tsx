@@ -262,12 +262,18 @@ function UsersPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <KeyRound className="size-4 text-primary" />
                           <span className="font-mono font-bold tracking-wider">{i.token}</span>
+                          {i.role && <Badge variant="outline" className="ml-2 text-xs">{i.role.toUpperCase()}</Badge>}
                         </div>
                         <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString()}</p>
                       </div>
-                      <Button variant="ghost" size="icon" onClick={() => copyToken(i.token)} className="rounded-full text-slate-400 hover:text-primary hover:bg-primary/10" title="Copiar Token">
-                        <Copy className="size-4" />
-                      </Button>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => copyToken(i.token)} className="rounded-full text-slate-400 hover:text-primary hover:bg-primary/10" title="Copiar Token">
+                          <Copy className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => deleteInvite(i.id)} className="rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50" title="Apagar Convite">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -364,22 +370,23 @@ function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label>Nível de Acesso</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
-                <div 
-                  onClick={() => setEditRole("user")}
-                  className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${editRole === 'user' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50'}`}
-                >
-                  <UserCheck className="size-6" />
-                  <span className="font-bold">Usuário Padrão</span>
+              {editUser.role === 'dev' ? (
+                <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
+                  🔒 O nível do Desenvolvedor não pode ser modificado.
                 </div>
-                <div 
-                  onClick={() => setEditRole("admin")}
-                  className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${editRole === 'admin' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50'}`}
+              ) : (
+                <select 
+                  value={editRole} 
+                  onChange={(e: any) => setEditRole(e.target.value)}
+                  className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/20"
                 >
-                  <ShieldAlert className="size-6" />
-                  <span className="font-bold">Master Admin</span>
-                </div>
-              </div>
+                  <option value="admin">Administrador (Prod. Executiva)</option>
+                  <option value="produtor">Produtor</option>
+                  <option value="iluminador">Iluminador</option>
+                  <option value="motorista">Motorista</option>
+                  <option value="user">Usuário Padrão</option>
+                </select>
+              )}
             </div>
             <div className="flex gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setEditUser(null)} className="flex-1 h-12 rounded-xl font-bold">Cancelar</Button>
