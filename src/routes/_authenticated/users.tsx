@@ -82,6 +82,17 @@ function UsersPage() {
     setLoading(false);
   }
 
+  async function deleteInvite(id: string) {
+    if (!confirm("Tem certeza que deseja apagar este convite?")) return;
+    const { error } = await supabase.from('invites').delete().eq('id', id);
+    if (error) {
+      toast.error("Erro ao apagar convite: " + error.message);
+    } else {
+      toast.success("Convite apagado com sucesso!");
+      loadData();
+    }
+  }
+
   async function generateInvite() {
     const token = Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
     
