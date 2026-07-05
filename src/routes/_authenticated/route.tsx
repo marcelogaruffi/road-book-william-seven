@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Route as RouteIcon, 
-  Ticket, Settings, Sun, Moon, LogOut 
+  Ticket, Settings, Sun, Moon, LogOut, Wallet 
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -139,6 +139,15 @@ function AuthedLayout() {
                {sidebarOpen && <span>Público</span>}
              </Link>
           </Button>
+            {userRole === 'admin' && (
+              <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+                 <Link to="/financeiro">
+                   <Wallet className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                   {sidebarOpen && <span>Financeiro</span>}
+                 </Link>
+              </Button>
+            )}
+
           
           {user.email === 'marcelo.garuffi@gmail.com' && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
