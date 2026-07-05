@@ -163,9 +163,13 @@ function UsersPage() {
     }
   }
 
-  async function deleteUser(id: string) {
+  async function deleteUser(u: Profile) {
+    if (u.role === 'dev') {
+      toast.error("Você não pode deletar uma conta de Desenvolvedor.");
+      return;
+    }
     if (!confirm("Tem certeza que deseja remover este usuário? Ele perderá o acesso ao painel.")) return;
-    const { error } = await supabase.rpc('delete_user', { user_id: id });
+    const { error } = await supabase.rpc('delete_user', { user_id: u.id });
     if (error) {
       toast.error("Erro ao remover: " + error.message);
     } else {
