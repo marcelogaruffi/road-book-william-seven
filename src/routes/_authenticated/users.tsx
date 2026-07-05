@@ -358,6 +358,11 @@ function UsersPage() {
               <Label>Nome Completo</Label>
               <Input required value={editNome} onChange={(e) => setEditNome(e.target.value)} className="h-12 rounded-xl" />
             </div>
+
+            <div className="space-y-2">
+              <Label>E-mail de Acesso (Login)</Label>
+              <Input readOnly value={editUser?.email || "E-mail não registrado"} className="h-12 rounded-xl bg-slate-50 cursor-not-allowed text-slate-500" title="O e-mail de acesso não pode ser alterado por aqui" />
+            </div>
             
             <div className="space-y-2">
               <Label>Foto de Perfil (Avatar)</Label>
