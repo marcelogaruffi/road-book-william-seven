@@ -220,7 +220,6 @@ function UsersPage() {
                   onChange={(e: any) => setInviteRole(e.target.value)}
                   className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/20"
                 >
-                  <option value="dev">Desenvolvedor (Você)</option>
                   <option value="admin">Administrador (Prod. Executiva)</option>
                   <option value="produtor">Produtor</option>
                   <option value="iluminador">Iluminador</option>
