@@ -25,6 +25,7 @@ type Profile = {
   nome: string;
   telefone: string | null;
   foto_url: string | null;
+  email?: string | null;
   role: "dev" | "admin" | "produtor" | "iluminador" | "motorista" | "user";
 };
 
@@ -262,7 +263,12 @@ function UsersPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <KeyRound className="size-4 text-primary" />
                           <span className="font-mono font-bold tracking-wider">{i.token}</span>
-                          {i.role && <Badge variant="outline" className="ml-2 text-xs">{i.role.toUpperCase()}</Badge>}
+                          {i.role === "dev" && <Badge className="ml-2 text-xs bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">DESENVOLVEDOR</Badge>}
+                          {i.role === "admin" && <Badge className="ml-2 text-xs bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">MASTER ADMIN</Badge>}
+                          {i.role === "produtor" && <Badge className="ml-2 text-xs bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">PRODUTOR</Badge>}
+                          {i.role === "iluminador" && <Badge className="ml-2 text-xs bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">ILUMINADOR</Badge>}
+                          {i.role === "motorista" && <Badge className="ml-2 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">MOTORISTA</Badge>}
+                          {i.role === "user" && <Badge className="ml-2 text-xs bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">USUÁRIO PADRÃO</Badge>}
                         </div>
                         <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString()}</p>
                       </div>
@@ -301,7 +307,7 @@ function UsersPage() {
                         {u.nome[0].toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-lg text-slate-800 dark:text-white truncate">{u.nome}</h4>
                         {u.role === "dev" && <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">Desenvolvedor</Badge>}
@@ -311,7 +317,13 @@ function UsersPage() {
                         {u.role === "motorista" && <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">Motorista</Badge>}
                         {u.role === "user" && <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">Usuário Padrão</Badge>}
                       </div>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-0.5">{u.telefone || "Sem telefone"}</p>
+                      <div className="flex items-center gap-4 mt-1">
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium flex items-center gap-1">
+                          <Mail className="size-3.5" />
+                          {u.email || "Sem e-mail"}
+                        </p>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{u.telefone || "Sem telefone"}</p>
+                      </div>
                     </div>
                   </div>
                   
