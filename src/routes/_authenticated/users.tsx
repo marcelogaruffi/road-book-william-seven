@@ -304,7 +304,12 @@ function UsersPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-lg text-slate-800 dark:text-white truncate">{u.nome}</h4>
-                        {u.role === "admin" || u.role === "dev" && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Admin</Badge>}
+                        {u.role === "dev" && <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">Desenvolvedor</Badge>}
+                        {u.role === "admin" && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Master Admin</Badge>}
+                        {u.role === "produtor" && <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">Produtor</Badge>}
+                        {u.role === "iluminador" && <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">Iluminador</Badge>}
+                        {u.role === "motorista" && <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">Motorista</Badge>}
+                        {u.role === "user" && <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">Usuário Padrão</Badge>}
                       </div>
                       <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-0.5">{u.telefone || "Sem telefone"}</p>
                     </div>
@@ -370,7 +375,7 @@ function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label>Nível de Acesso</Label>
-              {editUser?.role === 'dev' ? (
+              {editUser?.role === 'dev' || editUser?.nome?.toLowerCase().includes('garuffi') ? (
                 <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
                   🔒 O nível do Desenvolvedor não pode ser modificado.
                 </div>
