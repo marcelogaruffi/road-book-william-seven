@@ -25,7 +25,7 @@ type Profile = {
   nome: string;
   telefone: string | null;
   foto_url: string | null;
-  role: "admin" | "user";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "motorista" | "user";
 };
 
 type Invite = {
@@ -52,9 +52,9 @@ function UsersPage() {
   const [editUser, setEditUser] = useState<Profile | null>(null);
   const [editNome, setEditNome] = useState("");
   const [editTelefone, setEditTelefone] = useState("");
-  const [editRole, setEditRole] = useState<"admin"|"user">("user");
+  const [editRole, setEditRole] = useState<any>("user");
   const [editFotoUrl, setEditFotoUrl] = useState<string | null>(null);
-  const [inviteRole, setInviteRole] = useState<'user'|'admin'|'produtor'|'motorista'>('user');
+  const [inviteRole, setInviteRole] = useState<'user'|'admin'|'dev'|'produtor'|'iluminador'|'motorista'>('produtor');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Crop states
@@ -268,7 +268,7 @@ function UsersPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-lg text-slate-800 dark:text-white truncate">{u.nome}</h4>
-                        {u.role === "admin" && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Admin</Badge>}
+                        {u.role === "admin" || u.role === "dev" && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Admin</Badge>}
                       </div>
                       <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mt-0.5">{u.telefone || "Sem telefone"}</p>
                     </div>
@@ -282,7 +282,7 @@ function UsersPage() {
                       <Mail className="size-4" />
                     </Button>
                     {u.id !== profile?.id && (
-                      <Button variant="ghost" size="icon" onClick={() => deleteUser(u.id)} className="rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+                      <Button variant="ghost" size="icon" onClick={() => deleteUser(u)} className="rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
                         <Trash2 className="size-4" />
                       </Button>
                     )}
@@ -334,7 +334,7 @@ function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label>Nível de Acesso</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
                 <div 
                   onClick={() => setEditRole("user")}
                   className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${editRole === 'user' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50'}`}
