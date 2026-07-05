@@ -16,8 +16,18 @@ function FinanceiroPage() {
   const [selectedRoadbook, setSelectedRoadbook] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
   useEffect(() => {
     (async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData.user) {
+        const { data: profile } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
+        if (profile && profile.role === 'admin') {
+          setIsAdmin(true);
+        }
+      }
+      
       const { data, error } = await supabase.from("roadbooks").select("id, espetaculo, cidade, data_inicial").order("data_inicial", { ascending: false });
       if (error) {
         toast.error("Erro ao carregar roadbooks: " + error.message);
@@ -27,6 +37,17 @@ function FinanceiroPage() {
       setLoading(false);
     })();
   }, []);
+
+  if (!loading && !isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh]">
+        <Wallet className="size-16 text-slate-300 mb-4" />
+        <h2 className="text-2xl font-bold text-slate-700">Acesso Negado</h2>
+        <p className="text-slate-500 mt-2">O painel financeiro é restrito ao Administrador Master.</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-6">
