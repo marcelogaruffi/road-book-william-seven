@@ -264,7 +264,7 @@ function UsersPage() {
                           <KeyRound className="size-4 text-primary" />
                           <span className="font-mono font-bold tracking-wider">{i.token}</span>
                           {i.role === "dev" && <Badge className="ml-2 text-xs bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">DESENVOLVEDOR</Badge>}
-                          {i.role === "admin" && <Badge className="ml-2 text-xs bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">MASTER ADMIN</Badge>}
+                          {i.role === "admin" && <Badge className="ml-2 text-xs bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">ADMINISTRADOR</Badge>}
                           {i.role === "produtor" && <Badge className="ml-2 text-xs bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">PRODUTOR</Badge>}
                           {i.role === "iluminador" && <Badge className="ml-2 text-xs bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">ILUMINADOR</Badge>}
                           {i.role === "motorista" && <Badge className="ml-2 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">MOTORISTA</Badge>}
@@ -311,7 +311,7 @@ function UsersPage() {
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-lg text-slate-800 dark:text-white truncate">{u.nome}</h4>
                         {u.role === "dev" && <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">Desenvolvedor</Badge>}
-                        {u.role === "admin" && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Master Admin</Badge>}
+                        {u.role === "admin" && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Administrador</Badge>}
                         {u.role === "produtor" && <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">Produtor</Badge>}
                         {u.role === "iluminador" && <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">Iluminador</Badge>}
                         {u.role === "motorista" && <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">Motorista</Badge>}
