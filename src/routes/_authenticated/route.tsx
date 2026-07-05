@@ -98,7 +98,11 @@ function AuthedLayout() {
                   {userName}
                 </span>
                 <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider leading-tight">
-                  {userRole === 'admin' ? 'Master' : 'Convidado'}
+                  {userRole === 'dev' ? 'Desenvolvedor' : 
+                   userRole === 'admin' ? 'Master Admin' : 
+                   userRole === 'produtor' ? 'Produtor' : 
+                   userRole === 'iluminador' ? 'Iluminador' : 
+                   userRole === 'motorista' ? 'Motorista' : 'Usuário'}
                 </span>
               </div>
             </div>
@@ -139,7 +143,7 @@ function AuthedLayout() {
                {sidebarOpen && <span>Público</span>}
              </Link>
           </Button>
-            {userRole === 'admin' && (
+            {(userRole === 'admin' || userRole === 'dev') && (
               <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
                  <Link to="/financeiro">
                    <Wallet className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
@@ -149,11 +153,11 @@ function AuthedLayout() {
             )}
 
           
-          {user.email === 'marcelo.garuffi@gmail.com' && (
+          {(userRole === 'admin' || userRole === 'dev') && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
                <Link to="/users">
                  <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                 {sidebarOpen && <span>Administrador</span>}
+                 {sidebarOpen && <span>Equipe</span>}
                </Link>
             </Button>
           )}
