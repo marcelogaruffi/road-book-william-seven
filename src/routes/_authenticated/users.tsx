@@ -54,6 +54,7 @@ function UsersPage() {
   const [editTelefone, setEditTelefone] = useState("");
   const [editRole, setEditRole] = useState<"admin"|"user">("user");
   const [editFotoUrl, setEditFotoUrl] = useState<string | null>(null);
+  const [inviteRole, setInviteRole] = useState<'user'|'admin'|'produtor'|'motorista'>('user');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Crop states
@@ -84,7 +85,7 @@ function UsersPage() {
   async function generateInvite() {
     const token = Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
     
-    const { error } = await supabase.from("invites").insert({ token });
+    const { error } = await supabase.from("invites").insert({ token, role: inviteRole });
     if (error) {
       toast.error("Erro ao gerar convite: " + error.message);
     } else {
@@ -333,7 +334,7 @@ function UsersPage() {
             </div>
             <div className="space-y-2">
               <Label>Nível de Acesso</Label>
-              <div className="grid grid-cols-2 gap-3 mt-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
                 <div 
                   onClick={() => setEditRole("user")}
                   className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all ${editRole === 'user' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 dark:border-white/10 text-slate-500 hover:bg-slate-50'}`}

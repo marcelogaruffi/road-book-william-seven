@@ -18,6 +18,7 @@ import { Route as RbSlugRouteImport } from './routes/rb.$slug'
 import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedVersaoMotoristaSlugRouteImport } from './routes/_authenticated/versao-motorista.$slug'
 import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticated/tour.new'
@@ -70,6 +71,11 @@ const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
   path: '/publico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/users': typeof AuthenticatedUsersRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/users': typeof AuthenticatedUsersRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/financeiro'
     | '/publico'
     | '/users'
     | '/motorista-print/$slug'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/financeiro'
     | '/publico'
     | '/users'
     | '/motorista-print/$slug'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/financeiro'
     | '/_authenticated/publico'
     | '/_authenticated/users'
     | '/motorista-print/$slug'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPublicoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -345,6 +364,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
@@ -357,6 +377,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
