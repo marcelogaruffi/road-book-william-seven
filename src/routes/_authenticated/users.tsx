@@ -213,6 +213,22 @@ function UsersPage() {
                 <h3 className="text-2xl font-black mb-2">Novo Membro</h3>
                 <p className="text-indigo-100 font-medium text-sm">Gere um token de convite seguro e envie para a pessoa criar a conta.</p>
               </div>
+              
+              <div className="space-y-2">
+                <select 
+                  value={inviteRole} 
+                  onChange={(e: any) => setInviteRole(e.target.value)}
+                  className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/20"
+                >
+                  <option value="dev">Desenvolvedor (Você)</option>
+                  <option value="admin">Administrador (Prod. Executiva)</option>
+                  <option value="produtor">Produtor</option>
+                  <option value="iluminador">Iluminador</option>
+                  <option value="motorista">Motorista</option>
+                  <option value="user">Usuário Padrão</option>
+                </select>
+              </div>
+
               <Button onClick={generateInvite} className="w-full bg-white text-indigo-600 hover:bg-slate-100 font-bold h-12 rounded-xl shadow-lg">
                 <Plus className="mr-2 size-5" /> Gerar Convite
               </Button>

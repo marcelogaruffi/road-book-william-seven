@@ -205,10 +205,20 @@ function AuthPage() {
         }
       }
 
-      // Atualizar perfil com a foto (a trigger no banco já criou o perfil base)
-      if (fotoUrl) {
-        await supabase.from("profiles").update({ foto_url: fotoUrl }).eq("id", user.id);
-      }
+      // Fetch the role from the invite
+      const { data: inviteData } = await supabase
+        .from("invites")
+        .select("role")
+        .eq("token", token)
+        .single();
+        
+      const role = inviteData?.role || 'user';
+
+      // Atualizar perfil com a foto e a role correta! (a trigger no banco já criou o perfil base)
+      const updatePayload: any = { role: role };
+      if (fotoUrl) updatePayload.foto_url = fotoUrl;
+      
+      await supabase.from("profiles").update(updatePayload).eq("id", user.id);
 
       // Marcar convite como usado no banco
       await supabase.from("invites").update({ used_at: new Date().toISOString() }).eq("token", token);
