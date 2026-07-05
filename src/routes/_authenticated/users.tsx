@@ -84,7 +84,7 @@ function UsersPage() {
 
   async function deleteInvite(id: string) {
     if (!confirm("Tem certeza que deseja apagar este convite?")) return;
-    const { error } = await supabase.from('invites').delete().eq('id', id);
+    const { error } = await supabase.rpc('delete_invite', { invite_id: id });
     if (error) {
       toast.error("Erro ao apagar convite: " + error.message);
     } else {
