@@ -16,10 +16,10 @@ import { Route as TurneSlugRouteImport } from './routes/turne.$slug'
 import { Route as TurneCompletaSlugRouteImport } from './routes/turne-completa.$slug'
 import { Route as RbSlugRouteImport } from './routes/rb.$slug'
 import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
-import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedVersaoMotoristaSlugRouteImport } from './routes/_authenticated/versao-motorista.$slug'
 import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticated/tour.new'
 import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated/tour.$id'
@@ -61,11 +61,6 @@ const MotoristaPrintSlugRoute = MotoristaPrintSlugRouteImport.update({
   path: '/motorista-print/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
-  id: '/users',
-  path: '/users',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
   id: '/publico',
   path: '/publico',
@@ -79,6 +74,11 @@ const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
+  id: '/cadastros',
+  path: '/cadastros',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedVersaoMotoristaSlugRoute =
@@ -117,10 +117,10 @@ const AuthenticatedPrintSlugRoute = AuthenticatedPrintSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastros': typeof AuthenticatedCadastrosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/publico': typeof AuthenticatedPublicoRoute
-  '/users': typeof AuthenticatedUsersRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
@@ -135,10 +135,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cadastros': typeof AuthenticatedCadastrosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/publico': typeof AuthenticatedPublicoRoute
-  '/users': typeof AuthenticatedUsersRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
@@ -155,10 +155,10 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
-  '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
@@ -175,10 +175,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cadastros'
     | '/dashboard'
     | '/financeiro'
     | '/publico'
-    | '/users'
     | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
@@ -193,10 +193,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/cadastros'
     | '/dashboard'
     | '/financeiro'
     | '/publico'
-    | '/users'
     | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
@@ -212,10 +212,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/cadastros'
     | '/_authenticated/dashboard'
     | '/_authenticated/financeiro'
     | '/_authenticated/publico'
-    | '/_authenticated/users'
     | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
@@ -289,13 +289,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MotoristaPrintSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/users': {
-      id: '/_authenticated/users'
-      path: '/users'
-      fullPath: '/users'
-      preLoaderRoute: typeof AuthenticatedUsersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/publico': {
       id: '/_authenticated/publico'
       path: '/publico'
@@ -315,6 +308,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cadastros': {
+      id: '/_authenticated/cadastros'
+      path: '/cadastros'
+      fullPath: '/cadastros'
+      preLoaderRoute: typeof AuthenticatedCadastrosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/versao-motorista/$slug': {
@@ -363,10 +363,10 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
-  AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
   AuthenticatedRoadbookNewRoute: typeof AuthenticatedRoadbookNewRoute
@@ -376,10 +376,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,
-  AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,
   AuthenticatedRoadbookNewRoute: AuthenticatedRoadbookNewRoute,

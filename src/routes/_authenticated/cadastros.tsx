@@ -37,7 +37,7 @@ type Invite = {
   used_at: string | null;
 };
 
-export const Route = createFileRoute("/_authenticated/users")({
+export const Route = createFileRoute("/_authenticated/cadastros")({
   head: () => ({ meta: [{ title: "Equipe e Convites - Seven Produções Artísticas" }] }),
   component: UsersPage,
 });
@@ -197,12 +197,12 @@ function UsersPage() {
     toast.info("Para resetar a senha, peça para o usuário clicar em 'Esqueci a Senha' na tela de login.");
   }
 
-  if (user.email !== "marcelo.garuffi@gmail.com") {
+  if (profile?.role !== "dev" && profile?.role !== "admin") {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh]">
         <ShieldAlert className="size-16 text-slate-300 mb-4" />
         <h2 className="text-2xl font-bold text-slate-700">Acesso Negado</h2>
-        <p className="text-slate-500 mt-2">Esta tela é restrita ao Administrador Master.</p>
+        <p className="text-slate-500 mt-2">Esta tela é restrita a Administradores e Desenvolvedores.</p>
       </div>
     );
   }

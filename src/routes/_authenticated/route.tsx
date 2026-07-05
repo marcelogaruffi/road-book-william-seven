@@ -155,9 +155,9 @@ function AuthedLayout() {
           
           {(userRole === 'admin' || userRole === 'dev') && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/users">
+               <Link to="/cadastros">
                  <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                 {sidebarOpen && <span>Administração</span>}
+                 {sidebarOpen && <span>Cadastros e Convites</span>}
                </Link>
             </Button>
           )}
