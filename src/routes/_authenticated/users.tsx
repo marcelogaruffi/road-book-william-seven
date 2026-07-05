@@ -388,7 +388,18 @@ function UsersPage() {
 
             <div className="space-y-2">
               <Label>Telefone / WhatsApp</Label>
-              <Input value={editTelefone} onChange={(e) => setEditTelefone(e.target.value)} className="h-12 rounded-xl" />
+              <Input 
+                value={editTelefone} 
+                onChange={(e) => {
+                  let v = e.target.value.replace(/\D/g, '');
+                  if (v.length > 11) v = v.substring(0, 11);
+                  if (v.length > 2) v = `(${v.substring(0,2)}) ${v.substring(2)}`;
+                  if (v.length > 10) v = `${v.substring(0,10)}-${v.substring(10)}`;
+                  setEditTelefone(v);
+                }} 
+                className="h-12 rounded-xl" 
+                placeholder="(11) 99999-9999"
+              />
             </div>
             <div className="space-y-2">
               <Label>Nível de Acesso</Label>
