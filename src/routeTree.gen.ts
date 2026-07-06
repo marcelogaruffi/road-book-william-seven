@@ -16,8 +16,11 @@ import { Route as TurneSlugRouteImport } from './routes/turne.$slug'
 import { Route as TurneCompletaSlugRouteImport } from './routes/turne-completa.$slug'
 import { Route as RbSlugRouteImport } from './routes/rb.$slug'
 import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
+import { Route as AuthenticatedSomRouteImport } from './routes/_authenticated/som'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
+import { Route as AuthenticatedIluminacaoRouteImport } from './routes/_authenticated/iluminacao'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedVersaoMotoristaSlugRouteImport } from './routes/_authenticated/versao-motorista.$slug'
@@ -61,14 +64,29 @@ const MotoristaPrintSlugRoute = MotoristaPrintSlugRouteImport.update({
   path: '/motorista-print/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSomRoute = AuthenticatedSomRouteImport.update({
+  id: '/som',
+  path: '/som',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
   id: '/publico',
   path: '/publico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedIluminacaoRoute = AuthenticatedIluminacaoRouteImport.update({
+  id: '/iluminacao',
+  path: '/iluminacao',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedEventosRoute = AuthenticatedEventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -119,8 +137,11 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/iluminacao': typeof AuthenticatedIluminacaoRoute
   '/publico': typeof AuthenticatedPublicoRoute
+  '/som': typeof AuthenticatedSomRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
@@ -137,8 +158,11 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/iluminacao': typeof AuthenticatedIluminacaoRoute
   '/publico': typeof AuthenticatedPublicoRoute
+  '/som': typeof AuthenticatedSomRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
@@ -157,8 +181,11 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/eventos': typeof AuthenticatedEventosRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/iluminacao': typeof AuthenticatedIluminacaoRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
+  '/_authenticated/som': typeof AuthenticatedSomRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
@@ -177,8 +204,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastros'
     | '/dashboard'
+    | '/eventos'
     | '/financeiro'
+    | '/iluminacao'
     | '/publico'
+    | '/som'
     | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
@@ -195,8 +225,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/cadastros'
     | '/dashboard'
+    | '/eventos'
     | '/financeiro'
+    | '/iluminacao'
     | '/publico'
+    | '/som'
     | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
@@ -214,8 +247,11 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/cadastros'
     | '/_authenticated/dashboard'
+    | '/_authenticated/eventos'
     | '/_authenticated/financeiro'
+    | '/_authenticated/iluminacao'
     | '/_authenticated/publico'
+    | '/_authenticated/som'
     | '/motorista-print/$slug'
     | '/rb/$slug'
     | '/turne-completa/$slug'
@@ -289,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MotoristaPrintSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/som': {
+      id: '/_authenticated/som'
+      path: '/som'
+      fullPath: '/som'
+      preLoaderRoute: typeof AuthenticatedSomRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/publico': {
       id: '/_authenticated/publico'
       path: '/publico'
@@ -296,11 +339,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPublicoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/iluminacao': {
+      id: '/_authenticated/iluminacao'
+      path: '/iluminacao'
+      fullPath: '/iluminacao'
+      preLoaderRoute: typeof AuthenticatedIluminacaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/financeiro': {
       id: '/_authenticated/financeiro'
       path: '/financeiro'
       fullPath: '/financeiro'
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/eventos': {
+      id: '/_authenticated/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof AuthenticatedEventosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -365,8 +422,11 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedIluminacaoRoute: typeof AuthenticatedIluminacaoRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
+  AuthenticatedSomRoute: typeof AuthenticatedSomRoute
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
   AuthenticatedRoadbookNewRoute: typeof AuthenticatedRoadbookNewRoute
@@ -378,8 +438,11 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEventosRoute: AuthenticatedEventosRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedIluminacaoRoute: AuthenticatedIluminacaoRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,
+  AuthenticatedSomRoute: AuthenticatedSomRoute,
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,
   AuthenticatedRoadbookNewRoute: AuthenticatedRoadbookNewRoute,
