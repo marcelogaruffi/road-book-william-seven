@@ -289,7 +289,8 @@ function EventosComponent() {
               <p className="text-sm text-slate-500 -mt-2">Selecione os profissionais que terão acesso aos road books desta viagem.</p>
               <div className="flex flex-col gap-6 mt-4">
                 {[
-                  { key: 'produtor', label: 'Produtores / Admins', roles: ['admin', 'produtor'] },
+                  { key: 'admin', label: 'Administradores', roles: ['admin'] },
+                  { key: 'produtor', label: 'Produtores', roles: ['produtor'] },
                   { key: 'artista', label: 'Artistas', roles: ['artista'] },
                   { key: 'iluminador', label: 'Iluminadores', roles: ['iluminador'] },
                   { key: 'tecnico_som', label: 'Técnicos de Som', roles: ['tecnico_som'] },
