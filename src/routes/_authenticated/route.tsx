@@ -135,7 +135,7 @@ function AuthedLayout() {
           <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
              <Link to="/dashboard" hash="roadbooks">
                <Ticket className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-               {sidebarOpen && <span>Road Books</span>}
+               {sidebarOpen && <span>{userRole === 'motorista' ? 'Cidades' : 'Road Books'}</span>}
              </Link>
           </Button>
           

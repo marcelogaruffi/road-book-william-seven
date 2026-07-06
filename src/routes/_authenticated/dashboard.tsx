@@ -59,10 +59,17 @@ function Dashboard() {
 
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
   const [dup, setDup] = useState<Roadbook | null>(null);
 
   async function load() {
     setLoading(true);
+    const { data: authData } = await supabase.auth.getUser();
+    if (authData.user) {
+      const { data: p } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
+      if (p) setProfile(p);
+    }
+
     const [{ data: rb, error: e1 }, { data: tr, error: e2 }] = await Promise.all([
       supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id").order("data_inicial", { ascending: true }),
       supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
@@ -127,14 +134,14 @@ function Dashboard() {
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Bem-vindo de volta! Aqui está o resumo das suas turnês.</p>
           </div>
-          <div className="flex gap-3 items-center">
+          {profile?.role !== 'motorista' && (<div className="flex gap-3 items-center">
             <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-all rounded-xl px-5 h-12 border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5">
               <Link to="/tour/new"><Plus className="size-4 mr-2" />Nova Turnê</Link>
             </Button>
             <Button asChild className="shadow-[0_8px_20px_rgba(var(--primary),0.2)] hover:shadow-[0_12px_25px_rgba(var(--primary),0.3)] transition-all rounded-xl px-6 h-12 bg-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-semibold text-white">
               <Link to="/roadbook/new"><Plus className="size-5 mr-2" />Novo Road Book</Link>
             </Button>
-          </div>
+          </div>)}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -213,7 +220,7 @@ function Dashboard() {
                       {t.espetaculo && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{t.espetaculo}</p>}
                     </div>
                     
-                    <DropdownMenu>
+                    {profile?.role !== 'motorista' && (<DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400">
                           <MoreVertical className="size-5" />
@@ -232,6 +239,7 @@ function Dashboard() {
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                )}
                   </div>
 
                   <div className="mt-auto relative z-10 flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
