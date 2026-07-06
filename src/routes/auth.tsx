@@ -214,6 +214,7 @@ function AuthPage() {
       // Token válido! Avança para o passo 2.
       toast.success("Token validado! Preencha seus dados.");
       setSignupStep(2);
+      setEmail("");
     } catch (err: any) {
       setErrorMsg(err.message);
     } finally {
@@ -453,7 +454,7 @@ function AuthPage() {
                     <KeyRound className="size-5 text-primary" />
                     <Label className="text-primary font-bold text-base">Token de Convite</Label>
                   </div>
-                  <Input required className="h-12 rounded-xl bg-white dark:bg-card border-primary/30 font-mono text-center text-lg tracking-widest font-bold focus-visible:ring-primary" placeholder="Insira seu código" value={token} onChange={(e) => setToken(e.target.value.toUpperCase())} />
+                  <Input id="token_input" name="token_input" autoComplete="off" required className="h-12 rounded-xl bg-white dark:bg-card border-primary/30 font-mono text-center text-lg tracking-widest font-bold focus-visible:ring-primary" placeholder="Insira seu código" value={token} onChange={(e) => setToken(e.target.value.toUpperCase())} />
                 </div>
                 
                 <Button type="submit" className="w-full h-12 rounded-xl font-bold text-lg shadow-lg mt-2" disabled={loading}>
