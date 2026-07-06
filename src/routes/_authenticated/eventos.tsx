@@ -59,6 +59,7 @@ function EventosComponent() {
   const [local, setLocal] = useState('');
   const [espetaculo, setEspetaculo] = useState('');
   const [equipe, setEquipe] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -287,53 +288,79 @@ function EventosComponent() {
             <div className="space-y-3 md:col-span-2 pt-2 border-t mt-2">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Equipe Escalada</Label>
               <p className="text-sm text-slate-500 -mt-2">Selecione os profissionais que terão acesso aos road books desta viagem.</p>
-              <div className="flex flex-col gap-6 mt-4">
-                {[
-                  { key: 'admin', label: 'Administradores', roles: ['admin'] },
-                  { key: 'produtor', label: 'Produtores', roles: ['produtor'] },
-                  { key: 'artista', label: 'Artistas', roles: ['artista'] },
-                  { key: 'iluminador', label: 'Iluminadores', roles: ['iluminador'] },
-                  { key: 'tecnico_som', label: 'Técnicos de Som', roles: ['tecnico_som'] },
-                  { key: 'motorista', label: 'Motoristas', roles: ['motorista'] },
-                ].map(group => {
-                  const groupProfs = profissionais.filter(p => group.roles.includes(p.role));
-                  if (groupProfs.length === 0) return null;
-                  return (
-                    <div key={group.key} className="space-y-2 border-b pb-4 last:border-0 last:pb-0">
-                      <h4 className="font-bold text-sm text-slate-400 uppercase tracking-wider">{group.label}</h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {groupProfs.map(p => {
-                           const isSelected = equipe.includes(p.id);
-                           return (
-                             <div 
-                                key={p.id} 
-                                onClick={() => toggleEquipe(p.id)}
-                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-slate-200 hover:border-slate-300 dark:border-white/10 dark:hover:border-white/20'}`}
-                             >
-                               <div>
-                                 <p className="font-bold text-slate-800 dark:text-white text-sm">{p.nome}</p>
-                                 <p className="text-xs text-slate-500 uppercase font-semibold mt-0.5">{p.role}</p>
-                               </div>
-                               <div className={`size-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-primary border-primary text-white' : 'border-slate-300 dark:border-slate-600'}`}>
-                                  {isSelected && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="size-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                               </div>
-                             </div>
-                           );
-                        })}
-                      </div>
+              
+              <div className="relative">
+                <div 
+                  className="flex min-h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background cursor-pointer hover:border-slate-400 transition-colors"
+                  onClick={() => setShowDropdown(!showDropdown)}
+                >
+                  <span className="text-slate-500">Adicionar profissionais...</span>
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className={`opacity-50 transition-transform ${showDropdown ? 'rotate-180' : ''}`}><path d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819L7.43179 8.56819C7.60753 8.74393 7.89245 8.74393 8.06819 8.56819L10.5682 6.06819C10.7439 5.89245 10.7439 5.60753 10.5682 5.43179C10.3924 5.25605 10.1075 5.25605 9.93179 5.43179L7.5 7.86358L5.06819 5.43179C4.89245 5.25605 4.60753 5.25605 4.43179 5.43179Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+                </div>
+                
+                {showDropdown && (
+                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border rounded-xl shadow-xl z-50 p-3 max-h-64 overflow-y-auto">
+                    <div className="flex flex-col gap-4">
+                      {[
+                        { key: 'admin', label: 'Administradores', roles: ['admin'] },
+                        { key: 'produtor', label: 'Produtores', roles: ['produtor'] },
+                        { key: 'artista', label: 'Artistas', roles: ['artista'] },
+                        { key: 'iluminador', label: 'Iluminadores', roles: ['iluminador'] },
+                        { key: 'tecnico_som', label: 'Técnicos de Som', roles: ['tecnico_som'] },
+                        { key: 'motorista', label: 'Motoristas', roles: ['motorista'] },
+                      ].map(group => {
+                        const groupProfs = profissionais
+                          .filter(p => group.roles.includes(p.role) && !equipe.includes(p.id))
+                          .sort((a, b) => a.nome.localeCompare(b.nome));
+                          
+                        if (groupProfs.length === 0) return null;
+                        return (
+                          <div key={group.key} className="space-y-2">
+                            <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider">{group.label}</h4>
+                            <div className="flex flex-col gap-1">
+                              {groupProfs.map(p => (
+                                 <div 
+                                    key={p.id} 
+                                    onClick={() => toggleEquipe(p.id)}
+                                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors group"
+                                 >
+                                   <span className="font-semibold text-slate-800 dark:text-white text-sm">{p.nome}</span>
+                                   <Plus className="size-4 text-slate-400 group-hover:text-primary transition-colors" />
+                                 </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {profissionais.filter(p => !equipe.includes(p.id)).length === 0 && (
+                        <div className="text-center p-4 text-slate-500 text-sm font-medium">Todos os profissionais já foram adicionados.</div>
+                      )}
                     </div>
-                  );
-                })}
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
 
-          <DialogFooter className="mt-4 gap-2">
-            <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">Cancelar</Button>
-            <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md"><Save className="size-4 mr-2"/> Salvar Evento</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
-}
+              {/* Exibição dos selecionados */}
+              {equipe.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-dashed">
+                  {equipe.map(id => profissionais.find(x => x.id === id))
+                    .filter((p): p is Profile => p !== undefined)
+                    .sort((a, b) => a.nome.localeCompare(b.nome))
+                    .map(p => (
+                      <div key={p.id} className="flex items-center justify-between p-3 rounded-xl border border-primary/20 bg-white dark:bg-card shadow-sm">
+                        <div>
+                          <p className="font-bold text-slate-800 dark:text-white text-sm">{p.nome}</p>
+                          <p className="text-xs text-slate-500 uppercase font-semibold mt-0.5">{p.role}</p>
+                        </div>
+                        <button 
+                           onClick={() => toggleEquipe(p.id)}
+                           className="size-8 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500 text-slate-400 transition-colors"
+                        >
+                           <X className="size-4" />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          
