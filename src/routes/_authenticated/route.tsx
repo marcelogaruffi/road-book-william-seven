@@ -12,7 +12,7 @@ type Profile = {
   id: string;
   nome: string;
   foto_url: string | null;
-  role: "admin" | "user";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "artista" | "user";
 };
 
 export const Route = createFileRoute("/_authenticated")({
@@ -139,7 +139,7 @@ function AuthedLayout() {
              </Link>
           </Button>
           
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador' || userRole === 'tecnico_som') && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
                <Link to="/eventos">
                  <Calendar className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />

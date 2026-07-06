@@ -27,7 +27,7 @@ type Profile = {
   telefone: string | null;
   foto_url: string | null;
   email?: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "user";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "artista" | "user";
 };
 
 type Invite = {
@@ -56,7 +56,7 @@ function UsersPage() {
   const [editTelefone, setEditTelefone] = useState("");
   const [editRole, setEditRole] = useState<any>("user");
   const [editFotoUrl, setEditFotoUrl] = useState<string | null>(null);
-  const [inviteRole, setInviteRole] = useState<'user'|'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'>('produtor');
+  const [inviteRole, setInviteRole] = useState<'user'|'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'|'artista'>('produtor');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Crop states
@@ -238,6 +238,7 @@ function UsersPage() {
                   <option value="iluminador">Iluminador</option>
                     <option value="tecnico_som">Técnico de Som</option>
                   <option value="motorista">Motorista</option>
+                    <option value="artista">Artista</option>
                   <option value="user">Usuário Padrão</option>
                 </select>
               </div>
@@ -267,6 +268,7 @@ function UsersPage() {
                           {i.role === "iluminador" && <Badge className="ml-2 text-xs bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">ILUMINADOR</Badge>}
                             {i.role === "tecnico_som" && <Badge className="ml-2 text-xs bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">TÉCNICO DE SOM</Badge>}
                           {i.role === "motorista" && <Badge className="ml-2 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">MOTORISTA</Badge>}
+                            {i.role === "artista" && <Badge className="ml-2 text-xs bg-pink-100 text-pink-700 hover:bg-pink-100 border-none px-2 rounded-md">ARTISTA</Badge>}
                           {i.role === "user" && <Badge className="ml-2 text-xs bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">USUÁRIO PADRÃO</Badge>}
                         </div>
                         <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString('pt-BR')}</p>
@@ -315,6 +317,7 @@ function UsersPage() {
                         {u.role === "iluminador" && <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">Iluminador</Badge>}
                           {u.role === "tecnico_som" && <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">Técnico de Som</Badge>}
                         {u.role === "motorista" && <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">Motorista</Badge>}
+                          {u.role === "artista" && <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-none px-2 rounded-md">Artista</Badge>}
                         {u.role === "user" && <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">Usuário Padrão</Badge>}
                       </div>
                       <div className="flex items-center gap-4 mt-1">
@@ -422,6 +425,7 @@ function UsersPage() {
                   <option value="iluminador">Iluminador</option>
                     <option value="tecnico_som">Técnico de Som</option>
                   <option value="motorista">Motorista</option>
+                    <option value="artista">Artista</option>
                   <option value="user">Usuário Padrão</option>
                 </select>
               )}
