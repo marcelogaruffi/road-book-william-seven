@@ -11,7 +11,7 @@ import { Suspense, lazy } from "react";
 const Cropper = lazy(() => import("react-easy-crop"));
 import getCroppedImg from "@/lib/cropUtils";
 import { toast } from "sonner";
-import { Camera, Mail, Lock, User, Phone, KeyRound, UploadCloud, Sun, Moon, ArrowLeft, UserCheck } from "lucide-react";
+import { Camera, Mail, Lock, User, Phone, KeyRound, UploadCloud, Sun, Moon, ArrowLeft, UserCheck, Image as ImageIcon, X } from 'lucide-react';
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -38,6 +38,13 @@ function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [foto, setFoto] = useState<File | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  
+  // States para Câmera
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Crop states
@@ -83,7 +90,9 @@ function AuthPage() {
     }
   };
 
+
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setShowPhotoOptions(false);
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       const reader = new FileReader();
@@ -91,6 +100,55 @@ function AuthPage() {
       reader.readAsDataURL(file);
     }
   };
+
+  const startCamera = async () => {
+    setShowPhotoOptions(false);
+    setShowCamera(true);
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (err) {
+      toast.error("Não foi possível acessar a câmera.");
+      setShowCamera(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        // Draw image
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        setImageSrc(dataUrl);
+        stopCamera();
+      }
+    }
+  };
+
+  // Cleanup camera on unmount
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
 
   const onCropComplete = (croppedArea: any, croppedAreaPixels: any) => {
     setCroppedAreaPixels(croppedAreaPixels);
@@ -419,7 +477,7 @@ function AuthPage() {
                 <div className="flex flex-col items-center justify-center space-y-3 mb-6">
                   <div 
                     className="size-24 rounded-full border-2 border-dashed border-slate-300 dark:border-white/20 flex items-center justify-center bg-slate-50 dark:bg-white/5 cursor-pointer hover:border-primary transition-colors overflow-hidden group relative"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => setShowPhotoOptions(true)}
                   >
                     {fotoPreview ? (
                       <img src={fotoPreview} alt="Preview" className="w-full h-full object-cover" />
@@ -430,8 +488,8 @@ function AuthPage() {
                       <UploadCloud className="text-white size-6" />
                     </div>
                   </div>
-                  <Label className="text-slate-500 font-medium cursor-pointer hover:text-primary" onClick={() => fileInputRef.current?.click()}>Adicionar Foto (Opcional)</Label>
-                  <input type="file" accept="image/*" capture="user" className="hidden" ref={fileInputRef} onChange={handleFotoChange} />
+                  <Label className="text-slate-500 font-medium cursor-pointer hover:text-primary" onClick={() => setShowPhotoOptions(true)}>Adicionar Foto (Opcional)</Label>
+                  <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFotoChange} />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -507,6 +565,52 @@ function AuthPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Opções de Foto */}
+      <Dialog open={showPhotoOptions} onOpenChange={setShowPhotoOptions}>
+        <DialogContent className="sm:max-w-md rounded-[2rem] p-6 border-0 shadow-2xl dark:bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black text-center">Adicionar Foto</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <Button variant="outline" className="h-32 flex flex-col items-center justify-center gap-3 rounded-2xl hover:bg-slate-50 hover:border-primary dark:hover:bg-white/5" onClick={startCamera}>
+              <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <Camera className="size-6 text-primary" />
+              </div>
+              <span className="font-bold">Tirar Foto</span>
+            </Button>
+            <Button variant="outline" className="h-32 flex flex-col items-center justify-center gap-3 rounded-2xl hover:bg-slate-50 hover:border-primary dark:hover:bg-white/5" onClick={() => fileInputRef.current?.click()}>
+              <div className="size-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+                <ImageIcon className="size-6 text-blue-500" />
+              </div>
+              <span className="font-bold">Galeria</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal da Câmera (Webcam) */}
+      <Dialog open={showCamera} onOpenChange={(open) => !open && stopCamera()}>
+        <DialogContent className="sm:max-w-xl rounded-[2rem] p-6 border-0 shadow-2xl dark:bg-card">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black flex items-center justify-between">
+              Tirar Foto
+              <Button variant="ghost" size="icon" onClick={stopCamera} className="rounded-full">
+                <X className="size-5" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center mt-4">
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+            <canvas ref={canvasRef} className="hidden" />
+          </div>
+          <div className="flex justify-center mt-6">
+            <Button onClick={capturePhoto} className="h-16 w-16 rounded-full bg-primary hover:bg-primary/90 shadow-lg border-4 border-primary/20 flex items-center justify-center">
+              <div className="size-10 bg-white rounded-full"></div>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* MODAL DE CROP */}
       <Dialog open={!!imageSrc} onOpenChange={(open) => !open && setImageSrc(null)}>
