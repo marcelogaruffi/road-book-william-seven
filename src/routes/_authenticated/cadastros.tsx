@@ -324,16 +324,20 @@ function UsersPage() {
                   </div>
                   
                   <div className="flex items-center gap-2 justify-end sm:border-l border-slate-100 dark:border-white/10 sm:pl-4 pt-4 sm:pt-0 border-t sm:border-t-0">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(u)} className="rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10">
-                      <Pencil className="size-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={warnAboutPassword} className="rounded-xl text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10" title="Resetar Senha">
-                      <Mail className="size-4" />
-                    </Button>
-                    {u.id !== profile?.id && (
-                      <Button variant="ghost" size="icon" onClick={() => deleteUser(u)} className="rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
-                        <Trash2 className="size-4" />
-                      </Button>
+                    {!(u.role === 'dev' && profile?.role !== 'dev') && (
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(u)} className="rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10">
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={warnAboutPassword} className="rounded-xl text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10" title="Resetar Senha">
+                          <Mail className="size-4" />
+                        </Button>
+                        {u.id !== profile?.id && (
+                          <Button variant="ghost" size="icon" onClick={() => deleteUser(u)} className="rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+                            <Trash2 className="size-4" />
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </Card>
