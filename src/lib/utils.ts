@@ -24,3 +24,23 @@ export function formatPhone(value: string | null | undefined): string {
     });
   }
 }
+
+
+export function maskPhone(value: string, oldValue: string): string {
+  if (!value) return "";
+  let digits = value.replace(/\D/g, "");
+  
+  // Detect backspacing over a formatting character
+  if (value.length < oldValue.length && digits.length === oldValue.replace(/\D/g, "").length) {
+    digits = digits.slice(0, -1);
+  }
+
+  if (!digits) return "";
+  if (digits.length > 11) digits = digits.substring(0, 11);
+  
+  let formatted = digits;
+  if (digits.length > 2) formatted = `(${digits.substring(0, 2)}) ${digits.substring(2)}`;
+  if (formatted.length > 10) formatted = `${formatted.substring(0, 10)}-${formatted.substring(10)}`;
+  
+  return formatted;
+}

@@ -1,3 +1,4 @@
+import { maskPhone } from '@/lib/utils';
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -169,11 +170,7 @@ function AuthPage() {
   };
 
   const handleCelularChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let v = e.target.value.replace(/\D/g, "");
-    if (v.length > 11) v = v.substring(0, 11);
-    if (v.length > 2) v = `(${v.substring(0, 2)}) ${v.substring(2)}`;
-    if (v.length > 9) v = `${v.substring(0, 10)}-${v.substring(10)}`;
-    setCelular(v);
+    setCelular(maskPhone(e.target.value, celular));
   };
 
   async function handleLogin(e: React.FormEvent) {
