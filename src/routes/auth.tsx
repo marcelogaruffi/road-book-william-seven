@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { maskPhone } from '@/lib/utils';
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";

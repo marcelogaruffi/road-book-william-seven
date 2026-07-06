@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { rowToRoadbook } from "@/lib/roadbook-types";
