@@ -239,8 +239,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/${kind}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
-        novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: signed?.signedUrl });
+        const { data: publicData } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
+        novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: publicData.publicUrl });
         idx++;
       }
 
@@ -340,8 +340,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/voos/${side}/outras/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
-        novos.push({ path, nome: sequentialName, categoria: "Outras", url: signed?.signedUrl });
+        const { data: publicData } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
+        novos.push({ path, nome: sequentialName, categoria: "Outras", url: publicData.publicUrl });
         idx++;
       }
       setD((s) => ({ ...s, [side]: { ...s[side], outras_informacoes_fotos: [...(s[side].outras_informacoes_fotos ?? []), ...novos] } }));
@@ -378,8 +378,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/boarding/${side}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
-        novos.push({ path, nome: sequentialName, tipo: f.type || "application/octet-stream", url: signed?.signedUrl });
+        const { data: publicData } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
+        novos.push({ path, nome: sequentialName, tipo: f.type || "application/octet-stream", url: publicData.publicUrl });
         idx++;
       }
       setD((s) => ({ ...s, [side]: { ...s[side], cartoes_embarque: [...(s[side].cartoes_embarque ?? []), ...novos] } }));
@@ -417,8 +417,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
-        novos.push({ nome: sequentialName, path, tipo: f.type || "application/octet-stream", url: signed?.signedUrl });
+        const { data: publicData } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
+        novos.push({ nome: sequentialName, path, tipo: f.type || "application/octet-stream", url: publicData.publicUrl });
         idx++;
       }
       setD((s) => ({ ...s, documentos: [...s.documentos, ...novos] }));
@@ -487,8 +487,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         const path = `${uid}/${rbId}/outro_local_${localIndex}/${Date.now()}-${sequentialName}`;
         const { error } = await supabase.storage.from("roadbook-docs").upload(path, f, { upsert: false, contentType: f.type });
         if (error) throw error;
-        const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
-        novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: signed?.signedUrl });
+        const { data: publicData } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
+        novos.push({ path, nome: sequentialName, categoria: "Outros", descricao: "", url: publicData.publicUrl });
         idx++;
       }
 
