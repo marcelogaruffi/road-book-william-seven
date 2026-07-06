@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from "sonner";
 
 export const Route = createFileRoute('/_authenticated/eventos')({
   component: EventosComponent,
@@ -44,7 +44,7 @@ function EventosComponent() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [profissionais, setProfissionais] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -75,7 +75,7 @@ function EventosComponent() {
     const [evRes, trRes, profRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, nome, role').in('role', ['motorista', 'tecnico_som', 'iluminador', 'artista'])
+      supabase.from('profiles').select('id, nome, role').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'artista'])
     ]);
 
     if (evRes.data) setEventos(evRes.data);
@@ -118,16 +118,16 @@ function EventosComponent() {
     if (!confirm('Tem certeza que deseja excluir este evento?')) return;
     const { error } = await supabase.from('eventos').delete().eq('id', id);
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     } else {
-      toast({ title: 'Sucesso', description: 'Evento excluído.' });
+      toast.success('Evento excluído.');
       loadData();
     }
   };
 
   const handleSave = async () => {
     if (!cidade || !dataApres || !horario || !local || !espetaculo) {
-      toast({ title: 'Aviso', description: 'Preencha os campos obrigatórios.', variant: 'destructive' });
+      toast.warning('Preencha os campos obrigatórios.');
       return;
     }
 
@@ -154,9 +154,9 @@ function EventosComponent() {
     }
 
     if (error) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast.error(error.message);
     } else {
-      toast({ title: 'Sucesso', description: 'Evento salvo com sucesso.' });
+      toast.success('Evento salvo com sucesso.');
       setOpenDialog(false);
       loadData();
     }
@@ -287,24 +287,41 @@ function EventosComponent() {
             <div className="space-y-3 md:col-span-2 pt-2 border-t mt-2">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Equipe Escalada</Label>
               <p className="text-sm text-slate-500 -mt-2">Selecione os profissionais que terão acesso aos road books desta viagem.</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
-                {profissionais.map(p => {
-                   const isSelected = equipe.includes(p.id);
-                   return (
-                     <div 
-                        key={p.id} 
-                        onClick={() => toggleEquipe(p.id)}
-                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-slate-200 hover:border-slate-300 dark:border-white/10 dark:hover:border-white/20'}`}
-                     >
-                       <div>
-                         <p className="font-bold text-slate-800 dark:text-white text-sm">{p.nome}</p>
-                         <p className="text-xs text-slate-500 uppercase font-semibold mt-0.5">{p.role}</p>
-                       </div>
-                       <div className={`size-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-primary border-primary text-white' : 'border-slate-300 dark:border-slate-600'}`}>
-                          {isSelected && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="size-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-                       </div>
-                     </div>
-                   );
+              <div className="flex flex-col gap-6 mt-4">
+                {[
+                  { key: 'produtor', label: 'Produtores / Admins', roles: ['admin', 'produtor'] },
+                  { key: 'artista', label: 'Artistas', roles: ['artista'] },
+                  { key: 'iluminador', label: 'Iluminadores', roles: ['iluminador'] },
+                  { key: 'tecnico_som', label: 'Técnicos de Som', roles: ['tecnico_som'] },
+                  { key: 'motorista', label: 'Motoristas', roles: ['motorista'] },
+                ].map(group => {
+                  const groupProfs = profissionais.filter(p => group.roles.includes(p.role));
+                  if (groupProfs.length === 0) return null;
+                  return (
+                    <div key={group.key} className="space-y-2 border-b pb-4 last:border-0 last:pb-0">
+                      <h4 className="font-bold text-sm text-slate-400 uppercase tracking-wider">{group.label}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {groupProfs.map(p => {
+                           const isSelected = equipe.includes(p.id);
+                           return (
+                             <div 
+                                key={p.id} 
+                                onClick={() => toggleEquipe(p.id)}
+                                className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-slate-200 hover:border-slate-300 dark:border-white/10 dark:hover:border-white/20'}`}
+                             >
+                               <div>
+                                 <p className="font-bold text-slate-800 dark:text-white text-sm">{p.nome}</p>
+                                 <p className="text-xs text-slate-500 uppercase font-semibold mt-0.5">{p.role}</p>
+                               </div>
+                               <div className={`size-5 rounded-full border flex items-center justify-center ${isSelected ? 'bg-primary border-primary text-white' : 'border-slate-300 dark:border-slate-600'}`}>
+                                  {isSelected && <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="size-3"><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                               </div>
+                             </div>
+                           );
+                        })}
+                      </div>
+                    </div>
+                  );
                 })}
               </div>
             </div>
