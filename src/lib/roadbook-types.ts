@@ -174,6 +174,7 @@ export type RoadbookData = {
   id?: string;
   slug?: string;
   tour_id?: string | null;
+  evento_id?: string | null;
   espetaculo: string;
   cidade: string;
   estado: string;
@@ -221,6 +222,7 @@ export type RoadbookData = {
 
 export const emptyRoadbook: RoadbookData = {
   tour_id: null,
+  evento_id: null,
   espetaculo: "", cidade: "", estado: "", festival: "",
   data_inicial: "", data_final: "",
   resumo_executivo: "",
@@ -258,6 +260,7 @@ export function rowToRoadbook(row: any): RoadbookData {
     id: row.id,
     slug: row.slug,
     tour_id: row.tour_id ?? null,
+      evento_id: row.evento_id ?? null,
     espetaculo: row.espetaculo ?? "",
     cidade: row.cidade ?? "",
     estado: row.estado ?? "",

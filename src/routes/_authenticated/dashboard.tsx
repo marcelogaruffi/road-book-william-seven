@@ -2,18 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { 
   Plus, ExternalLink, Pencil, Trash2, Copy, Calendar, MapPin, 
   MoreVertical, BookOpen, MapPinned, Bus, ChevronRight 
@@ -83,16 +73,20 @@ function Dashboard() {
 
   useEffect(() => { load(); }, []);
 
+  const [deleteRbId, setDeleteRbId] = useState<string | null>(null);
+  
   async function onDelete(id: string) {
-    if (!confirm("Excluir este Road Book?")) return;
     const { error } = await supabase.from("roadbooks").delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+    setDeleteRbId(null);
   }
 
+  const [deleteTourId, setDeleteTourId] = useState<string | null>(null);
+
   async function onDeleteTour(id: string) {
-    if (!confirm("Excluir esta turnê? Os Road Books vinculados serão mantidos.")) return;
     const { error } = await supabase.from("tours").delete().eq("id", id);
     if (error) toast.error(error.message); else { toast.success("Excluída"); load(); }
+    setDeleteTourId(null);
   }
 
   const getGradient = (index: number) => {
@@ -271,7 +265,7 @@ function Dashboard() {
                            <Link to="/tour/$id" params={{ id: t.id }} className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200"><Pencil className="size-4 mr-3" /> Editar Detalhes</Link>
                         </DropdownMenuItem>
                         <div className="h-px bg-slate-100 dark:bg-white/10 my-1 -mx-2"></div>
-                        <DropdownMenuItem onClick={() => onDeleteTour(t.id)} className="text-red-500 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-500/10 rounded-xl py-2.5 font-semibold">
+                        <DropdownMenuItem onClick={() => setDeleteTourId(t.id)} className="text-red-500 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-500/10 rounded-xl py-2.5 font-semibold">
                           <Trash2 className="size-4 mr-3" /> Excluir Turnê
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -350,7 +344,7 @@ function Dashboard() {
                     <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" onClick={() => setDup(r)} title="Duplicar">
                       <Copy className="size-4.5" />
                     </Button>
-                    <Button variant="outline" onClick={() => onDelete(r.id)} className="rounded-xl h-11 w-full sm:w-11 px-0 bg-red-50/50 shadow-sm hover:bg-red-100 border-red-200 text-red-500 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors" title="Excluir">
+                    <Button variant="outline" onClick={() => setDeleteRbId(r.id)} className="rounded-xl h-11 w-full sm:w-11 px-0 bg-red-50/50 shadow-sm hover:bg-red-100 border-red-200 text-red-500 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors" title="Excluir">
                       <Trash2 className="size-4.5" />
                     </Button>
                   </div>
@@ -372,6 +366,36 @@ function Dashboard() {
           onDone={load}
         />
       )}
+
+      <Dialog open={!!deleteRbId} onOpenChange={(open) => !open && setDeleteRbId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Roadbook</DialogTitle>
+            <DialogDescription>
+              Você tem certeza que deseja excluir? Esta ação não poderá ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteRbId(null)}>Cancelar</Button>
+            <Button onClick={() => deleteRbId && onDelete(deleteRbId)} className="bg-red-500 hover:bg-red-600">Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleteTourId} onOpenChange={(open) => !open && setDeleteTourId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Turnê</DialogTitle>
+            <DialogDescription>
+              Você tem certeza que deseja excluir esta turnê? Os Road Books vinculados a ela serão mantidos, mas a turnê não poderá ser recuperada.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTourId(null)}>Cancelar</Button>
+            <Button onClick={() => deleteTourId && onDeleteTour(deleteTourId)} className="bg-red-500 hover:bg-red-600">Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

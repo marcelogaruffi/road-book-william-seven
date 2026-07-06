@@ -300,6 +300,8 @@ function EventosComponent() {
                 </div>
                 
                 {showDropdown && (
+                  <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)}></div>
                   <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border rounded-xl shadow-xl z-50 p-3 max-h-64 overflow-y-auto">
                     <div className="flex flex-col gap-4">
                       {[
@@ -312,7 +314,7 @@ function EventosComponent() {
                       ].map(group => {
                         const groupProfs = profissionais
                           .filter(p => group.roles.includes(p.role) && !equipe.includes(p.id))
-                          .sort((a, b) => a.nome.localeCompare(b.nome));
+                          .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
                           
                         if (groupProfs.length === 0) return null;
                         return (
@@ -338,6 +340,7 @@ function EventosComponent() {
                       )}
                     </div>
                   </div>
+                  </>
                 )}
               </div>
 
@@ -346,7 +349,7 @@ function EventosComponent() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-dashed">
                   {equipe.map(id => profissionais.find(x => x.id === id))
                     .filter((p): p is Profile => p !== undefined)
-                    .sort((a, b) => a.nome.localeCompare(b.nome))
+                    .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
                     .map(p => (
                       <div key={p.id} className="flex items-center justify-between p-3 rounded-xl border border-primary/20 bg-white dark:bg-card shadow-sm">
                         <div>

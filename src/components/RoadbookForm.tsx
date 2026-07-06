@@ -30,12 +30,14 @@ import { formatPhone } from "@/lib/utils";
 import { makeRoadbookSlug } from "@/lib/slug";
 
 type TourOpt = { id: string; nome: string };
+type EventoOpt = { id: string; espetaculo: string; cidade: string; data: string; data_inicio: string | null; data_fim: string | null; local: string; };
 
 export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const navigate = useNavigate();
   const [d, setD] = useState<RoadbookData>(initial);
   const [saving, setSaving] = useState(false);
   const [tours, setTours] = useState<TourOpt[]>([]);
+  const [eventos, setEventos] = useState<EventoOpt[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
@@ -63,8 +65,12 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("tours").select("id,nome").order("nome");
-      setTours((data as TourOpt[]) ?? []);
+      const [toursRes, eventosRes] = await Promise.all([
+        supabase.from("tours").select("id,nome").order("nome"),
+        supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local").order("data", { ascending: false })
+      ]);
+      setTours((toursRes.data as TourOpt[]) ?? []);
+      setEventos((eventosRes.data as EventoOpt[]) ?? []);
     })();
   }, []);
 
@@ -113,7 +119,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const dayGroups = useMemo(() => {
     // group programacao by data
     const map = new Map<string, { item: ProgItem, globalIndex: number }[]>();
-    d.programacao.forEach((p, i) => {
+    (Array.isArray(d.programacao) ? d.programacao : []).forEach((p, i) => {
       const k = p.data || "";
       if (!map.has(k)) map.set(k, []);
       map.get(k)!.push({ item: p, globalIndex: i });
@@ -639,7 +645,65 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6">
               <CardTitle className="text-2xl font-black flex items-center gap-2"><LayoutList className="size-6 text-primary" /> Capa e Configurações</CardTitle>
             </CardHeader>
+
             <CardContent className="grid sm:grid-cols-2 gap-6">
+              <div className="sm:col-span-2 space-y-2 border-b border-slate-100 dark:border-white/5 pb-6 mb-2">
+                <Label className="font-bold text-slate-700 dark:text-slate-300">Vincular a um Evento (Preenchimento Automático e RLS)</Label>
+                <Select 
+                  value={d.evento_id || "none"} 
+                  onValueChange={(val) => {
+                    if (val === "none") {
+                      up("evento_id", null);
+                      return;
+                    }
+                    const ev = eventos.find(e => e.id === val);
+                    if (ev) {
+                      setD(s => ({
+                        ...s,
+                        evento_id: ev.id,
+                        espetaculo: ev.espetaculo || s.espetaculo,
+                        cidade: ev.cidade || s.cidade,
+                        data_inicial: ev.data_inicio || ev.data || s.data_inicial,
+                        data_final: ev.data_fim || ev.data || s.data_final,
+                        teatro_nome: ev.local || s.teatro_nome,
+                      }));
+                      toast.success("Dados preenchidos a partir do evento!");
+                    }
+                  }}
+                >
+                  <SelectTrigger className="h-12 rounded-xl bg-primary/5 border-primary/20">
+                    <SelectValue placeholder="Selecione um evento..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum evento</SelectItem>
+                    {eventos && Array.isArray(eventos) && eventos.map(e => {
+                      if (!e) return null;
+                      let dataStr = 'S/ Data';
+                      try {
+                        if (e.data && typeof e.data === 'string' && e.data.trim() !== '') {
+                          const parts = e.data.split('-');
+                          if (parts.length === 3) {
+                            dataStr = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                          } else {
+                            dataStr = e.data;
+                          }
+                        }
+                      } catch (err) {
+                        dataStr = 'Erro na Data';
+                      }
+                      return (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.cidade || 'Sem Cidade'} - {e.espetaculo || 'Sem Espetáculo'} ({dataStr})
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">
+                  Ao selecionar um evento, apenas os profissionais escalados naquele evento poderão ver este Roadbook.
+                </p>
+              </div>
+
               <Field label="Espetáculo *">
                 <Input required value={d.espetaculo} onChange={(e) => up("espetaculo", e.target.value)} />
               </Field>
@@ -675,7 +739,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                   <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Nenhuma</SelectItem>
-                    {tours.map((t) => <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>)}
+                    {tours && Array.isArray(tours) && tours.map((t) => <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </Field>
@@ -741,7 +805,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             </CardHeader>
             <CardContent className="space-y-3">
               {d.quartos.length === 0 && <p className="text-sm text-muted-foreground">Nenhum quarto.</p>}
-              {d.quartos.map((q, i) => (
+              {(Array.isArray(d.quartos) ? d.quartos : []).map((q, i) => (
                 <div key={i} className="grid sm:grid-cols-12 gap-2 items-end border rounded-md p-3">
                   <div className="sm:col-span-7"><Label className="text-xs">Pessoa</Label><Input value={q.pessoa} onChange={(e) => updateQuarto(i, { pessoa: e.target.value })} /></div>
                   <div className="sm:col-span-4"><Label className="text-xs">Quarto</Label><Input value={q.numero} onChange={(e) => updateQuarto(i, { numero: e.target.value })} /></div>
@@ -803,7 +867,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             </CardHeader>
             <CardContent className="space-y-3">
               {d.outros_contatos.length === 0 && <p className="text-sm text-muted-foreground">Nenhum.</p>}
-              {d.outros_contatos.map((c, i) => (
+              {(Array.isArray(d.outros_contatos) ? d.outros_contatos : []).map((c, i) => (
                 <div key={i} className="grid sm:grid-cols-12 gap-2 items-end border rounded-md p-3">
                   <div className="sm:col-span-3"><Label className="text-xs">Nome</Label><Input value={c.nome} onChange={(e) => updateContato(i, { nome: e.target.value })} /></div>
                   <div className="sm:col-span-3"><Label className="text-xs">Função</Label><Input value={c.funcao} onChange={(e) => updateContato(i, { funcao: e.target.value })} /></div>
@@ -1114,8 +1178,8 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             </CardHeader>
             <CardContent className="space-y-4">
               {(() => {
-                const fotos = d.documentos.map((doc, i) => ({ doc, i })).filter(x => x.doc.tipo?.startsWith("image/"));
-                const pdfs = d.documentos.map((doc, i) => ({ doc, i })).filter(x => !x.doc.tipo?.startsWith("image/"));
+                const fotos = (Array.isArray(d.documentos) ? d.documentos : []).map((doc, i) => ({ doc, i })).filter(x => x.doc.tipo?.startsWith("image/"));
+                const pdfs = (Array.isArray(d.documentos) ? d.documentos : []).map((doc, i) => ({ doc, i })).filter(x => !x.doc.tipo?.startsWith("image/"));
                 return (
                   <div className={`space-y-6 ${userRole === 'iluminador' ? 'pointer-events-none opacity-90' : ''}`}>
       {userRole === 'iluminador' && (

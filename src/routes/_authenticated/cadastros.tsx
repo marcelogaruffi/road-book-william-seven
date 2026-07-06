@@ -109,6 +109,10 @@ function UsersPage() {
   }
 
   function openEdit(u: Profile) {
+    if (u.role === 'dev' && profile?.role !== 'dev') {
+      toast.error("Administradores não podem editar o perfil Desenvolvedor.");
+      return;
+    }
     setEditUser(u);
     setEditNome(u.nome);
     setEditTelefone(u.telefone || "");
