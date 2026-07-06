@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { toast } from "sonner";
+import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute('/_authenticated/eventos')({
   component: EventosComponent,
@@ -202,7 +203,7 @@ function EventosComponent() {
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold">
-                    <Calendar className="size-3 mr-1" /> {fmtDate(ev.data)} às {ev.horario.substring(0,5)}
+                    <Calendar className="size-3 mr-1" /> {fmtDate(ev.data)} às {ev.horario?.substring(0,5)}
                   </Badge>
                   {ev.turne_id && (
                     <Badge variant="outline" className="text-slate-500">
