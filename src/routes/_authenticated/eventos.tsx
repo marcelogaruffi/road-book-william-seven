@@ -44,7 +44,6 @@ function EventosComponent() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [profissionais, setProfissionais] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -98,6 +97,7 @@ function EventosComponent() {
     setLocal('');
     setEspetaculo('');
     setEquipe([]);
+    setShowDropdown(false);
     setOpenDialog(true);
   };
 
@@ -112,6 +112,7 @@ function EventosComponent() {
     setLocal(ev.local);
     setEspetaculo(ev.espetaculo);
     setEquipe(ev.equipe || []);
+    setShowDropdown(false);
     setOpenDialog(true);
   };
 
@@ -363,4 +364,14 @@ function EventosComponent() {
                 </div>
               )}
             </div>
-          
+          </div>
+
+          <DialogFooter className="mt-4 gap-2">
+            <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">Cancelar</Button>
+            <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md"><Save className="size-4 mr-2"/> Salvar Evento</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
