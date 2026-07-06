@@ -1181,12 +1181,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                 const fotos = (Array.isArray(d.documentos) ? d.documentos : []).map((doc, i) => ({ doc, i })).filter(x => x.doc.tipo?.startsWith("image/"));
                 const pdfs = (Array.isArray(d.documentos) ? d.documentos : []).map((doc, i) => ({ doc, i })).filter(x => !x.doc.tipo?.startsWith("image/"));
                 return (
-                  <div className={`space-y-6 ${userRole === 'iluminador' ? 'pointer-events-none opacity-90' : ''}`}>
-      {userRole === 'iluminador' && (
-        <div className="bg-amber-100 text-amber-800 p-4 rounded-xl border border-amber-200 flex items-center justify-center font-bold pointer-events-auto">
-          Você está em Modo Leitura (Iluminador). A edição está desabilitada.
-        </div>
-      )}
+                  <div className="space-y-6">
                     {fotos.length > 0 && (
                       <div>
                         <h4 className="text-sm font-semibold mb-3 border-b pb-1">Galeria de Fotos</h4>
