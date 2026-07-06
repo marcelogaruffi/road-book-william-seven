@@ -23,7 +23,7 @@ function FinanceiroPage() {
       const { data: authData } = await supabase.auth.getUser();
       if (authData.user) {
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
-        if (profile && profile.role === 'admin') {
+        if (profile && (profile.role === 'admin' || profile.role === 'dev')) {
           setIsAdmin(true);
         }
       }
@@ -43,7 +43,7 @@ function FinanceiroPage() {
       <div className="flex flex-col items-center justify-center h-[70vh]">
         <Wallet className="size-16 text-slate-300 mb-4" />
         <h2 className="text-2xl font-bold text-slate-700">Acesso Negado</h2>
-        <p className="text-slate-500 mt-2">O painel financeiro é restrito ao Administrador Master.</p>
+        <p className="text-slate-500 mt-2">O painel financeiro é restrito a Administradores e Desenvolvedores.</p>
       </div>
     );
   }
