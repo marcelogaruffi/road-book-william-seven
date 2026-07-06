@@ -269,7 +269,7 @@ function UsersPage() {
                           {i.role === "motorista" && <Badge className="ml-2 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">MOTORISTA</Badge>}
                           {i.role === "user" && <Badge className="ml-2 text-xs bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">USUÁRIO PADRÃO</Badge>}
                         </div>
-                        <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString()}</p>
+                        <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString('pt-BR')}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <Button variant="ghost" size="icon" onClick={() => copyToken(i.token)} className="rounded-full text-slate-400 hover:text-primary hover:bg-primary/10" title="Copiar Token">

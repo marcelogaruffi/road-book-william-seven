@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { FileDown, FileSpreadsheet, Plus, Trash2, ChevronDown, Users, Pencil, Check } from "lucide-react";
+import { FileDown, FileSpreadsheet, Plus, Trash2, ChevronDown, Users, Pencil, Check, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
@@ -32,6 +32,19 @@ function PublicoPage() {
   const [roadbooks, setRoadbooks] = useState<any[]>([]);
   const [registros, setRegistros] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    async function checkRole() {
+      const { data: authData } = await supabase.auth.getUser();
+      if (authData.user) {
+        const { data: p } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
+        if (p) setProfile(p);
+      }
+    }
+    checkRole();
+  }, []);
+
 
   // Form State
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -332,6 +345,17 @@ function PublicoPage() {
     });
 
     doc.save("Relatorio_Publico.pdf");
+  }
+
+
+  if (profile && !['dev', 'admin', 'produtor'].includes(profile.role)) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[70vh]">
+        <ShieldAlert className="size-16 text-slate-300 mb-4" />
+        <h2 className="text-2xl font-bold text-slate-700">Acesso Negado</h2>
+        <p className="text-slate-500 mt-2">Esta tela é restrita a Produtores, Administradores e Desenvolvedores.</p>
+      </div>
+    );
   }
 
   return (
