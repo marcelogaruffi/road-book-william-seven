@@ -605,9 +605,9 @@ function AuthPage() {
             <canvas ref={canvasRef} className="hidden" />
           </div>
           <div className="flex justify-center mt-6 pb-2">
-            <Button onClick={capturePhoto} className="h-20 w-20 rounded-full bg-red-500 hover:bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.3)] border-[6px] border-red-100 dark:border-white/20 flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
-              <div className="size-12 bg-white rounded-full shadow-inner"></div>
-            </Button>
+            <button onClick={capturePhoto} className="h-20 w-20 flex-shrink-0 aspect-square p-0 rounded-full bg-red-500 hover:bg-red-600 shadow-[0_0_20px_rgba(239,68,68,0.3)] border-[6px] border-red-100 dark:border-white/20 flex items-center justify-center transition-transform hover:scale-105 active:scale-95 outline-none">
+              <div className="size-12 bg-white rounded-full shadow-inner flex-shrink-0"></div>
+            </button>
           </div>
         </DialogContent>
       </Dialog>
