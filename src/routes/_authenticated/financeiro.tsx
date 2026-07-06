@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Wallet } from "lucide-react";
+import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
   component: FinanceiroPage,
@@ -16,16 +17,13 @@ function FinanceiroPage() {
   const [selectedRoadbook, setSelectedRoadbook] = useState<string>("");
   const [loading, setLoading] = useState(true);
 
+  const { profile } = AuthedRoute.useRouteContext();
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     (async () => {
-      const { data: authData } = await supabase.auth.getUser();
-      if (authData.user) {
-        const { data: profile } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
-        if (profile && (profile.role === 'admin' || profile.role === 'dev')) {
-          setIsAdmin(true);
-        }
+      if (profile && (profile.role === 'admin' || profile.role === 'dev')) {
+        setIsAdmin(true);
       }
       
       const { data, error } = await supabase.from("roadbooks").select("id, espetaculo, cidade, data_inicial").order("data_inicial", { ascending: false });

@@ -7,6 +7,8 @@ import {
   Ticket, Settings, Sun, Moon, LogOut, Wallet 
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Users } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -21,16 +23,33 @@ export const Route = createFileRoute("/_authenticated")({
     const { data: authData, error: authError } = await supabase.auth.getUser();
     if (authError || !authData.user) throw redirect({ to: "/auth" });
     
+    let profile = null;
+    let isSimulating = false;
+
     // Buscar perfil do usuário
-    const { data: profile } = await supabase
+    const { data: realProfile } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", authData.user.id)
       .single();
 
+    profile = realProfile;
+
+    if (realProfile?.role === 'dev') {
+      const stored = localStorage.getItem('simulated_profile');
+      if (stored) {
+        try {
+          profile = JSON.parse(stored);
+          isSimulating = true;
+        } catch(e) {}
+      }
+    }
+
     return { 
       user: authData.user,
-      profile: profile as Profile | null
+      realProfile: realProfile as Profile | null,
+      profile: profile as Profile | null,
+      isSimulating
     };
   },
   component: AuthedLayout,
@@ -38,9 +57,22 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthedLayout() {
   const navigate = useNavigate();
-  const { user, profile } = Route.useRouteContext();
+  const { user, profile, realProfile, isSimulating } = Route.useRouteContext();
   const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [simuladorOpen, setSimuladorOpen] = useState(false);
+  const [usersToSimulate, setUsersToSimulate] = useState<Profile[]>([]);
+  
+  async function loadUsersToSimulate() {
+    setSimuladorOpen(true);
+    const { data } = await supabase.from('profiles').select('*').order('nome');
+    if (data) setUsersToSimulate(data as Profile[]);
+  }
+
+  function startSimulation(u: Profile) {
+    localStorage.setItem('simulated_profile', JSON.stringify(u));
+    window.location.reload();
+  }
 
   useEffect(() => {
     if (document.documentElement.classList.contains("dark")) {
@@ -72,8 +104,24 @@ function AuthedLayout() {
   const userRole = profile?.role || "user";
   const fotoUrl = profile?.foto_url;
 
+  const clearSimulation = () => {
+    localStorage.removeItem("simulated_profile");
+    window.location.reload();
+  };
+
   return (
     <div className="flex min-h-screen bg-slate-50/50 dark:bg-background transition-colors duration-500 overflow-x-hidden">
+      {isSimulating && (
+        <div className="fixed top-0 left-0 w-full z-50 bg-red-600 text-white p-2 px-4 flex items-center justify-between shadow-md">
+          <div className="font-bold flex items-center gap-2">
+            <span className="animate-pulse">⚠️</span>
+            MODO SIMULADOR ATIVO: Você está visualizando o sistema como {userName} ({userRole})
+          </div>
+          <Button variant="outline" size="sm" onClick={clearSimulation} className="text-black bg-white hover:bg-slate-100 font-bold border-none h-8">
+            Encerrar Simulação
+          </Button>
+        </div>
+      )}
       {/* OVERLAY MOBILE */}
       {sidebarOpen && (
         <div 
@@ -194,6 +242,12 @@ function AuthedLayout() {
           )}
         </div>
 
+          {realProfile?.role === 'dev' && (
+            <Button variant="ghost" onClick={loadUsersToSimulate} className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 font-bold transition-colors`}>
+               <Users className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+               {sidebarOpen && <span>Simulador de Acesso</span>}
+            </Button>
+          )}
         <div className="p-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
           <Button 
             variant="ghost" 
@@ -240,6 +294,28 @@ function AuthedLayout() {
       <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] overflow-x-hidden print:m-0 print:p-0`}>
         <Outlet />
       </main>
+      {/* SIMULADOR DIALOG */}
+      <Dialog open={simuladorOpen} onOpenChange={setSimuladorOpen}>
+        <DialogContent className="sm:max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Simular Acesso</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 mt-4">
+            {usersToSimulate.map(u => (
+              <div key={u.id} onClick={() => startSimulation(u)} className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer border">
+                <Avatar className="size-8">
+                  <AvatarImage src={u.foto_url || undefined} />
+                  <AvatarFallback>{u.nome ? u.nome[0] : 'U'}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <span className="font-bold text-sm">{u.nome}</span>
+                  <span className="text-xs text-slate-500">{u.role}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

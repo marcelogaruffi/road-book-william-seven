@@ -39,7 +39,8 @@ type Tour = {
 };
 
 function EventosComponent() {
-  const [role, setRole] = useState<string | null>(null);
+  const { profile, isSimulating } = AuthedRoute.useRouteContext();
+  const role = profile?.role || null;
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
   const [profissionais, setProfissionais] = useState<Profile[]>([]);
@@ -66,19 +67,19 @@ function EventosComponent() {
 
   const loadData = async () => {
     setLoading(true);
-    const { data: authData } = await supabase.auth.getUser();
-    if (authData.user) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
-      if (profile) setRole(profile.role);
-    }
-
     const [evRes, trRes, profRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, nome, role').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'artista'])
     ]);
 
-    if (evRes.data) setEventos(evRes.data);
+    if (evRes.data) {
+      let finalEv = evRes.data;
+      if (isSimulating && profile && !['admin', 'dev', 'produtor'].includes(profile.role)) {
+        finalEv = finalEv.filter(e => e.equipe?.includes(profile.id));
+      }
+      setEventos(finalEv);
+    }
     if (trRes.data) setTours(trRes.data);
     if (profRes.data) setProfissionais(profRes.data);
     setLoading(false);

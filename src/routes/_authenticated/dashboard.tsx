@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Route as AuthedRoute } from "./route";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { 
@@ -49,24 +50,31 @@ function Dashboard() {
 
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState<any>(null);
+  const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const [dup, setDup] = useState<Roadbook | null>(null);
 
   async function load() {
     setLoading(true);
-    const { data: authData } = await supabase.auth.getUser();
-    if (authData.user) {
-      const { data: p } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single();
-      if (p) setProfile(p);
+    const [{ data: rb, error: e1 }, { data: tr, error: e2 }, { data: evts }] = await Promise.all([
+      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id,evento_id").order("data_inicial", { ascending: true }),
+      supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
+      isSimulating ? supabase.from("eventos").select("id, equipe") : Promise.resolve({ data: [] })
+    ]);
+    
+    let roadbooksFinal = rb as Roadbook[] || [];
+    if (isSimulating && profile) {
+      if (!['admin', 'dev', 'produtor'].includes(profile.role)) {
+         roadbooksFinal = roadbooksFinal.filter(r => {
+           if (!r.evento_id) return true;
+           const evt = evts?.find(e => e.id === r.evento_id);
+           return evt?.equipe?.includes(profile.id);
+         });
+      }
     }
 
-    const [{ data: rb, error: e1 }, { data: tr, error: e2 }] = await Promise.all([
-      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id").order("data_inicial", { ascending: true }),
-      supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
-    ]);
     if (e1) toast.error(e1.message);
     if (e2) toast.error(e2.message);
-    setItems((rb as Roadbook[]) ?? []);
+    setItems(roadbooksFinal);
     setTours((tr as Tour[]) ?? []);
     setLoading(false);
   }
