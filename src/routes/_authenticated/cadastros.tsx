@@ -65,11 +65,7 @@ function UsersPage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   useEffect(() => {
-    if (user.email === "marcelo.garuffi@gmail.com") {
-      loadData();
-    } else {
-      setLoading(false);
-    }
+    loadData();
   }, [user]);
 
   async function loadData() {
