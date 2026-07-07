@@ -105,9 +105,9 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       const { error } = await supabase.storage.from("roadbook-docs").upload(path, file, { upsert: true, contentType: file.type });
       if (error) throw error;
       
-      const { data: signed } = await supabase.storage.from("roadbook-docs").createSignedUrl(path, 315360000); // 10 years
+      const { data: publicData } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
       
-      up("espetaculo_logo_url", signed?.signedUrl);
+      up("espetaculo_logo_url", publicData.publicUrl);
       toast.success("Logo enviado com sucesso!");
     } catch (err: any) {
       toast.error(err.message ?? "Erro no upload do logo");
