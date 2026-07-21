@@ -227,21 +227,23 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
   }, [lightbox]);
 
   // Touch Swipe handlers for Lightbox
-  const [touchStart, setTouchStart] = useState<number | null>(null);
-  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const touchStartRef = useRef<number | null>(null);
+  const touchEndRef = useRef<number | null>(null);
 
   const onTouchStart = (e: React.TouchEvent) => {
-    setTouchEnd(null);
-    setTouchStart(e.targetTouches[0].clientX);
+    touchEndRef.current = null;
+    touchStartRef.current = e.targetTouches[0].clientX;
   };
 
   const onTouchMove = (e: React.TouchEvent) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    touchEndRef.current = e.targetTouches[0].clientX;
   };
 
   const onTouchEndHandler = () => {
-    if (!touchStart || !touchEnd || !lightbox?.allItems || lightbox.allItems.length <= 1) return;
-    const distance = touchStart - touchEnd;
+    if (touchStartRef.current === null || touchEndRef.current === null) return;
+    if (!lightbox?.allItems || lightbox.allItems.length <= 1) return;
+    
+    const distance = touchStartRef.current - touchEndRef.current;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
 
@@ -1540,7 +1542,8 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                 src={lightbox.item.url}
                 alt={lightbox.item.nome}
                 onClick={(e) => e.stopPropagation()}
-                className="max-w-full max-h-full object-contain rounded shadow-2xl"
+                draggable={false}
+                className="max-w-full max-h-full object-contain rounded shadow-2xl pointer-events-none"
               />
             )
           )}
