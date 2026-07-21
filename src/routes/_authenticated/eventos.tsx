@@ -7,10 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X, ClipboardList, Lightbulb, Mic2, MessageSquareText, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from "sonner";
 import { Route as AuthedRoute } from "./route";
+import RiderViewModal from "@/components/RiderViewModal";
 
 export const Route = createFileRoute('/_authenticated/eventos')({
   component: EventosComponent,
@@ -46,6 +48,7 @@ function EventosComponent() {
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
   const [profissionais, setProfissionais] = useState<Profile[]>([]);
+  const [templatesEspetaculos, setTemplatesEspetaculos] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -61,6 +64,22 @@ function EventosComponent() {
   const [local, setLocal] = useState('');
   const [espetaculo, setEspetaculo] = useState('');
   const [equipe, setEquipe] = useState<string[]>([]);
+  const [equipeOriginal, setEquipeOriginal] = useState<string[]>([]);
+  const [searchEquipe, setSearchEquipe] = useState('');
+  const [permitirSms, setPermitirSms] = useState(false);
+
+  // SMS Dialog states
+  const [showSmsDialog, setShowSmsDialog] = useState(false);
+  const [smsMembersToNotify, setSmsMembersToNotify] = useState<string[]>([]);
+  const [smsMessage, setSmsMessage] = useState('');
+  const [sendingSms, setSendingSms] = useState(false);
+
+  // Rider dialog states
+  const [openRiderDialog, setOpenRiderDialog] = useState(false);
+  const [loadingRider, setLoadingRider] = useState(false);
+  const [currentRiderSom, setCurrentRiderSom] = useState<any>(null);
+  const [currentRiderLuz, setCurrentRiderLuz] = useState<any>(null);
+  const [currentEventName, setCurrentEventName] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
@@ -69,10 +88,12 @@ function EventosComponent() {
 
   const loadData = async () => {
     setLoading(true);
-    const [evRes, trRes, profRes] = await Promise.all([
+    const [evRes, trRes, profRes, tempRes, confRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, nome, role').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'artista'])
+      supabase.from('profiles').select('id, nome, role').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'artista']),
+      supabase.from('templates_espetaculos').select('nome_espetaculo'),
+      supabase.from('configuracoes_sistema').select('permitir_sms_escala').eq('id', 1).maybeSingle()
     ]);
 
     if (evRes.data) {
@@ -84,6 +105,8 @@ function EventosComponent() {
     }
     if (trRes.data) setTours(trRes.data);
     if (profRes.data) setProfissionais(profRes.data);
+    if (tempRes.data) setTemplatesEspetaculos(tempRes.data.map(t => t.nome_espetaculo));
+    if (confRes?.data) setPermitirSms(confRes.data.permitir_sms_escala);
     setLoading(false);
   };
 
@@ -100,6 +123,8 @@ function EventosComponent() {
     setLocal('');
     setEspetaculo('');
     setEquipe([]);
+    setEquipeOriginal([]);
+    setSearchEquipe('');
     setShowDropdown(false);
     setOpenDialog(true);
   };
@@ -115,6 +140,7 @@ function EventosComponent() {
     setLocal(ev.local);
     setEspetaculo(ev.espetaculo);
     setEquipe(ev.equipe || []);
+    setEquipeOriginal(ev.equipe || []);
     setShowDropdown(false);
     setOpenDialog(true);
   };
@@ -127,6 +153,25 @@ function EventosComponent() {
     } else {
       toast.success('Evento excluído.');
       loadData();
+    }
+  };
+
+  const handleCreateEspetaculo = async () => {
+    const novo = window.prompt("Qual o nome do novo Espetáculo?");
+    if (!novo || !novo.trim()) return;
+    const cleanName = novo.trim();
+    if (templatesEspetaculos.includes(cleanName)) {
+      toast.warning("Este espetáculo já existe.");
+      setEspetaculo(cleanName);
+      return;
+    }
+    const { error } = await supabase.from('templates_espetaculos').insert({ nome_espetaculo: cleanName });
+    if (error) {
+      toast.error("Erro ao criar espetáculo: " + error.message);
+    } else {
+      toast.success("Espetáculo cadastrado!");
+      setTemplatesEspetaculos(prev => [...prev, cleanName].sort());
+      setEspetaculo(cleanName);
     }
   };
 
@@ -164,7 +209,75 @@ function EventosComponent() {
       toast.success('Evento salvo com sucesso.');
       setOpenDialog(false);
       loadData();
+      
+      // Check if there are new members to notify
+      if (permitirSms) {
+        const novosMembros = equipe.filter(m => !equipeOriginal.includes(m));
+        if (novosMembros.length > 0) {
+          setSmsMembersToNotify(novosMembros);
+          setSmsMessage(`Olá! Você foi escalado(a) para o espetáculo ${espetaculo} em ${cidade} no dia ${new Date(dataApres + 'T12:00:00Z').toLocaleDateString('pt-BR')}. Acesse o painel de gestão do William Seven para mais detalhes!`);
+          setShowSmsDialog(true);
+        }
+      }
     }
+  };
+
+  const handleSendSms = async (members: string[], customMessage: string) => {
+    setSendingSms(true);
+    const { data, error } = await supabase.rpc('send_sms_notification', {
+      profile_ids: members,
+      sms_body: customMessage
+    });
+    setSendingSms(false);
+    
+    if (error) {
+      toast.error("Erro ao enviar SMS: " + error.message);
+    } else {
+      const result: any = data;
+      if (result.success > 0) {
+        toast.success(`SMS enviado com sucesso para ${result.success} pessoa(s).`);
+      }
+      if (result.failed_no_phone > 0) {
+        toast.warning(`${result.failed_no_phone} pessoa(s) não tinham telefone cadastrado.`);
+      }
+      if (result.failed_api > 0) {
+        if (result.last_api_error) {
+          toast.error(`Falha no Twilio: ${result.last_api_error}`);
+          console.error("Twilio Error:", result.last_api_error);
+        } else {
+          toast.error(`Falha ao enviar para ${result.failed_api} pessoa(s) (Verifique o saldo do Twilio ou os números autorizados no modo Trial).`);
+        }
+      }
+      setShowSmsDialog(false);
+    }
+  };
+
+  const notifyAll = (ev: Evento) => {
+    if (!ev.equipe || ev.equipe.length === 0) {
+      toast.warning('Este evento não possui equipe escalada.');
+      return;
+    }
+    setSmsMembersToNotify(ev.equipe);
+    setSmsMessage(`Lembrete: O espetáculo ${ev.espetaculo} em ${ev.cidade} será dia ${new Date(ev.data + 'T12:00:00Z').toLocaleDateString('pt-BR')}.`);
+    setShowSmsDialog(true);
+  };
+
+  const handleViewRider = async (ev: Evento) => {
+    setCurrentEventName(`${ev.espetaculo} em ${ev.cidade}`);
+    setOpenRiderDialog(true);
+    setLoadingRider(true);
+    setCurrentRiderSom(null);
+    setCurrentRiderLuz(null);
+
+    const [resSom, resLuz] = await Promise.all([
+      supabase.from('mapas_som').select('*').eq('evento_id', ev.id).maybeSingle(),
+      supabase.from('mapas_luz').select('*').eq('evento_id', ev.id).maybeSingle()
+    ]);
+
+    if (resSom.data) setCurrentRiderSom(resSom.data);
+    if (resLuz.data) setCurrentRiderLuz(resLuz.data);
+    
+    setLoadingRider(false);
   };
 
   const toggleEquipe = (id: string) => {
@@ -173,6 +286,51 @@ function EventosComponent() {
 
   const getTourName = (id: string | null) => tours.find(t => t.id === id)?.nome || 'Sem turnê vinculada';
   const fmtDate = (d: string) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('pt-BR') : '';
+
+  const hoje = new Date().toISOString().split('T')[0];
+  const proximos = eventos.filter(e => e.data >= hoje);
+  const realizados = eventos.filter(e => e.data < hoje).reverse();
+
+  const renderEventoCard = (ev: Evento) => (
+    <Card key={ev.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group rounded-[1.5rem]">
+      <div className="flex-1">
+        <div className="flex items-center gap-2 mb-2">
+          <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold">
+            <Calendar className="size-3 mr-1" /> {fmtDate(ev.data)} às {ev.horario?.substring(0,5)}
+          </Badge>
+          {ev.turne_id && (
+            <Badge variant="outline" className="text-slate-500">
+              Turnê: {getTourName(ev.turne_id)}
+            </Badge>
+          )}
+        </div>
+        <h3 className="font-black text-xl text-slate-800 dark:text-white mb-1">{ev.espetaculo}</h3>
+        <div className="flex items-center text-sm font-semibold text-slate-500 gap-4">
+          <span className="flex items-center"><MapPin className="size-4 mr-1"/> {ev.cidade} - {ev.local}</span>
+          <span className="flex items-center"><Users className="size-4 mr-1"/> {ev.equipe?.length || 0} membros na equipe</span>
+        </div>
+      </div>
+
+      {canEdit && (
+        <div className="flex flex-wrap gap-2 justify-end w-full md:w-auto">
+          {permitirSms && (
+            <Button variant="outline" size="sm" onClick={() => notifyAll(ev)} className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50" title="Notificar Equipe via SMS">
+              <Mic2 className="size-4 mr-1" /> Avisar escala via SMS
+            </Button>
+          )}
+          <Button variant="outline" size="sm" onClick={() => handleViewRider(ev)} className="rounded-xl border-slate-200" title="Ver Riders de Palco">
+            <Lightbulb className="size-4 mr-1" /> Riders
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(ev)} className="rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10">
+            <Edit className="size-4" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.id)} className="rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
+            <Trash2 className="size-4" />
+          </Button>
+        </div>
+      )}
+    </Card>
+  );
 
   return (
     <div className="space-y-6">
@@ -192,44 +350,36 @@ function EventosComponent() {
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-      ) : eventos.length === 0 ? (
+      ) : proximos.length === 0 && realizados.length === 0 ? (
         <Card className="p-16 text-center border-dashed border-2 bg-transparent rounded-[2rem]">
           <p className="text-slate-500 font-medium mb-6">Nenhum evento cadastrado ainda.</p>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {eventos.map(ev => (
-            <Card key={ev.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group rounded-[1.5rem]">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold">
-                    <Calendar className="size-3 mr-1" /> {fmtDate(ev.data)} às {ev.horario?.substring(0,5)}
-                  </Badge>
-                  {ev.turne_id && (
-                    <Badge variant="outline" className="text-slate-500">
-                      Turnê: {getTourName(ev.turne_id)}
-                    </Badge>
-                  )}
-                </div>
-                <h3 className="font-black text-xl text-slate-800 dark:text-white mb-1">{ev.espetaculo}</h3>
-                <div className="flex items-center text-sm font-semibold text-slate-500 gap-4">
-                  <span className="flex items-center"><MapPin className="size-4 mr-1"/> {ev.cidade} - {ev.local}</span>
-                  <span className="flex items-center"><Users className="size-4 mr-1"/> {ev.equipe?.length || 0} membros na equipe</span>
-                </div>
+        <div className="space-y-12">
+          {proximos.length > 0 ? (
+            <div>
+              <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6">Próximos Eventos</h3>
+              <div className="grid gap-4">
+                {proximos.map(renderEventoCard)}
               </div>
-
-              {canEdit && (
-                <div className="flex gap-2">
-                  <Button variant="outline" size="icon" onClick={() => handleOpenEdit(ev)} className="rounded-xl">
-                    <Edit className="size-4 text-slate-500" />
-                  </Button>
-                  <Button variant="outline" size="icon" onClick={() => handleDelete(ev.id)} className="rounded-xl hover:bg-red-50 hover:text-red-500">
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
-              )}
-            </Card>
-          ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
+              <p className="text-slate-500 font-medium">Nenhum evento futuro encontrado.</p>
+            </div>
+          )}
+          
+          {realizados.length > 0 && (
+            <div>
+              <div className="flex items-center gap-3 mb-6 opacity-70">
+                <h3 className="text-xl font-bold tracking-tight text-slate-500 dark:text-slate-400">Eventos Realizados</h3>
+                <div className="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
+              </div>
+              <div className="grid gap-4 opacity-90">
+                {realizados.map(renderEventoCard)}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -242,8 +392,22 @@ function EventosComponent() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-4">
             <div className="space-y-2 md:col-span-2">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Nome do Evento / Espetáculo *</Label>
-              <Input value={espetaculo} onChange={e => setEspetaculo(e.target.value)} className="h-12 rounded-xl" />
+              <div className="flex items-center justify-between">
+                <Label className="font-bold text-slate-700 dark:text-slate-300">Nome do Evento / Espetáculo *</Label>
+                <Button type="button" variant="ghost" size="sm" onClick={handleCreateEspetaculo} className="h-8 text-primary font-bold">
+                  <Plus className="size-4 mr-1" /> Novo Espetáculo
+                </Button>
+              </div>
+              <select 
+                value={espetaculo} 
+                onChange={e => setEspetaculo(e.target.value)}
+                className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+              >
+                <option value="">Selecione um espetáculo...</option>
+                {templatesEspetaculos.map(esp => (
+                  <option key={esp} value={esp}>{esp}</option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-2 md:col-span-2">
@@ -304,8 +468,15 @@ function EventosComponent() {
                 
                 {showDropdown && (
                   <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowDropdown(false)}></div>
-                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border rounded-xl shadow-xl z-50 p-3 max-h-64 overflow-y-auto">
+                  <div className="fixed inset-0 z-[60]" onClick={() => setShowDropdown(false)}></div>
+                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border rounded-xl shadow-xl z-[70] p-3 max-h-72 overflow-y-auto flex flex-col gap-3">
+                    <Input 
+                      placeholder="Buscar profissional..." 
+                      value={searchEquipe}
+                      onChange={(e) => setSearchEquipe(e.target.value)}
+                      className="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    />
                     <div className="flex flex-col gap-4">
                       {[
                         { key: 'admin', label: 'Administradores', roles: ['admin'] },
@@ -317,6 +488,7 @@ function EventosComponent() {
                       ].map(group => {
                         const groupProfs = profissionais
                           .filter(p => group.roles.includes(p.role) && !equipe.includes(p.id))
+                          .filter(p => !searchEquipe || (p.nome || '').toLowerCase().includes(searchEquipe.toLowerCase()))
                           .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
                           
                         if (groupProfs.length === 0) return null;
@@ -375,6 +547,49 @@ function EventosComponent() {
           <DialogFooter className="mt-4 gap-2">
             <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">Cancelar</Button>
             <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md"><Save className="size-4 mr-2"/> Salvar Evento</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <RiderViewModal 
+        open={openRiderDialog}
+        onClose={setOpenRiderDialog}
+        loading={loadingRider}
+        eventName={currentEventName}
+        somData={currentRiderSom}
+        luzData={currentRiderLuz}
+      />
+
+      <Dialog open={showSmsDialog} onOpenChange={setShowSmsDialog}>
+        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-0 shadow-2xl bg-white dark:bg-slate-900">
+          <div className="bg-indigo-600 dark:bg-indigo-900 p-6 text-white">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-black flex items-center gap-3">
+                <MessageSquareText className="size-6" /> Notificar Equipe
+              </DialogTitle>
+              <DialogDescription className="text-indigo-100 font-medium">
+                Deseja enviar um SMS para avisar {smsMembersToNotify.length} pessoa(s) sobre a escala?
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+          
+          <div className="p-6 space-y-4">
+            <div className="space-y-2">
+              <Label className="text-slate-700 font-bold">Mensagem do SMS</Label>
+              <Textarea 
+                value={smsMessage} 
+                onChange={(e) => setSmsMessage(e.target.value)} 
+                className="min-h-[100px] resize-none bg-slate-50 text-base"
+              />
+              <p className="text-xs text-slate-500 text-right">{smsMessage.length} caracteres</p>
+            </div>
+          </div>
+          
+          <DialogFooter className="p-6 pt-0 gap-2">
+            <Button variant="outline" onClick={() => setShowSmsDialog(false)} className="rounded-xl h-12 px-6 font-bold">Pular</Button>
+            <Button onClick={() => handleSendSms(smsMembersToNotify, smsMessage)} disabled={sendingSms} className="rounded-xl h-12 px-8 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md">
+              {sendingSms ? <Loader2 className="size-5 animate-spin mr-2" /> : <Mic2 className="size-5 mr-2"/>} Enviar SMS
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

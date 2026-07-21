@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { maskPhone } from '@/lib/utils';
+import { formatPhone } from '@/lib/utils';
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +8,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Copy, Plus, UserX, UserCheck, ShieldAlert, KeyRound, Pencil, Trash2, Mail } from "lucide-react";
+import { Copy, Plus, UserX, UserCheck, ShieldAlert, KeyRound, Pencil, Trash2, Mail, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import TemplateRidersTab from "@/components/TemplateRidersTab";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +31,8 @@ type Profile = {
   foto_url: string | null;
   email?: string | null;
   role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "artista" | "user";
+  telefone?: string | null;
+  telefone_verificado?: boolean | null;
 };
 
 type Invite = {
@@ -215,12 +219,19 @@ function UsersPage() {
       {/* HEADER */}
       <section className="space-y-4">
         <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
-          Configurações do Administrador
+          Configurações do Sistema
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 font-medium">Gere tokens de convite e gerencie os acessos ao sistema.</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Gerencie acessos e modelos padrão (Riders) do sistema.</p>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <Tabs defaultValue="equipe" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
+          <TabsTrigger value="equipe" className="rounded-lg h-full font-bold">Equipe e Convites</TabsTrigger>
+          <TabsTrigger value="riders" className="rounded-lg h-full font-bold">Riders Padrão</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="equipe" className="mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* COLUNA ESQUERDA: CONVITES */}
         <div className="space-y-6">
@@ -330,7 +341,18 @@ function UsersPage() {
                           <Mail className="size-3.5" />
                           {u.email || "Sem e-mail"}
                         </p>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{u.telefone || "Sem telefone"}</p>
+                        {u.telefone ? (
+                          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                            {formatPhone(u.telefone) || u.telefone}
+                            {u.telefone_verificado && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-700 ring-1 ring-inset ring-green-600/20">
+                                <Check className="size-3" /> Verificado
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Não verificado</p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -358,6 +380,12 @@ function UsersPage() {
           )}
         </div>
       </div>
+      </TabsContent>
+
+      <TabsContent value="riders" className="mt-0">
+        <TemplateRidersTab role={profile?.role || ''} />
+      </TabsContent>
+      </Tabs>
 
       {/* MODAL DE EDIÇÃO */}
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>

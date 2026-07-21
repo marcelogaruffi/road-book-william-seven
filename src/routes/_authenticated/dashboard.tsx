@@ -126,6 +126,58 @@ function Dashboard() {
 
   const currentCity = items.find(r => r.data_inicial === hoje)?.cidade || "Nenhuma";
 
+  const renderRoadbookCard = (r: Roadbook, index: number) => (
+    <Card key={r.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgb(0,0,0,0.3)] bg-white dark:bg-card/60 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-[1.5rem] relative overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-100 dark:bg-white/5 group-hover:bg-primary transition-colors duration-300"></div>
+      
+      <div className="min-w-0 flex-1 pl-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:hover:bg-sky-500/30 border-none font-bold rounded-lg px-3 py-0.5">
+            <Calendar className="size-3 mr-1.5 inline-block -mt-0.5" />
+            {fmtDate(r.data_inicial)}
+          </Badge>
+          {r.festival && (
+            <Badge variant="secondary" className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 dark:bg-fuchsia-500/20 dark:text-fuchsia-300 dark:hover:bg-fuchsia-500/30 border-none font-bold rounded-lg px-3 py-0.5">
+              {r.festival}
+            </Badge>
+          )}
+        </div>
+        <h3 className="font-black text-xl text-slate-800 dark:text-white truncate mb-1.5">{r.espetaculo}</h3>
+        <div className="flex items-center text-sm font-semibold text-slate-500 dark:text-slate-400 gap-1.5">
+          <MapPin className="size-4" />
+          <span>{r.cidade}{r.estado ? ` - ${r.estado}` : ""}</span>
+        </div>
+      </div>
+      
+      {/* Responsive Actions */}
+      <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 md:pr-2 items-center border-t border-slate-100 dark:border-white/5 md:border-0 pt-4 md:pt-0 mt-2 md:mt-0">
+        <Button variant="outline" className="rounded-xl h-11 w-full sm:w-auto bg-slate-50 shadow-sm hover:bg-primary hover:text-white hover:border-primary border-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-300 dark:hover:bg-primary dark:hover:text-white transition-colors font-bold" asChild>
+          {profile?.role === 'motorista' ? (<a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Ver Roteiro</a>) : (<a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Ver Roteiro</a>)}
+        </Button>
+        
+        {profile?.role !== 'motorista' && (
+        <div className="grid grid-cols-4 sm:flex gap-2 w-full sm:w-auto sm:border-l sm:border-slate-200 dark:sm:border-white/10 sm:pl-3 sm:ml-1">
+          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Versão para motorista">
+            <a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
+            </a>
+          </Button>
+          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Editar">
+            <Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4.5" /></Link>
+          </Button>
+          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" onClick={() => setDup(r)} title="Duplicar">
+            <Copy className="size-4.5" />
+          </Button>
+          <Button variant="outline" onClick={() => setDeleteRbId(r.id)} className="rounded-xl h-11 w-full sm:w-11 px-0 bg-red-50/50 shadow-sm hover:bg-red-100 border-red-200 text-red-500 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors" title="Excluir">
+            <Trash2 className="size-4.5" />
+          </Button>
+        </div>
+        )}
+      </div>
+    </Card>
+  );
+
+  const realizados = items.filter(r => r.data_inicial && r.data_inicial < hoje).reverse();
 
   return (
     <div className="max-w-7xl mx-auto space-y-12">
@@ -295,75 +347,41 @@ function Dashboard() {
         )}
       </section>
 
-      {/* ROAD BOOKS */}
+      {/* ROAD BOOKS - RECENTES / FUTUROS */}
       <section id="roadbooks" className="space-y-6 pt-4 scroll-mt-24">
         <div className="flex items-center gap-3 px-2">
-          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white\">{profile?.role === 'motorista' ? 'Programações de viagem recentes' : 'Road Books Recentes'}</h2>
+          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">{profile?.role === 'motorista' ? 'Próximas Viagens' : 'Próximos Eventos'}</h2>
           <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
         </div>
 
         {loading ? (
           <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-        ) : items.length === 0 ? (
+        ) : proximos.length === 0 ? (
            <Card className="p-16 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
-            <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">Nenhum road book cadastrado.</p>
-            <Button asChild className="rounded-full shadow-lg h-12 px-8"><Link to="/roadbook/new"><Plus className="size-4 mr-2" />Criar o primeiro</Link></Button>
+            <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">Nenhum evento próximo.</p>
+            {profile?.role !== 'motorista' && (
+              <Button asChild className="rounded-full shadow-lg h-12 px-8"><Link to="/roadbook/new"><Plus className="size-4 mr-2" />Criar o primeiro</Link></Button>
+            )}
           </Card>
         ) : (
           <div className="grid gap-5">
-            {items.map((r, index) => (
-              <Card key={r.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgb(0,0,0,0.3)] bg-white dark:bg-card/60 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-[1.5rem] relative overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-100 dark:bg-white/5 group-hover:bg-primary transition-colors duration-300"></div>
-                
-                <div className="min-w-0 flex-1 pl-3">
-                  <div className="flex items-center gap-2 mb-3 flex-wrap">
-                    <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:hover:bg-sky-500/30 border-none font-bold rounded-lg px-3 py-0.5">
-                      <Calendar className="size-3 mr-1.5 inline-block -mt-0.5" />
-                      {fmtDate(r.data_inicial)}
-                    </Badge>
-                    {r.festival && (
-                      <Badge variant="secondary" className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 dark:bg-fuchsia-500/20 dark:text-fuchsia-300 dark:hover:bg-fuchsia-500/30 border-none font-bold rounded-lg px-3 py-0.5">
-                        {r.festival}
-                      </Badge>
-                    )}
-                  </div>
-                  <h3 className="font-black text-xl text-slate-800 dark:text-white truncate mb-1.5">{r.espetaculo}</h3>
-                  <div className="flex items-center text-sm font-semibold text-slate-500 dark:text-slate-400 gap-1.5">
-                    <MapPin className="size-4" />
-                    <span>{r.cidade}{r.estado ? ` - ${r.estado}` : ""}</span>
-                  </div>
-                </div>
-                
-                {/* Responsive Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 md:pr-2 items-center border-t border-slate-100 dark:border-white/5 md:border-0 pt-4 md:pt-0 mt-2 md:mt-0">
-                  <Button variant="outline" className="rounded-xl h-11 w-full sm:w-auto bg-slate-50 shadow-sm hover:bg-primary hover:text-white hover:border-primary border-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-300 dark:hover:bg-primary dark:hover:text-white transition-colors font-bold" asChild>
-                    {profile?.role === 'motorista' ? (<a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2\" /> Ver Roteiro</a>) : (<a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2\" /> Ver Roteiro</a>)}
-                  </Button>
-                  
-{profile?.role !== 'motorista' && (
-                  <div className="grid grid-cols-4 sm:flex gap-2 w-full sm:w-auto sm:border-l sm:border-slate-200 dark:sm:border-white/10 sm:pl-3 sm:ml-1">
-                    <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Versão para motorista">
-                      <a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-                      </a>
-                    </Button>
-                    <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Editar">
-                      <Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4.5" /></Link>
-                    </Button>
-                    <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" onClick={() => setDup(r)} title="Duplicar">
-                      <Copy className="size-4.5" />
-                    </Button>
-                    <Button variant="outline" onClick={() => setDeleteRbId(r.id)} className="rounded-xl h-11 w-full sm:w-11 px-0 bg-red-50/50 shadow-sm hover:bg-red-100 border-red-200 text-red-500 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors" title="Excluir">
-                      <Trash2 className="size-4.5" />
-                    </Button>
-                  </div>
-                  )}
-                </div>
-              </Card>
-            ))}
+            {proximos.map(renderRoadbookCard)}
           </div>
         )}
       </section>
+
+      {/* ROAD BOOKS - REALIZADOS */}
+      {realizados.length > 0 && (
+        <section id="realizados" className="space-y-6 pt-4 scroll-mt-24">
+          <div className="flex items-center gap-3 px-2 opacity-70">
+            <h2 className="text-xl font-bold tracking-tight text-slate-500 dark:text-slate-400">Viagens Realizadas</h2>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+          </div>
+          <div className="grid gap-5 opacity-90">
+            {realizados.map(renderRoadbookCard)}
+          </div>
+        </section>
+      )}
 
       {dup && (
         <DuplicateRoadbookDialog

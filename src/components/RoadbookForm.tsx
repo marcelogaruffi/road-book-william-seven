@@ -117,6 +117,18 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   }
 
   // ============ PROGRAMACAO grouped by day ============
+  const availableLocais = useMemo(() => {
+    const s = new Set<string>();
+    if (d.teatro_nome) s.add(d.teatro_nome);
+    if (d.hotel_nome) s.add(d.hotel_nome);
+    if (d.automacoes?.hospital_referencia_nome) s.add(d.automacoes.hospital_referencia_nome);
+    if (d.automacoes?.restaurante_hotel_nome) s.add(d.automacoes.restaurante_hotel_nome);
+    if (d.automacoes?.restaurante_teatro_nome) s.add(d.automacoes.restaurante_teatro_nome);
+    if (d.automacoes?.shopping_nome) s.add(d.automacoes.shopping_nome);
+    d.automacoes?.outros_locais?.forEach(l => { if (l.nome) s.add(l.nome); });
+    return Array.from(s).filter(Boolean);
+  }, [d]);
+
   const dayGroups = useMemo(() => {
     // group programacao by data
     const map = new Map<string, { item: ProgItem, globalIndex: number }[]>();
@@ -851,14 +863,22 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
 
         <TabsContent value="contatos" className="mt-0 space-y-4">
           <Card className="rounded-2xl">
-            <CardHeader><CardTitle>Produção e Receptivo</CardTitle></CardHeader>
-            <CardContent className="grid sm:grid-cols-2 gap-4">
-              <Field label="Produção — Nome"><Input value={d.producao_nome} onChange={(e) => up("producao_nome", e.target.value)} /></Field>
-              <Field label="Receptivo — Nome"><Input value={d.receptivo_nome} onChange={(e) => up("receptivo_nome", e.target.value)} /></Field>
-              <Field label="Produção — E-mail"><Input type="email" value={d.producao_telefone} onChange={(e) => up("producao_telefone", e.target.value)} /></Field>
-              <Field label="Receptivo — Telefone"><Input value={d.receptivo_telefone} onChange={(e) => up("receptivo_telefone", formatPhone(e.target.value))} /></Field>
-              <Field label="Produção — WhatsApp"><Input value={d.producao_whatsapp} onChange={(e) => up("producao_whatsapp", formatPhone(e.target.value))} placeholder="55 11 99999-9999" /></Field>
-              <Field label="Receptivo — WhatsApp"><Input value={d.receptivo_whatsapp} onChange={(e) => up("receptivo_whatsapp", formatPhone(e.target.value))} placeholder="55 11 99999-9999" /></Field>
+            <CardHeader><CardTitle>Equipes Locais (Produção e Anjo)</CardTitle></CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-8">
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-700 dark:text-slate-300 border-b pb-2">Produção Local</h3>
+                <Field label="Nome"><Input value={d.producao_nome} onChange={(e) => up("producao_nome", e.target.value)} /></Field>
+                <Field label="Telefone"><Input value={d.producao_telefone} onChange={(e) => up("producao_telefone", formatPhone(e.target.value))} /></Field>
+                <Field label="E-mail"><Input type="email" value={d.automacoes?.producao_email || ""} onChange={(e) => up("automacoes", { ...d.automacoes, producao_email: e.target.value })} /></Field>
+                <Field label="WhatsApp"><Input value={d.producao_whatsapp} onChange={(e) => up("producao_whatsapp", formatPhone(e.target.value))} placeholder="55 11 99999-9999" /></Field>
+              </div>
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-700 dark:text-slate-300 border-b pb-2">Receptivo (Anjo)</h3>
+                <Field label="Nome"><Input value={d.receptivo_nome} onChange={(e) => up("receptivo_nome", e.target.value)} /></Field>
+                <Field label="Telefone"><Input value={d.receptivo_telefone} onChange={(e) => up("receptivo_telefone", formatPhone(e.target.value))} /></Field>
+                <Field label="E-mail"><Input type="email" value={d.automacoes?.receptivo_email || ""} onChange={(e) => up("automacoes", { ...d.automacoes, receptivo_email: e.target.value })} /></Field>
+                <Field label="WhatsApp"><Input value={d.receptivo_whatsapp} onChange={(e) => up("receptivo_whatsapp", formatPhone(e.target.value))} placeholder="55 11 99999-9999" /></Field>
+              </div>
             </CardContent>
           </Card>
           <Card className="rounded-2xl">
@@ -891,6 +911,9 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               </div>
             </CardHeader>
             <CardContent className="space-y-12">
+              <datalist id="locais-sugestao">
+                {availableLocais.map((loc, idx) => <option key={idx} value={loc} />)}
+              </datalist>
               {dayGroups.length === 0 && <p className="text-sm text-muted-foreground">Nenhum dia cadastrado.</p>}
               {dayGroups.map((g) => (
                   <div key={g.data} className="relative pl-6">
@@ -898,10 +921,14 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     
                     <h3 className="font-black text-xl text-slate-800 dark:text-white mb-6 flex items-center gap-3 relative">
                       <div className="absolute -left-[30px] w-4 h-4 rounded-full bg-primary ring-4 ring-white dark:ring-slate-900"></div>
-                      <span className="bg-primary text-white px-4 py-1.5 rounded-xl text-lg shadow-sm">
-                        {g.data ? new Date(g.data + "T00:00:00").toLocaleDateString("pt-BR") : "Sem data"}
-                      </span>
+                      <Input
+                        type="date"
+                        value={g.data || ""}
+                        onChange={(e) => updateDayDate(g.data, e.target.value)}
+                        className="w-48 bg-primary text-white border-0 px-4 py-1.5 rounded-xl text-lg shadow-sm font-bold [&::-webkit-calendar-picker-indicator]:invert"
+                      />
                       <Button type="button" size="sm" variant="outline" onClick={() => addEvent(g.data)} className="ml-auto rounded-xl shadow-sm"><Plus className="size-4 mr-1" /> Nova Atividade</Button>
+                      <Button type="button" size="sm" variant="destructive" onClick={() => removeDay(g.data)} className="rounded-xl shadow-sm"><Trash2 className="size-4" /></Button>
                     </h3>
                     <div className="space-y-4 mt-4">
                       {g.itens.map(({ item: p, globalIndex }) => (
@@ -919,7 +946,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                               </Select>
                             </div>
                             <div className="sm:col-span-1 flex sm:justify-end"><Button type="button" variant="ghost" size="icon" onClick={() => removeProgItem(globalIndex)}><Trash2 className="size-4" /></Button></div>
-                            <div className="sm:col-span-6"><Label className="text-xs">Local</Label><Input value={p.local} onChange={(e) => updateProgItem(globalIndex, { local: e.target.value })} /></div>
+                            <div className="sm:col-span-6"><Label className="text-xs">Local</Label><Input list="locais-sugestao" value={p.local} onChange={(e) => updateProgItem(globalIndex, { local: e.target.value })} placeholder="Selecione ou digite" /></div>
                             <div className="sm:col-span-6"><Label className="text-xs">Observação</Label><Textarea rows={1} value={p.observacao} onChange={(e) => updateProgItem(globalIndex, { observacao: e.target.value })} /></div>
                           </div>
                         </div>

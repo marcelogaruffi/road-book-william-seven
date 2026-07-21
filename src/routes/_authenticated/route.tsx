@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
-  Ticket, Settings, Sun, Moon, LogOut, Wallet 
+  Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users } from "lucide-react";
+import { Users, Contact2 } from "lucide-react";
 
 type Profile = {
   id: string;
@@ -32,6 +32,19 @@ export const Route = createFileRoute("/_authenticated")({
       .select("*")
       .eq("id", authData.user.id)
       .single();
+
+    // Verificação de SMS Global
+    const { data: configData } = await supabase
+      .from('configuracoes_sistema')
+      .select('exigir_sms_cadastro')
+      .eq('id', 1)
+      .single();
+
+    if (configData?.exigir_sms_cadastro && realProfile?.role !== 'admin' && realProfile?.role !== 'dev') {
+      if (!authData.user.phone_confirmed_at) {
+        throw redirect({ to: '/verify-phone' });
+      }
+    }
 
     profile = realProfile;
 
@@ -91,6 +104,7 @@ function AuthedLayout() {
   };
 
   async function signOut() {
+    localStorage.removeItem("simulated_profile");
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
@@ -168,6 +182,11 @@ function AuthedLayout() {
         </div>
 
         <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2">
+          {/* SECTION: GERAL */}
+          <div className={`px-4 text-[10px] font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+             Geral
+          </div>
+          
           <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold rounded-xl`}>
              <Link to="/dashboard">
                <LayoutDashboard className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
@@ -196,6 +215,13 @@ function AuthedLayout() {
             </Button>
           )}
 
+          {/* SECTION: TÉCNICA */}
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador' || userRole === 'tecnico_som') && (
+            <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+               Técnica
+            </div>
+          )}
+
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador') && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
                <Link to="/iluminacao">
@@ -214,7 +240,14 @@ function AuthedLayout() {
             </Button>
           )}
 
-{(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
+          {/* SECTION: GESTÃO */}
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
+            <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+               Gestão
+            </div>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
              <Link to="/publico">
                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -232,11 +265,36 @@ function AuthedLayout() {
             )}
 
           
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
+            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+               <Link to="/contatos">
+                 <Contact2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Contatos</span>}
+               </Link>
+            </Button>
+          )}
+          
+          {/* SECTION: ADMINISTRAÇÃO */}
+          {(userRole === 'admin' || userRole === 'dev') && (
+            <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+               Administração
+            </div>
+          )}
+
           {(userRole === 'admin' || userRole === 'dev') && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
                <Link to="/cadastros">
-                 <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 <UserPlus className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Cadastros e Convites</span>}
+               </Link>
+            </Button>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev') && (
+            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+               <Link to="/configuracoes">
+                 <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Configurações</span>}
                </Link>
             </Button>
           )}
