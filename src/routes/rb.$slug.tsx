@@ -226,6 +226,42 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
     return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   }, [lightbox]);
 
+  // Touch Swipe handlers for Lightbox
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEndHandler = () => {
+    if (!touchStart || !touchEnd || !lightbox?.allItems || lightbox.allItems.length <= 1) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      // swipe left -> next
+      setLightbox(prev => {
+        if (!prev || !prev.allItems) return prev;
+        const nextIdx = (prev.index! + 1) % prev.allItems.length;
+        return { item: prev.allItems[nextIdx], allItems: prev.allItems, index: nextIdx };
+      });
+    } else if (isRightSwipe) {
+      // swipe right -> prev
+      setLightbox(prev => {
+        if (!prev || !prev.allItems) return prev;
+        const prevIdx = (prev.index! - 1 + prev.allItems.length) % prev.allItems.length;
+        return { item: prev.allItems[prevIdx], allItems: prev.allItems, index: prevIdx };
+      });
+    }
+  };
+
   // Operational Map State and Fetching
   interface PlaceDetail {
     name: string;
@@ -1444,6 +1480,9 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
           role="dialog"
           aria-modal="true"
           onClick={() => setLightbox(null)}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEndHandler}
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in group/lb"
         >
           <button
