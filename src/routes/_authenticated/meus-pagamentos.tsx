@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/meus-pagamentos")({
-  head: () => ({ meta: [{ title: "Meus Pagamentos - Seven ProduÃ§Ãµes ArtÃ­sticas" }] }),
+  head: () => ({ meta: [{ title: "Meus Pagamentos - Seven Produções Artísticas" }] }),
   component: MeusPagamentosPage,
 });
 
@@ -23,7 +23,7 @@ function MeusPagamentosPage() {
     if (!profile) return;
     setLoading(true);
 
-    // 1. Fetch escalas do usuÃ¡rio que foram aceitas
+    // 1. Fetch escalas do usuário que foram aceitas
     const { data: escalasData, error: errEscalas } = await supabase
       .from('evento_escalas')
       .select(`
@@ -45,7 +45,7 @@ function MeusPagamentosPage() {
     let pgtos = [];
 
     if (escalaIds.length > 0) {
-      // 2. Fetch valores combinados (CachêêÃªs)
+      // 2. Fetch valores combinados (Cachês)
       const { data: cacheData } = await supabase
         .from('evento_escalas_financeiro')
         .select('*')
@@ -90,7 +90,7 @@ function MeusPagamentosPage() {
           Meus Pagamentos
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Acompanhe os cachÃªs combinados e pagamentos efetuados dos eventos em que vocÃª participou.
+          Acompanhe os cachês combinados e pagamentos efetuados dos eventos em que você participou.
         </p>
       </div>
 
@@ -99,7 +99,7 @@ function MeusPagamentosPage() {
           <div className="col-span-full py-12 text-center text-slate-500">Carregando pagamentos...</div>
         ) : pagamentos.length === 0 ? (
           <div className="col-span-full py-12 text-center text-slate-500 bg-white dark:bg-card/50 rounded-2xl border border-slate-200 dark:border-white/10">
-            VocÃª ainda nÃ£o possui cachÃªs ou pagamentos registrados.
+            Você ainda não possui cachês ou pagamentos registrados.
           </div>
         ) : (
           pagamentos.map(item => (
@@ -109,7 +109,7 @@ function MeusPagamentosPage() {
                   {item.evento?.espetaculo || 'Evento'}
                 </CardTitle>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-2 font-medium">
-                  <MapPin className="size-3.5" /> {item.evento?.cidade || 'Cidade nÃ£o definida'}
+                  <MapPin className="size-3.5" /> {item.evento?.cidade || 'Cidade não definida'}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500 mt-1 font-medium">
                   <CalendarDays className="size-3.5" /> {item.evento?.data ? format(new Date(item.evento.data + 'T12:00:00Z'), "dd 'de' MMMM", { locale: ptBR }) : 'Data Indefinida'}
