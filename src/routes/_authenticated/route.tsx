@@ -116,6 +116,9 @@ function AuthedLayout() {
 
   const userName = profile?.nome || user.user_metadata?.full_name || "Usuário";
   const userRole = profile?.role || "user";
+  const userFuncoes: string[] = Array.isArray(profile?.funcoes) ? profile.funcoes : [];
+  // Helper: returns true if user has this role as primary OR as extra function
+  const hasRole = (role: string) => userRole === role || userFuncoes.includes(role);
   const fotoUrl = profile?.foto_url;
 
   const clearSimulation = () => {
@@ -229,13 +232,13 @@ function AuthedLayout() {
           )}
 
           {/* SECTION: TÉCNICA */}
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador' || userRole === 'tecnico_som') && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('iluminador') || hasRole('tecnico_som')) && (
             <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
                Técnica
             </div>
           )}
 
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador') && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('iluminador')) && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
                <Link to="/iluminacao">
                  <Lightbulb className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
@@ -244,7 +247,7 @@ function AuthedLayout() {
             </Button>
           )}
 
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'tecnico_som') && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('tecnico_som')) && (
             <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
                <Link to="/som">
                  <Mic2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
