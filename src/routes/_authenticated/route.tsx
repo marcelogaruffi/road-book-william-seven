@@ -119,6 +119,12 @@ function AuthedLayout() {
   const userFuncoes: string[] = Array.isArray(profile?.funcoes) ? profile.funcoes : [];
   // Helper: returns true if user has this role as primary OR as extra function
   const hasRole = (role: string) => userRole === role || userFuncoes.includes(role);
+  // Close sidebar on mobile after clicking a nav item
+  const closeMobileMenu = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  };
   const fotoUrl = profile?.foto_url;
 
   const clearSimulation = () => {
@@ -184,7 +190,7 @@ function AuthedLayout() {
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2">
+        <div className="flex-1 overflow-y-auto py-6 px-3 space-y-2" onClick={closeMobileMenu}>
           {/* SECTION: GERAL */}
           <div className={`px-4 text-[10px] font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
              Geral
