@@ -5,8 +5,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CurrencyInput } from "@/components/CurrencyInput";
-
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X, ClipboardList, Lightbulb, Mic2, MessageSquareText, Loader2 } from 'lucide-react';
@@ -65,12 +63,11 @@ function EventosComponent() {
   const [horario, setHorario] = useState('');
   const [local, setLocal] = useState('');
   const [espetaculo, setEspetaculo] = useState('');
-  const [escalasAtuais, setEscalasAtuais] = useState<{usuario_id: string, funcao: string}[]>([]);
-  const [escalasOriginais, setEscalasOriginais] = useState<{usuario_id: string, funcao: string}[]>([]);
-  // Compute derived state for easy lookup
-  const equipe = Array.from(new Set(escalasAtuais.map(e => e.usuario_id)));
-  const [caches, setCaches] = useState<Record<string, string>>({});
-  const [showCachesDialog, setShowCachêêesDialog] = useState(false);
+  const [equipe, setEquipe] = useState<string[]>([]);
+  const [equipeOriginal, setEquipeOriginal] = useState<string[]>([]);
+  const [funcoesExercidas, setFuncoesExercidas] = useState<Record<string, string>>({});
+  const [caches, setCachêêes] = useState<Record<string, string>>({});
+  const [showCachêêesDialog, setShowCachêêesDialog] = useState(false);
   const [searchEquipe, setSearchEquipe] = useState('');
   const [permitirSms, setPermitirSms] = useState(false);
 
@@ -98,7 +95,7 @@ function EventosComponent() {
     const [evRes, trRes, profRes, tempRes, confRes, escRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, nome, role, funcoes, caches_padrao').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'artista']),
+      supabase.from('profiles').select('id, nome, role').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'artista']),
       supabase.from('templates_espetaculos').select('nome_espetaculo'),
       supabase.from('configuracoes_sistema').select('permitir_sms_escala').eq('id', 1).maybeSingle(),
       supabase.from('evento_escalas').select('*')
@@ -131,9 +128,9 @@ function EventosComponent() {
     setHorario('');
     setLocal('');
     setEspetaculo('');
-    setEscalasAtuais([]);
-    setEscalasOriginais([]);
-    
+    setEquipe([]);
+    setEquipeOriginal([]);
+    setFuncoesExercidas({});
     setSearchEquipe('');
     setShowDropdown(false);
     setOpenDialog(true);
@@ -149,41 +146,27 @@ function EventosComponent() {
     setHorario(ev.horario);
     setLocal(ev.local);
     setEspetaculo(ev.espetaculo);
+    setEquipe(ev.equipe || []);
+    setEquipeOriginal(ev.equipe || []);
     setShowDropdown(false);
     
-    setCaches({});
-    
-    let novasEscalas: {usuario_id: string, funcao: string}[] = [];
-    if (['admin', 'dev', 'produtor'].includes(role || '')) {
+    setCachêêes({});
+    setFuncoesExercidas({});
+    if (['admin', 'dev'].includes(role || '')) {
        const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', ev.id);
        if (escData && escData.length > 0) {
          const { data: cacheData } = await supabase.from('evento_escalas_financeiro').select('escala_id, cache_valor').in('escala_id', escData.map(e => e.id));
-         const cMap: any = {};
+         const cacheMap: Record<string, string> = {};
+         const funcoesMap: Record<string, string> = {};
          escData.forEach(e => {
-           if (e.funcao) {
-             novasEscalas.push({ usuario_id: e.usuario_id, funcao: e.funcao });
-             const c = cacheData?.find(x => x.escala_id === e.id);
-             if (c && c.cache_valor > 0) {
-               cMap[`${e.usuario_id}_${e.funcao}`] = c.cache_valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-             }
-           }
+           if (e.funcao) funcoesMap[e.usuario_id] = e.funcao;
+           const val = cacheData?.find(c => c.escala_id === e.id)?.cache_valor;
+           if (val !== undefined && val !== null) cacheMap[e.usuario_id] = val.toString();
          });
-         setCaches(cMap);
-       } else if (ev.equipe && ev.equipe.length > 0) {
-         // Fallback for old events without scales
-         novasEscalas = ev.equipe.map(uid => {
-           const p = profissionais.find(pr => pr.id === uid);
-           return { usuario_id: uid, funcao: p?.role || 'user' };
-         });
-       }
-    } else {
-       if (ev.equipe && ev.equipe.length > 0) {
-         novasEscalas = ev.equipe.map(uid => ({ usuario_id: uid, funcao: 'user' }));
+         setCachêêes(cacheMap);
+         setFuncoesExercidas(funcoesMap);
        }
     }
-    setEscalasAtuais(novasEscalas);
-    setEscalasOriginais([...novasEscalas]);
-    
     setOpenDialog(true);
   };
 
@@ -191,7 +174,7 @@ function EventosComponent() {
     if (!confirm('Tem certeza que deseja excluir este evento?')) return;
     const { error } = await supabase.from('eventos').delete().eq('id', id);
     if (error) {
-      toast.error(getErrorMessage(error));
+      toast.error(error.message);
     } else {
       toast.success('Evento excluído.');
       loadData();
@@ -209,7 +192,7 @@ function EventosComponent() {
     }
     const { error } = await supabase.from('templates_espetaculos').insert({ nome_espetaculo: cleanName });
     if (error) {
-      toast.error("Erro ao criar espetáculo: " + getErrorMessage(error));
+      toast.error("Erro ao criar espetáculo: " + error.message);
     } else {
       toast.success("Espetáculo cadastrado!");
       setTemplatesEspetaculos(prev => [...prev, cleanName].sort());
@@ -248,78 +231,53 @@ function EventosComponent() {
     }
 
     if (error) {
-      toast.error(getErrorMessage(error));
+      toast.error(error.message);
     } else {
       toast.success('Evento salvo com sucesso.');
       setOpenDialog(false);
       loadData();
       
-      // Delete removed scales
-      const removedEscalas = escalasOriginais.filter(eo => !escalasAtuais.some(ea => ea.usuario_id === eo.usuario_id && ea.funcao === eo.funcao));
-      if (removedEscalas.length > 0 && savedEventId) {
-        for (const re of removedEscalas) {
-           await supabase.from('evento_escalas').delete().match({ evento_id: savedEventId, usuario_id: re.usuario_id, funcao: re.funcao });
-        }
-      }
+      // Find members that are in equipe but don't have an escala yet
+      const currentEscalasRes = await supabase.from('evento_escalas').select('usuario_id').eq('evento_id', savedEventId);
+      const existingEscalasIds = currentEscalasRes.data?.map(e => e.usuario_id) || [];
+      const membrosSemEscala = equipe.filter(m => !existingEscalasIds.includes(m));
 
-      // Find explicitly added scales
-      const novasEscalas = escalasAtuais.filter(ea => !escalasOriginais.some(eo => eo.usuario_id === ea.usuario_id && eo.funcao === ea.funcao));
-      
-      if (novasEscalas.length > 0 && savedEventId) {
-        const escalasToInsert = novasEscalas.map(ne => ({
+      if (membrosSemEscala.length > 0 && savedEventId) {
+        // Create pending escalas
+        const escalasToInsert = membrosSemEscala.map(uid => ({
           evento_id: savedEventId,
-          usuario_id: ne.usuario_id,
+          usuario_id: uid,
           status: 'pendente',
-          funcao: ne.funcao
+          funcao: funcoesExercidas[uid] || null
         }));
-        await supabase.from('evento_escalas').insert(escalasToInsert);
+        await supabase.from('evento_escalas').insert(escalasToInsert); 
         
-        // Group notifications by user so they receive only one
-        const userNotifs: Record<string, { funcoes: string[], totalCache: number }> = {};
-        for (const ne of novasEscalas) {
-           if (!userNotifs[ne.usuario_id]) userNotifs[ne.usuario_id] = { funcoes: [], totalCache: 0 };
-           userNotifs[ne.usuario_id].funcoes.push(ne.funcao.replace('_', ' '));
-           const valStr = caches[`${ne.usuario_id}_${ne.funcao}`] || '0';
-           const val = parseFloat(valStr.replace(/\./g, '').replace(',', '.')) || 0;
-           userNotifs[ne.usuario_id].totalCache += val;
-        }
-
-        const notificacoes = Object.keys(userNotifs).map(uid => {
-          const n = userNotifs[uid];
-          const funcStr = n.funcoes.join(' e ');
-          const cacheStr = n.totalCache > 0 ? ` totalizando R$ ${n.totalCache.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '';
-          return {
-            usuario_id: uid,
-            tipo: 'escala',
-            titulo: 'Nova Escala de Trabalho',
-            mensagem: `Você foi escalado(a) como ${funcStr} para ${espetaculo} em ${cidade}${cacheStr}! Data: ${new Date(dataApres + 'T12:00:00Z').toLocaleDateString('pt-BR')}. Acesse para responder.`,
-            link: '/'
-          };
-        });
+        // Create notifications
+        const notificacoes = membrosSemEscala.map(uid => ({
+          usuario_id: uid,
+          tipo: 'escala',
+          titulo: 'Nova Escala de Trabalho',
+          mensagem: `Você foi escalado(a) para o espetáculo ${espetaculo} em ${cidade} com cachê de R$ ${caches[uid] || '0'}! O dia da apresentação é ${new Date(dataApres + 'T12:00:00Z').toLocaleDateString('pt-BR')}. Acesse para responder.`,
+          link: '/'
+        }));
         await supabase.from('notificacoes').insert(notificacoes);
 
-        if (permitirSms) {
-          const smsUids = Object.keys(userNotifs);
-          if (smsUids.length > 0) {
-            setSmsMembersToNotify(smsUids);
-            setSmsMessage(`Olá! Você foi escalado(a) para o espetáculo ${espetaculo} em ${cidade}. Acesse o painel de gestão do William Seven para mais detalhes sobre cachê e datas!`);
-            setShowSmsDialog(true);
-          }
+        // Notify via SMS only explicitly newly added members (not just migrating old ones)
+        const novosMembrosReais = equipe.filter(m => !equipeOriginal.includes(m));
+        if (permitirSms && novosMembrosReais.length > 0) {
+          setSmsMembersToNotify(novosMembrosReais);
+          setSmsMessage(`Olá! Você foi escalado(a) para o espetáculo ${espetaculo} em ${cidade}. Acesse o painel de gestão do William Seven para mais detalhes sobre cachê e datas!`);
+          setShowSmsDialog(true);
         }
       }
 
-      // Update Financials for ALL current scales (since cache might have changed)
-      if (['admin', 'dev', 'produtor'].includes(role || '') && savedEventId) {
-        const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', savedEventId);
-        if (escData) {
-          const financeiroUpserts = escData.map(esc => {
-            const valStr = caches[`${esc.usuario_id}_${esc.funcao}`] || '0';
-            const val = parseFloat(valStr.replace(/\./g, '').replace(',', '.')) || 0;
-            return {
-              escala_id: esc.id,
-              cache_valor: val
-            };
-          });
+      if (['admin', 'dev'].includes(role || '') && savedEventId) {
+        const escRes = await supabase.from('evento_escalas').select('id, usuario_id').eq('evento_id', savedEventId);
+        if (escRes.data) {
+          const financeiroUpserts = escRes.data.map(esc => ({
+            escala_id: esc.id,
+            cache_valor: parseFloat(caches[esc.usuario_id]?.replace(',', '.') || '0') || 0
+          }));
           if (financeiroUpserts.length > 0) {
             await supabase.from('evento_escalas_financeiro').upsert(financeiroUpserts);
           }
@@ -337,7 +295,7 @@ function EventosComponent() {
     setSendingSms(false);
     
     if (error) {
-      toast.error("Erro ao enviar SMS: " + getErrorMessage(error));
+      toast.error("Erro ao enviar SMS: " + error.message);
     } else {
       const result: any = data;
       if (result.success > 0) {
@@ -386,24 +344,26 @@ function EventosComponent() {
     setLoadingRider(false);
   };
 
-  const toggleEquipe = (id: string, funcao: string) => {
-    setEscalasAtuais(prev => {
-      const exists = prev.some(e => e.usuario_id === id && e.funcao === funcao);
-      if (exists) {
-        // Remove scale
-        setCaches(c => { const nc = { ...c }; delete nc[`${id}_${funcao}`]; return nc; });
-        return prev.filter(e => !(e.usuario_id === id && e.funcao === funcao));
+  const toggleEquipe = (id: string, funcao?: string) => {
+    setEquipe(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(p => p !== id);
       } else {
-        // Add scale
-        const prof = profissionais.find(p => p.id === id);
-        if (prof && prof.caches_padrao) {
-          const baseCaches = typeof prof.caches_padrao === 'object' && prof.caches_padrao !== null ? prof.caches_padrao : {};
-          const cacheVal = baseCaches[funcao] ? baseCaches[funcao] : null;
-          if (cacheVal) {
-            setCaches(c => ({ ...c, [`${id}_${funcao}`]: cacheVal }));
+        if (funcao) {
+          setFuncoesExercidas(f => ({ ...f, [id]: funcao }));
+        }
+        // Automatically populate cache if empty
+        if (!caches[id]) {
+          const prof = profissionais.find(p => p.id === id);
+          if (prof && prof.cache_padrao) {
+            const baseCachêêes = typeof prof.cache_padrao === 'object' && prof.cache_padrao !== null ? prof.cache_padrao : {};
+            const cacheVal = funcao && baseCachêêes[funcao] ? baseCachêêes[funcao] : null;
+            if (cacheVal) {
+              setCachêêes(c => ({ ...c, [id]: Number(cacheVal).toFixed(2) }));
+            }
           }
         }
-        return [...prev, { usuario_id: id, funcao }];
+        return [...prev, id];
       }
     });
   };
@@ -412,8 +372,8 @@ function EventosComponent() {
   const fmtDate = (d: string) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('pt-BR') : '';
 
   const hoje = new Date().toISOString().split('T')[0];
-  const proximos = eventos.filter(e => (e.data_fim || e.data) >= hoje);
-  const realizados = eventos.filter(e => (e.data_fim || e.data) < hoje).reverse();
+  const proximos = eventos.filter(e => e.data >= hoje);
+  const realizados = eventos.filter(e => e.data < hoje).reverse();
 
   const renderEventoCard = (ev: Evento) => (
     <Card key={ev.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group rounded-[1.5rem]">
@@ -600,7 +560,6 @@ function EventosComponent() {
                       onChange={(e) => setSearchEquipe(e.target.value)}
                       className="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"
                       onClick={(e) => e.stopPropagation()}
-                      autoFocus
                     />
                     <div className="flex flex-col gap-4">
                       {[
@@ -612,11 +571,7 @@ function EventosComponent() {
                         { key: 'motorista', label: 'Motoristas', roles: ['motorista'] },
                       ].map(group => {
                         const groupProfs = profissionais
-                          .filter(p => {
-                             const matchesRole = group.roles.includes(p.role) || (p.funcoes && p.funcoes.some((f: string) => group.roles.includes(f)));
-                             const isAlreadyInThisFunction = escalasAtuais.some(e => e.usuario_id === p.id && e.funcao === group.roles[0]);
-                             return matchesRole && !isAlreadyInThisFunction;
-                          })
+                          .filter(p => (group.roles.includes(p.role) || (p.funcoes && p.funcoes.some((f: string) => group.roles.includes(f)))) && !equipe.includes(p.id))
                           .filter(p => !searchEquipe || (p.nome || '').toLowerCase().includes(searchEquipe.toLowerCase()))
                           .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
                           
@@ -628,7 +583,7 @@ function EventosComponent() {
                               {groupProfs.map(p => (
                                  <div 
                                     key={p.id} 
-                                    onClick={() => { toggleEquipe(p.id, group.roles[0]); setSearchEquipe(''); setShowDropdown(false); }}
+                                    onClick={() => { toggleEquipe(p.id, group.roles[0]); setShowDropdown(false); }}
                                     className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors group"
                                  >
                                    <span className="font-semibold text-slate-800 dark:text-white text-sm flex items-center gap-2">
@@ -658,19 +613,13 @@ function EventosComponent() {
               </div>
 
               {/* Exibição dos selecionados */}
-              {escalasAtuais.length > 0 && (
+              {equipe.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-dashed">
-                  {[...escalasAtuais]
-                    .sort((a, b) => {
-                       const pa = profissionais.find(x => x.id === a.usuario_id);
-                       const pb = profissionais.find(x => x.id === b.usuario_id);
-                       return (pa?.nome || '').localeCompare(pb?.nome || '');
-                    })
-                    .map(esc => {
-                      const p = profissionais.find(x => x.id === esc.usuario_id);
-                      if (!p) return null;
-                      const cacheKey = `${esc.usuario_id}_${esc.funcao}`;
-                      const escala = escalas.find(e => e.evento_id === editingId && e.usuario_id === esc.usuario_id && e.funcao === esc.funcao);
+                  {equipe.map(id => profissionais.find(x => x.id === id))
+                    .filter((p): p is Profile => p !== undefined)
+                    .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
+                    .map(p => {
+                      const escala = escalas.find(e => e.evento_id === editingId && e.usuario_id === p.id);
                       const statusColor = escala?.status === 'aceita' ? 'bg-green-100 text-green-700 border-green-200' :
                                           escala?.status === 'recusada' ? 'bg-red-100 text-red-700 border-red-200' :
                                           escala?.status === 'pendente' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
@@ -678,10 +627,10 @@ function EventosComponent() {
                       const statusLabel = escala?.status === 'aceita' ? 'Aceita' :
                                           escala?.status === 'recusada' ? 'Recusada' :
                                           escala?.status === 'pendente' ? 'Pendente' :
-                                          'Pendente';
+                                          'Não notificado';
 
                       return (
-                        <div key={cacheKey} className="flex items-center justify-between p-3 rounded-xl border border-primary/20 bg-white dark:bg-card shadow-sm">
+                        <div key={p.id} className="flex items-center justify-between p-3 rounded-xl border border-primary/20 bg-white dark:bg-card shadow-sm">
                           <div>
                             <p className="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
                               {p.nome}
@@ -690,14 +639,23 @@ function EventosComponent() {
                               </Badge>
                             </p>
                             <div className="flex flex-wrap items-center gap-2 mt-1">
-                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase font-bold">
-                                Escalado como: {esc.funcao.replace('_', ' ')}
-                              </span>
+                              {funcoesExercidas[p.id] && (
+                                <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase font-bold">
+                                  Escalado como: {funcoesExercidas[p.id].replace('_', ' ')}
+                                </span>
+                              )}
+                              <div className="flex gap-1">
+                                {(p.funcoes && p.funcoes.length > 0 ? p.funcoes : [p.role]).map((f: string, i: number) => (
+                                  <span key={i} className="text-[9px] text-slate-400 border border-slate-200 dark:border-slate-700 px-1 py-0 rounded uppercase">
+                                    {f.replace('_', ' ')}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
                           </div>
                           
                           <button 
-                             onClick={() => toggleEquipe(esc.usuario_id, esc.funcao)}
+                             onClick={() => toggleEquipe(p.id)}
                              className="size-8 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500 text-slate-400 transition-colors"
                           >
                              <X className="size-4" />
@@ -712,7 +670,7 @@ function EventosComponent() {
 
           <DialogFooter className="mt-4 gap-2">
             <Button variant="outline" onClick={() => setShowCachêêesDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
-              💰 Cachês da Equipe
+              💰 Cachêêês da Equipe
             </Button>
             <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">Cancelar</Button>
             <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md"><Save className="size-4 mr-2"/> Salvar Evento</Button>
@@ -721,42 +679,36 @@ function EventosComponent() {
       </Dialog>
       
       {/* MODAL DE CACHÊS */}
-      <Dialog open={showCachesDialog} onOpenChange={setShowCachêêesDialog}>
+      <Dialog open={showCachêêesDialog} onOpenChange={setShowCachêêesDialog}>
         <DialogContent className="rounded-[2rem] p-6 max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl font-black">Cachês da Equipe ({equipe.length})</DialogTitle>
+            <DialogTitle className="text-xl font-black">Cachêêês da Equipe ({equipe.length})</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-3 mt-4">
-            {[...escalasAtuais]
-              .sort((a, b) => {
-                 const pa = profissionais.find(x => x.id === a.usuario_id);
-                 const pb = profissionais.find(x => x.id === b.usuario_id);
-                 return (pa?.nome || '').localeCompare(pb?.nome || '');
-              })
-              .map(esc => {
-                const p = profissionais.find(x => x.id === esc.usuario_id);
-                if (!p) return null;
-                const cacheKey = `${esc.usuario_id}_${esc.funcao}`;
-                return (
-                  <div key={cacheKey} className="flex items-center justify-between p-3 border rounded-xl bg-slate-50 dark:bg-slate-900/50">
-                    <div>
-                      <p className="font-bold text-sm">{p.nome}</p>
-                      <p className="text-xs text-slate-500 uppercase font-semibold">
-                        {esc.funcao.replace('_', ' ')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-400">R$</span>
-                      <CurrencyInput 
-                        className="w-28 h-9 font-bold text-right bg-white dark:bg-slate-900"
-                        value={caches[cacheKey] || ''}
-                        onChange={(val) => setCaches({...caches, [cacheKey]: val})}
-                      />
-                    </div>
+            {equipe.map(id => profissionais.find(x => x.id === id))
+              .filter((p): p is Profile => p !== undefined)
+              .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
+              .map(p => (
+                <div key={p.id} className="flex items-center justify-between p-3 border rounded-xl bg-slate-50 dark:bg-slate-900/50">
+                  <div>
+                    <p className="font-bold text-sm">{p.nome}</p>
+                    <p className="text-xs text-slate-500 uppercase font-semibold">
+                      {funcoesExercidas[p.id] ? funcoesExercidas[p.id].replace('_', ' ') : p.role}
+                    </p>
                   </div>
-                );
-              })}
-              {escalasAtuais.length === 0 && <p className="text-slate-500 text-center text-sm py-4">Nenhum profissional selecionado.</p>}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-slate-400">R$</span>
+                    <Input 
+                      type="text" 
+                      className="w-24 h-9 font-bold text-right" 
+                      placeholder="0,00"
+                      value={caches[p.id] || ''}
+                      onChange={e => setCachêêes({...caches, [p.id]: e.target.value})}
+                    />
+                  </div>
+                </div>
+              ))}
+              {equipe.length === 0 && <p className="text-slate-500 text-center text-sm py-4">Nenhum profissional selecionado.</p>}
           </div>
           <DialogFooter className="mt-4">
             <Button onClick={() => setShowCachêêesDialog(false)} className="w-full h-12 rounded-xl font-bold">Concluído</Button>

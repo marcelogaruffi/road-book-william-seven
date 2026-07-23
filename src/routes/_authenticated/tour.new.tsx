@@ -36,13 +36,13 @@ function NewTour() {
           .insert({ user_id: uid, nome, espetaculo: espetaculo || null, producao: producao || null, slug: trySlug })
           .select("id").single();
         if (!error && row) { inserted = row; break; }
-        if (error && !`${error.message}`.toLowerCase().includes("duplicate")) throw error;
+        if (error && !`${getErrorMessage(error)}`.toLowerCase().includes("duplicate")) throw error;
         if (attempt === 4) throw error;
       }
       toast.success("Turnê criada");
       navigate({ to: "/tour/$id", params: { id: inserted.id } });
     } catch (err: any) {
-      toast.error(err.message ?? "Erro");
+      toast.error(getErrorMessage(err) ?? "Erro");
     } finally { setBusy(false); }
   }
 

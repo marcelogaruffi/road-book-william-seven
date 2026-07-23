@@ -12,7 +12,6 @@ import { Copy, Plus, UserX, UserCheck, ShieldAlert, KeyRound, Pencil, Trash2, Ma
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TemplateRidersTab from "@/components/TemplateRidersTab";
-import { CachesPadraoTab } from "@/components/CachesPadraoTab";
 import {
   Dialog,
   DialogContent,
@@ -20,17 +19,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { CurrencyInput } from "@/components/CurrencyInput";
 import { Suspense, lazy } from "react";
 const Cropper = lazy(() => import("react-easy-crop"));
 import getCroppedImg from "@/lib/cropUtils";
 import { Slider } from "@/components/ui/slider";
 
 type Profile = {
-  caches_padrao?: Record<string, string>;
   id: string;
   nome: string;
-  funcoes?: string[];
   telefone: string | null;
   foto_url: string | null;
   email?: string | null;
@@ -64,11 +60,8 @@ function UsersPage() {
   const [editNome, setEditNome] = useState("");
   const [editTelefone, setEditTelefone] = useState("");
   const [editRole, setEditRole] = useState<any>("user");
-  const [editFotoUrl, setEditFotoUrl] = useState<string | null>(null);
   const [editFuncoes, setEditFuncoes] = useState<string[]>([]);
-  const [editCachesPadrao, setEditCachesPadrao] = useState<Record<string, string>>({});
-  const [customFuncao, setCustomFuncao] = useState("");
-  const [showCustomFuncaoInput, setShowCustomFuncaoInput] = useState(false);
+  const [editFotoUrl, setEditFotoUrl] = useState<string | null>(null);
   const [inviteRole, setInviteRole] = useState<'user'|'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'|'artista'>('produtor');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
@@ -97,7 +90,7 @@ function UsersPage() {
     if (!confirm("Tem certeza que deseja apagar este convite?")) return;
     const { error } = await supabase.rpc('delete_invite', { invite_id: id });
     if (error) {
-      toast.error("Erro ao apagar convite: " + getErrorMessage(error));
+      toast.error("Erro ao apagar convite: " + error.message);
     } else {
       toast.success("Convite apagado com sucesso!");
       loadData();
@@ -109,7 +102,7 @@ function UsersPage() {
     
     const { error } = await supabase.from("invites").insert({ token, role: inviteRole });
     if (error) {
-      toast.error("Erro ao gerar convite: " + getErrorMessage(error));
+      toast.error("Erro ao gerar convite: " + error.message);
     } else {
       toast.success("Convite gerado com sucesso!");
       loadData();
@@ -130,9 +123,8 @@ function UsersPage() {
     setEditNome(u.nome);
     setEditTelefone(u.telefone || "");
     setEditRole(u.role);
+    setEditFuncoes(u.funcoes || (u.role ? [u.role] : []));
     setEditFotoUrl(u.foto_url);
-    setEditFuncoes(u.funcoes || []);
-    setEditCachesPadrao(u.caches_padrao || {});
   }
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -164,7 +156,7 @@ function UsersPage() {
       toast.success("Foto enviada com sucesso!");
       setImageSrc(null); // Fecha o modal de crop
     } catch (err: any) {
-      toast.error("Erro ao enviar foto: " + getErrorMessage(err));
+      toast.error("Erro ao enviar foto: " + err.message);
     } finally {
       setUploadingPhoto(false);
     }
@@ -174,17 +166,18 @@ function UsersPage() {
     e.preventDefault();
     if (!editUser) return;
     
-    const { error } = await supabase.from("profiles").update({
-      nome: editNome,
-      telefone: editTelefone,
-      role: editRole,
-      funcoes: editFuncoes,
-      caches_padrao: editCachesPadrao,
-      foto_url: editFotoUrl
-    }).eq("id", editUser.id);
+    const updates = { 
+        nome: editNome, 
+        telefone: editTelefone, 
+        role: editRole,
+        funcoes: editFuncoes,
+        foto_url: editFotoUrl
+      };
+
+    const { error } = await supabase.from("profiles").update(updates).eq("id", editUser.id);
 
     if (error) {
-      toast.error(getErrorMessage(error));
+      toast.error(error.message);
     } else {
       toast.success("Usuário atualizado com sucesso!");
       setEditUser(null);
@@ -201,7 +194,7 @@ function UsersPage() {
     if (!confirm("Tem certeza que deseja remover este usuário? Ele perderá o acesso ao painel.")) return;
     const { error } = await supabase.rpc('delete_user', { user_id: u.id });
     if (error) {
-      toast.error("Erro ao remover: " + getErrorMessage(error));
+      toast.error("Erro ao remover: " + error.message);
     } else {
       toast.success("Usuário removido da equipe.");
       loadData();
@@ -237,10 +230,9 @@ function UsersPage() {
       </section>
 
       <Tabs defaultValue="equipe" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
-          <TabsTrigger value="equipe" className="rounded-lg h-full font-bold text-xs sm:text-sm">Equipe e Convites</TabsTrigger>
-          <TabsTrigger value="caches_padrao" className="rounded-lg h-full font-bold text-xs sm:text-sm">Cachês Padrão</TabsTrigger>
-          <TabsTrigger value="riders" className="rounded-lg h-full font-bold text-xs sm:text-sm">Riders Padrão</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
+          <TabsTrigger value="equipe" className="rounded-lg h-full font-bold">Equipe e Convites</TabsTrigger>
+          <TabsTrigger value="riders" className="rounded-lg h-full font-bold">Riders Padrão</TabsTrigger>
         </TabsList>
 
         <TabsContent value="equipe" className="mt-8">
@@ -340,25 +332,14 @@ function UsersPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-lg text-slate-800 dark:text-white truncate">{u.nome}</h4>
-                        {(() => {
-                          const funcs = u.funcoes && u.funcoes.length > 0 ? u.funcoes : [u.role];
-                          // Some accounts might have dev/admin role but no funcoes array
-                          if (['dev', 'admin', 'user'].includes(u.role) && !funcs.includes(u.role)) {
-                            funcs.unshift(u.role);
-                          }
-                          
-                          return Array.from(new Set(funcs)).map(f => {
-                            if (f === "dev") return <Badge key={f} className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">Desenvolvedor</Badge>;
-                            if (f === "admin") return <Badge key={f} className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Administrador</Badge>;
-                            if (f === "produtor") return <Badge key={f} className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">Produtor</Badge>;
-                            if (f === "iluminador") return <Badge key={f} className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">Iluminador</Badge>;
-                            if (f === "tecnico_som") return <Badge key={f} className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">Técnico de Som</Badge>;
-                            if (f === "motorista") return <Badge key={f} className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">Motorista</Badge>;
-                            if (f === "artista") return <Badge key={f} className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-none px-2 rounded-md">Artista</Badge>;
-                            if (f === "user") return <Badge key={f} className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">Usuário Padrão</Badge>;
-                            return <Badge key={f} className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md capitalize">{f}</Badge>;
-                          });
-                        })()}
+                        {u.role === "dev" && <Badge className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">Desenvolvedor</Badge>}
+                        {u.role === "admin" && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Administrador</Badge>}
+                        {u.role === "produtor" && <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">Produtor</Badge>}
+                        {u.role === "iluminador" && <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">Iluminador</Badge>}
+                          {u.role === "tecnico_som" && <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">Técnico de Som</Badge>}
+                        {u.role === "motorista" && <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">Motorista</Badge>}
+                          {u.role === "artista" && <Badge className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-none px-2 rounded-md">Artista</Badge>}
+                        {u.role === "user" && <Badge className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">Usuário Padrão</Badge>}
                       </div>
                       <div className="flex items-center gap-4 mt-1">
                         <p className="text-slate-500 dark:text-slate-400 text-sm font-medium flex items-center gap-1">
@@ -406,12 +387,7 @@ function UsersPage() {
       </div>
       </TabsContent>
 
-      
-        <TabsContent value="caches_padrao" className="mt-0">
-          <CachesPadraoTab />
-        </TabsContent>
-
-        <TabsContent value="riders" className="mt-0">
+      <TabsContent value="riders" className="mt-0">
         <TemplateRidersTab role={profile?.role || ''} />
       </TabsContent>
       </Tabs>
@@ -471,42 +447,7 @@ function UsersPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Funções na Equipe (Múltipla Escolha)</Label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {['produtor', 'iluminador', 'tecnico_som', 'motorista', 'artista'].map(f => (
-                  <Badge 
-                    key={f}
-                    variant={editFuncoes.includes(f) ? "default" : "outline"}
-                    className={`cursor-pointer border-slate-300 py-1.5 px-3 hover:bg-slate-200 dark:hover:bg-slate-800 ${editFuncoes.includes(f) ? 'bg-primary text-white border-primary hover:bg-primary/90' : ''}`}
-                    onClick={() => setEditFuncoes(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
-                  >
-                    {f.toUpperCase().replace('_', ' ')}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            {editFuncoes.length > 0 && (
-              <div className="space-y-3 pt-2">
-                <Label>Cachê Padrão por Função</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {editFuncoes.map(f => (
-                    <div key={f} className="space-y-1.5">
-                      <Label className="text-xs text-slate-500">{f.toUpperCase().replace('_', ' ')}</Label>
-                      <CurrencyInput 
-                        value={editCachesPadrao[f] || ""}
-                        onChange={(v) => setEditCachesPadrao(prev => ({...prev, [f]: v}))}
-                        className="h-10 rounded-lg text-sm"
-                        placeholder="R$ 0,00"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label>Nível de Acesso Principal (Permissões)</Label>
+              <Label>Nível de Acesso</Label>
               {editUser?.role === 'dev' || editUser?.nome?.toLowerCase().includes('garuffi') ? (
                 <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
                   🔒 O nível do Desenvolvedor não pode ser modificado.
@@ -527,6 +468,23 @@ function UsersPage() {
                 </select>
               )}
             </div>
+
+            <div className="space-y-2 pt-2">
+              <Label>Funções / Especialidades na Equipe (Múltipla Escolha)</Label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {['produtor', 'iluminador', 'tecnico_som', 'motorista', 'artista'].map(f => (
+                  <Badge 
+                    key={f}
+                    variant={editFuncoes.includes(f) ? "default" : "outline"}
+                    className={`cursor-pointer border-slate-300 py-1.5 px-3 hover:bg-slate-200 dark:hover:bg-slate-800 ${editFuncoes.includes(f) ? 'bg-primary text-white border-primary hover:bg-primary/90' : ''}`}
+                    onClick={() => setEditFuncoes(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
+                  >
+                    {f.toUpperCase().replace('_', ' ')}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
             <div className="flex gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setEditUser(null)} className="flex-1 h-12 rounded-xl font-bold">Cancelar</Button>
               <Button type="submit" className="flex-1 h-12 rounded-xl font-bold shadow-lg">Salvar Alterações</Button>

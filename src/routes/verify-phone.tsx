@@ -66,7 +66,7 @@ function VerifyPhoneComponent() {
     setSending(false);
     
     if (error) {
-      const msg = error.message.toLowerCase();
+      const msg = getErrorMessage(error).toLowerCase();
       if (msg.includes('already registered') || msg.includes('unique constraint')) {
         setFormError('Este número de celular já está cadastrado em outra conta. Por favor, tente outro número.');
       } else if (msg.includes('unverified') || msg.includes('trial')) {

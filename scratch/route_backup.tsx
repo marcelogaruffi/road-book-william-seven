@@ -1,20 +1,21 @@
-import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
-  Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote
+  Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Contact2 } from "lucide-react";
+import { Users, Contact2, User } from "lucide-react";
 
 type Profile = {
   id: string;
   nome: string;
   foto_url: string | null;
   role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "artista" | "user";
+  funcoes?: string[];
 };
 
 export const Route = createFileRoute("/_authenticated")({
@@ -71,6 +72,22 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthedLayout() {
   const navigate = useNavigate();
   const { user, profile, realProfile, isSimulating } = Route.useRouteContext();
+  const location = useLocation();
+
+  const getLinkClass = (path: string, exact: boolean = false, hash?: string) => {
+    let isActive = exact ? location.pathname === path : location.pathname.startsWith(path);
+    if (isActive && hash) {
+      isActive = location.hash === hash;
+    } else if (isActive && !hash && path === "/dashboard" && location.hash) {
+      isActive = false; // Se tiver hash, o dashboard puro não fica ativo
+    }
+    return `w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 transition-all duration-200 rounded-xl ${
+      isActive
+        ? "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/20"
+        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium"
+    }`;
+  };
+
   const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [simuladorOpen, setSimuladorOpen] = useState(false);
@@ -116,6 +133,7 @@ function AuthedLayout() {
 
   const userName = profile?.nome || user.user_metadata?.full_name || "Usuário";
   const userRole = profile?.role || "user";
+  const userFuncoes = profile?.funcoes || [];
   const fotoUrl = profile?.foto_url;
 
   const clearSimulation = () => {
@@ -186,41 +204,45 @@ function AuthedLayout() {
           <div className={`px-4 text-[10px] font-bold text-slate-400 mt-2 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
              Geral
           </div>
-          
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold rounded-xl`}>
+          <Button asChild variant="ghost" className={getLinkClass("/dashboard", true)}>
              <Link to="/dashboard">
                <LayoutDashboard className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Dashboard</span>}
              </Link>
           </Button>
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+          <Button asChild variant="ghost" className={getLinkClass("/dashboard", false, "#turnes")}>
              <Link to="/dashboard" hash="turnes">
                <RouteIcon className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Turnês</span>}
              </Link>
           </Button>
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+          <Button asChild variant="ghost" className={getLinkClass("/dashboard", false, "#roadbooks")}>
              <Link to="/dashboard" hash="roadbooks">
                <Ticket className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>{userRole === 'motorista' ? 'Cidades' : 'Road Books'}</span>}
              </Link>
           </Button>
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+          
+          {/* SECTION: MEU PAINEL */}
+          <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+             Meu Painel
+          </div>
+          
+          <Button asChild variant="ghost" className={getLinkClass("/minhas-escalas", false)}>
              <Link to="/minhas-escalas">
                <ClipboardList className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Minhas Escalas</span>}
              </Link>
           </Button>
-
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+          <Button asChild variant="ghost" className={getLinkClass("/meus-pagamentos", false)}>
              <Link to="/meus-pagamentos">
-               <Banknote className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+               <Wallet className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Meus Pagamentos</span>}
              </Link>
           </Button>
-          
+
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+            <Button asChild variant="ghost" className={getLinkClass("/eventos", false)}>
                <Link to="/eventos">
                  <Calendar className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Eventos</span>}
@@ -229,14 +251,14 @@ function AuthedLayout() {
           )}
 
           {/* SECTION: TÉCNICA */}
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador' || userRole === 'tecnico_som') && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador' || userRole === 'tecnico_som' || userFuncoes.includes('iluminador') || userFuncoes.includes('tecnico_som')) && (
             <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
                Técnica
             </div>
           )}
 
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'iluminador' || userFuncoes.includes('iluminador')) && (
+            <Button asChild variant="ghost" className={getLinkClass("/iluminacao", false)}>
                <Link to="/iluminacao">
                  <Lightbulb className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Iluminação</span>}
@@ -244,8 +266,8 @@ function AuthedLayout() {
             </Button>
           )}
 
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'tecnico_som') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'tecnico_som' || userFuncoes.includes('tecnico_som')) && (
+            <Button asChild variant="ghost" className={getLinkClass("/som", false)}>
                <Link to="/som">
                  <Mic2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Som</span>}
@@ -259,36 +281,35 @@ function AuthedLayout() {
                Gestão
             </div>
           )}
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
+            <Button asChild variant="ghost" className={getLinkClass("/escalas", false)}>
+               <Link to="/escalas">
+                 <ClipboardList className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Gestão de Escalas</span>}
+               </Link>
+            </Button>
+          )}
 
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+            <Button asChild variant="ghost" className={getLinkClass("/publico", false)}>
              <Link to="/publico">
                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                {sidebarOpen && <span>Público</span>}
              </Link>
           </Button>
           )}
-            {(userRole === 'admin' || userRole === 'dev') && (
-              <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-                 <Link to="/financeiro">
-                   <Wallet className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                   {sidebarOpen && <span>Financeiro</span>}
-                 </Link>
-              </Button>
-            )}
 
-          
-
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/escalas">
-                 <Users className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                 {sidebarOpen && <span>Painel de Escalas</span>}
+          {(userRole === 'admin' || userRole === 'dev') && (
+            <Button asChild variant="ghost" className={getLinkClass("/financeiro", false)}>
+               <Link to="/financeiro">
+                 <Wallet className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Financeiro</span>}
                </Link>
             </Button>
           )}
+
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+            <Button asChild variant="ghost" className={getLinkClass("/contatos", false)}>
                <Link to="/contatos">
                  <Contact2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Contatos</span>}
@@ -304,7 +325,16 @@ function AuthedLayout() {
           )}
 
           {(userRole === 'admin' || userRole === 'dev') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+            <Button asChild variant="ghost" className={getLinkClass("/dados-pessoais", false)}>
+               <Link to="/dados-pessoais">
+                 <User className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Dados Pessoais</span>}
+               </Link>
+            </Button>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev') && (
+            <Button asChild variant="ghost" className={getLinkClass("/cadastros", false)}>
                <Link to="/cadastros">
                  <UserPlus className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Cadastros e Convites</span>}
@@ -313,7 +343,7 @@ function AuthedLayout() {
           )}
 
           {(userRole === 'admin' || userRole === 'dev') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
+            <Button asChild variant="ghost" className={getLinkClass("/configuracoes", false)}>
                <Link to="/configuracoes">
                  <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Configurações</span>}

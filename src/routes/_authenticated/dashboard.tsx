@@ -56,21 +56,22 @@ function Dashboard() {
 
   async function load() {
     setLoading(true);
-    const [{ data: rb, error: e1 }, { data: tr, error: e2 }, { data: evts }] = await Promise.all([
+    const [{ data: rb, error: e1 }, { data: tr, error: e2 }, { data: evts }, { data: esc }] = await Promise.all([
       supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id,evento_id").order("data_inicial", { ascending: true }),
       supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
-      isSimulating ? supabase.from("eventos").select("id, equipe") : Promise.resolve({ data: [] })
+      (profile && !['admin', 'dev', 'produtor'].includes(profile.role)) || isSimulating ? supabase.from("eventos").select("id, equipe") : Promise.resolve({ data: [] }),
+      profile ? supabase.from("evento_escalas").select("evento_id, status").eq("usuario_id", profile.id) : Promise.resolve({ data: [] })
     ]);
     
     let roadbooksFinal = rb as Roadbook[] || [];
-    if (isSimulating && profile) {
-      if (!['admin', 'dev', 'produtor'].includes(profile.role)) {
-         roadbooksFinal = roadbooksFinal.filter(r => {
-           if (!(r as any).evento_id) return true;
-           const evt = evts?.find(e => e.id === (r as any).evento_id);
-           return evt?.equipe?.includes(profile.id);
-         });
-      }
+    if (profile && !['admin', 'dev', 'produtor'].includes(profile.role)) {
+       roadbooksFinal = roadbooksFinal.filter(r => {
+         if (!(r as any).evento_id) return true;
+         const escala = esc?.find(e => e.evento_id === (r as any).evento_id);
+         const evt = evts?.find(e => e.id === (r as any).evento_id);
+         if (!escala) return evt?.equipe?.includes(profile.id);
+         return escala.status === 'aceita';
+       });
     }
 
     if (e1) toast.error(e1.message);
@@ -86,7 +87,7 @@ function Dashboard() {
   
   async function onDelete(id: string) {
     const { error } = await supabase.from("roadbooks").delete().eq("id", id);
-    if (error) toast.error(error.message); else { toast.success("Excluído"); load(); }
+    if (error) toast.error(getErrorMessage(error)); else { toast.success("Excluído"); load(); }
     setDeleteRbId(null);
   }
 
@@ -94,7 +95,7 @@ function Dashboard() {
 
   async function onDeleteTour(id: string) {
     const { error } = await supabase.from("tours").delete().eq("id", id);
-    if (error) toast.error(error.message); else { toast.success("Excluída"); load(); }
+    if (error) toast.error(getErrorMessage(error)); else { toast.success("Excluída"); load(); }
     setDeleteTourId(null);
   }
 
@@ -121,10 +122,12 @@ function Dashboard() {
   };
 
   const hoje = new Date().toISOString().split('T')[0];
-  const proximos = items.filter(r => r.data_inicial && r.data_inicial >= hoje);
+  const proximos = items.filter(r => (r.data_final || r.data_inicial) && (r.data_final || r.data_inicial) >= hoje);
   const nextCity = proximos.length > 0 ? proximos[0].cidade : (items.length > 0 ? items[items.length - 1].cidade : "Nenhuma");
-
   const currentCity = items.find(r => r.data_inicial === hoje)?.cidade || "Nenhuma";
+  const percentComplete = items.length > 0 ? Math.round(((items.length - proximos.length) / items.length) * 100) : 0;
+
+  const realizados = items.filter(r => (r.data_final || r.data_inicial) && (r.data_final || r.data_inicial) < hoje).reverse();
 
   const renderRoadbookCard = (r: Roadbook, index: number) => (
     <Card key={r.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgb(0,0,0,0.3)] bg-white dark:bg-card/60 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-[1.5rem] relative overflow-hidden">
@@ -177,7 +180,6 @@ function Dashboard() {
     </Card>
   );
 
-  const realizados = items.filter(r => r.data_inicial && r.data_inicial < hoje).reverse();
 
   return (
     <div className="max-w-7xl mx-auto space-y-12">

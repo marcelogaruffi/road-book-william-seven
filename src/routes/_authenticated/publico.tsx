@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/publico")({
   component: PublicoPage,
 });
 
-const ATIVIDADES = ["Apresentação", "Intercâmbio", "Oficina", "Pensamento Giratório"].sort((a, b) => a.localeCompare(b));
+const ATIVIDADES = ["Apresentação", "Intercâmbio", "Oficina", "Pensamento Giratório", "Outra..."].sort((a, b) => a.localeCompare(b));
 const PUBLICO_OPCOES = [
   "1º Ano", "1º Ano Ensino Médio", "2º Ano", "2º Ano Ensino Médio", "3º Ano", "3º Ano Ensino Médio",
   "4º Ano", "5º Ano", "6º Ano", "7º Ano", "8º Ano", "9º Ano",
@@ -55,6 +55,7 @@ function PublicoPage() {
   const [data, setData] = useState("");
   const [horario, setHorario] = useState("");
   const [atividade, setAtividade] = useState("");
+  const [outraAtividade, setOutraAtividade] = useState("");
   const [publicoPresente, setPublicoPresente] = useState("");
   const [publicoMajoritario, setPublicoMajoritario] = useState<string[]>([]);
 
@@ -93,11 +94,24 @@ function PublicoPage() {
       return;
     }
 
+    const tzoffset = (new Date()).getTimezoneOffset() * 60000;
+    const localToday = (new Date(Date.now() - tzoffset)).toISOString().split('T')[0];
+    if (data > localToday) {
+      toast.error("Não é possível registrar relatórios de datas futuras.");
+      return;
+    }
+
+    const finalAtividade = atividade === "Outra..." ? outraAtividade.trim() : atividade;
+    if (atividade === "Outra..." && !finalAtividade) {
+      toast.error("Por favor, digite o nome da outra atividade.");
+      return;
+    }
+
     const payload = {
       roadbook_id: roadbookId,
       data,
       horario,
-      atividade,
+      atividade: finalAtividade,
       publico_presente: publicoPresente ? parseInt(publicoPresente) : null,
       publico_majoritario: publicoMajoritario
     };
@@ -120,6 +134,8 @@ function PublicoPage() {
         setHorario("");
         setPublicoPresente("");
         setPublicoMajoritario([]);
+        setOutraAtividade("");
+        setOutraAtividade("");
       }
     } else {
       const { data: inserted, error } = await supabase
@@ -137,6 +153,7 @@ function PublicoPage() {
         setHorario("");
         setPublicoPresente("");
         setPublicoMajoritario([]);
+        setOutraAtividade("");
       }
     }
   }
@@ -168,7 +185,13 @@ function PublicoPage() {
     setRoadbookId(r.roadbook_id);
     setData(r.data);
     setHorario(r.horario.substring(0, 5));
-    setAtividade(r.atividade);
+    if (ATIVIDADES.includes(r.atividade)) {
+      setAtividade(r.atividade);
+      setOutraAtividade("");
+    } else {
+      setAtividade("Outra...");
+      setOutraAtividade(r.atividade);
+    }
     setPublicoPresente(r.publico_presente ? r.publico_presente.toString() : "");
     setPublicoMajoritario(r.publico_majoritario || []);
     
@@ -483,6 +506,12 @@ function PublicoPage() {
               </Select>
             </div>
 
+            {atividade === "Outra..." && (
+              <div className="space-y-2 lg:col-span-1">
+                <Label className="font-bold text-slate-700 dark:text-slate-300">Qual atividade?</Label>
+                <Input value={outraAtividade} onChange={e => setOutraAtividade(e.target.value)} required className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 px-4 w-full" placeholder="Digite a atividade..." />
+              </div>
+            )}
             <div className="space-y-2 lg:col-span-1">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Público</Label>
               <Input type="number" min="0" placeholder="Qtd" value={publicoPresente} onChange={e => setPublicoPresente(e.target.value)} className="h-11 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 w-full" />
@@ -581,7 +610,7 @@ function PublicoPage() {
                       ) : <span className="text-slate-400">-</span>}
                     </TableCell>
                     <TableCell className="text-right pr-4">
-                      <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+                      <div className="flex justify-end gap-1 transition-opacity focus-within:opacity-100">
                         <Button variant="ghost" size="icon" onClick={() => handleEdit(r)} className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:text-amber-400 dark:hover:bg-amber-900/20 rounded-xl transition-colors">
                           <Pencil className="size-4" />
                         </Button>

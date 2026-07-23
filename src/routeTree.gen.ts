@@ -18,9 +18,14 @@ import { Route as TurneCompletaSlugRouteImport } from './routes/turne-completa.$
 import { Route as RbSlugRouteImport } from './routes/rb.$slug'
 import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authenticated/minhas-escalas'
+import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
+import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated/escalas'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDadosPessoaisRouteImport } from './routes/_authenticated/dados-pessoais'
 import { Route as AuthenticatedContatosRouteImport } from './routes/_authenticated/contatos'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
@@ -79,6 +84,23 @@ const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
   path: '/publico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMinhasEscalasRoute =
+  AuthenticatedMinhasEscalasRouteImport.update({
+    id: '/minhas-escalas',
+    path: '/minhas-escalas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMeusPagamentosRoute =
+  AuthenticatedMeusPagamentosRouteImport.update({
+    id: '/meus-pagamentos',
+    path: '/meus-pagamentos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   id: '/financeiro',
   path: '/financeiro',
@@ -89,11 +111,22 @@ const AuthenticatedEventosRoute = AuthenticatedEventosRouteImport.update({
   path: '/eventos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedEscalasRoute = AuthenticatedEscalasRouteImport.update({
+  id: '/escalas',
+  path: '/escalas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDadosPessoaisRoute =
+  AuthenticatedDadosPessoaisRouteImport.update({
+    id: '/dados-pessoais',
+    path: '/dados-pessoais',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedContatosRoute = AuthenticatedContatosRouteImport.update({
   id: '/contatos',
   path: '/contatos',
@@ -173,9 +206,14 @@ export interface FileRoutesByFullPath {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contatos': typeof AuthenticatedContatosRoute
+  '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/escalas': typeof AuthenticatedEscalasRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
+  '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
@@ -199,9 +237,14 @@ export interface FileRoutesByTo {
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contatos': typeof AuthenticatedContatosRoute
+  '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/escalas': typeof AuthenticatedEscalasRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
+  '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/perfil': typeof AuthenticatedPerfilRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
@@ -227,9 +270,14 @@ export interface FileRoutesById {
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/contatos': typeof AuthenticatedContatosRoute
+  '/_authenticated/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/escalas': typeof AuthenticatedEscalasRoute
   '/_authenticated/eventos': typeof AuthenticatedEventosRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
+  '/_authenticated/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
   '/rb/$slug': typeof RbSlugRoute
@@ -255,9 +303,14 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/configuracoes'
     | '/contatos'
+    | '/dados-pessoais'
     | '/dashboard'
+    | '/escalas'
     | '/eventos'
     | '/financeiro'
+    | '/meus-pagamentos'
+    | '/minhas-escalas'
+    | '/perfil'
     | '/publico'
     | '/motorista-print/$slug'
     | '/rb/$slug'
@@ -281,9 +334,14 @@ export interface FileRouteTypes {
     | '/cadastros'
     | '/configuracoes'
     | '/contatos'
+    | '/dados-pessoais'
     | '/dashboard'
+    | '/escalas'
     | '/eventos'
     | '/financeiro'
+    | '/meus-pagamentos'
+    | '/minhas-escalas'
+    | '/perfil'
     | '/publico'
     | '/motorista-print/$slug'
     | '/rb/$slug'
@@ -308,9 +366,14 @@ export interface FileRouteTypes {
     | '/_authenticated/cadastros'
     | '/_authenticated/configuracoes'
     | '/_authenticated/contatos'
+    | '/_authenticated/dados-pessoais'
     | '/_authenticated/dashboard'
+    | '/_authenticated/escalas'
     | '/_authenticated/eventos'
     | '/_authenticated/financeiro'
+    | '/_authenticated/meus-pagamentos'
+    | '/_authenticated/minhas-escalas'
+    | '/_authenticated/perfil'
     | '/_authenticated/publico'
     | '/motorista-print/$slug'
     | '/rb/$slug'
@@ -404,6 +467,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPublicoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/minhas-escalas': {
+      id: '/_authenticated/minhas-escalas'
+      path: '/minhas-escalas'
+      fullPath: '/minhas-escalas'
+      preLoaderRoute: typeof AuthenticatedMinhasEscalasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/meus-pagamentos': {
+      id: '/_authenticated/meus-pagamentos'
+      path: '/meus-pagamentos'
+      fullPath: '/meus-pagamentos'
+      preLoaderRoute: typeof AuthenticatedMeusPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/financeiro': {
       id: '/_authenticated/financeiro'
       path: '/financeiro'
@@ -418,11 +502,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedEventosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/escalas': {
+      id: '/_authenticated/escalas'
+      path: '/escalas'
+      fullPath: '/escalas'
+      preLoaderRoute: typeof AuthenticatedEscalasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dados-pessoais': {
+      id: '/_authenticated/dados-pessoais'
+      path: '/dados-pessoais'
+      fullPath: '/dados-pessoais'
+      preLoaderRoute: typeof AuthenticatedDadosPessoaisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/contatos': {
@@ -523,9 +621,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedContatosRoute: typeof AuthenticatedContatosRoute
+  AuthenticatedDadosPessoaisRoute: typeof AuthenticatedDadosPessoaisRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedEscalasRoute: typeof AuthenticatedEscalasRoute
   AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedMeusPagamentosRoute: typeof AuthenticatedMeusPagamentosRoute
+  AuthenticatedMinhasEscalasRoute: typeof AuthenticatedMinhasEscalasRoute
+  AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
   AuthenticatedIluminacaoEvento_idRoute: typeof AuthenticatedIluminacaoEvento_idRoute
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
@@ -543,9 +646,14 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedContatosRoute: AuthenticatedContatosRoute,
+  AuthenticatedDadosPessoaisRoute: AuthenticatedDadosPessoaisRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedEscalasRoute: AuthenticatedEscalasRoute,
   AuthenticatedEventosRoute: AuthenticatedEventosRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedMeusPagamentosRoute: AuthenticatedMeusPagamentosRoute,
+  AuthenticatedMinhasEscalasRoute: AuthenticatedMinhasEscalasRoute,
+  AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,
   AuthenticatedIluminacaoEvento_idRoute: AuthenticatedIluminacaoEvento_idRoute,
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,

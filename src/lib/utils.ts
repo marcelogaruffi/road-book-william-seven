@@ -51,3 +51,51 @@ export function maskPhone(value: string, oldValue: string): string {
   
   return formatted;
 }
+
+export function getErrorMessage(error: any): string {
+  if (!error) return "Ocorreu um erro inesperado. Tente novamente.";
+  
+  const msg = typeof error === 'string' ? error : (error.message || error.error_description || "");
+  const code = error.code || "";
+  
+  if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+    return "Falha de conexão. Verifique se você está conectado à internet.";
+  }
+  if (msg.includes("JWT") || msg.includes("Auth session missing") || code === 'PGRST301') {
+    return "Sua sessão expirou. Por favor, faça login novamente.";
+  }
+  if (code === '23505' || msg.includes("duplicate key")) {
+    return "Este item já existe no sistema.";
+  }
+  if (code === '23503' || msg.includes("foreign key")) {
+    return "Ação bloqueada: Este item está vinculado a outras partes do sistema.";
+  }
+  if (code === 'PGRST116') {
+    return "Nenhum dado encontrado para a sua solicitação.";
+  }
+  if (code === '42P01') {
+    return "Ocorreu um problema no sistema de dados.";
+  }
+  if (msg.includes("Failed to upload") || msg.includes("storage")) {
+    return "Falha ao enviar arquivo. Verifique sua internet ou tente uma imagem menor.";
+  }
+  if (msg.includes("rate limit") || code === '429') {
+    return "Muitas solicitações ao mesmo tempo. Aguarde alguns segundos e tente novamente.";
+  }
+  if (msg.includes("User already registered") || msg.includes("duplicate email")) {
+    return "Já existe uma conta com este e-mail.";
+  }
+  if (msg.includes("Invalid login credentials") || msg.includes("Invalid credentials")) {
+    return "Usuário ou senha incorretos.";
+  }
+  if (msg.includes("SMS") || msg.includes("Twilio")) {
+    return "Falha no envio da mensagem SMS. Verifique o número ou o saldo do sistema.";
+  }
+  
+  // Return original if it doesn't look like technical jargon, or fallback to generic
+  if (msg && !/[A-Z_0-9]{5,}/.test(msg) && msg.length < 80) {
+      return msg;
+  }
+  
+  return msg || "Ocorreu um erro inesperado. Tente novamente.";
+}

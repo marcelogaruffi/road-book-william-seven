@@ -299,7 +299,7 @@ function MapaLuzForm() {
                           updateJson('arquivo_nome', file.name);
                           toast.success('Upload concluído!', { id: toastId });
                         } catch (err: any) {
-                          toast.error(`Erro no upload: ${err.message}`, { id: toastId });
+                          toast.error(`Erro no upload: ${getErrorMessage(err)}`, { id: toastId });
                         }
                       }}
                     />

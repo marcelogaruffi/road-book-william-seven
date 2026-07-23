@@ -1796,11 +1796,11 @@ function PrintDayWeather({ date }: { date: string }) {
   return <span className="text-xs text-muted-foreground ml-3 font-normal font-sans">({weatherText})</span>;
 }
 
-// ============ Hourly Weather Cache & Component ============
-const hourlyWeatherCache: { [date: string]: Promise<{ temp: number[]; code: number[] }> } = {};
+// ============ Hourly Weather Cachêêe & Component ============
+const hourlyWeatherCachêêe: { [date: string]: Promise<{ temp: number[]; code: number[] }> } = {};
 
 function fetchHourlyWeather(latitude: number, longitude: number, date: string): Promise<{ temp: number[]; code: number[] }> {
-  if (hourlyWeatherCache[date]) return hourlyWeatherCache[date];
+  if (hourlyWeatherCachêêe[date]) return hourlyWeatherCachêêe[date];
 
   const promise = (async () => {
     const [y, m, d] = date.split("-").map(Number);
@@ -1869,7 +1869,7 @@ function fetchHourlyWeather(latitude: number, longitude: number, date: string): 
     }
   })();
 
-  hourlyWeatherCache[date] = promise;
+  hourlyWeatherCachêêe[date] = promise;
   return promise;
 }
 

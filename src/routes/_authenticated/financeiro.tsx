@@ -2,6 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { FinanceiroTab } from "@/components/FinanceiroTab";
+import { CachesEquipeTab } from "@/components/CachesEquipeTab";
+import { CachesPadraoTab } from "@/components/CachesPadraoTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -28,7 +31,7 @@ function FinanceiroPage() {
       
       const { data, error } = await supabase.from("roadbooks").select("id, espetaculo, cidade, data_inicial").order("data_inicial", { ascending: false });
       if (error) {
-        toast.error("Erro ao carregar roadbooks: " + error.message);
+        toast.error("Erro ao carregar roadbooks: " + getErrorMessage(error));
       } else {
         setRoadbooks(data || []);
       }
@@ -78,7 +81,27 @@ function FinanceiroPage() {
 
         {selectedRoadbook ? (
           <div className="pt-6 border-t border-slate-100 dark:border-white/5 mt-6">
-            <FinanceiroTab roadbookId={selectedRoadbook} />
+            <Tabs defaultValue="geral" className="w-full">
+              <TabsList className="grid w-full max-w-2xl grid-cols-3 bg-slate-100 dark:bg-white/10 rounded-xl mb-6 p-1">
+                <TabsTrigger value="geral" className="rounded-lg font-bold text-xs sm:text-sm">Receitas & Despesas</TabsTrigger>
+                <TabsTrigger value="caches" className="rounded-lg font-bold text-xs sm:text-sm">Cachês da Equipe</TabsTrigger>
+                <TabsTrigger value="caches_padrao" className="rounded-lg font-bold text-xs sm:text-sm">Cachês Padrão (Base)</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="geral" className="mt-0">
+                <FinanceiroTab roadbookId={selectedRoadbook} />
+              </TabsContent>
+              
+              <TabsContent value="caches" className="mt-0">
+                <CachesEquipeTab roadbookId={selectedRoadbook} />
+              </TabsContent>
+            
+              <TabsContent value="caches_padrao" className="mt-0">
+                <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm">
+                  <CachesPadraoTab />
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         ) : (
           <div className="py-12 text-center flex flex-col items-center justify-center opacity-50">

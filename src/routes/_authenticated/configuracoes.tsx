@@ -72,7 +72,7 @@ function ConfiguracoesComponent() {
 
     setSaving(false);
     if (error) {
-      toast.error('Erro ao salvar configuração: ' + error.message);
+      toast.error('Erro ao salvar configuração: ' + getErrorMessage(error));
       setExigirSms(!checked); // revert
     } else {
       toast.success(checked ? 'Verificação por SMS ativada!' : 'Verificação por SMS desativada.');
@@ -89,7 +89,7 @@ function ConfiguracoesComponent() {
 
     setSaving(false);
     if (error) {
-      toast.error('Erro ao salvar configuração: ' + error.message);
+      toast.error('Erro ao salvar configuração: ' + getErrorMessage(error));
       setPermitirSmsEscala(!checked); // revert
     } else {
       toast.success(checked ? 'Notificações de escala por SMS ativadas!' : 'Notificações de escala por SMS desativadas.');
@@ -109,7 +109,7 @@ function ConfiguracoesComponent() {
 
     setSavingTwilio(false);
     if (error) {
-      toast.error('Erro ao salvar credenciais do Twilio: ' + error.message);
+      toast.error('Erro ao salvar credenciais do Twilio: ' + getErrorMessage(error));
     } else {
       toast.success('Credenciais do Twilio salvas com sucesso!');
     }

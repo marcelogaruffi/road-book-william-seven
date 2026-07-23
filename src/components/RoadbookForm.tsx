@@ -110,7 +110,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       up("espetaculo_logo_url", publicData.publicUrl);
       toast.success("Logo enviado com sucesso!");
     } catch (err: any) {
-      toast.error(err.message ?? "Erro no upload do logo");
+      toast.error(getErrorMessage(err) ?? "Erro no upload do logo");
     } finally {
       setUploading(false);
     }
@@ -272,7 +272,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       }
       toast.success(`${novos.length} foto(s) enviada(s)`);
     } catch (err: any) {
-      toast.error(err.message ?? "Erro no upload");
+      toast.error(getErrorMessage(err) ?? "Erro no upload");
     } finally {
       setUploading(false);
     }
@@ -360,7 +360,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       setD((s) => ({ ...s, [side]: { ...s[side], outras_informacoes_fotos: [...(s[side].outras_informacoes_fotos ?? []), ...novos] } }));
       toast.success(`${novos.length} foto(s) enviada(s)`);
     } catch (err: any) {
-      toast.error(err.message ?? "Erro no upload");
+      toast.error(getErrorMessage(err) ?? "Erro no upload");
     } finally {
       setUploading(false);
     }
@@ -398,7 +398,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       setD((s) => ({ ...s, [side]: { ...s[side], cartoes_embarque: [...(s[side].cartoes_embarque ?? []), ...novos] } }));
       toast.success(`${novos.length} cartão(ões) enviado(s)`);
     } catch (err: any) {
-      toast.error(err.message ?? "Erro no upload");
+      toast.error(getErrorMessage(err) ?? "Erro no upload");
     } finally {
       setUploading(false);
     }
@@ -437,7 +437,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       setD((s) => ({ ...s, documentos: [...s.documentos, ...novos] }));
       toast.success(`${novos.length} arquivo(s) enviado(s)`);
     } catch (err: any) {
-      toast.error(err.message ?? "Erro no upload");
+      toast.error(getErrorMessage(err) ?? "Erro no upload");
     } finally {
       setUploading(false);
       e.target.value = "";
@@ -521,7 +521,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       });
       toast.success(`${novos.length} foto(s) enviada(s)`);
     } catch (err: any) {
-      toast.error(err.message ?? "Erro no upload");
+      toast.error(getErrorMessage(err) ?? "Erro no upload");
     } finally {
       setUploading(false);
     }
@@ -605,14 +605,14 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           
           console.log(`  Resposta INSERT Tentativa ${attempt + 1}:`, { status, row, error });
           if (!error && row) { inserted = row as any; break; }
-          if (error && !`${error.message}`.toLowerCase().includes("duplicate")) throw error;
+          if (error && !`${getErrorMessage(error)}`.toLowerCase().includes("duplicate")) throw error;
           if (attempt === 4) throw error ?? new Error("Não foi possível gerar slug");
         }
         toast.success("Criado! Página pública: /rb/" + inserted!.slug);
       }
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao salvar");
+      toast.error(getErrorMessage(err) ?? "Erro ao salvar");
     } finally {
       setSaving(false);
     }

@@ -17,7 +17,7 @@ function EditPage() {
   useEffect(() => {
     (async () => {
       const { data: row, error } = await supabase.from("roadbooks").select("*").eq("id", id).maybeSingle();
-      if (error) { toast.error(error.message); return; }
+      if (error) { toast.error(getErrorMessage(error)); return; }
       if (!row) { toast.error("Não encontrado"); return; }
       setData(rowToRoadbook(row));
     })();

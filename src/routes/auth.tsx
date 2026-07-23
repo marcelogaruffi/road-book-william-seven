@@ -183,7 +183,7 @@ function AuthPage() {
       if (error) throw error;
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      setErrorMsg(err.message === "Invalid login credentials" ? "E-mail ou senha incorretos." : err.message);
+      setErrorMsg(getErrorMessage(err) === "Invalid login credentials" ? "E-mail ou senha incorretos." : getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -217,7 +217,7 @@ function AuthPage() {
       setSignupStep(2);
       setEmail("");
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -293,10 +293,10 @@ function AuthPage() {
       }, 4000);
 
     } catch (err: any) {
-      if (err.message && err.message.includes("rate limit")) {
+      if (getErrorMessage(err) && getErrorMessage(err).includes("rate limit")) {
         setErrorMsg("O limite de testes do servidor (Supabase) foi atingido (Rate Limit). Aguarde 1 hora ou configure um SMTP próprio no painel para continuar testando novos cadastros.");
       } else {
-        setErrorMsg(err.message || "Erro desconhecido ao cadastrar.");
+        setErrorMsg(getErrorMessage(err) || "Erro desconhecido ao cadastrar.");
       }
     } finally {
       setLoading(false);
@@ -315,7 +315,7 @@ function AuthPage() {
       toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
       setMode("login");
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -334,7 +334,7 @@ function AuthPage() {
       toast.success("Sua senha foi redefinida com sucesso!");
       navigate({ to: "/dashboard" });
     } catch (err: any) {
-      setErrorMsg(err.message);
+      setErrorMsg(getErrorMessage(err));
     } finally {
       setLoading(false);
     }

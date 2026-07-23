@@ -41,7 +41,7 @@ function EditTour() {
       nome: tour.nome, espetaculo: tour.espetaculo, producao: tour.producao,
     }).eq("id", tour.id);
     setBusy(false);
-    if (error) toast.error(error.message); else toast.success("Salvo");
+    if (error) toast.error(getErrorMessage(error)); else toast.success("Salvo");
   }
 
   if (!tour) return <p className="text-muted-foreground">Carregando...</p>;

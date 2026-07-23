@@ -77,7 +77,7 @@ export default function TemplateRidersTab({ role, context = 'ambos' }: { role?: 
     
     setSaving(false);
     if (error) {
-      toast.error("Erro ao salvar: " + error.message);
+      toast.error("Erro ao salvar: " + getErrorMessage(error));
     } else {
       toast.success("Rider Padrão salvo com sucesso!");
       clearForm();

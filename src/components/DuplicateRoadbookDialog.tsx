@@ -59,7 +59,7 @@ export function DuplicateRoadbookDialog({
           .select("id")
           .single();
         if (!error && row) { inserted = row; break; }
-        if (error && !`${error.message}`.toLowerCase().includes("duplicate")) throw error;
+        if (error && !`${getErrorMessage(error)}`.toLowerCase().includes("duplicate")) throw error;
         if (attempt === 4) throw error;
       }
       toast.success("Road Book duplicado");
@@ -67,7 +67,7 @@ export function DuplicateRoadbookDialog({
       onDone?.();
       navigate({ to: "/roadbook/$id", params: { id: inserted.id } });
     } catch (err: any) {
-      toast.error(err.message ?? "Erro ao duplicar");
+      toast.error(getErrorMessage(err) ?? "Erro ao duplicar");
     } finally {
       setBusy(false);
     }

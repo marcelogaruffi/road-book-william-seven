@@ -20,12 +20,12 @@ export interface GlobalWeather {
   error?: string;
 }
 
-const geocodeCache: Record<string, { lat: number; lon: number }> = {};
+const geocodeCachêêe: Record<string, { lat: number; lon: number }> = {};
 
 export async function geocodeCity(city: string) {
   if (!city) return null;
   const cleaned = city.split(",")[0].trim();
-  if (geocodeCache[cleaned]) return geocodeCache[cleaned];
+  if (geocodeCachêêe[cleaned]) return geocodeCachêêe[cleaned];
 
   try {
     const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cleaned)}&count=1&language=pt&format=json`;
@@ -33,7 +33,7 @@ export async function geocodeCity(city: string) {
     const data = await res.json();
     if (data.results && data.results.length > 0) {
       const loc = { lat: data.results[0].latitude, lon: data.results[0].longitude };
-      geocodeCache[cleaned] = loc;
+      geocodeCachêêe[cleaned] = loc;
       return loc;
     }
   } catch (e) {

@@ -12,6 +12,8 @@ import { Trash2, Upload, Plus, DollarSign, ArrowUpRight, ArrowDownRight, Wallet 
 
 export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
   const [receitas, setReceitas] = useState<FinancasReceita[]>([]);
+  const [totalCachesEquipe, setTotalCachesEquipe] = useState<number>(0);
+  const [detalhesCaches, setDetalhesCaches] = useState<any[]>([]);
   const [despesas, setDespesas] = useState<FinancasDespesa[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -29,11 +31,49 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
     const { data: recData, error: recError } = await supabase.from("financas_receitas").select("*").eq("roadbook_id", roadbookId);
     const { data: despData, error: despError } = await supabase.from("financas_despesas").select("*").eq("roadbook_id", roadbookId);
     
-    if (recError) toast.error("Erro ao carregar receitas: " + recError.message);
+    if (recError) toast.error("Erro ao carregar receitas: " + getErrorMessage(recError));
     else setReceitas((recData as FinancasReceita[]) || []);
     
-    if (despError) toast.error("Erro ao carregar despesas: " + despError.message);
+    if (despError) toast.error("Erro ao carregar despesas: " + getErrorMessage(despError));
     else setDespesas((despData as FinancasDespesa[]) || []);
+
+    let somaCaches = 0;
+    let detalhes: any[] = [];
+    try {
+      const { data: rbData } = await supabase.from('roadbooks').select('evento_id, cidade, espetaculo').eq('id', roadbookId).maybeSingle();
+      if (rbData) {
+        let realEventoId = rbData.evento_id;
+        if (!realEventoId && rbData.cidade && rbData.espetaculo) {
+          const { data: evData } = await supabase.from('eventos').select('id').eq('cidade', rbData.cidade).eq('espetaculo', rbData.espetaculo).maybeSingle();
+          if (evData) realEventoId = evData.id;
+        }
+
+        if (realEventoId) {
+          const { data: escData } = await supabase.from('evento_escalas').select('id, funcao, profiles!inner(nome)').eq('evento_id', realEventoId);
+          if (escData && escData.length > 0) {
+            const escIds = escData.map((e: any) => e.id);
+            const { data: finData } = await supabase.from('evento_escalas_financeiro').select('escala_id, cache_valor').in('escala_id', escIds);
+            if (finData) {
+              somaCaches = finData.reduce((acc: number, curr: any) => acc + (Number(curr.cache_valor) || 0), 0);
+              
+              // Build details
+              detalhes = escData.map(esc => {
+                 const fin = finData.find(f => f.escala_id === esc.id);
+                 return {
+                   nome: esc.profiles?.nome || 'Desconhecido',
+                   funcao: esc.funcao || 'Membro',
+                   valor: Number(fin?.cache_valor || 0)
+                 };
+              }).filter(d => d.valor > 0);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao buscar caches: ", e);
+    }
+    setTotalCachesEquipe(somaCaches);
+    setDetalhesCaches(detalhes);
     
     setLoading(false);
   }
@@ -109,7 +149,8 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
   }
 
   const totalReceitas = receitas.reduce((acc, r) => acc + (Number(r.valor) || 0), 0);
-  const totalDespesas = despesas.reduce((acc, d) => acc + (Number(d.valor) || 0), 0);
+  const totalDespesasLancadas = despesas.reduce((acc, d) => acc + (Number(d.valor) || 0), 0);
+  const totalDespesas = totalDespesasLancadas + totalCachesEquipe;
   const saldo = totalReceitas - totalDespesas;
 
   return (
@@ -282,6 +323,33 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
               </div>
             </div>
           ))}
+                  {totalCachesEquipe > 0 && (
+            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 mt-4 overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-100 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                <div>
+                  <p className="font-bold text-slate-700 dark:text-slate-300">Cachês da Equipe (Somatório)</p>
+                  <p className="text-sm text-slate-500">Importado automaticamente da aba Cachês</p>
+                </div>
+                <div className="text-right mt-2 md:mt-0">
+                  <p className="font-black text-rose-600 dark:text-rose-400">R$ {totalCachesEquipe.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                </div>
+              </div>
+              {detalhesCaches.length > 0 && (
+                <div className="p-4 space-y-2">
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Detalhamento da Equipe</p>
+                  {detalhesCaches.map((det, i) => (
+                    <div key={i} className="flex justify-between items-center py-2 border-b border-slate-200 dark:border-slate-700/50 last:border-0 last:pb-0">
+                      <div>
+                        <p className="font-semibold text-sm">{det.nome}</p>
+                        <p className="text-xs text-slate-500 capitalize">{det.funcao.replace('_', ' ')}</p>
+                      </div>
+                      <p className="font-bold text-sm text-slate-700 dark:text-slate-300">R$ {det.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
