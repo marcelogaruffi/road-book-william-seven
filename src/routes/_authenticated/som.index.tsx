@@ -162,7 +162,7 @@ function SomComponent() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div>
-        <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent flex items-center gap-3">
+        <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white flex items-center gap-3 pb-1">
           <Mic2 className="size-8 text-blue-500" />
           Mapas de Som
         </h1>

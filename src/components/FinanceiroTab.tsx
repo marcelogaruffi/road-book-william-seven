@@ -165,7 +165,7 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400">Receitas</p>
-                <h3 className="text-2xl font-black text-emerald-900 dark:text-emerald-100">R$ {totalReceitas.toFixed(2)}</h3>
+                <h3 className="text-2xl font-black text-emerald-900 dark:text-emerald-100">R$ {totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
               </div>
             </div>
           </CardContent>
@@ -179,7 +179,7 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
               </div>
               <div>
                 <p className="text-sm font-medium text-rose-600 dark:text-rose-400">Despesas</p>
-                <h3 className="text-2xl font-black text-rose-900 dark:text-rose-100">R$ {totalDespesas.toFixed(2)}</h3>
+                <h3 className="text-2xl font-black text-rose-900 dark:text-rose-100">R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
               </div>
             </div>
           </CardContent>
@@ -193,7 +193,7 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
               </div>
               <div>
                 <p className={`text-sm font-medium ${saldo >= 0 ? "text-blue-600 dark:text-blue-400" : "text-amber-600 dark:text-amber-400"}`}>Saldo Líquido</p>
-                <h3 className={`text-2xl font-black ${saldo >= 0 ? "text-blue-900 dark:text-blue-100" : "text-amber-900 dark:text-amber-100"}`}>R$ {saldo.toFixed(2)}</h3>
+                <h3 className={`text-2xl font-black ${saldo >= 0 ? "text-blue-900 dark:text-blue-100" : "text-amber-900 dark:text-amber-100"}`}>R$ {saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h3>
               </div>
             </div>
           </CardContent>

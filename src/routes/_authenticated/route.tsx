@@ -196,45 +196,33 @@ function AuthedLayout() {
              Geral
           </div>
           
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold rounded-xl`}>
-             <Link to="/dashboard">
+          <Link to="/dashboard" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium transition-colors rounded-xl`} activeOptions={{ exact: true }} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <LayoutDashboard className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Dashboard</span>}
              </Link>
-          </Button>
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-             <Link to="/dashboard" hash="turnes">
+          <Link to="/dashboard" hash="turnes" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeOptions={{ includeSearch: false, includeHash: true }} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <RouteIcon className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Turnês</span>}
              </Link>
-          </Button>
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-             <Link to="/dashboard" hash="roadbooks">
+          <Link to="/dashboard" hash="roadbooks" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeOptions={{ includeSearch: false, includeHash: true }} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <Ticket className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>{userRole === 'motorista' ? 'Cidades' : 'Road Books'}</span>}
              </Link>
-          </Button>
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-             <Link to="/minhas-escalas">
+          <Link to="/minhas-escalas" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <ClipboardList className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Minhas Escalas</span>}
              </Link>
-          </Button>
 
-          <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-             <Link to="/meus-pagamentos">
+          <Link to="/meus-pagamentos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <Banknote className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Meus Pagamentos</span>}
              </Link>
-          </Button>
           
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/eventos">
+            <Link to="/eventos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Calendar className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Eventos</span>}
                </Link>
-            </Button>
           )}
 
           {/* SECTION: TÉCNICA */}
@@ -245,21 +233,17 @@ function AuthedLayout() {
           )}
 
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('iluminador')) && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/iluminacao">
+            <Link to="/iluminacao" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Lightbulb className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Iluminação</span>}
                </Link>
-            </Button>
           )}
 
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('tecnico_som')) && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/som">
+            <Link to="/som" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Mic2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Som</span>}
                </Link>
-            </Button>
           )}
 
           {/* SECTION: GESTÃO */}
@@ -270,39 +254,31 @@ function AuthedLayout() {
           )}
 
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-             <Link to="/publico">
+            <Link to="/publico" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                {sidebarOpen && <span>Público</span>}
              </Link>
-          </Button>
           )}
             {(userRole === 'admin' || userRole === 'dev') && (
-              <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-                 <Link to="/financeiro">
+              <Link to="/financeiro" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                    <Wallet className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                    {sidebarOpen && <span>Financeiro</span>}
                  </Link>
-              </Button>
             )}
 
           
 
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/escalas">
+            <Link to="/escalas" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Users className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Painel de Escalas</span>}
                </Link>
-            </Button>
           )}
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/contatos">
+            <Link to="/contatos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Contact2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Contatos</span>}
                </Link>
-            </Button>
           )}
           
           {/* SECTION: ADMINISTRAÇÃO */}
@@ -313,21 +289,17 @@ function AuthedLayout() {
           )}
 
           {(userRole === 'admin' || userRole === 'dev') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/cadastros">
+            <Link to="/cadastros" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <UserPlus className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Cadastros e Convites</span>}
                </Link>
-            </Button>
           )}
 
           {(userRole === 'admin' || userRole === 'dev') && (
-            <Button asChild variant="ghost" className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 font-medium rounded-xl transition-colors`}>
-               <Link to="/configuracoes">
+            <Link to="/configuracoes" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Configurações</span>}
                </Link>
-            </Button>
           )}
         </div>
 

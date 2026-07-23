@@ -12,7 +12,6 @@ import { Copy, Plus, UserX, UserCheck, ShieldAlert, KeyRound, Pencil, Trash2, Ma
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TemplateRidersTab from "@/components/TemplateRidersTab";
-import { CachesPadraoTab } from "@/components/CachesPadraoTab";
 import {
   Dialog,
   DialogContent,
@@ -230,16 +229,15 @@ function UsersPage() {
       
       {/* HEADER */}
       <section className="space-y-4">
-        <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white pb-1">
           Configurações do Sistema
         </h1>
         <p className="text-slate-500 dark:text-slate-400 font-medium">Gerencie acessos e modelos padrão (Riders) do sistema.</p>
       </section>
 
       <Tabs defaultValue="equipe" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
+        <TabsList className="grid w-full grid-cols-2 max-w-lg bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
           <TabsTrigger value="equipe" className="rounded-lg h-full font-bold text-xs sm:text-sm">Equipe e Convites</TabsTrigger>
-          <TabsTrigger value="caches_padrao" className="rounded-lg h-full font-bold text-xs sm:text-sm">Cachês Padrão</TabsTrigger>
           <TabsTrigger value="riders" className="rounded-lg h-full font-bold text-xs sm:text-sm">Riders Padrão</TabsTrigger>
         </TabsList>
 
@@ -405,11 +403,6 @@ function UsersPage() {
         </div>
       </div>
       </TabsContent>
-
-      
-        <TabsContent value="caches_padrao" className="mt-0">
-          <CachesPadraoTab />
-        </TabsContent>
 
         <TabsContent value="riders" className="mt-0">
         <TemplateRidersTab role={profile?.role || ''} />

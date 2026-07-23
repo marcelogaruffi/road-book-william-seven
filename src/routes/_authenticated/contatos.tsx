@@ -8,7 +8,8 @@ import { RoadbookData } from "@/lib/roadbook-types";
 import { Button } from "@/components/ui/button";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
+import { saveAs } from "file-saver";
 
 type ContactRow = {
   id: string; // just a unique key
@@ -128,9 +129,38 @@ function ContatosPage() {
   };
 
   // Exportação em PDF
-  const exportPDF = () => {
+  const exportPDF = async () => {
     const doc = new jsPDF();
-    doc.text("Lista de Contatos - Seven Produções Artísticas", 14, 20);
+    
+    let startY = 20;
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      const logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => resolve(reader.result as string);
+      });
+      
+      const img = new Image();
+      img.src = logoBase64;
+      await new Promise((res) => { img.onload = res; });
+      
+      const imgWidth = 40;
+      const imgHeight = (img.naturalHeight / img.naturalWidth) * imgWidth;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const x = (pageWidth - imgWidth) / 2;
+      
+      doc.addImage(logoBase64, 'PNG', x, 10, imgWidth, imgHeight);
+      doc.setFontSize(16);
+      doc.text("Agenda de Contatos - Seven Produções Artísticas", pageWidth / 2, 10 + imgHeight + 8, { align: 'center' });
+      startY = 10 + imgHeight + 15;
+    } catch (e) {
+      console.warn("Logo não carregado", e);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.setFontSize(16);
+      doc.text("Agenda de Contatos - Seven Produções Artísticas", pageWidth / 2, 15, { align: 'center' });
+    }
     
     const tableData = filteredContacts.map(c => [
       c.nome,
@@ -140,40 +170,101 @@ function ContatosPage() {
     ]);
 
     autoTable(doc, {
-      startY: 30,
+      startY: startY,
       head: [['Nome', 'Função', 'Contato', 'Cidades']],
       body: tableData,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [79, 70, 229] }
+      theme: "grid",
+      styles: { fontSize: 8, cellPadding: 3, textColor: [51, 65, 85], lineColor: [226, 232, 240] },
+      headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42] },
     });
     
     doc.save("contatos_seven.pdf");
   };
 
   // Exportação em Excel
-  const exportExcel = () => {
-    const worksheetData = filteredContacts.map(c => ({
-      Nome: c.nome,
-      "Função": c.funcao,
-      Telefone: c.telefone,
-      "E-mail": c.email,
-      Cidades: Array.from(c.cidades).join(", ")
-    }));
+  const exportExcel = async () => {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Contatos");
 
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Contatos");
+    let logoBase64: string | undefined;
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      logoBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => resolve(reader.result as string);
+      });
+    } catch (e) {
+      console.warn("Logo não carregado", e);
+    }
+
+    let imgHeightExcel = 70;
+    const imgWidthExcel = 140;
+    if (logoBase64) {
+      const img = new Image();
+      img.src = logoBase64;
+      await new Promise((res) => { img.onload = res; });
+      imgHeightExcel = (img.naturalHeight / img.naturalWidth) * imgWidthExcel;
+    }
+
+    worksheet.getColumn(1).width = 30; // Nome
+    worksheet.getColumn(2).width = 25; // Função
+    worksheet.getColumn(3).width = 20; // Contato
+    worksheet.getColumn(4).width = 40; // Cidades
+
+    const headerRowNumber = logoBase64 ? 6 : 1;
     
-    // Auto-ajuste de colunas simples
-    const maxWidths = [
-      { wch: 30 }, // Nome
-      { wch: 35 }, // Função
-      { wch: 20 }, // Telefone
-      { wch: 50 }, // Cidades
-    ];
-    worksheet['!cols'] = maxWidths;
+    if (logoBase64) {
+      const imageId = workbook.addImage({
+        base64: logoBase64,
+        extension: 'png',
+      });
+      worksheet.addImage(imageId, {
+        tl: { col: 0, row: 0 },
+        ext: { width: imgWidthExcel, height: imgHeightExcel }
+      });
+      
+      worksheet.mergeCells('B1:D4');
+      worksheet.getCell('B1').value = 'Agenda de Contatos';
+      worksheet.getCell('B1').font = { size: 16, bold: true, color: { argb: "FF0f172a" } };
+      worksheet.getCell('B1').alignment = { vertical: 'middle', horizontal: 'left' };
+    }
 
-    XLSX.writeFile(workbook, "contatos_seven.xlsx");
+    const headerRow = worksheet.getRow(headerRowNumber);
+    headerRow.values = ["Nome", "Função", "Contato", "Cidades"];
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: "FF334155" } };
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF1F5F9" } };
+      cell.alignment = { vertical: "middle", horizontal: "center" };
+      cell.border = {
+        top: { style: "thin", color: { argb: "FFE2E8F0" } }, left: { style: "thin", color: { argb: "FFE2E8F0" } },
+        bottom: { style: "thin", color: { argb: "FFE2E8F0" } }, right: { style: "thin", color: { argb: "FFE2E8F0" } }
+      };
+    });
+
+    filteredContacts.forEach((c) => {
+      const rowData = [
+        c.nome,
+        c.funcao,
+        c.telefone || c.email,
+        Array.from(c.cidades).join(", ")
+      ];
+      
+      const newRow = worksheet.addRow(rowData);
+      newRow.eachCell((cell) => {
+        cell.alignment = { vertical: "middle" };
+        cell.border = {
+          top: { style: "thin", color: { argb: "FFE2E8F0" } },
+          left: { style: "thin", color: { argb: "FFE2E8F0" } },
+          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+          right: { style: "thin", color: { argb: "FFE2E8F0" } }
+        };
+      });
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), "contatos_seven.xlsx");
   };
 
   // Restrição de acesso
@@ -192,7 +283,7 @@ function ContatosPage() {
       {/* HEADER */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-4">
-          <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white pb-1">
             Agenda de Contatos
           </h1>
           <p className="text-slate-500 dark:text-slate-400 font-medium max-w-2xl">

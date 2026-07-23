@@ -120,7 +120,7 @@ function ConfiguracoesComponent() {
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-slate-800 to-slate-500 dark:from-white dark:to-slate-400 bg-clip-text text-transparent flex items-center gap-3">
+        <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white flex items-center gap-3 pb-1">
           <Settings className="size-8 text-slate-500" />
           Configurações do Sistema
         </h1>

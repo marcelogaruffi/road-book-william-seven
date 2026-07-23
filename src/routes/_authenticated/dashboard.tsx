@@ -122,10 +122,10 @@ function Dashboard() {
   };
 
   const hoje = new Date().toISOString().split('T')[0];
-  const proximos = items.filter(r => (r.data_final || r.data_inicial) && (r.data_final || r.data_inicial) >= hoje);
-  const nextCity = proximos.length > 0 ? proximos[0].cidade : (items.length > 0 ? items[items.length - 1].cidade : "Nenhuma");
-  const currentCity = items.find(r => r.data_inicial === hoje)?.cidade || "Nenhuma";
-  const percentComplete = items.length > 0 ? Math.round(((items.length - proximos.length) / items.length) * 100) : 0;
+  const eventosAtuais = items.filter(r => r.data_inicial && r.data_inicial <= hoje && (!r.data_final ? r.data_inicial >= hoje : r.data_final >= hoje));
+  const currentCity = eventosAtuais.length > 0 ? eventosAtuais[0].cidade : "Sem viagem";
+  const futuros = items.filter(r => r.data_inicial && r.data_inicial > hoje);
+  const nextCity = futuros.length > 0 ? futuros[0].cidade : "Sem viagem";
 
   const realizados = items.filter(r => (r.data_final || r.data_inicial) && (r.data_final || r.data_inicial) < hoje).reverse();
 
@@ -239,27 +239,29 @@ function Dashboard() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="p-4 bg-blue-100/50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-300 rounded-2xl shadow-sm ring-1 ring-blue-200/50 dark:ring-blue-800">
-                <MapPinned className="size-7" />
-              </div>
-              <div>
-                <h3 className="text-4xl font-black text-slate-800 dark:text-white mb-1">{tours.length}</h3>
-                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Turnês Ativas</p>
-              </div>
-            </div>
-          </Card>
-          
-          <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
             <div className="flex items-center gap-5 relative z-10">
               <div className="p-4 bg-purple-100/50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 rounded-2xl shadow-sm ring-1 ring-purple-200/50 dark:ring-purple-800">
                 <BookOpen className="size-7" />
               </div>
               <div>
-                <h3 className="text-4xl font-black text-slate-800 dark:text-white mb-1">{items.length}</h3>
-                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Road Books</p>
+                <h3 className="text-4xl font-black text-slate-800 dark:text-white mb-1">{futuros.length}</h3>
+                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Viagens Futuras</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+            <div className="flex items-center gap-5 relative z-10">
+              <div className="p-4 bg-emerald-100/50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded-2xl shadow-sm ring-1 ring-emerald-200/50 dark:ring-emerald-800">
+                <MapPin className="size-7" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 line-clamp-2 leading-tight">
+                  {currentCity}
+                </h3>
+                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Cidade Atual</p>
               </div>
             </div>
           </Card>
@@ -271,10 +273,10 @@ function Dashboard() {
                 <Calendar className="size-7" />
               </div>
               <div className="min-w-0">
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-1 truncate">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 line-clamp-2 leading-tight">
                   {nextCity}
                 </h3>
-                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Próxima Cidade</p>
+                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Próxima Cidade</p>
               </div>
             </div>
           </Card>
@@ -349,6 +351,19 @@ function Dashboard() {
         )}
       </section>
 
+      {/* EVENTO ATUAL */}
+      {eventosAtuais.length > 0 && (
+        <section className="space-y-6 pt-4 scroll-mt-24">
+          <div className="flex items-center gap-3 px-2">
+            <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Evento Atual</h2>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+          </div>
+          <div className="grid gap-5">
+            {eventosAtuais.map(renderRoadbookCard)}
+          </div>
+        </section>
+      )}
+
       {/* ROAD BOOKS - RECENTES / FUTUROS */}
       <section id="roadbooks" className="space-y-6 pt-4 scroll-mt-24">
         <div className="flex items-center gap-3 px-2">
@@ -358,7 +373,7 @@ function Dashboard() {
 
         {loading ? (
           <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-        ) : proximos.length === 0 ? (
+        ) : futuros.length === 0 ? (
            <Card className="p-16 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
             <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">Nenhum evento próximo.</p>
             {profile?.role !== 'motorista' && (
@@ -367,7 +382,7 @@ function Dashboard() {
           </Card>
         ) : (
           <div className="grid gap-5">
-            {proximos.map(renderRoadbookCard)}
+            {futuros.map(renderRoadbookCard)}
           </div>
         )}
       </section>
