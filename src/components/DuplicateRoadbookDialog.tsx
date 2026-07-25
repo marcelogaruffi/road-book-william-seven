@@ -62,7 +62,7 @@ export function DuplicateRoadbookDialog({
         if (error && !`${getErrorMessage(error)}`.toLowerCase().includes("duplicate")) throw error;
         if (attempt === 4) throw error;
       }
-      toast.success("Road Book duplicado");
+      toast.success("Guia de Viagem duplicado");
       onOpenChange(false);
       onDone?.();
       navigate({ to: "/roadbook/$id", params: { id: inserted.id } });

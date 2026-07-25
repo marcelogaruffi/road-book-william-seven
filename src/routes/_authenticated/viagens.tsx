@@ -1,0 +1,407 @@
+// @ts-nocheck
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Route as AuthedRoute } from "./route";
+import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { 
+  Plus, ExternalLink, Pencil, Trash2, Copy, Calendar, MapPin, 
+  MoreVertical, BookOpen, MapPinned, Bus, ChevronRight, AlertCircle, Wrench, Settings2, ShieldAlert
+} from "lucide-react";
+import { toast } from "sonner";
+import { DuplicateRoadbookDialog } from "@/components/DuplicateRoadbookDialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
+
+type Roadbook = {
+  id: string;
+  slug: string;
+  espetaculo: string;
+  cidade: string;
+  estado: string | null;
+  festival: string | null;
+  data_inicial: string | null;
+  data_final: string | null;
+  tour_id: string | null;
+  programacao?: any[];
+};
+
+type Tour = { id: string; slug: string; nome: string; espetaculo: string | null };
+
+export const Route = createFileRoute("/_authenticated/viagens")({
+  validateSearch: (search: Record<string, unknown>): { all?: boolean } => {
+    return { all: search?.all === true || search?.all === 'true' }
+  },
+  head: () => ({ meta: [{ title: "Viagens - Seven Produções Artísticas" }] }),
+  component: Viagens,
+});
+
+function Viagens() {
+  const [items, setItems] = useState<Roadbook[]>([]);
+  
+  const fmtDate = (d?: string | null) => {
+    if (!d) return "";
+    const [y, m, day] = d.split('-');
+    if (day) return `${day}/${m}/${y}`;
+    return d;
+  };
+
+  const [tours, setTours] = useState<Tour[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { profile, isSimulating } = AuthedRoute.useRouteContext();
+  const [dup, setDup] = useState<Roadbook | null>(null);
+  const [escalasPendentes, setEscalasPendentes] = useState<number>(0);
+
+  const isAdminRole = profile ? ['admin', 'dev', 'produtor', 'assistente_producao', 'tour_manager'].includes(profile.role) : false;
+  const search = Route.useSearch();
+  const isAllParam = search.all === true;
+  const showAll = isAdminRole && isAllParam;
+
+  async function load() {
+    setLoading(true);
+      const [{ data: rb, error: e1 }, { data: tr, error: e2 }, { data: evts }, { data: esc }] = await Promise.all([
+      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id,evento_id,programacao").order("data_inicial", { ascending: true }),
+      supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
+      (profile && !showAll) || isSimulating ? supabase.from("eventos").select("id, equipe") : Promise.resolve({ data: [] }),
+      profile ? supabase.from("evento_escalas").select("evento_id, status").eq("usuario_id", profile.id) : Promise.resolve({ data: [] })
+    ]);
+    
+    let roadbooksFinal = rb as Roadbook[] || [];
+    if (profile && !showAll) {
+       roadbooksFinal = roadbooksFinal.filter(r => {
+         const eId = (r as any).evento_id;
+         if (!eId) return false;
+         
+         const isAceita = esc?.some(e => String(e.evento_id) === String(eId) && String(e.status).toLowerCase().includes('aceit'));
+         if (isAceita) return true;
+
+         const evt = evts?.find(e => String(e.id) === String(eId));
+         const isInEquipe = evt?.equipe && Array.isArray(evt.equipe) && evt.equipe.includes(profile.id);
+         return isInEquipe;
+       });
+    }
+
+    if (e1) toast.error(e1.message);
+    if (e2) toast.error(e2.message);
+    setItems(roadbooksFinal);
+    setTours((tr as Tour[]) ?? []);
+    setEscalasPendentes(esc?.filter(e => e.status === 'pendente').length || 0);
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, [showAll, profile?.id, isSimulating]);
+
+  const [deleteRbId, setDeleteRbId] = useState<string | null>(null);
+  
+  async function onDelete(id: string) {
+    const { error } = await supabase.from("roadbooks").delete().eq("id", id);
+    if (error) toast.error(getErrorMessage(error)); else { toast.success("Excluído"); load(); }
+    setDeleteRbId(null);
+  }
+
+  const [deleteTourId, setDeleteTourId] = useState<string | null>(null);
+
+  async function onDeleteTour(id: string) {
+    const { error } = await supabase.from("tours").delete().eq("id", id);
+    if (error) toast.error(getErrorMessage(error)); else { toast.success("Excluída"); load(); }
+    setDeleteTourId(null);
+  }
+
+  const getGradient = (index: number) => {
+    const gradients = [
+      "from-blue-500/20 to-cyan-500/20",
+      "from-purple-500/20 to-pink-500/20",
+      "from-orange-500/20 to-amber-500/20",
+      "from-emerald-500/20 to-teal-500/20",
+      "from-rose-500/20 to-red-500/20"
+    ];
+    return gradients[index % gradients.length];
+  };
+  
+  const getIconColor = (index: number) => {
+    const colors = [
+      "text-blue-500 bg-blue-500/10",
+      "text-purple-500 bg-purple-500/10",
+      "text-orange-500 bg-orange-500/10",
+      "text-emerald-500 bg-emerald-500/10",
+      "text-rose-500 bg-rose-500/10"
+    ];
+    return colors[index % colors.length];
+  };
+
+  const getRoadbookStartDateTime = (rb: Roadbook): Date => {
+    if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const firstProg = progs[0];
+      return new Date(`${firstProg.data}T${firstProg.hora_inicio || firstProg.hora || "00:00"}:00-03:00`);
+    }
+    return new Date(`${rb.data_inicial || "2000-01-01"}T00:00:00-03:00`);
+  };
+
+  const getRoadbookEndDateTime = (rb: Roadbook): Date => {
+    if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const lastProg = progs[progs.length - 1];
+      return new Date(`${lastProg.data}T${lastProg.hora_fim || lastProg.hora_inicio || lastProg.hora || "23:59"}:00-03:00`);
+    }
+    return new Date(`${rb.data_final || rb.data_inicial || "2000-01-01"}T23:59:59-03:00`);
+  };
+
+  const now = new Date();
+  
+  const eventosAtuais = items.filter(r => getRoadbookStartDateTime(r) <= now && getRoadbookEndDateTime(r) >= now).sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
+  const futuros = items.filter(r => getRoadbookStartDateTime(r) > now).sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
+
+  const upcomingRoadbooks = items.filter(r => getRoadbookEndDateTime(r) >= now);
+  upcomingRoadbooks.sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
+
+  const currentCity = upcomingRoadbooks.length > 0 ? upcomingRoadbooks[0].cidade : "Sem viagem";
+  const nextCity = upcomingRoadbooks.length > 1 ? upcomingRoadbooks[1].cidade : "Sem viagem";
+  
+  const hoje = now.toISOString().split('T')[0];
+  const realizados = items.filter(r => getRoadbookEndDateTime(r) < now).sort((a, b) => getRoadbookStartDateTime(b).getTime() - getRoadbookStartDateTime(a).getTime());
+
+  const renderRoadbookCard = (r: Roadbook, index: number) => (
+    <Card key={r.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgb(0,0,0,0.3)] bg-white dark:bg-card/60 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-[1.5rem] relative overflow-hidden">
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-100 dark:bg-white/5 group-hover:bg-primary transition-colors duration-300"></div>
+      
+      <div className="min-w-0 flex-1 pl-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:hover:bg-sky-500/30 border-none font-bold rounded-lg px-3 py-0.5">
+            <Calendar className="size-3 mr-1.5 inline-block -mt-0.5" />
+            {fmtDate(r.data_inicial)}
+          </Badge>
+          {r.festival && (
+            <Badge variant="secondary" className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 dark:bg-fuchsia-500/20 dark:text-fuchsia-300 dark:hover:bg-fuchsia-500/30 border-none font-bold rounded-lg px-3 py-0.5">
+              {r.festival}
+            </Badge>
+          )}
+        </div>
+        <h3 className="font-black text-xl text-slate-800 dark:text-white mb-1.5">{r.espetaculo}</h3>
+        <div className="flex items-center text-sm font-semibold text-slate-500 dark:text-slate-400 gap-1.5">
+          <MapPin className="size-4" />
+          <span>{r.cidade}{r.estado ? ` - ${r.estado}` : ""}</span>
+        </div>
+      </div>
+      
+      {/* Responsive Actions */}
+      <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 md:pr-2 items-center border-t border-slate-100 dark:border-white/5 md:border-0 pt-4 md:pt-0 mt-2 md:mt-0">
+        {profile?.role === 'motorista' && (
+          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-auto bg-slate-50 shadow-sm hover:bg-primary hover:text-white hover:border-primary border-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-300 dark:hover:bg-primary dark:hover:text-white transition-colors font-bold" asChild>
+            <a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Guia Motorista</a>
+          </Button>
+        )}
+        <Button variant="outline" className="rounded-xl h-11 w-full sm:w-auto bg-slate-50 shadow-sm hover:bg-primary hover:text-white hover:border-primary border-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-300 dark:hover:bg-primary dark:hover:text-white transition-colors font-bold" asChild>
+          <a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Guia de Viagem</a>
+        </Button>
+        
+        {isAdminRole && (
+        <div className="grid grid-cols-3 gap-2 w-full sm:w-auto sm:border-l sm:border-slate-200 dark:sm:border-white/10 sm:pl-3 sm:ml-1">
+          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Editar">
+            <Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4.5" /></Link>
+          </Button>
+          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" onClick={() => setDup(r)} title="Duplicar">
+            <Copy className="size-4.5" />
+          </Button>
+          <Button variant="outline" onClick={() => setDeleteRbId(r.id)} className="rounded-xl h-11 w-full sm:w-11 px-0 bg-red-50/50 shadow-sm hover:bg-red-100 border-red-200 text-red-500 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors" title="Excluir">
+            <Trash2 className="size-4.5" />
+          </Button>
+        </div>
+        )}
+      </div>
+    </Card>
+  );
+
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-12">
+      
+      {/* HEADER E STATS */}
+      <section className="space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+          <div>
+            <Badge variant="outline" className="mb-3 border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400">Sistema Online</Badge>
+            <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-snug pb-2 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+              {showAll ? "Todos os Guias" : "Minhas Viagens"}
+            </h1>
+            <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Gerencie suas turnês e guias de viagem.</p>
+          </div>
+          {showAll && (<div className="flex gap-3 items-center">
+            <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-all rounded-xl px-5 h-12 border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5">
+              <Link to="/tour/new"><Plus className="size-4 mr-2" />Nova Turnê</Link>
+            </Button>
+            <Button asChild className="shadow-[0_8px_20px_rgba(var(--primary),0.2)] hover:shadow-[0_12px_25px_rgba(var(--primary),0.3)] transition-all rounded-xl px-6 h-12 bg-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-semibold text-white">
+              <Link to="/roadbook/new"><Plus className="size-5 mr-2" />Novo Guia de Viagem</Link>
+            </Button>
+          </div>)}
+        </div>
+      </section>
+
+      {/* TURNÊS */}
+      {showAll && (
+      <section id="turnes" className="space-y-6 pt-4 scroll-mt-24">
+        <div className="flex items-center gap-3 px-2">
+          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Turnês</h2>
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+        </div>
+        
+        {tours.length === 0 ? (
+          <Card className="p-12 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
+            <p className="text-slate-500 dark:text-slate-400 font-medium">Você ainda não tem turnês criadas.</p>
+          </Card>
+        ) : (
+          <div className="grid xl:grid-cols-3 md:grid-cols-2 gap-6">
+            {tours.map((t, i) => {
+              const count = items.filter((r) => r.tour_id === t.id).length;
+              const gradient = getGradient(i);
+              const iconColor = getIconColor(i);
+              
+              return (
+                <Card key={t.id} className="p-6 flex flex-col gap-5 group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.2)] bg-white dark:bg-card/40 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 rounded-[2rem] relative overflow-hidden">
+                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br ${gradient} transition-opacity duration-500 pointer-events-none`}></div>
+                  
+                  <div className="flex items-start justify-between gap-4 relative z-10">
+                    <div className={`p-3.5 rounded-2xl ${iconColor} shrink-0 shadow-sm ring-1 ring-white/20`}>
+                      <Bus className="size-6" />
+                    </div>
+                    
+                    <div className="flex-1 min-w-0 pt-1">
+                      <h3 className="font-bold text-xl text-slate-800 dark:text-white truncate">{t.nome}</h3>
+                      {t.espetaculo && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{t.espetaculo}</p>}
+                    </div>
+                    
+                    {profile?.role !== 'motorista' && (<DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400">
+                          <MoreVertical className="size-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="rounded-2xl shadow-xl dark:border-white/10 w-48 p-2">
+                        <DropdownMenuItem asChild className="rounded-xl py-2.5">
+                           <a href={`/turne/${t.slug}`} target="_blank" rel="noreferrer" className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200"><ExternalLink className="size-4 mr-3" /> Abrir Turnê</a>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild className="rounded-xl py-2.5">
+                           <Link to="/tour/$id" params={{ id: t.id }} className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200"><Pencil className="size-4 mr-3" /> Editar Detalhes</Link>
+                        </DropdownMenuItem>
+                        <div className="h-px bg-slate-100 dark:bg-white/10 my-1 -mx-2"></div>
+                        <DropdownMenuItem onClick={() => setDeleteTourId(t.id)} className="text-red-500 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-500/10 rounded-xl py-2.5 font-semibold">
+                          <Trash2 className="size-4 mr-3" /> Excluir Turnê
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+                  </div>
+
+                  <div className="mt-auto relative z-10 flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
+                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-slate-300 dark:border-white/10 rounded-full px-3 py-1 font-semibold">{count} Cidades</Badge>
+                    <Button variant="link" className="px-0 text-primary font-bold h-auto hover:no-underline group-hover:translate-x-1 transition-transform" asChild>
+                       <a href={`/turne/${t.slug}`} target="_blank" rel="noreferrer">Ver detalhes <ChevronRight className="size-4 ml-1" /></a>
+                    </Button>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+      </section>
+      )}
+
+      {/* EVENTO ATUAL */}
+      {eventosAtuais.length > 0 && (
+        <section className="space-y-6 pt-4 scroll-mt-24">
+          <div className="flex items-center gap-3 px-2">
+            <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Viagem em Andamento</h2>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+          </div>
+          <div className="grid gap-5">
+            {eventosAtuais.map(renderRoadbookCard)}
+          </div>
+        </section>
+      )}
+
+      {/* ROAD BOOKS - RECENTES / FUTUROS */}
+      <section id="roadbooks" className="space-y-6 pt-4 scroll-mt-24">
+        <div className="flex items-center gap-3 px-2">
+          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Próximas Viagens</h2>
+          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
+        ) : futuros.length === 0 ? (
+           <Card className="p-16 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
+            <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">Nenhum evento próximo.</p>
+            {showAll && (
+              <Button asChild className="rounded-full shadow-lg h-12 px-8"><Link to="/roadbook/new"><Plus className="size-4 mr-2" />Criar o primeiro</Link></Button>
+            )}
+          </Card>
+        ) : (
+          <div className="grid gap-5">
+            {futuros.map(renderRoadbookCard)}
+          </div>
+        )}
+      </section>
+
+      {/* ROAD BOOKS - REALIZADOS */}
+      {realizados.length > 0 && (
+        <section id="realizados" className="space-y-6 pt-4 scroll-mt-24">
+          <div className="flex items-center gap-3 px-2">
+            <h2 className="text-2xl font-black tracking-tight text-slate-500 dark:text-slate-400">Viagens Passadas</h2>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+          </div>
+          <div className="grid gap-5">
+            {realizados.map(renderRoadbookCard)}
+          </div>
+        </section>
+      )}
+
+      {dup && (
+        <DuplicateRoadbookDialog
+          open={!!dup}
+          onOpenChange={(v) => !v && setDup(null)}
+          sourceId={dup.id}
+          defaultEspetaculo={dup.espetaculo}
+          defaultCidade={dup.cidade}
+          onDone={load}
+        />
+      )}
+
+      <Dialog open={!!deleteRbId} onOpenChange={(open) => !open && setDeleteRbId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Excluir Guia de Viagem</DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">
+              Tem certeza que deseja excluir permanentemente este guia de viagem? Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteRbId(null)}>Cancelar</Button>
+            <Button onClick={() => deleteRbId && onDelete(deleteRbId)} className="bg-red-500 hover:bg-red-600">Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!deleteTourId} onOpenChange={(open) => !open && setDeleteTourId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir Turnê</DialogTitle>
+            <DialogDescription>
+              Você tem certeza que deseja excluir esta turnê? Os Road Books vinculados a ela serão mantidos, mas a turnê não poderá ser recuperada.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTourId(null)}>Cancelar</Button>
+            <Button onClick={() => deleteTourId && onDeleteTour(deleteTourId)} className="bg-red-500 hover:bg-red-600">Excluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

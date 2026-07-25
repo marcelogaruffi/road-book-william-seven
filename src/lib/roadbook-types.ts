@@ -311,6 +311,7 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
   return {
     user_id: userId,
     tour_id: d.tour_id || null,
+    evento_id: d.evento_id || null,
     espetaculo: d.espetaculo,
     cidade: d.cidade,
     estado: d.estado || null,

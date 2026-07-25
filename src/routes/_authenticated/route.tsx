@@ -4,17 +4,20 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
-  Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote
+  Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote,
+  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus
 } from "lucide-react";
+import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Users, Contact2 } from "lucide-react";
+import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
 
 type Profile = {
   id: string;
   nome: string;
   foto_url: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "artista" | "user";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video";
 };
 
 export const Route = createFileRoute("/_authenticated")({
@@ -169,12 +172,7 @@ function AuthedLayout() {
                   {userName}
                 </span>
                 <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider leading-tight">
-                  {userRole === 'dev' ? 'Desenvolvedor' : 
-                   userRole === 'admin' ? 'Administrador' : 
-                   userRole === 'produtor' ? 'Produtor' : 
-                   userRole === 'iluminador' ? 'Iluminador' : 
-                   userRole === 'tecnico_som' ? 'Técnico de Som' : 
-                   userRole === 'motorista' ? 'Motorista' : 'Usuário'}
+                  {ROLE_BADGE_MAP[userRole as keyof typeof ROLE_BADGE_MAP]?.label || userRole.toUpperCase()}
                 </span>
               </div>
             </div>
@@ -200,22 +198,31 @@ function AuthedLayout() {
                <LayoutDashboard className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Dashboard</span>}
              </Link>
-          <Link to="/dashboard" hash="turnes" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeOptions={{ includeSearch: false, includeHash: true }} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
-               <RouteIcon className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-               {sidebarOpen && <span>Turnês</span>}
-             </Link>
-          <Link to="/dashboard" hash="roadbooks" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeOptions={{ includeSearch: false, includeHash: true }} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
-               <Ticket className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-               {sidebarOpen && <span>{userRole === 'motorista' ? 'Cidades' : 'Road Books'}</span>}
-             </Link>
           <Link to="/minhas-escalas" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <ClipboardList className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Minhas Escalas</span>}
              </Link>
 
-          <Link to="/meus-pagamentos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
-               <Banknote className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-               {sidebarOpen && <span>Meus Pagamentos</span>}
+          {/* VIAGENS - GERAL */}
+          <Link to="/viagens" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeOptions={{ exact: true }} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+            <Bus className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+            {sidebarOpen && <span>Minhas Viagens</span>}
+          </Link>
+
+          {['admin', 'dev', 'produtor', 'assistente_producao', 'tour_manager'].includes(userRole) && (
+              <Link to="/viagens" search={{ all: true }} className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                <ClipboardList className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                {sidebarOpen && <span>Guias de Viagem e Turnê</span>}
+              </Link>
+          )}
+
+          {/* SECTION: EQUIPE */}
+          <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+             Equipe
+          </div>
+          <Link to="/contatos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+               <Contact2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+               {sidebarOpen && <span>Contatos da Equipe</span>}
              </Link>
           
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
@@ -225,24 +232,74 @@ function AuthedLayout() {
                </Link>
           )}
 
+          {/* SECTION: ARTÍSTICO / ELENCO */}
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('musico') || hasRole('elenco')) && (
+            <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+               Artístico
+            </div>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('musico')) && (
+            <Link to="/partituras" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <Music className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Partituras / Músicas</span>}
+               </Link>
+          )}
+
+
+
+          {/* SECTION: BASTIDORES */}
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('contra_regra') || hasRole('camareiro') || hasRole('cenotecnico')) && (
+            <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+               Bastidores
+            </div>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('contra_regra') || hasRole('cenotecnico')) && (
+            <Link to="/palco" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <StageIcon className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Montagem de Palco</span>}
+               </Link>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('camareiro') || hasRole('contra_regra') || hasRole('stage_manager')) && (
+            <Link to="/figurinos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <ClothesRackIcon className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Figurinos</span>}
+               </Link>
+          )}
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('camareiro')) && (
+            <Link to="/camarins" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <StarDoorIcon className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Camarins</span>}
+               </Link>
+          )}
+
           {/* SECTION: TÉCNICA */}
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('iluminador') || hasRole('tecnico_som')) && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('iluminador') || hasRole('tecnico_som') || hasRole('tecnico_video') || hasRole('roadie')) && (
             <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
                Técnica
             </div>
           )}
 
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('iluminador')) && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('iluminador')) && (
             <Link to="/iluminacao" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Lightbulb className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Iluminação</span>}
                </Link>
           )}
 
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || hasRole('tecnico_som')) && (
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('tecnico_som') || hasRole('roadie')) && (
             <Link to="/som" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Mic2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                 {sidebarOpen && <span>Som</span>}
+                 {sidebarOpen && <span>Design de Som</span>}
+               </Link>
+          )}
+          
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('tecnico_video')) && (
+            <Link to="/video" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <Video className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Vídeo e Mídia Cênica</span>}
                </Link>
           )}
 
@@ -274,12 +331,7 @@ function AuthedLayout() {
                  {sidebarOpen && <span>Painel de Escalas</span>}
                </Link>
           )}
-          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
-            <Link to="/contatos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
-                 <Contact2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                 {sidebarOpen && <span>Contatos</span>}
-               </Link>
-          )}
+
           
           {/* SECTION: ADMINISTRAÇÃO */}
           {(userRole === 'admin' || userRole === 'dev') && (

@@ -98,7 +98,7 @@ function EventosComponent() {
     const [evRes, trRes, profRes, tempRes, confRes, escRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, nome, role, funcoes, caches_padrao').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'artista']),
+      supabase.from('profiles').select('id, nome, role, funcoes, caches_padrao').in('role', ['admin', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'elenco', 'stage_manager', 'contra_regra', 'assistente_producao', 'camareiro', 'musico', 'tour_manager', 'roadie', 'cenotecnico', 'tecnico_video']),
       supabase.from('templates_espetaculos').select('nome_espetaculo'),
       supabase.from('configuracoes_sistema').select('permitir_sms_escala').eq('id', 1).maybeSingle(),
       supabase.from('evento_escalas').select('*')
@@ -606,9 +606,18 @@ function EventosComponent() {
                       {[
                         { key: 'admin', label: 'Administradores', roles: ['admin'] },
                         { key: 'produtor', label: 'Produtores', roles: ['produtor'] },
-                        { key: 'artista', label: 'Artistas', roles: ['artista'] },
+                        { key: 'elenco', label: 'Elenco', roles: ['elenco'] },
+                        { key: 'musico', label: 'Músicos', roles: ['musico'] },
+                        { key: 'stage_manager', label: 'Stage Managers', roles: ['stage_manager'] },
+                        { key: 'contra_regra', label: 'Contra-regras', roles: ['contra_regra'] },
+                        { key: 'assistente_producao', label: 'Assistentes de Produção', roles: ['assistente_producao'] },
+                        { key: 'camareiro', label: 'Camareiros', roles: ['camareiro'] },
+                        { key: 'tour_manager', label: 'Tour Managers', roles: ['tour_manager'] },
                         { key: 'iluminador', label: 'Iluminadores', roles: ['iluminador'] },
                         { key: 'tecnico_som', label: 'Técnicos de Som', roles: ['tecnico_som'] },
+                        { key: 'tecnico_video', label: 'Técnicos de Vídeo', roles: ['tecnico_video'] },
+                        { key: 'roadie', label: 'Roadies', roles: ['roadie'] },
+                        { key: 'cenotecnico', label: 'Cenotécnicos', roles: ['cenotecnico'] },
                         { key: 'motorista', label: 'Motoristas', roles: ['motorista'] },
                       ].map(group => {
                         const groupProfs = profissionais

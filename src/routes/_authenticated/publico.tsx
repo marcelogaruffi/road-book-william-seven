@@ -407,8 +407,23 @@ function PublicoPage() {
     return acc;
   }, {} as Record<string, number>);
 
+  const IDADE_MAP: Record<string, string> = {
+    "1º Ano": "6 anos (1º Ano)",
+    "2º Ano": "7 anos (2º Ano)",
+    "3º Ano": "8 anos (3º Ano)",
+    "4º Ano": "9 anos (4º Ano)",
+    "5º Ano": "10 anos (5º Ano)",
+    "6º Ano": "11 anos (6º Ano)",
+    "7º Ano": "12 anos (7º Ano)",
+    "8º Ano": "13 anos (8º Ano)",
+    "9º Ano": "14 anos (9º Ano)",
+    "1º Ano Ensino Médio": "15 anos (1º EM)",
+    "2º Ano Ensino Médio": "16 anos (2º EM)",
+    "3º Ano Ensino Médio": "17 anos (3º EM)",
+  };
+
   const pieAgeData = Object.keys(ageDataMap).map(key => ({
-    name: key,
+    name: IDADE_MAP[key] || key,
     value: ageDataMap[key]
   })).sort((a, b) => b.value - a.value);
 
@@ -650,7 +665,7 @@ function PublicoPage() {
             <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-4">
               <CardTitle className="text-lg font-bold">Público por Atividade</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 h-[300px]">
+            <CardContent className="pt-6 h-[400px]">
               {pieActivityData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -668,7 +683,7 @@ function PublicoPage() {
                       ))}
                     </Pie>
                     <RechartsTooltip formatter={(value) => value.toLocaleString('pt-BR')} />
-                    <Legend />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -681,7 +696,7 @@ function PublicoPage() {
             <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-4">
               <CardTitle className="text-lg font-bold">Frequência por Idade</CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 h-[300px]">
+            <CardContent className="pt-6 h-[450px]">
               {pieAgeData.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -699,7 +714,7 @@ function PublicoPage() {
                       ))}
                     </Pie>
                     <RechartsTooltip formatter={(value) => value + ' vezes'} />
-                    <Legend />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (

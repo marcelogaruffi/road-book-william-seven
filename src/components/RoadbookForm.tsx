@@ -66,14 +66,21 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
 
   useEffect(() => {
     (async () => {
-      const [toursRes, eventosRes] = await Promise.all([
+      const [toursRes, eventosRes, roadbooksRes] = await Promise.all([
         supabase.from("tours").select("id,nome").order("nome"),
-        supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local").order("data", { ascending: false })
+        supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local").order("data", { ascending: false }),
+        supabase.from("roadbooks").select("evento_id").not("evento_id", "is", null)
       ]);
       setTours((toursRes.data as TourOpt[]) ?? []);
-      setEventos((eventosRes.data as EventoOpt[]) ?? []);
+      
+      const usedEventIds = new Set((roadbooksRes.data || []).map(r => r.evento_id));
+      const allEventos = (eventosRes.data as EventoOpt[]) ?? [];
+      
+      const availableEventos = allEventos.filter(e => !usedEventIds.has(e.id) || e.id === initial.evento_id);
+      
+      setEventos(availableEventos);
     })();
-  }, []);
+  }, [initial.evento_id]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -569,8 +576,12 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!d.espetaculo.trim() || !d.cidade.trim()) {
+    if (!d.espetaculo?.trim() || !d.cidade?.trim()) {
       toast.error("Espetáculo e Cidade são obrigatórios");
+      return;
+    }
+    if (!d.evento_id) {
+      toast.error("É obrigatório vincular o Guia a um Evento cadastrado (Selecione no primeiro campo).");
       return;
     }
     setSaving(true);
@@ -616,6 +627,46 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (!d.id && !d.evento_id) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 mt-4 text-center bg-white dark:bg-card/40 rounded-[2rem] border border-slate-200 dark:border-white/10 shadow-sm max-w-2xl mx-auto">
+        <div className="bg-sky-50 dark:bg-sky-500/10 p-6 rounded-full mb-6">
+          <CalendarDays className="size-12 text-sky-500" />
+        </div>
+        <h2 className="text-3xl font-black mb-3 text-slate-800 dark:text-white">Vincular Evento</h2>
+        <p className="text-slate-500 dark:text-slate-400 mb-8 font-medium text-lg">Selecione um evento para continuar a construção do guia de viagem.</p>
+        
+        <Select 
+          value="none" 
+          onValueChange={(val) => {
+            if (val === "none") return;
+            const ev = eventos.find(e => e.id === val);
+            if (ev) {
+              setD(s => ({
+                ...s,
+                evento_id: ev.id,
+                espetaculo: ev.espetaculo || s.espetaculo,
+                cidade: ev.cidade || s.cidade,
+                data_inicial: ev.data_inicio || ev.data || s.data_inicial,
+                data_final: ev.data_fim || ev.data || s.data_final,
+              }));
+            }
+          }}
+        >
+          <SelectTrigger className="h-12 w-full max-w-sm rounded-xl font-medium border-slate-200 dark:border-white/10">
+            <SelectValue placeholder="Selecione o evento..." />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl border-slate-200 dark:border-white/10 shadow-xl">
+            <SelectItem value="none">Selecione o evento...</SelectItem>
+            {eventos.map(e => (
+              <SelectItem key={e.id} value={e.id} className="cursor-pointer">{e.espetaculo} - {e.cidade} {e.data ? `(${e.data.split('-').reverse().join('/')})` : ''}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
   }
 
   return (
@@ -1259,7 +1310,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
 
       <div className="flex gap-3 justify-end sticky bottom-4">
         <Button type="button" variant="outline" onClick={() => navigate({ to: "/dashboard" })}>Cancelar</Button>
-        <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar Road Book"}</Button>
+        <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar Guia de Viagem"}</Button>
       </div>
 
       <Dialog open={mapPickerOpen} onOpenChange={setMapPickerOpen}>

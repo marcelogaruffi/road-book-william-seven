@@ -4,9 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { getErrorMessage } from "@/lib/utils";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ExternalLink, Pencil, Plus } from "lucide-react";
+import { Route as AuthedRoute } from "./route";
 
 type Tour = { id: string; slug: string; nome: string; espetaculo: string | null; producao: string | null };
 type Roadbook = { id: string; slug: string; espetaculo: string; cidade: string; estado: string | null; data_inicial: string | null; data_final: string | null };
@@ -22,6 +25,12 @@ function EditTour() {
   const [tour, setTour] = useState<Tour | null>(null);
   const [cities, setCities] = useState<Roadbook[]>([]);
   const [busy, setBusy] = useState(false);
+  
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "elenco";
+  const userFuncoes = profile?.funcoes || [];
+  const hasRole = (r: string) => userRole === r || userFuncoes.includes(r);
+  const canManageRoadbooks = ['dev', 'admin', 'produtor', 'assistente_producao', 'tour_manager'].some(r => hasRole(r));
 
   async function load() {
     const [{ data: t }, { data: c }] = await Promise.all([
@@ -66,11 +75,13 @@ function EditTour() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
           <CardTitle>Cidades</CardTitle>
-          <Button size="sm" onClick={() => navigate({ to: "/roadbook/new" })}><Plus className="size-4 mr-1" />Adicionar cidade</Button>
+          {canManageRoadbooks && (
+            <Button size="sm" onClick={() => navigate({ to: "/roadbook/new" })}><Plus className="size-4 mr-1" />Adicionar cidade</Button>
+          )}
         </CardHeader>
         <CardContent>
           {cities.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma cidade. Crie um novo Road Book e selecione esta turnê no campo "Turnê".</p>
+            <p className="text-sm text-muted-foreground">Nenhuma cidade. Crie um novo Guia de Viagem e selecione esta turnê no campo "Turnê".</p>
           ) : (
             <div className="divide-y">
               {cities.map((c) => (
@@ -81,7 +92,9 @@ function EditTour() {
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button variant="ghost" size="icon" asChild><a href={`/rb/${c.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4" /></a></Button>
-                    <Button variant="ghost" size="icon" asChild><Link to="/roadbook/$id" params={{ id: c.id }}><Pencil className="size-4" /></Link></Button>
+                    {canManageRoadbooks && (
+                      <Button variant="ghost" size="icon" asChild><Link to="/roadbook/$id" params={{ id: c.id }}><Pencil className="size-4" /></Link></Button>
+                    )}
                   </div>
                 </div>
               ))}

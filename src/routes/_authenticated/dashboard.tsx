@@ -5,10 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Route as AuthedRoute } from "./route";
 import { Card } from "@/components/ui/card";
+import { getErrorMessage } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { 
   Plus, ExternalLink, Pencil, Trash2, Copy, Calendar, MapPin, 
-  MoreVertical, BookOpen, MapPinned, Bus, ChevronRight 
+  MoreVertical, BookOpen, MapPinned, Bus, ChevronRight, AlertCircle, Wrench, Settings2, ShieldAlert,
+  ClipboardList, Route as RouteIcon, Banknote, Contact2, Music, Shirt, Volume2, Lightbulb, Projector, FileText, Drama, LayoutTemplate, DoorOpen, Video, Mic2
 } from "lucide-react";
 import { toast } from "sonner";
 import { DuplicateRoadbookDialog } from "@/components/DuplicateRoadbookDialog";
@@ -19,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
 
 type Roadbook = {
   id: string;
@@ -30,6 +33,7 @@ type Roadbook = {
   data_inicial: string | null;
   data_final: string | null;
   tour_id: string | null;
+  programacao?: any[];
 };
 
 type Tour = { id: string; slug: string; nome: string; espetaculo: string | null };
@@ -53,11 +57,12 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const [dup, setDup] = useState<Roadbook | null>(null);
+  const [escalasPendentes, setEscalasPendentes] = useState<number>(0);
 
   async function load() {
     setLoading(true);
     const [{ data: rb, error: e1 }, { data: tr, error: e2 }, { data: evts }, { data: esc }] = await Promise.all([
-      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id,evento_id").order("data_inicial", { ascending: true }),
+      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id,evento_id,programacao").order("data_inicial", { ascending: true }),
       supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
       (profile && !['admin', 'dev', 'produtor'].includes(profile.role)) || isSimulating ? supabase.from("eventos").select("id, equipe") : Promise.resolve({ data: [] }),
       profile ? supabase.from("evento_escalas").select("evento_id, status").eq("usuario_id", profile.id) : Promise.resolve({ data: [] })
@@ -66,11 +71,15 @@ function Dashboard() {
     let roadbooksFinal = rb as Roadbook[] || [];
     if (profile && !['admin', 'dev', 'produtor'].includes(profile.role)) {
        roadbooksFinal = roadbooksFinal.filter(r => {
-         if (!(r as any).evento_id) return true;
-         const escala = esc?.find(e => e.evento_id === (r as any).evento_id);
-         const evt = evts?.find(e => e.id === (r as any).evento_id);
-         if (!escala) return evt?.equipe?.includes(profile.id);
-         return escala.status === 'aceita';
+         const eId = (r as any).evento_id;
+         if (!eId) return false;
+         
+         const isAceita = esc?.some(e => String(e.evento_id) === String(eId) && String(e.status).toLowerCase().includes('aceit'));
+         if (isAceita) return true;
+
+         const evt = evts?.find(e => String(e.id) === String(eId));
+         const isInEquipe = evt?.equipe && Array.isArray(evt.equipe) && evt.equipe.includes(profile.id);
+         return isInEquipe;
        });
     }
 
@@ -78,6 +87,7 @@ function Dashboard() {
     if (e2) toast.error(e2.message);
     setItems(roadbooksFinal);
     setTours((tr as Tour[]) ?? []);
+    setEscalasPendentes(esc?.filter(e => e.status === 'pendente').length || 0);
     setLoading(false);
   }
 
@@ -121,13 +131,37 @@ function Dashboard() {
     return colors[index % colors.length];
   };
 
-  const hoje = new Date().toISOString().split('T')[0];
-  const eventosAtuais = items.filter(r => r.data_inicial && r.data_inicial <= hoje && (!r.data_final ? r.data_inicial >= hoje : r.data_final >= hoje));
-  const currentCity = eventosAtuais.length > 0 ? eventosAtuais[0].cidade : "Sem viagem";
-  const futuros = items.filter(r => r.data_inicial && r.data_inicial > hoje);
-  const nextCity = futuros.length > 0 ? futuros[0].cidade : "Sem viagem";
+  const getRoadbookStartDateTime = (rb: Roadbook): Date => {
+    if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const firstProg = progs[0];
+      return new Date(`${firstProg.data}T${firstProg.hora_inicio || firstProg.hora || "00:00"}:00-03:00`);
+    }
+    return new Date(`${rb.data_inicial || "2000-01-01"}T00:00:00-03:00`);
+  };
 
-  const realizados = items.filter(r => (r.data_final || r.data_inicial) && (r.data_final || r.data_inicial) < hoje).reverse();
+  const getRoadbookEndDateTime = (rb: Roadbook): Date => {
+    if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const lastProg = progs[progs.length - 1];
+      return new Date(`${lastProg.data}T${lastProg.hora_fim || lastProg.hora_inicio || lastProg.hora || "23:59"}:00-03:00`);
+    }
+    return new Date(`${rb.data_final || rb.data_inicial || "2000-01-01"}T23:59:59-03:00`);
+  };
+
+  const now = new Date();
+  
+  const eventosAtuais = items.filter(r => getRoadbookStartDateTime(r) <= now && getRoadbookEndDateTime(r) >= now).sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
+  const futuros = items.filter(r => getRoadbookStartDateTime(r) > now).sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
+
+  const upcomingRoadbooks = items.filter(r => getRoadbookEndDateTime(r) >= now);
+  upcomingRoadbooks.sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
+
+  const currentCity = upcomingRoadbooks.length > 0 ? upcomingRoadbooks[0].cidade : "Sem viagem";
+  const nextCity = upcomingRoadbooks.length > 1 ? upcomingRoadbooks[1].cidade : "Sem viagem";
+  
+  const hoje = now.toISOString().split('T')[0];
+  const realizados = items.filter(r => getRoadbookEndDateTime(r).getTime() < now.getTime()).sort((a, b) => getRoadbookStartDateTime(b).getTime() - getRoadbookStartDateTime(a).getTime());
 
   const renderRoadbookCard = (r: Roadbook, index: number) => (
     <Card key={r.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgb(0,0,0,0.3)] bg-white dark:bg-card/60 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-[1.5rem] relative overflow-hidden">
@@ -189,7 +223,7 @@ function Dashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
             <Badge variant="outline" className="mb-3 border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400">Sistema Online</Badge>
-            <h1 className="text-4xl xl:text-5xl font-black tracking-tight bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-snug pb-2 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
               Visão Geral
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Bem-vindo de volta! Aqui está o resumo das suas turnês.</p>
@@ -199,12 +233,29 @@ function Dashboard() {
               <Link to="/tour/new"><Plus className="size-4 mr-2" />Nova Turnê</Link>
             </Button>
             <Button asChild className="shadow-[0_8px_20px_rgba(var(--primary),0.2)] hover:shadow-[0_12px_25px_rgba(var(--primary),0.3)] transition-all rounded-xl px-6 h-12 bg-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-semibold text-white">
-              <Link to="/roadbook/new"><Plus className="size-5 mr-2" />Novo Road Book</Link>
+              <Link to="/roadbook/new"><Plus className="size-5 mr-2" />Novo Guia de Viagem</Link>
             </Button>
           </div>)}
         </div>
 
-        {profile?.role === 'motorista' ? (
+        {/* ALERTA DE ESCALAS PENDENTES */}
+        {escalasPendentes > 0 && (
+          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl shrink-0">
+                <AlertCircle className="size-6" />
+              </div>
+              <div>
+                <h3 className="text-amber-800 dark:text-amber-200 font-bold text-lg">Você tem {escalasPendentes} convite(s) pendente(s)</h3>
+                <p className="text-amber-700/80 dark:text-amber-300/80 text-sm font-medium mt-0.5">Responda às suas escalas para confirmar presença nos eventos.</p>
+              </div>
+            </div>
+            <Button asChild className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-sm font-bold h-11 rounded-xl shrink-0">
+              <Link to="/minhas-escalas">Ver Escalas</Link>
+            </Button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
@@ -236,210 +287,128 @@ function Dashboard() {
             </div>
           </Card>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="p-4 bg-purple-100/50 dark:bg-purple-900/40 text-purple-600 dark:text-purple-300 rounded-2xl shadow-sm ring-1 ring-purple-200/50 dark:ring-purple-800">
-                <BookOpen className="size-7" />
-              </div>
-              <div>
-                <h3 className="text-4xl font-black text-slate-800 dark:text-white mb-1">{futuros.length}</h3>
-                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Viagens Futuras</p>
-              </div>
-            </div>
-          </Card>
 
-          <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="p-4 bg-emerald-100/50 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 rounded-2xl shadow-sm ring-1 ring-emerald-200/50 dark:ring-emerald-800">
-                <MapPin className="size-7" />
+        {/* GRADES DE ACESSO RÁPIDO (MENUS) */}
+        <section className="space-y-6 pt-4">
+          <div className="flex items-center gap-3 px-2">
+            <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Acesso Rápido</h2>
+            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            
+            <Link to="/minhas-escalas" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+              <div className="p-4 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
+                <ClipboardList className="size-6" />
               </div>
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 line-clamp-2 leading-tight">
-                  {currentCity}
-                </h3>
-                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Cidade Atual</p>
+              <span className="font-bold text-slate-700 dark:text-slate-300">Minhas Escalas</span>
+            </Link>
+            
+            <Link to="/viagens" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+              <div className="p-4 bg-emerald-500/10 text-emerald-600 rounded-2xl group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                <Bus className="size-6" />
               </div>
-            </div>
-          </Card>
+              <span className="font-bold text-slate-700 dark:text-slate-300">Minhas Viagens</span>
+            </Link>
 
-          <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
-            <div className="flex items-center gap-5 relative z-10">
-              <div className="p-4 bg-orange-100/50 dark:bg-orange-900/40 text-orange-600 dark:text-orange-300 rounded-2xl shadow-sm ring-1 ring-orange-200/50 dark:ring-orange-800">
-                <Calendar className="size-7" />
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1 line-clamp-2 leading-tight">
-                  {nextCity}
-                </h3>
-                <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">Próxima Cidade</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-      
-      )}</section>
 
-      {/* TURNÊS */}
-      <section id="turnes" className="space-y-6 pt-4 scroll-mt-24">
+
+            {/* EVENTOS - ADMIN/PRODUTOR */}
+            {['admin', 'dev', 'produtor'].includes(profile?.role || "") && (
+              <Link to="/eventos" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-sky-500/10 text-sky-600 rounded-2xl group-hover:bg-sky-500 group-hover:text-white transition-colors">
+                  <Calendar className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Eventos</span>
+              </Link>
+            )}
+
+            {/* PARTITURAS */}
+            {['admin', 'dev', 'produtor', 'assistente_producao', 'stage_manager', 'musico'].includes(profile?.role || "") && (
+              <Link to="/partituras" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-fuchsia-500/10 text-fuchsia-600 rounded-2xl group-hover:bg-fuchsia-500 group-hover:text-white transition-colors">
+                  <Music className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Partituras</span>
+              </Link>
+            )}
+
+
+            
+            {/* FIGURINOS GESTAO */}
+            {['admin', 'dev', 'camareiro'].includes(profile?.role || "") && (
+              <Link to="/figurinos" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-pink-500/10 text-pink-600 rounded-2xl group-hover:bg-pink-500 group-hover:text-white transition-colors">
+                  <ClothesRackIcon className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Figurinos</span>
+              </Link>
+            )}
+
+            {/* MAPAS TÉCNICOS */}
+            {['admin', 'dev', 'tecnico_som'].includes(profile?.role || "") && (
+              <Link to="/som" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-blue-500/10 text-blue-600 rounded-2xl group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                  <Mic2 className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Design de Som</span>
+              </Link>
+            )}
+            {['admin', 'dev', 'iluminador'].includes(profile?.role || "") && (
+              <Link to="/iluminacao" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-amber-500/10 text-amber-600 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                  <Lightbulb className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Iluminação</span>
+              </Link>
+            )}
+            {['admin', 'dev', 'tecnico_video'].includes(profile?.role || "") && (
+              <Link to="/video" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-purple-500/10 text-purple-600 rounded-2xl group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                  <Video className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Vídeo e Mídia Cênica</span>
+              </Link>
+            )}
+            {['admin', 'dev', 'cenotecnico', 'roadie'].includes(profile?.role || "") && (
+              <Link to="/palco" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-slate-500/10 text-slate-600 rounded-2xl group-hover:bg-slate-500 group-hover:text-white transition-colors">
+                  <StageIcon className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Palco / Cenário</span>
+              </Link>
+            )}
+            {['admin', 'dev', 'camareiro'].includes(profile?.role || "") && (
+              <Link to="/camarins" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
+                <div className="p-4 bg-pink-500/10 text-pink-600 rounded-2xl group-hover:bg-pink-500 group-hover:text-white transition-colors">
+                  <StarDoorIcon className="size-6" />
+                </div>
+                <span className="font-bold text-slate-700 dark:text-slate-300">Camarins</span>
+              </Link>
+            )}
+
+          </div>
+        </section>
+      </section>
+
+      {/* EVENTO ATUAL (Somente os 2 primeiros roadbooks) */}
+      <section className="space-y-6 pt-4">
         <div className="flex items-center gap-3 px-2">
-          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Minhas Turnês</h2>
+          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Próximos Eventos</h2>
           <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
         </div>
         
-        {tours.length === 0 ? (
-          <Card className="p-12 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
-            <p className="text-slate-500 dark:text-slate-400 font-medium">Você ainda não tem turnês criadas.</p>
+        {upcomingRoadbooks.length === 0 ? (
+          <Card className="p-16 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
+            <p className="text-slate-500 dark:text-slate-400 font-medium">Você não possui eventos futuros programados.</p>
           </Card>
         ) : (
-          <div className="grid xl:grid-cols-3 md:grid-cols-2 gap-6">
-            {tours.map((t, i) => {
-              const count = items.filter((r) => r.tour_id === t.id).length;
-              const gradient = getGradient(i);
-              const iconColor = getIconColor(i);
-              
-              return (
-                <Card key={t.id} className="p-6 flex flex-col gap-5 group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.2)] bg-white dark:bg-card/40 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 rounded-[2rem] relative overflow-hidden">
-                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br ${gradient} transition-opacity duration-500 pointer-events-none`}></div>
-                  
-                  <div className="flex items-start justify-between gap-4 relative z-10">
-                    <div className={`p-3.5 rounded-2xl ${iconColor} shrink-0 shadow-sm ring-1 ring-white/20`}>
-                      <Bus className="size-6" />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0 pt-1">
-                      <h3 className="font-bold text-xl text-slate-800 dark:text-white truncate">{t.nome}</h3>
-                      {t.espetaculo && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{t.espetaculo}</p>}
-                    </div>
-                    
-                    {profile?.role !== 'motorista' && (<DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400">
-                          <MoreVertical className="size-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-2xl shadow-xl dark:border-white/10 w-48 p-2">
-                        <DropdownMenuItem asChild className="rounded-xl py-2.5">
-                           <a href={`/turne/${t.slug}`} target="_blank" rel="noreferrer" className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200"><ExternalLink className="size-4 mr-3" /> Abrir Turnê</a>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="rounded-xl py-2.5">
-                           <Link to="/tour/$id" params={{ id: t.id }} className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200"><Pencil className="size-4 mr-3" /> Editar Detalhes</Link>
-                        </DropdownMenuItem>
-                        <div className="h-px bg-slate-100 dark:bg-white/10 my-1 -mx-2"></div>
-                        <DropdownMenuItem onClick={() => setDeleteTourId(t.id)} className="text-red-500 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-500/10 rounded-xl py-2.5 font-semibold">
-                          <Trash2 className="size-4 mr-3" /> Excluir Turnê
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
-                  </div>
-
-                  <div className="mt-auto relative z-10 flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-slate-300 dark:border-white/10 rounded-full px-3 py-1 font-semibold">{count} Cidades</Badge>
-                    <Button variant="link" className="px-0 text-primary font-bold h-auto hover:no-underline group-hover:translate-x-1 transition-transform" asChild>
-                       <a href={`/turne/${t.slug}`} target="_blank" rel="noreferrer">Ver detalhes <ChevronRight className="size-4 ml-1" /></a>
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
+          <div className="grid gap-5">
+            {upcomingRoadbooks.slice(0, 2).map(renderRoadbookCard)}
           </div>
         )}
       </section>
 
-      {/* EVENTO ATUAL */}
-      {eventosAtuais.length > 0 && (
-        <section className="space-y-6 pt-4 scroll-mt-24">
-          <div className="flex items-center gap-3 px-2">
-            <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Evento Atual</h2>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
-          </div>
-          <div className="grid gap-5">
-            {eventosAtuais.map(renderRoadbookCard)}
-          </div>
-        </section>
-      )}
-
-      {/* ROAD BOOKS - RECENTES / FUTUROS */}
-      <section id="roadbooks" className="space-y-6 pt-4 scroll-mt-24">
-        <div className="flex items-center gap-3 px-2">
-          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">{profile?.role === 'motorista' ? 'Próximas Viagens' : 'Próximos Eventos'}</h2>
-          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
-        </div>
-
-        {loading ? (
-          <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-        ) : futuros.length === 0 ? (
-           <Card className="p-16 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
-            <p className="text-slate-500 dark:text-slate-400 font-medium mb-6">Nenhum evento próximo.</p>
-            {profile?.role !== 'motorista' && (
-              <Button asChild className="rounded-full shadow-lg h-12 px-8"><Link to="/roadbook/new"><Plus className="size-4 mr-2" />Criar o primeiro</Link></Button>
-            )}
-          </Card>
-        ) : (
-          <div className="grid gap-5">
-            {futuros.map(renderRoadbookCard)}
-          </div>
-        )}
-      </section>
-
-      {/* ROAD BOOKS - REALIZADOS */}
-      {realizados.length > 0 && (
-        <section id="realizados" className="space-y-6 pt-4 scroll-mt-24">
-          <div className="flex items-center gap-3 px-2 opacity-70">
-            <h2 className="text-xl font-bold tracking-tight text-slate-500 dark:text-slate-400">Viagens Realizadas</h2>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
-          </div>
-          <div className="grid gap-5 opacity-90">
-            {realizados.map(renderRoadbookCard)}
-          </div>
-        </section>
-      )}
-
-      {dup && (
-        <DuplicateRoadbookDialog
-          open={!!dup}
-          onOpenChange={(v) => !v && setDup(null)}
-          sourceId={dup.id}
-          defaultEspetaculo={dup.espetaculo}
-          defaultCidade={dup.cidade}
-          onDone={load}
-        />
-      )}
-
-      <Dialog open={!!deleteRbId} onOpenChange={(open) => !open && setDeleteRbId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Excluir Roadbook</DialogTitle>
-            <DialogDescription>
-              Você tem certeza que deseja excluir? Esta ação não poderá ser desfeita.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteRbId(null)}>Cancelar</Button>
-            <Button onClick={() => deleteRbId && onDelete(deleteRbId)} className="bg-red-500 hover:bg-red-600">Excluir</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!deleteTourId} onOpenChange={(open) => !open && setDeleteTourId(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Excluir Turnê</DialogTitle>
-            <DialogDescription>
-              Você tem certeza que deseja excluir esta turnê? Os Road Books vinculados a ela serão mantidos, mas a turnê não poderá ser recuperada.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteTourId(null)}>Cancelar</Button>
-            <Button onClick={() => deleteTourId && onDeleteTour(deleteTourId)} className="bg-red-500 hover:bg-red-600">Excluir</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

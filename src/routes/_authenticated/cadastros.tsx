@@ -33,7 +33,7 @@ type Profile = {
   telefone: string | null;
   foto_url: string | null;
   email?: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "artista" | "user";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video";
   telefone?: string | null;
   telefone_verificado?: boolean | null;
 };
@@ -44,6 +44,25 @@ type Invite = {
   created_at: string;
   expires_at: string;
   used_at: string | null;
+};
+
+export const ROLE_BADGE_MAP: Record<string, { label: string, classes: string }> = {
+  dev: { label: 'Desenvolvedor', classes: 'bg-purple-100 text-purple-700 hover:bg-purple-100' },
+  admin: { label: 'Administrador', classes: 'bg-amber-100 text-amber-700 hover:bg-amber-100' },
+  produtor: { label: 'Produtor', classes: 'bg-blue-100 text-blue-700 hover:bg-blue-100' },
+  iluminador: { label: 'Iluminador', classes: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100' },
+  tecnico_som: { label: 'Técnico de Som', classes: 'bg-orange-100 text-orange-700 hover:bg-orange-100' },
+  motorista: { label: 'Motorista', classes: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' },
+  elenco: { label: 'Elenco', classes: 'bg-pink-100 text-pink-700 hover:bg-pink-100' },
+  stage_manager: { label: 'Stage Manager', classes: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-100' },
+  contra_regra: { label: 'Contra-regra', classes: 'bg-stone-100 text-stone-700 hover:bg-stone-100' },
+  assistente_producao: { label: 'Assistente', classes: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-100' },
+  camareiro: { label: 'Camareiro', classes: 'bg-rose-100 text-rose-700 hover:bg-rose-100' },
+  musico: { label: 'Músico', classes: 'bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-100' },
+  tour_manager: { label: 'Tour Manager', classes: 'bg-sky-100 text-sky-700 hover:bg-sky-100' },
+  roadie: { label: 'Roadie', classes: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100' },
+  cenotecnico: { label: 'Cenotécnico', classes: 'bg-slate-200 text-slate-800 hover:bg-slate-200' },
+  tecnico_video: { label: 'Téc. de Vídeo', classes: 'bg-teal-100 text-teal-700 hover:bg-teal-100' },
 };
 
 export const Route = createFileRoute("/_authenticated/cadastros")({
@@ -68,7 +87,7 @@ function UsersPage() {
   const [editCachesPadrao, setEditCachesPadrao] = useState<Record<string, string>>({});
   const [customFuncao, setCustomFuncao] = useState("");
   const [showCustomFuncaoInput, setShowCustomFuncaoInput] = useState(false);
-  const [inviteRole, setInviteRole] = useState<'user'|'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'|'artista'>('produtor');
+  const [inviteRole, setInviteRole] = useState<'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'|'stage_manager'|'contra_regra'|'assistente_producao'|'camareiro'|'elenco'|'musico'|'tour_manager'|'roadie'|'cenotecnico'|'tecnico_video'>('produtor');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Crop states
@@ -263,10 +282,19 @@ function UsersPage() {
                   <option value="admin">Administrador (Prod. Executiva)</option>
                   <option value="produtor">Produtor</option>
                   <option value="iluminador">Iluminador</option>
-                    <option value="tecnico_som">Técnico de Som</option>
+                  <option value="tecnico_som">Técnico de Som</option>
                   <option value="motorista">Motorista</option>
-                    <option value="artista">Artista</option>
-                  <option value="user">Usuário Padrão</option>
+                  <option value="stage_manager">Stage Manager</option>
+                  <option value="contra_regra">Contra-regra</option>
+                  <option value="assistente_producao">Assistente de Produção</option>
+                  <option value="camareiro">Camareiro / Figurinista</option>
+                  <option value="elenco">Elenco</option>
+                  <option value="musico">Músico</option>
+                  <option value="tour_manager">Tour Manager</option>
+                  <option value="roadie">Roadie</option>
+                  <option value="cenotecnico">Cenotécnico</option>
+                  <option value="tecnico_video">Técnico de Vídeo</option>
+
                 </select>
               </div>
 
@@ -289,14 +317,11 @@ function UsersPage() {
                         <div className="flex items-center gap-2 mb-1">
                           <KeyRound className="size-4 text-primary" />
                           <span className="font-mono font-bold tracking-wider">{i.token}</span>
-                          {i.role === "dev" && <Badge className="ml-2 text-xs bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">DESENVOLVEDOR</Badge>}
-                          {i.role === "admin" && <Badge className="ml-2 text-xs bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">ADMINISTRADOR</Badge>}
-                          {i.role === "produtor" && <Badge className="ml-2 text-xs bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">PRODUTOR</Badge>}
-                          {i.role === "iluminador" && <Badge className="ml-2 text-xs bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">ILUMINADOR</Badge>}
-                            {i.role === "tecnico_som" && <Badge className="ml-2 text-xs bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">TÉCNICO DE SOM</Badge>}
-                          {i.role === "motorista" && <Badge className="ml-2 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">MOTORISTA</Badge>}
-                            {i.role === "artista" && <Badge className="ml-2 text-xs bg-pink-100 text-pink-700 hover:bg-pink-100 border-none px-2 rounded-md">ARTISTA</Badge>}
-                          {i.role === "user" && <Badge className="ml-2 text-xs bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">USUÁRIO PADRÃO</Badge>}
+                          {ROLE_BADGE_MAP[i.role] && (
+                            <Badge className={`ml-2 text-xs border-none px-2 rounded-md uppercase tracking-wider ${ROLE_BADGE_MAP[i.role].classes}`}>
+                              {ROLE_BADGE_MAP[i.role].label}
+                            </Badge>
+                          )}
                         </div>
                         <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString('pt-BR')}</p>
                       </div>
@@ -346,14 +371,9 @@ function UsersPage() {
                           }
                           
                           return Array.from(new Set(funcs)).map(f => {
-                            if (f === "dev") return <Badge key={f} className="bg-purple-100 text-purple-700 hover:bg-purple-100 border-none px-2 rounded-md">Desenvolvedor</Badge>;
-                            if (f === "admin") return <Badge key={f} className="bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">Administrador</Badge>;
-                            if (f === "produtor") return <Badge key={f} className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">Produtor</Badge>;
-                            if (f === "iluminador") return <Badge key={f} className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">Iluminador</Badge>;
-                            if (f === "tecnico_som") return <Badge key={f} className="bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">Técnico de Som</Badge>;
-                            if (f === "motorista") return <Badge key={f} className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">Motorista</Badge>;
-                            if (f === "artista") return <Badge key={f} className="bg-pink-100 text-pink-700 hover:bg-pink-100 border-none px-2 rounded-md">Artista</Badge>;
-                            if (f === "user") return <Badge key={f} className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">Usuário Padrão</Badge>;
+                            if (ROLE_BADGE_MAP[f]) {
+                              return <Badge key={f} className={`border-none px-2 rounded-md ${ROLE_BADGE_MAP[f].classes}`}>{ROLE_BADGE_MAP[f].label}</Badge>;
+                            }
                             return <Badge key={f} className="bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md capitalize">{f}</Badge>;
                           });
                         })()}
@@ -466,14 +486,19 @@ function UsersPage() {
             <div className="space-y-2">
               <Label>Funções na Equipe (Múltipla Escolha)</Label>
               <div className="flex flex-wrap gap-2 mt-1">
-                {['produtor', 'iluminador', 'tecnico_som', 'motorista', 'artista'].map(f => (
+                {Object.keys(ROLE_BADGE_MAP).filter(f => !['dev', 'admin'].includes(f)).map(f => (
                   <Badge 
                     key={f}
-                    variant={editFuncoes.includes(f) ? "default" : "outline"}
-                    className={`cursor-pointer border-slate-300 py-1.5 px-3 hover:bg-slate-200 dark:hover:bg-slate-800 ${editFuncoes.includes(f) ? 'bg-primary text-white border-primary hover:bg-primary/90' : ''}`}
+                    variant="outline" 
+                    className={`cursor-pointer border px-3 py-1.5 transition-all text-sm font-semibold rounded-xl
+                      ${editFuncoes.includes(f) 
+                        ? `${ROLE_BADGE_MAP[f].classes} border-transparent ring-2 ring-indigo-500/30 scale-105 shadow-sm` 
+                        : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5 hover:-translate-y-0.5'
+                      }
+                    `}
                     onClick={() => setEditFuncoes(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
                   >
-                    {f.toUpperCase().replace('_', ' ')}
+                    {ROLE_BADGE_MAP[f].label}
                   </Badge>
                 ))}
               </div>
@@ -513,10 +538,19 @@ function UsersPage() {
                   <option value="admin">Administrador (Prod. Executiva)</option>
                   <option value="produtor">Produtor</option>
                   <option value="iluminador">Iluminador</option>
-                    <option value="tecnico_som">Técnico de Som</option>
+                  <option value="tecnico_som">Técnico de Som</option>
                   <option value="motorista">Motorista</option>
-                    <option value="artista">Artista</option>
-                  <option value="user">Usuário Padrão</option>
+                  <option value="stage_manager">Stage Manager</option>
+                  <option value="contra_regra">Contra-regra</option>
+                  <option value="assistente_producao">Assistente de Produção</option>
+                  <option value="camareiro">Camareiro / Figurinista</option>
+                  <option value="elenco">Elenco</option>
+                  <option value="musico">Músico</option>
+                  <option value="tour_manager">Tour Manager</option>
+                  <option value="roadie">Roadie</option>
+                  <option value="cenotecnico">Cenotécnico</option>
+                  <option value="tecnico_video">Técnico de Vídeo</option>
+
                 </select>
               )}
             </div>
