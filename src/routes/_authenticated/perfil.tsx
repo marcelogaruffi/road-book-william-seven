@@ -12,7 +12,7 @@ import { Save, User, MapPin, Landmark } from "lucide-react";
 import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
-  head: () => ({ meta: [{ title: "Meu Perfil - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Meus Dados - Seven Produções Artísticas" }] }),
   component: PerfilPage,
 });
 
@@ -50,7 +50,8 @@ function PerfilPage() {
     banco_agencia: "",
     banco_conta: "",
     pix_tipo: "",
-    pix_chave: ""
+    pix_chave: "",
+    data_nascimento: ""
   });
 
   useEffect(() => {
@@ -70,7 +71,8 @@ function PerfilPage() {
         banco_agencia: profile.banco_agencia || "",
         banco_conta: profile.banco_conta || "",
         pix_tipo: profile.pix_tipo || "",
-        pix_chave: profile.pix_chave || ""
+        pix_chave: profile.pix_chave || "",
+        data_nascimento: profile.data_nascimento || ""
       });
     }
   }, [profile]);
@@ -107,6 +109,7 @@ function PerfilPage() {
         banco_conta: formData.banco_conta,
         pix_tipo: formData.pix_tipo,
         pix_chave: formData.pix_chave,
+        data_nascimento: formData.data_nascimento || null,
         updated_at: new Date().toISOString()
       })
       .eq("id", profile.id);
@@ -144,7 +147,7 @@ function PerfilPage() {
     <div className="max-w-4xl mx-auto space-y-6 pb-20">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          Meu Perfil
+          Meus Dados
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
           Mantenha seus dados cadastrais e informações bancárias atualizadas para os pagamentos.
@@ -168,15 +171,19 @@ function PerfilPage() {
             </div>
             <div className="space-y-2">
               <Label>Nome Social (Opcional)</Label>
-              <Input name="nome_social" value={formData.nome_social} onChange={handleChange} />
+              <Input name="nome_social" value={formData.nome_social} onChange={handleChange} placeholder="Como prefere ser chamado" />
             </div>
             <div className="space-y-2">
-              <Label>CPF</Label>
-              <Input name="cpf" value={formData.cpf} onChange={handleChange} placeholder="000.000.000-00" />
+              <Label>Data de Nascimento *</Label>
+              <Input name="data_nascimento" type="date" value={formData.data_nascimento} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
-              <Label>Telefone (WhatsApp)</Label>
-              <Input name="telefone" value={formData.telefone} onChange={handleChange} placeholder="(00) 00000-0000" />
+              <Label>CPF *</Label>
+              <Input name="cpf" value={formData.cpf} onChange={handleChange} placeholder="000.000.000-00" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Telefone (WhatsApp) *</Label>
+              <Input name="telefone" value={formData.telefone} onChange={handleChange} placeholder="(00) 00000-0000" required />
             </div>
           </CardContent>
         </Card>
@@ -276,11 +283,7 @@ function PerfilPage() {
 
         <div className="flex justify-end pt-2">
           <Button type="submit" size="lg" disabled={loading} className="w-full sm:w-auto font-bold rounded-xl px-8">
-            {loading ? "Salvando..." : (
-              <>
-                <Save className="size-4 mr-2" /> Salvar Perfil
-              </>
-            )}
+            {loading ? "Salvando..." : <><Save className="size-4 mr-2" /> Salvar Dados</>}
           </Button>
         </div>
       </form>

@@ -8,11 +8,15 @@ import {
 
 export const Route = createFileRoute("/motorista-print/$slug")({
   ssr: false,
-  loader: async ({ params }) => {
+  loader: async ({ params, deps }) => {
     const { data, error } = await supabase.from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!data) throw notFound();
     return rowToRoadbook(data);
+  },
+  head: ({ loaderData }) => {
+    const title = loaderData ? `Programação ${loaderData.cidade || ''} ${loaderData.espetaculo || ''} - Seven Produções Artísticas` : "Programação - Seven Produções Artísticas";
+    return { meta: [{ title }] };
   },
   component: IsolatedPrintPage,
 });
@@ -44,7 +48,18 @@ function IsolatedPrintPage() {
     const keys = Array.from(map.keys()).sort((a, b) => {
       if (!a) return 1; if (!b) return -1; return a.localeCompare(b);
     });
-    return keys.map((k) => ({ data: k, itens: map.get(k)!.sort((a,b) => (a.hora_inicio||"").localeCompare(b.hora_inicio||"")) }));
+    
+    // Ler search params para filtrar dias
+    const urlParams = new URLSearchParams(window.location.search);
+    const diasParam = urlParams.get('dias');
+    let allowedDays = keys;
+    if (diasParam) {
+      allowedDays = diasParam.split(',');
+    }
+
+    return keys
+      .filter(k => allowedDays.includes(k))
+      .map((k) => ({ data: k, itens: map.get(k)!.sort((a,b) => (a.hora_inicio||"").localeCompare(b.hora_inicio||"")) }));
   }, [rb.programacao]);
 
   return (

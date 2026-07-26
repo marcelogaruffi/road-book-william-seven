@@ -33,7 +33,7 @@ type Profile = {
   telefone: string | null;
   foto_url: string | null;
   email?: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais";
   telefone?: string | null;
   telefone_verificado?: boolean | null;
 };
@@ -63,6 +63,8 @@ export const ROLE_BADGE_MAP: Record<string, { label: string, classes: string }> 
   roadie: { label: 'Roadie', classes: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100' },
   cenotecnico: { label: 'Cenotécnico', classes: 'bg-slate-200 text-slate-800 hover:bg-slate-200' },
   tecnico_video: { label: 'Téc. de Vídeo', classes: 'bg-teal-100 text-teal-700 hover:bg-teal-100' },
+  assessoria_imprensa: { label: 'Assessoria de Imprensa', classes: 'bg-violet-100 text-violet-700 hover:bg-violet-100' },
+  midias_sociais: { label: 'Mídias Sociais', classes: 'bg-blue-200 text-blue-800 hover:bg-blue-200' },
 };
 
 export const Route = createFileRoute("/_authenticated/cadastros")({

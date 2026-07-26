@@ -7,10 +7,11 @@ import { Route as AuthedRoute } from "./route";
 import { Card } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { ROLE_BADGE_MAP } from "./cadastros";
 import { 
   Plus, ExternalLink, Pencil, Trash2, Copy, Calendar, MapPin, 
   MoreVertical, BookOpen, MapPinned, Bus, ChevronRight, AlertCircle, Wrench, Settings2, ShieldAlert,
-  ClipboardList, Route as RouteIcon, Banknote, Contact2, Music, Shirt, Volume2, Lightbulb, Projector, FileText, Drama, LayoutTemplate, DoorOpen, Video, Mic2
+  ClipboardList, Route as RouteIcon, Banknote, Contact2, Music, Shirt, Volume2, Lightbulb, Projector, FileText, Drama, LayoutTemplate, DoorOpen, Video, Mic2, Sun, Sparkles
 } from "lucide-react";
 import { toast } from "sonner";
 import { DuplicateRoadbookDialog } from "@/components/DuplicateRoadbookDialog";
@@ -58,6 +59,7 @@ function Dashboard() {
   const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const [dup, setDup] = useState<Roadbook | null>(null);
   const [escalasPendentes, setEscalasPendentes] = useState<number>(0);
+  const [bdaysToday, setBdaysToday] = useState<{nome: string, role: string}[]>([]);
 
   async function load() {
     setLoading(true);
@@ -88,6 +90,22 @@ function Dashboard() {
     setItems(roadbooksFinal);
     setTours((tr as Tour[]) ?? []);
     setEscalasPendentes(esc?.filter(e => e.status === 'pendente').length || 0);
+    
+    if (profile && ['admin', 'dev', 'produtor', 'assistente_producao'].includes(profile.role)) {
+      const { data: profs } = await supabase.from('profiles').select('nome, role, data_nascimento').not('data_nascimento', 'is', null);
+      if (profs) {
+        const today = new Date();
+        const m = today.getMonth() + 1;
+        const d = today.getDate();
+        const todayBdays = profs.filter(p => {
+          if (!p.data_nascimento) return false;
+          const [by, bm, bd] = p.data_nascimento.split('-');
+          return parseInt(bm) === m && parseInt(bd) === d;
+        });
+        setBdaysToday(todayBdays);
+      }
+    }
+    
     setLoading(false);
   }
 
@@ -162,6 +180,81 @@ function Dashboard() {
   
   const hoje = now.toISOString().split('T')[0];
   const realizados = items.filter(r => getRoadbookEndDateTime(r).getTime() < now.getTime()).sort((a, b) => getRoadbookStartDateTime(b).getTime() - getRoadbookStartDateTime(a).getTime());
+
+  // Smart Panel Logic
+  const roleName = profile?.role ? ROLE_BADGE_MAP[profile.role]?.label || profile.role : 'Membro da Equipe';
+  const firstName = profile?.nome ? profile.nome.split(' ')[0] : 'Time Seven';
+  
+  const getSmartMessage = () => {
+    if (escalasPendentes > 0) {
+      return { 
+        title: `Olá, ${firstName}!`, 
+        sub: `Você tem ${escalasPendentes} convite(s) pendente(s) de escala. Confirme sua presença para garantir a logística.`, 
+        icon: AlertCircle, 
+        color: 'from-amber-500 to-orange-600', 
+        link: '/minhas-escalas', 
+        btnText: 'Ver Escalas' 
+      };
+    }
+
+    if (bdaysToday.length > 0) {
+      return { 
+        title: `Dia de Festa, ${firstName}! 🎉`, 
+        sub: `Hoje é o aniversário de: ${bdaysToday.map(b => b.nome).join(', ')}. Não deixe de parabenizar nossa equipe!`, 
+        icon: Calendar, 
+        color: 'from-fuchsia-500 to-pink-600', 
+        link: '/dados-equipe', 
+        btnText: 'Ver Equipe' 
+      };
+    }
+    
+    if (upcomingRoadbooks.length > 0) {
+      const nextEvent = upcomingRoadbooks[0];
+      const daysUntil = Math.ceil((getRoadbookStartDateTime(nextEvent).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysUntil === 0) {
+        return { 
+          title: `É Hoje, ${firstName}! 🎸`, 
+          sub: `O espetáculo em ${nextEvent.cidade} acontece hoje. Acesse o roteiro para todos os detalhes do dia!`, 
+          icon: StageIcon, 
+          color: 'from-emerald-500 to-teal-600', 
+          link: profile?.role === 'motorista' ? `/versao-motorista/${nextEvent.slug}` : `/rb/${nextEvent.slug}`, 
+          btnText: 'Abrir Roteiro' 
+        };
+      }
+      
+      if (daysUntil <= 3) {
+        return { 
+          title: `Falta pouco, ${firstName}!`, 
+          sub: `Estamos a ${daysUntil} dias do evento em ${nextEvent.cidade}. Já arrumou as malas?`, 
+          icon: Bus, 
+          color: 'from-indigo-500 to-violet-600', 
+          link: profile?.role === 'motorista' ? `/versao-motorista/${nextEvent.slug}` : `/rb/${nextEvent.slug}`, 
+          btnText: 'Ver Roteiro' 
+        };
+      }
+      
+      return { 
+        title: `Tudo no esquema, ${firstName}.`, 
+        sub: `Nosso próximo compromisso será em ${nextEvent.cidade}, daqui a ${daysUntil} dias. Aproveite o tempo para organizar os detalhes!`, 
+        icon: MapPin, 
+        color: 'from-slate-800 to-slate-900 dark:from-slate-900 dark:to-slate-950', 
+        link: profile?.role === 'motorista' ? `/versao-motorista/${nextEvent.slug}` : `/rb/${nextEvent.slug}`, 
+        btnText: 'Ver Detalhes do Roteiro' 
+      };
+    }
+    
+    return { 
+      title: `Boas-vindas, ${firstName}!`, 
+      sub: `Nenhum evento futuro programado. Aproveite o descanso e recarregue as energias! ⚡`, 
+      icon: Sun, 
+      color: 'from-sky-400 to-blue-600', 
+      link: '/eventos', 
+      btnText: 'Ver Calendário' 
+    };
+  };
+
+  const smartMsg = getSmartMessage();
 
   const renderRoadbookCard = (r: Roadbook, index: number) => (
     <Card key={r.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgb(0,0,0,0.3)] bg-white dark:bg-card/60 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-[1.5rem] relative overflow-hidden">
@@ -239,22 +332,63 @@ function Dashboard() {
         </div>
 
         {/* ALERTA DE ESCALAS PENDENTES */}
-        {escalasPendentes > 0 && (
-          <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm animate-in fade-in slide-in-from-bottom-2">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl shrink-0">
-                <AlertCircle className="size-6" />
+        {/* ALERTA DE ANIVERSÁRIOS */}
+
+        {/* SMART PANEL */}
+        <div className={`relative overflow-hidden rounded-[2rem] p-6 sm:p-8 text-white shadow-xl bg-gradient-to-br ${smartMsg.color} animate-in fade-in slide-in-from-bottom-4 duration-700 group`}>
+          <div className="absolute top-0 right-0 p-8 opacity-20 transform translate-x-4 -translate-y-4 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-700">
+            <smartMsg.icon className="size-48" />
+          </div>
+          
+          <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+          <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <Badge className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md px-3 py-1 text-xs uppercase tracking-widest font-bold">
+                  {roleName}
+                </Badge>
+                {bdaysToday.length > 0 && escalasPendentes === 0 && (
+                   <Badge className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md px-3 py-1 font-bold">
+                     🎂 Aniversário Hoje!
+                   </Badge>
+                )}
               </div>
-              <div>
-                <h3 className="text-amber-800 dark:text-amber-200 font-bold text-lg">Você tem {escalasPendentes} convite(s) pendente(s)</h3>
-                <p className="text-amber-700/80 dark:text-amber-300/80 text-sm font-medium mt-0.5">Responda às suas escalas para confirmar presença nos eventos.</p>
+              <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-2 drop-shadow-sm">{smartMsg.title}</h2>
+              <p className="text-white/90 text-lg font-medium max-w-xl mb-6">{smartMsg.sub}</p>
+              
+              <div className="flex flex-wrap gap-4 mt-2">
+                <Button asChild className="bg-white text-slate-900 hover:bg-slate-100 rounded-xl font-bold px-6 shadow-lg shadow-black/10">
+                  <Link to={smartMsg.link}>{smartMsg.btnText}</Link>
+                </Button>
+                {escalasPendentes > 0 && bdaysToday.length > 0 && (
+                  <Button asChild variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-xl font-bold px-6 backdrop-blur-sm">
+                    <Link to="/dados-equipe">Tem aniversário na equipe! 🎉</Link>
+                  </Button>
+                )}
               </div>
             </div>
-            <Button asChild className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white border-0 shadow-sm font-bold h-11 rounded-xl shrink-0">
-              <Link to="/minhas-escalas">Ver Escalas</Link>
-            </Button>
+            
+            {/* QUICK STATS WIDGET */}
+            <div className="hidden lg:flex flex-col gap-4 shrink-0 bg-black/10 backdrop-blur-md p-5 rounded-[1.5rem] border border-white/10 shadow-inner">
+              <div className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-1.5 mb-1">
+                <Sparkles className="size-3.5" /> 
+                Seu Resumo Dinâmico
+              </div>
+              <div className="flex gap-6 divide-x divide-white/10">
+                <div>
+                  <div className="text-3xl font-black tabular-nums">{futuros.length}</div>
+                  <div className="text-xs text-white/70 font-bold mt-1 uppercase tracking-wide">Eventos Futuros</div>
+                </div>
+                <div className="pl-6">
+                  <div className="text-3xl font-black tabular-nums">{escalasPendentes}</div>
+                  <div className="text-xs text-white/70 font-bold mt-1 uppercase tracking-wide">Escalas Pendentes</div>
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+      </section>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
@@ -389,7 +523,6 @@ function Dashboard() {
 
           </div>
         </section>
-      </section>
 
       {/* EVENTO ATUAL (Somente os 2 primeiros roadbooks) */}
       <section className="space-y-6 pt-4">

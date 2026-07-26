@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
   Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote,
-  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus
+  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone
 } from "lucide-react";
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,7 +17,7 @@ type Profile = {
   id: string;
   nome: string;
   foto_url: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais";
 };
 
 export const Route = createFileRoute("/_authenticated")({
@@ -202,6 +202,10 @@ function AuthedLayout() {
                <ClipboardList className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Minhas Escalas</span>}
              </Link>
+          <Link to="/perfil" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+               <UserPlus className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+               {sidebarOpen && <span>Meus Dados</span>}
+             </Link>
 
           {/* VIAGENS - GERAL */}
           <Link to="/viagens" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeOptions={{ exact: true }} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
@@ -224,6 +228,13 @@ function AuthedLayout() {
                <Contact2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Contatos da Equipe</span>}
              </Link>
+             
+          {['admin', 'dev', 'produtor', 'assistente_producao', 'tour_manager'].includes(userRole) && (
+            <Link to="/dados-equipe" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <Users className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Dados da Equipe</span>}
+               </Link>
+          )}
           
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
             <Link to="/eventos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
@@ -300,6 +311,27 @@ function AuthedLayout() {
             <Link to="/video" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Video className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Vídeo e Mídia Cênica</span>}
+               </Link>
+          )}
+
+          {/* SECTION: COMUNICAÇÃO E MÍDIA */}
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assessoria_imprensa' || userRole === 'midias_sociais') && (
+            <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
+               Comunicação & Mídia
+            </div>
+          )}
+          
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assessoria_imprensa') && (
+            <Link to="/imprensa" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <Newspaper className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Imprensa</span>}
+               </Link>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'midias_sociais') && (
+            <Link to="/midias" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <Smartphone className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Mídias Sociais</span>}
                </Link>
           )}
 

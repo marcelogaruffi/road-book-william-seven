@@ -65,6 +65,14 @@ function DriverPrintPage() {
     return keys.map((k) => ({ data: k, itens: map.get(k)!.sort((a,b) => (a.hora_inicio||"").localeCompare(b.hora_inicio||"")) }));
   }, [rb.programacao]);
 
+  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (dayGroups.length > 0 && selectedDates.length === 0) {
+      setSelectedDates(dayGroups.map(g => g.data));
+    }
+  }, [dayGroups]);
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-background font-sans relative">
       {/* =========================================================================
@@ -108,15 +116,37 @@ function DriverPrintPage() {
             )}
           </div>
 
-          <div className="mt-8 flex justify-center">
-            <button 
-              onClick={() => {
-                window.open(`/motorista-print/${rb.slug}`, '_blank');
-              }} 
-              className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 dark:hover:bg-white transition transform hover:-translate-y-1"
-            >
-              Imprimir Roteiro
-            </button>
+          <div className="mt-8">
+            <h3 className="text-sm font-semibold mb-3 text-slate-800 dark:text-slate-200">Selecione os dias que deseja incluir no PDF:</h3>
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-6">
+              {dayGroups.map(group => (
+                <label key={group.data} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 p-1.5 rounded pr-3 transition-colors border border-slate-200 dark:border-slate-800">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-slate-300 text-primary focus:ring-primary"
+                    checked={selectedDates.includes(group.data)}
+                    onChange={(e) => {
+                      if (e.target.checked) setSelectedDates(s => [...s, group.data]);
+                      else setSelectedDates(s => s.filter(d => d !== group.data));
+                    }}
+                  />
+                  {fmtDate(group.data) || "Sem data"}
+                </label>
+              ))}
+            </div>
+            
+            <div className="flex justify-center">
+              <button 
+                onClick={() => {
+                  const query = selectedDates.length > 0 ? `?dias=${selectedDates.join(',')}` : '';
+                  window.open(`/motorista-print/${rb.slug}${query}`, '_blank');
+                }} 
+                disabled={selectedDates.length === 0}
+                className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 dark:hover:bg-white transition transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                Imprimir Roteiro ({selectedDates.length})
+              </button>
+            </div>
           </div>
         </div>
 
