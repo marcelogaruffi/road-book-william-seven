@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckSquare, ListTodo, Plus, Trash2, MapPin, Play, CheckCircle2, Circle, Pencil, X, Save, GripVertical, Music } from "lucide-react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/checklist")({
   component: ChecklistPage,
@@ -20,6 +21,7 @@ type ChecklistPadrao = {
   obrigatorio: boolean;
   ordem: number;
   espetaculo_nome: string;
+  setor?: string;
 };
 
 type ChecklistEvento = {
@@ -29,6 +31,7 @@ type ChecklistEvento = {
   obrigatorio: boolean;
   concluido: boolean;
   ordem: number;
+  setor?: string;
 };
 
 type Evento = {
@@ -39,8 +42,33 @@ type Evento = {
   espetaculo: string;
 };
 
+const SETORES = ["Produção", "Luz", "Som", "Audiovisual", "Camarins", "Figurino", "Cenografia"];
+
 function ChecklistPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  
+  // Define quais setores o usuário pode ver baseado no role e funcoes
+  const userRole = profile?.role || "elenco";
+  const userFuncoes = profile?.funcoes || [];
+  const hasRole = (r: string) => userRole === r || userFuncoes.includes(r);
+  
+  const canSeeAll = ["dev", "admin", "produtor", "assistente_producao", "tour_manager", "stage_manager", "contra_regra"].some(hasRole);
+  
+  const allowedSectores = SETORES.filter(s => {
+    if (canSeeAll) return true;
+    if (s === "Luz" && (hasRole("iluminador") || hasRole("roadie"))) return true;
+    if (s === "Som" && (hasRole("tecnico_som") || hasRole("roadie"))) return true;
+    if (s === "Audiovisual" && hasRole("tecnico_video")) return true;
+    if ((s === "Camarins" || s === "Figurino") && hasRole("camareiro")) return true;
+    if (s === "Cenografia" && hasRole("cenotecnico")) return true;
+    if (s === "Produção") return true; // Produção visível como fallback para funções não mapeadas que chegam aqui
+    return false;
+  });
+
+  const defaultSetor = allowedSectores.length > 0 ? allowedSectores[0] : "Produção";
+
   const [activeTab, setActiveTab] = useState("conferencia");
+  const [selectedSetor, setSelectedSetor] = useState(defaultSetor);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [itensPadrao, setItensPadrao] = useState<ChecklistPadrao[]>([]);
   const [itensEvento, setItensEvento] = useState<ChecklistEvento[]>([]);
@@ -112,14 +140,15 @@ function ChecklistPage() {
     if (!selectedEspetaculoPadrao) return toast.error("Selecione um Espetáculo primeiro");
     if (!novoItemNome.trim()) return toast.error("Digite o nome do item");
 
-    const itensDesteEspetaculo = itensPadrao.filter(i => i.espetaculo_nome === selectedEspetaculoPadrao);
+    const itensDesteEspetaculo = itensPadrao.filter(i => i.espetaculo_nome === selectedEspetaculoPadrao && (i.setor || 'Produção') === selectedSetor);
     const novaOrdem = itensDesteEspetaculo.length > 0 ? Math.max(...itensDesteEspetaculo.map(i => i.ordem)) + 1 : 0;
 
     const { data, error } = await supabase.from("checklist_padrao").insert({
       espetaculo_nome: selectedEspetaculoPadrao,
       item_nome: novoItemNome,
       obrigatorio: novoItemObrigatorio,
-      ordem: novaOrdem
+      ordem: novaOrdem,
+      setor: selectedSetor
     }).select().single();
 
     if (error) {
@@ -168,9 +197,9 @@ function ChecklistPage() {
 
   async function handleSort() {
     if (dragItem.current === null || dragOverItem.current === null) return;
-    if (dragItem.current === dragOverItem.current) return; // Didn't change position
+    if (dragItem.current === dragOverItem.current) return;
 
-    let _itens = [...itensPadrao];
+    let _itens = [...itensPadrao.filter(i => i.espetaculo_nome === selectedEspetaculoPadrao && (i.setor || 'Produção') === selectedSetor)];
     const draggedItemContent = _itens.splice(dragItem.current, 1)[0];
     _itens.splice(dragOverItem.current, 0, draggedItemContent);
     
@@ -179,16 +208,21 @@ function ChecklistPage() {
     
     // Update local order numbers to reflect new array position
     _itens = _itens.map((item, index) => ({ ...item, ordem: index }));
-    setItensPadrao(_itens);
     
-    // Update in DB (using bulk upsert)
+    // Atualizar no state global substituindo os antigos pelos novos
+    const idsToUpdate = new Set(_itens.map(i => i.id));
+    const otherItems = itensPadrao.filter(i => !idsToUpdate.has(i.id));
+    setItensPadrao([...otherItems, ..._itens]);
+    
+    // Update in DB
     const { error } = await supabase.from('checklist_padrao').upsert(
       _itens.map(i => ({ 
         id: i.id, 
         espetaculo_nome: i.espetaculo_nome,
         item_nome: i.item_nome, 
         obrigatorio: i.obrigatorio, 
-        ordem: i.ordem 
+        ordem: i.ordem,
+        setor: i.setor || 'Produção'
       }))
     );
     
@@ -213,7 +247,8 @@ function ChecklistPage() {
       item_nome: item.item_nome,
       obrigatorio: item.obrigatorio,
       ordem: item.ordem,
-      concluido: false
+      concluido: false,
+      setor: item.setor || 'Produção'
     }));
 
     const { data, error } = await supabase.from("checklist_eventos").insert(itensParaInserir).select();
@@ -256,7 +291,8 @@ function ChecklistPage() {
       item_nome: novoItemExtraNome,
       obrigatorio: novoItemExtraObrigatorio,
       concluido: false,
-      ordem: novaOrdem
+      ordem: novaOrdem,
+      setor: selectedSetor
     }).select().single();
     
     if (error) {
@@ -280,8 +316,11 @@ function ChecklistPage() {
     }
   }
 
-  const concluidosCount = itensEvento.filter(i => i.concluido).length;
-  const progresso = itensEvento.length > 0 ? Math.round((concluidosCount / itensEvento.length) * 100) : 0;
+  const displayedItensEvento = itensEvento.filter(i => (i.setor || 'Produção') === selectedSetor);
+  const displayedItensPadrao = itensPadrao.filter(i => i.espetaculo_nome === selectedEspetaculoPadrao && (i.setor || 'Produção') === selectedSetor);
+  
+  const concluidosCount = displayedItensEvento.filter(i => i.concluido).length;
+  const progresso = displayedItensEvento.length > 0 ? Math.round((concluidosCount / displayedItensEvento.length) * 100) : 0;
 
   return (
     <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
@@ -289,10 +328,26 @@ function ChecklistPage() {
         <div>
           <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
             <CheckSquare className="size-8 text-primary" />
-            Prancheta do Produtor
+            Central de Checklists
           </h1>
-          <p className="text-slate-500 mt-1">Gerenciamento de checklist e conferência dos eventos</p>
+          <p className="text-slate-500 mt-1">Gerenciamento de checklist e conferência dos eventos por setor</p>
         </div>
+      </div>
+
+      <div className="bg-slate-100/50 dark:bg-slate-800/30 p-2 rounded-3xl overflow-x-auto flex gap-2 hide-scrollbar">
+        {allowedSectores.map(s => (
+          <button
+            key={s}
+            onClick={() => setSelectedSetor(s)}
+            className={`whitespace-nowrap rounded-2xl px-5 py-2.5 transition-all font-semibold text-sm ${
+              selectedSetor === s
+                ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md"
+                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
+            }`}
+          >
+            {s}
+          </button>
+        ))}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -332,7 +387,7 @@ function ChecklistPage() {
                   <MapPin className="size-12 mb-4 opacity-50" />
                   <p>Selecione um evento acima para carregar o checklist.</p>
                 </div>
-              ) : itensEvento.length === 0 ? (
+              ) : displayedItensEvento.length === 0 ? (
                 <div className="text-center py-12 flex flex-col items-center">
                   <ListTodo className="size-16 text-slate-300 mb-4" />
                   <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">Nenhum checklist gerado</h3>
@@ -349,7 +404,7 @@ function ChecklistPage() {
                   <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
                     <div>
                       <h4 className="font-bold text-slate-700 dark:text-slate-300">Progresso da Conferência</h4>
-                      <p className="text-sm text-slate-500">{concluidosCount} de {itensEvento.length} itens concluídos</p>
+                      <p className="text-sm text-slate-500">{concluidosCount} de {displayedItensEvento.length} itens concluídos</p>
                     </div>
                     <div className="text-right">
                       <span className={`text-3xl font-black transition-colors duration-500 ${progresso === 100 ? 'text-emerald-500' : 'text-primary'}`}>{progresso}%</span>
@@ -362,7 +417,7 @@ function ChecklistPage() {
 
                   {/* Checklist Items */}
                   <div className="grid gap-3">
-                    {itensEvento.map(item => (
+                    {displayedItensEvento.map(item => (
                       <div 
                         key={item.id} 
                         className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer ${
@@ -497,14 +552,14 @@ function ChecklistPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {itensPadrao.filter(i => i.espetaculo_nome === selectedEspetaculoPadrao).length === 0 ? (
+                    {displayedItensPadrao.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
                           Nenhum item padrão cadastrado para este show.
                         </td>
                       </tr>
                     ) : (
-                      itensPadrao.filter(i => i.espetaculo_nome === selectedEspetaculoPadrao).map((item, index) => {
+                      displayedItensPadrao.map((item, index) => {
                         const isEditing = editingItemId === item.id;
 
                         return (
