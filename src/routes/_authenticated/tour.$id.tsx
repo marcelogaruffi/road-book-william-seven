@@ -25,6 +25,7 @@ function EditTour() {
   const [tour, setTour] = useState<Tour | null>(null);
   const [cities, setCities] = useState<Roadbook[]>([]);
   const [busy, setBusy] = useState(false);
+  const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
   
   const { profile } = AuthedRoute.useRouteContext();
   const userRole = profile?.role || "elenco";
@@ -33,13 +34,15 @@ function EditTour() {
   const canManageRoadbooks = ['dev', 'admin', 'produtor', 'assistente_producao', 'tour_manager'].some(r => hasRole(r));
 
   async function load() {
-    const [{ data: t }, { data: c }] = await Promise.all([
+    const [{ data: t }, { data: c }, { data: e }] = await Promise.all([
       supabase.from("tours").select("id,slug,nome,espetaculo,producao").eq("id", id).maybeSingle(),
       supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,data_inicial,data_final").eq("tour_id", id).order("data_inicial", { ascending: true, nullsFirst: false }),
+      supabase.from("templates_espetaculos").select("nome_espetaculo"),
     ]);
     if (!t) { toast.error("Turnê não encontrada"); return; }
     setTour(t as Tour);
     setCities((c as Roadbook[]) ?? []);
+    if (e) setEspetaculosList(e.map(d => d.nome_espetaculo));
   }
   useEffect(() => { load(); }, [id]);
 
@@ -66,7 +69,19 @@ function EditTour() {
         <CardHeader><CardTitle>Dados</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           <div><Label>Nome</Label><Input value={tour.nome} onChange={(e) => setTour({ ...tour, nome: e.target.value })} /></div>
-          <div><Label>Espetáculo</Label><Input value={tour.espetaculo ?? ""} onChange={(e) => setTour({ ...tour, espetaculo: e.target.value })} /></div>
+          <div>
+            <Label>Espetáculo</Label>
+            <select 
+              value={tour.espetaculo ?? ""}
+              onChange={e => setTour({ ...tour, espetaculo: e.target.value })}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+            >
+              <option value="">Selecione um espetáculo...</option>
+              {espetaculosList.map(esp => (
+                <option key={esp} value={esp}>{esp}</option>
+              ))}
+            </select>
+          </div>
           <div><Label>Produção</Label><Input value={tour.producao ?? ""} onChange={(e) => setTour({ ...tour, producao: e.target.value })} /></div>
           <div className="flex justify-end"><Button onClick={save} disabled={busy}>{busy ? "Salvando..." : "Salvar"}</Button></div>
         </CardContent>

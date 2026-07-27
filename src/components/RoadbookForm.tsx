@@ -39,6 +39,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const [saving, setSaving] = useState(false);
   const [tours, setTours] = useState<TourOpt[]>([]);
   const [eventos, setEventos] = useState<EventoOpt[]>([]);
+  const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
 
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
@@ -66,12 +67,14 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
 
   useEffect(() => {
     (async () => {
-      const [toursRes, eventosRes, roadbooksRes] = await Promise.all([
+      const [toursRes, eventosRes, roadbooksRes, espRes] = await Promise.all([
         supabase.from("tours").select("id,nome").order("nome"),
         supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local").order("data", { ascending: false }),
-        supabase.from("roadbooks").select("evento_id").not("evento_id", "is", null)
+        supabase.from("roadbooks").select("evento_id").not("evento_id", "is", null),
+        supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo")
       ]);
       setTours((toursRes.data as TourOpt[]) ?? []);
+      if (espRes.data) setEspetaculosList(espRes.data.map(d => d.nome_espetaculo));
       
       const usedEventIds = new Set((roadbooksRes.data || []).map(r => r.evento_id));
       const allEventos = (eventosRes.data as EventoOpt[]) ?? [];
@@ -768,15 +771,26 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                 </p>
               </div>
 
-              <Field label="Espetáculo *">
-                <Input required value={d.espetaculo} onChange={(e) => up("espetaculo", e.target.value)} />
-              </Field>
+              <div className="space-y-2">
+                <Label>Espetáculo *</Label>
+                <select 
+                  required
+                  value={d.espetaculo}
+                  onChange={e => up("espetaculo", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                >
+                  <option value="">Selecione um espetáculo...</option>
+                  {espetaculosList.map(esp => (
+                    <option key={esp} value={esp}>{esp}</option>
+                  ))}
+                </select>
+              </div>
               <div className="flex flex-col gap-2">
                 <Label>Logo do Espetáculo</Label>
                 <div className="flex items-center gap-4 border rounded-md p-2">
                   {d.espetaculo_logo_url ? (
                     <div className="relative group size-12 bg-slate-50 dark:bg-slate-900 rounded-md border flex items-center justify-center overflow-hidden shrink-0">
-                      <img src={d.espetaculo_logo_url} className="max-h-full max-w-full object-contain" />
+                      <img src={d.espetaculo_logo_url} alt={`Logo de ${d.espetaculo}`} className="max-h-full max-w-full object-contain" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                         <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-red-400" onClick={() => up("espetaculo_logo_url", "")}>
                           <Trash2 className="size-4" />
@@ -1187,6 +1201,10 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                   </div>
                 </div>
               ))}
+              
+              <Button type="button" variant="outline" className="w-full border-dashed mt-4 text-slate-500 hover:text-primary dark:border-white/10 dark:hover:border-primary/50 dark:hover:text-primary-foreground dark:hover:bg-primary/20 transition-all" onClick={addOutroLocal}>
+                <Plus className="size-4 mr-2" /> Adicionar Local Extra
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

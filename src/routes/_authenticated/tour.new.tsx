@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,13 @@ function NewTour() {
   const [nome, setNome] = useState("");
   const [espetaculo, setEspetaculo] = useState("");
   const [producao, setProducao] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
+  
+  useEffect(() => {
+    supabase.from("templates_espetaculos").select("nome_espetaculo").then(({ data }) => {
+      if (data) setEspetaculosList(data.map(d => d.nome_espetaculo));
+    });
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,7 +61,19 @@ function NewTour() {
           <CardHeader><CardTitle>Dados da turnê</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div><Label>Nome *</Label><Input value={nome} onChange={(e) => setNome(e.target.value)} required /></div>
-            <div><Label>Espetáculo</Label><Input value={espetaculo} onChange={(e) => setEspetaculo(e.target.value)} /></div>
+            <div>
+              <Label>Espetáculo</Label>
+              <select 
+                value={espetaculo}
+                onChange={e => setEspetaculo(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+              >
+                <option value="">Selecione um espetáculo...</option>
+                {espetaculosList.map(esp => (
+                  <option key={esp} value={esp}>{esp}</option>
+                ))}
+              </select>
+            </div>
             <div><Label>Produção</Label><Input value={producao} onChange={(e) => setProducao(e.target.value)} /></div>
           </CardContent>
         </Card>

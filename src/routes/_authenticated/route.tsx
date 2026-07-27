@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
   Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote,
-  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone
+  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone, ShoppingCart, CheckSquare
 } from "lucide-react";
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -364,26 +364,42 @@ function AuthedLayout() {
                </Link>
           )}
 
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
+            <Link to="/vendas" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <ShoppingCart className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Controle de Vendas</span>}
+               </Link>
+          )}
+
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
+            <Link to="/checklist" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                 <CheckSquare className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                 {sidebarOpen && <span>Prancheta do Produtor</span>}
+               </Link>
+          )}
+
           
           {/* SECTION: ADMINISTRAÇÃO */}
           {(userRole === 'admin' || userRole === 'dev') && (
-            <div className={`px-4 text-[10px] font-bold text-slate-400 mt-6 mb-1 uppercase tracking-wider ${!sidebarOpen && 'hidden'}`}>
-               Administração
-            </div>
-          )}
-
-          {(userRole === 'admin' || userRole === 'dev') && (
-            <Link to="/cadastros" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+            <div className="pt-4 pb-2">
+              <p className={`px-4 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 ${!sidebarOpen && 'text-center text-[10px]'}`}>
+                {sidebarOpen ? 'Administração' : 'Admin'}
+              </p>
+              <div className="space-y-1">
+                <Link to="/espetaculos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                  <Music className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                  {sidebarOpen && <span>Tipos de Shows</span>}
+                </Link>
+                <Link to="/cadastros" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <UserPlus className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Cadastros e Convites</span>}
-               </Link>
-          )}
-
-          {(userRole === 'admin' || userRole === 'dev') && (
-            <Link to="/configuracoes" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                </Link>
+                <Link to="/configuracoes" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <Settings className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                  {sidebarOpen && <span>Configurações</span>}
-               </Link>
+                </Link>
+              </div>
+            </div>
           )}
         </div>
 

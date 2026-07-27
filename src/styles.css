@@ -1,4 +1,4 @@
-﻿@import "tailwindcss" source(none);
+@import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
@@ -182,4 +182,62 @@
   #sonner-toaster, [data-sonner-toaster] { 
     display: none !important; 
   } 
+}
+
+/* 
+ * Acessibilidade 
+ */
+
+/* Tamanho de Fonte Global */
+.a11y-large {
+  font-size: 110% !important;
+}
+.a11y-xlarge {
+  font-size: 125% !important;
+}
+
+/* Reduzir Movimento */
+.a11y-reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Alto Contraste */
+.a11y-high-contrast {
+  /* Força backgrounds pretos ou brancos absolutos e remove glassmorphism */
+  --background: oklch(1 0 0) !important;
+  --foreground: oklch(0 0 0) !important;
+  --card: oklch(0.95 0 0) !important;
+  --primary: oklch(0.2 0 0) !important;
+  --muted: oklch(0.9 0 0) !important;
+}
+.dark.a11y-high-contrast {
+  --background: oklch(0 0 0) !important;
+  --foreground: oklch(1 0 0) !important;
+  --card: oklch(0.1 0 0) !important;
+  --primary: oklch(0.9 0 0) !important;
+  --primary-foreground: oklch(0 0 0) !important;
+  --muted: oklch(0.2 0 0) !important;
+}
+.a11y-high-contrast * {
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+/* Modo Foco / Leitura */
+.a11y-reading-mode aside, 
+.a11y-reading-mode header,
+.a11y-reading-mode .no-reading-mode {
+  opacity: 0.1 !important;
+  pointer-events: none !important;
+  filter: grayscale(100%) !important;
+  transition: all 0.3s ease;
+}
+.a11y-reading-mode aside:hover, 
+.a11y-reading-mode header:hover {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  filter: none !important;
 }

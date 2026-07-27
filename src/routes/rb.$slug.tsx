@@ -976,7 +976,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
           return (
             <div className="space-y-6">
               {fotos.length > 0 && (
-                <Section title="Galeria de Documentos" icon={<img className="size-4" />}>
+                <Section title="Galeria de Documentos" icon={<FileText className="size-4" />}>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {fotos.map((f: any, i) => (
                       <button key={i} type="button" onClick={() => setLightbox({ item: f, allItems: fotos, index: i })} className="relative aspect-square rounded-lg overflow-hidden border hover:opacity-90 transition-opacity">
