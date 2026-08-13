@@ -20,6 +20,7 @@ function NewTour() {
   const [espetaculo, setEspetaculo] = useState("");
   const [producao, setProducao] = useState("");
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
   
   useEffect(() => {
     supabase.from("templates_espetaculos").select("nome_espetaculo").then(({ data }) => {

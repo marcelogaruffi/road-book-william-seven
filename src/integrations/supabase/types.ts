@@ -14,6 +14,175 @@ export type Database = {
   }
   public: {
     Tables: {
+      props_padrao: {
+        Row: {
+          id: string
+          espetaculo_nome: string
+          item: string
+          ato: string | null
+          cena: string | null
+          preset_location: string | null
+          descricao: string | null
+          personagem: string | null
+          termino_uso: string | null
+          arquivo_url: string | null
+          ordem: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          espetaculo_nome: string
+          item: string
+          ato?: string | null
+          cena?: string | null
+          preset_location?: string | null
+          descricao?: string | null
+          personagem?: string | null
+          termino_uso?: string | null
+          arquivo_url?: string | null
+          ordem?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          espetaculo_nome?: string
+          item?: string
+          ato?: string | null
+          cena?: string | null
+          preset_location?: string | null
+          descricao?: string | null
+          personagem?: string | null
+          termino_uso?: string | null
+          arquivo_url?: string | null
+          ordem?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      props_eventos: {
+        Row: {
+          id: string
+          evento_id: string
+          item: string
+          ato: string | null
+          cena: string | null
+          preset_location: string | null
+          descricao: string | null
+          personagem: string | null
+          termino_uso: string | null
+          arquivo_url: string | null
+          ordem: number
+          concluido: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          evento_id: string
+          item: string
+          ato?: string | null
+          cena?: string | null
+          preset_location?: string | null
+          descricao?: string | null
+          personagem?: string | null
+          termino_uso?: string | null
+          arquivo_url?: string | null
+          ordem?: number
+          concluido?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          evento_id?: string
+          item?: string
+          ato?: string | null
+          cena?: string | null
+          preset_location?: string | null
+          descricao?: string | null
+          personagem?: string | null
+          termino_uso?: string | null
+          arquivo_url?: string | null
+          ordem?: number
+          concluido?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "props_eventos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      arquivos_padrao: {
+        Row: {
+          id: string
+          espetaculo_nome: string
+          nome: string
+          arquivo_url: string
+          tipo: "partitura" | "musica" | "mapa_palco" | "item_palco"
+          ordem: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          espetaculo_nome: string
+          nome: string
+          arquivo_url: string
+          tipo: "partitura" | "musica" | "mapa_palco" | "item_palco"
+          ordem?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          espetaculo_nome?: string
+          nome?: string
+          arquivo_url?: string
+          tipo?: "partitura" | "musica" | "mapa_palco" | "item_palco"
+          ordem?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      arquivos_eventos: {
+        Row: {
+          id: string
+          evento_id: string
+          nome: string
+          arquivo_url: string
+          tipo: "partitura" | "musica" | "mapa_palco" | "item_palco"
+          ordem: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          evento_id: string
+          nome: string
+          arquivo_url: string
+          tipo: "partitura" | "musica" | "mapa_palco" | "item_palco"
+          ordem?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          evento_id?: string
+          nome?: string
+          arquivo_url?: string
+          tipo?: "partitura" | "musica"
+          ordem?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "arquivos_eventos_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       roadbooks: {
         Row: {
           automacoes: Json

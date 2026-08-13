@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
+import { usePermissions } from "@/hooks/usePermissions";
+
 export const Route = createFileRoute('/_authenticated/configuracoes')({
   head: () => ({ meta: [{ title: 'Configurações do Sistema' }] }),
   component: ConfiguracoesComponent,
@@ -19,8 +21,7 @@ export const Route = createFileRoute('/_authenticated/configuracoes')({
 function ConfiguracoesComponent() {
   const { profile } = AuthedRoute.useRouteContext();
   const navigate = useNavigate();
-  const role = profile?.role || null;
-  const isAdmin = role === 'admin' || role === 'dev';
+  const { isAdmin } = usePermissions(profile);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

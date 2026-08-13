@@ -10,8 +10,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Wallet } from "lucide-react";
 import { Route as AuthedRoute } from "./route";
+import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
+  head: () => ({ meta: [{ title: "Financeiro - Seven Produções Artísticas" }] }),
   component: FinanceiroPage,
 });
 
@@ -21,14 +23,10 @@ function FinanceiroPage() {
   const [loading, setLoading] = useState(true);
 
   const { profile } = AuthedRoute.useRouteContext();
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { canAccessFinanceiro: isAllowed } = usePermissions(profile);
 
   useEffect(() => {
     (async () => {
-      if (profile && (profile.role === 'admin' || profile.role === 'dev')) {
-        setIsAdmin(true);
-      }
-      
       const { data, error } = await supabase.from("roadbooks").select("id, espetaculo, cidade, data_inicial").order("data_inicial", { ascending: false });
       if (error) {
         toast.error("Erro ao carregar roadbooks: " + getErrorMessage(error));
@@ -39,12 +37,12 @@ function FinanceiroPage() {
     })();
   }, []);
 
-  if (!loading && !isAdmin) {
+  if (!loading && !isAllowed) {
     return (
       <div className="flex flex-col items-center justify-center h-[70vh]">
         <Wallet className="size-16 text-slate-300 mb-4" />
         <h2 className="text-2xl font-bold text-slate-700">Acesso Negado</h2>
-        <p className="text-slate-500 mt-2">O painel financeiro é restrito a Administradores e Desenvolvedores.</p>
+        <p className="text-slate-500 mt-2">Você não tem permissão para acessar o painel financeiro.</p>
       </div>
     );
   }

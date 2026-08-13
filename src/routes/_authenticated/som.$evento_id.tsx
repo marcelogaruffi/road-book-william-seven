@@ -22,6 +22,8 @@ function MapaSomForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [eventoData, setEventoData] = useState<any>(null);
+
   // Helper para atualizar campos no json_data
   const updateJson = (key: string, value: any) => {
     setMapa((prev: any) => ({
@@ -56,10 +58,16 @@ function MapaSomForm() {
 
   const loadData = async () => {
     setLoading(true);
-    const { data } = await supabase.from('mapas_som').select('*').eq('evento_id', evento_id).single();
-    if (data) {
-      if (!data.json_data) data.json_data = {};
-      setMapa(data);
+    const [mapaRes, evRes] = await Promise.all([
+      supabase.from('mapas_som').select('*').eq('evento_id', evento_id).single(),
+      supabase.from('eventos').select('*').eq('id', evento_id).single()
+    ]);
+    if (mapaRes.data) {
+      if (!mapaRes.data.json_data) mapaRes.data.json_data = {};
+      setMapa(mapaRes.data);
+    }
+    if (evRes.data) {
+      setEventoData(evRes.data);
     }
     setLoading(false);
   };
@@ -132,6 +140,15 @@ function MapaSomForm() {
                   <Label>Sistema de P.A. do Local</Label>
                   <Input value={jd.sistema_pa || ''} onChange={e => updateJson('sistema_pa', e.target.value)} placeholder="Ex: Line Array d&b audiotechnik, 8 caixas por lado" />
                 </div>
+                {eventoData?.rider_som_local && (
+                  <div className="pt-2">
+                    <Button variant="outline" className="w-full sm:w-auto bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200" asChild>
+                      <a href={eventoData.rider_som_local} target="_blank" rel="noreferrer">
+                        Ver Rider de Som do Local
+                      </a>
+                    </Button>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">

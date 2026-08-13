@@ -22,6 +22,8 @@ function MapaLuzForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const [eventoData, setEventoData] = useState<any>(null);
+
   // Helper para atualizar campos no json_data
   const updateJson = (key: string, value: any) => {
     setMapa((prev: any) => ({
@@ -31,6 +33,11 @@ function MapaLuzForm() {
         [key]: value
       }
     }));
+  };
+
+  const updateInfra = async (field: string, value: string) => {
+    setEventoData((prev: any) => ({ ...prev, [field]: value }));
+    await supabase.from('eventos').update({ [field]: value }).eq('id', evento_id);
   };
 
   useEffect(() => {
@@ -56,10 +63,16 @@ function MapaLuzForm() {
 
   const loadData = async () => {
     setLoading(true);
-    const { data } = await supabase.from('mapas_luz').select('*').eq('evento_id', evento_id).single();
-    if (data) {
-      if (!data.json_data) data.json_data = {};
-      setMapa(data);
+    const [mapaRes, evRes] = await Promise.all([
+      supabase.from('mapas_luz').select('*').eq('evento_id', evento_id).single(),
+      supabase.from('eventos').select('*').eq('id', evento_id).single()
+    ]);
+    if (mapaRes.data) {
+      if (!mapaRes.data.json_data) mapaRes.data.json_data = {};
+      setMapa(mapaRes.data);
+    }
+    if (evRes.data) {
+      setEventoData(evRes.data);
     }
     setLoading(false);
   };
@@ -131,27 +144,37 @@ function MapaLuzForm() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label>Boca de Cena (m)</Label>
-                    <Input value={jd.boca_cena || ''} onChange={e => updateJson('boca_cena', e.target.value)} placeholder="Ex: 12m" />
+                    <Input value={eventoData?.boca_cena || ''} onChange={e => updateInfra('boca_cena', e.target.value)} placeholder="Ex: 12m" />
                   </div>
                   <div className="space-y-2">
                     <Label>Profundidade (m)</Label>
-                    <Input value={jd.profundidade || ''} onChange={e => updateJson('profundidade', e.target.value)} placeholder="Ex: 10m" />
+                    <Input value={eventoData?.profundidade || ''} onChange={e => updateInfra('profundidade', e.target.value)} placeholder="Ex: 10m" />
                   </div>
                   <div className="space-y-2">
                     <Label>Pé-direito (m)</Label>
-                    <Input value={jd.pe_direito || ''} onChange={e => updateJson('pe_direito', e.target.value)} placeholder="Ex: 8m" />
+                    <Input value={eventoData?.pe_direito || ''} onChange={e => updateInfra('pe_direito', e.target.value)} placeholder="Ex: 8m" />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Energia / Voltagem do Palco</Label>
-                    <Input value={jd.energia || ''} onChange={e => updateJson('energia', e.target.value)} placeholder="Ex: 220V Trifásico, 110V" />
+                    <Input value={eventoData?.energia || ''} onChange={e => updateInfra('energia', e.target.value)} placeholder="Ex: 220V Trifásico, 110V" />
                   </div>
                   <div className="space-y-2">
                     <Label>Varas de Luz (Manuais/Motorizadas)</Label>
                     <Input value={jd.varas_luz || ''} onChange={e => updateJson('varas_luz', e.target.value)} placeholder="Ex: 3 motorizadas, 2 manuais" />
                   </div>
+                  {eventoData?.rider_luz_local && (
+                    <div className="space-y-2 flex flex-col justify-end">
+                      <Label className="opacity-0 hidden md:block">Rider</Label>
+                      <Button variant="outline" className="w-full bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200" asChild>
+                        <a href={eventoData.rider_luz_local} target="_blank" rel="noreferrer">
+                          Ver Rider de Luz do Local
+                        </a>
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </AccordionContent>
             </AccordionItem>

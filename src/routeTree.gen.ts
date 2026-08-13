@@ -20,7 +20,9 @@ import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print
 import { Route as AuthenticatedViagensRouteImport } from './routes/_authenticated/viagens'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
+import { Route as AuthenticatedPermissoesRouteImport } from './routes/_authenticated/permissoes'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedNovoProjetoRouteImport } from './routes/_authenticated/novo-projeto'
 import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authenticated/minhas-escalas'
 import { Route as AuthenticatedMidiasRouteImport } from './routes/_authenticated/midias'
 import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
@@ -44,6 +46,7 @@ import { Route as AuthenticatedMeusFigurinosIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedIluminacaoIndexRouteImport } from './routes/_authenticated/iluminacao.index'
 import { Route as AuthenticatedFigurinosIndexRouteImport } from './routes/_authenticated/figurinos.index'
 import { Route as AuthenticatedCamarinsIndexRouteImport } from './routes/_authenticated/camarins.index'
+import { Route as AuthenticatedVideoEvento_idRouteImport } from './routes/_authenticated/video.$evento_id'
 import { Route as AuthenticatedVersaoMotoristaSlugRouteImport } from './routes/_authenticated/versao-motorista.$slug'
 import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticated/tour.new'
 import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated/tour.$id'
@@ -107,11 +110,22 @@ const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
   path: '/publico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPermissoesRoute = AuthenticatedPermissoesRouteImport.update({
+  id: '/permissoes',
+  path: '/permissoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNovoProjetoRoute =
+  AuthenticatedNovoProjetoRouteImport.update({
+    id: '/novo-projeto',
+    path: '/novo-projeto',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMinhasEscalasRoute =
   AuthenticatedMinhasEscalasRouteImport.update({
     id: '/minhas-escalas',
@@ -238,6 +252,12 @@ const AuthenticatedCamarinsIndexRoute =
     path: '/camarins/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedVideoEvento_idRoute =
+  AuthenticatedVideoEvento_idRouteImport.update({
+    id: '/video/$evento_id',
+    path: '/video/$evento_id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedVersaoMotoristaSlugRoute =
   AuthenticatedVersaoMotoristaSlugRouteImport.update({
     id: '/versao-motorista/$slug',
@@ -302,7 +322,9 @@ export interface FileRoutesByFullPath {
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/viagens': typeof AuthenticatedViagensRoute
@@ -318,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/tour/$id': typeof AuthenticatedTourIdRoute
   '/tour/new': typeof AuthenticatedTourNewRoute
   '/versao-motorista/$slug': typeof AuthenticatedVersaoMotoristaSlugRoute
+  '/video/$evento_id': typeof AuthenticatedVideoEvento_idRoute
   '/camarins/': typeof AuthenticatedCamarinsIndexRoute
   '/figurinos/': typeof AuthenticatedFigurinosIndexRoute
   '/iluminacao/': typeof AuthenticatedIluminacaoIndexRoute
@@ -346,7 +369,9 @@ export interface FileRoutesByTo {
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
   '/perfil': typeof AuthenticatedPerfilRoute
+  '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/viagens': typeof AuthenticatedViagensRoute
@@ -362,6 +387,7 @@ export interface FileRoutesByTo {
   '/tour/$id': typeof AuthenticatedTourIdRoute
   '/tour/new': typeof AuthenticatedTourNewRoute
   '/versao-motorista/$slug': typeof AuthenticatedVersaoMotoristaSlugRoute
+  '/video/$evento_id': typeof AuthenticatedVideoEvento_idRoute
   '/camarins': typeof AuthenticatedCamarinsIndexRoute
   '/figurinos': typeof AuthenticatedFigurinosIndexRoute
   '/iluminacao': typeof AuthenticatedIluminacaoIndexRoute
@@ -392,7 +418,9 @@ export interface FileRoutesById {
   '/_authenticated/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/_authenticated/midias': typeof AuthenticatedMidiasRoute
   '/_authenticated/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/_authenticated/novo-projeto': typeof AuthenticatedNovoProjetoRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
+  '/_authenticated/permissoes': typeof AuthenticatedPermissoesRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/_authenticated/viagens': typeof AuthenticatedViagensRoute
@@ -408,6 +436,7 @@ export interface FileRoutesById {
   '/_authenticated/tour/$id': typeof AuthenticatedTourIdRoute
   '/_authenticated/tour/new': typeof AuthenticatedTourNewRoute
   '/_authenticated/versao-motorista/$slug': typeof AuthenticatedVersaoMotoristaSlugRoute
+  '/_authenticated/video/$evento_id': typeof AuthenticatedVideoEvento_idRoute
   '/_authenticated/camarins/': typeof AuthenticatedCamarinsIndexRoute
   '/_authenticated/figurinos/': typeof AuthenticatedFigurinosIndexRoute
   '/_authenticated/iluminacao/': typeof AuthenticatedIluminacaoIndexRoute
@@ -438,7 +467,9 @@ export interface FileRouteTypes {
     | '/meus-pagamentos'
     | '/midias'
     | '/minhas-escalas'
+    | '/novo-projeto'
     | '/perfil'
+    | '/permissoes'
     | '/publico'
     | '/vendas'
     | '/viagens'
@@ -454,6 +485,7 @@ export interface FileRouteTypes {
     | '/tour/$id'
     | '/tour/new'
     | '/versao-motorista/$slug'
+    | '/video/$evento_id'
     | '/camarins/'
     | '/figurinos/'
     | '/iluminacao/'
@@ -482,7 +514,9 @@ export interface FileRouteTypes {
     | '/meus-pagamentos'
     | '/midias'
     | '/minhas-escalas'
+    | '/novo-projeto'
     | '/perfil'
+    | '/permissoes'
     | '/publico'
     | '/vendas'
     | '/viagens'
@@ -498,6 +532,7 @@ export interface FileRouteTypes {
     | '/tour/$id'
     | '/tour/new'
     | '/versao-motorista/$slug'
+    | '/video/$evento_id'
     | '/camarins'
     | '/figurinos'
     | '/iluminacao'
@@ -527,7 +562,9 @@ export interface FileRouteTypes {
     | '/_authenticated/meus-pagamentos'
     | '/_authenticated/midias'
     | '/_authenticated/minhas-escalas'
+    | '/_authenticated/novo-projeto'
     | '/_authenticated/perfil'
+    | '/_authenticated/permissoes'
     | '/_authenticated/publico'
     | '/_authenticated/vendas'
     | '/_authenticated/viagens'
@@ -543,6 +580,7 @@ export interface FileRouteTypes {
     | '/_authenticated/tour/$id'
     | '/_authenticated/tour/new'
     | '/_authenticated/versao-motorista/$slug'
+    | '/_authenticated/video/$evento_id'
     | '/_authenticated/camarins/'
     | '/_authenticated/figurinos/'
     | '/_authenticated/iluminacao/'
@@ -643,11 +681,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPublicoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/permissoes': {
+      id: '/_authenticated/permissoes'
+      path: '/permissoes'
+      fullPath: '/permissoes'
+      preLoaderRoute: typeof AuthenticatedPermissoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/perfil': {
       id: '/_authenticated/perfil'
       path: '/perfil'
       fullPath: '/perfil'
       preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/novo-projeto': {
+      id: '/_authenticated/novo-projeto'
+      path: '/novo-projeto'
+      fullPath: '/novo-projeto'
+      preLoaderRoute: typeof AuthenticatedNovoProjetoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/minhas-escalas': {
@@ -811,6 +863,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCamarinsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/video/$evento_id': {
+      id: '/_authenticated/video/$evento_id'
+      path: '/video/$evento_id'
+      fullPath: '/video/$evento_id'
+      preLoaderRoute: typeof AuthenticatedVideoEvento_idRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/versao-motorista/$slug': {
       id: '/_authenticated/versao-motorista/$slug'
       path: '/versao-motorista/$slug'
@@ -886,7 +945,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMeusPagamentosRoute: typeof AuthenticatedMeusPagamentosRoute
   AuthenticatedMidiasRoute: typeof AuthenticatedMidiasRoute
   AuthenticatedMinhasEscalasRoute: typeof AuthenticatedMinhasEscalasRoute
+  AuthenticatedNovoProjetoRoute: typeof AuthenticatedNovoProjetoRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
+  AuthenticatedPermissoesRoute: typeof AuthenticatedPermissoesRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedViagensRoute: typeof AuthenticatedViagensRoute
@@ -898,6 +959,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedTourIdRoute: typeof AuthenticatedTourIdRoute
   AuthenticatedTourNewRoute: typeof AuthenticatedTourNewRoute
   AuthenticatedVersaoMotoristaSlugRoute: typeof AuthenticatedVersaoMotoristaSlugRoute
+  AuthenticatedVideoEvento_idRoute: typeof AuthenticatedVideoEvento_idRoute
   AuthenticatedCamarinsIndexRoute: typeof AuthenticatedCamarinsIndexRoute
   AuthenticatedFigurinosIndexRoute: typeof AuthenticatedFigurinosIndexRoute
   AuthenticatedIluminacaoIndexRoute: typeof AuthenticatedIluminacaoIndexRoute
@@ -924,7 +986,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMeusPagamentosRoute: AuthenticatedMeusPagamentosRoute,
   AuthenticatedMidiasRoute: AuthenticatedMidiasRoute,
   AuthenticatedMinhasEscalasRoute: AuthenticatedMinhasEscalasRoute,
+  AuthenticatedNovoProjetoRoute: AuthenticatedNovoProjetoRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
+  AuthenticatedPermissoesRoute: AuthenticatedPermissoesRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedViagensRoute: AuthenticatedViagensRoute,
@@ -936,6 +1000,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedTourIdRoute: AuthenticatedTourIdRoute,
   AuthenticatedTourNewRoute: AuthenticatedTourNewRoute,
   AuthenticatedVersaoMotoristaSlugRoute: AuthenticatedVersaoMotoristaSlugRoute,
+  AuthenticatedVideoEvento_idRoute: AuthenticatedVideoEvento_idRoute,
   AuthenticatedCamarinsIndexRoute: AuthenticatedCamarinsIndexRoute,
   AuthenticatedFigurinosIndexRoute: AuthenticatedFigurinosIndexRoute,
   AuthenticatedIluminacaoIndexRoute: AuthenticatedIluminacaoIndexRoute,

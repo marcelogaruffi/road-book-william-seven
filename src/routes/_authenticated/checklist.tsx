@@ -89,6 +89,10 @@ function ChecklistPage() {
   const [editItemNome, setEditItemNome] = useState("");
   const [editItemObrigatorio, setEditItemObrigatorio] = useState(false);
 
+  const [editingEventoItemId, setEditingEventoItemId] = useState<string | null>(null);
+  const [editEventoItemNome, setEditEventoItemNome] = useState("");
+  const [editEventoItemObrigatorio, setEditEventoItemObrigatorio] = useState(false);
+
   // Drag and Drop refs
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -241,25 +245,35 @@ function ChecklistPage() {
 
     setLoading(true);
     
-    // Preparar itens para inserção baseados no padrão
-    const itensParaInserir = itensDesteShow.map(item => ({
-      evento_id: selectedEventoId,
-      item_nome: item.item_nome,
-      obrigatorio: item.obrigatorio,
-      ordem: item.ordem,
-      concluido: false,
-      setor: item.setor || 'Produção'
-    }));
+    // Preparar itens para inserção baseados no padrão e evitar duplicados
+    const displayedItensEvento = itensEvento.filter(i => (i.setor || 'Produção') === selectedSetor);
+    const existingNames = new Set(displayedItensEvento.map(i => i.item_nome.toLowerCase().trim()));
+    
+    const itensParaInserir = itensDesteShow
+      .filter(item => !existingNames.has(item.item_nome.toLowerCase().trim()))
+      .map(item => ({
+        evento_id: selectedEventoId,
+        item_nome: item.item_nome,
+        obrigatorio: item.obrigatorio,
+        ordem: item.ordem,
+        concluido: false,
+        setor: item.setor || 'Produção'
+      }));
+
+    if (itensParaInserir.length === 0) {
+      setLoading(false);
+      return toast.info("Todos os itens padrão já estão presentes neste checklist!");
+    }
 
     const { data, error } = await supabase.from("checklist_eventos").insert(itensParaInserir).select();
     
     setLoading(false);
 
     if (error) {
-      toast.error("Erro ao gerar checklist para o evento");
+      toast.error("Erro ao importar itens do padrão");
     } else {
-      toast.success("Checklist gerado com sucesso!");
-      setItensEvento(data || []);
+      toast.success("Itens padrão importados com sucesso!");
+      setItensEvento([...itensEvento, ...(data || [])]);
     }
   }
 
@@ -313,6 +327,29 @@ function ChecklistPage() {
     } else {
       setItensEvento(itensEvento.filter(i => i.id !== id));
       toast.success("Item removido");
+    }
+  }
+
+  function startEditingEvento(item: ChecklistEvento) {
+    setEditingEventoItemId(item.id);
+    setEditEventoItemNome(item.item_nome);
+    setEditEventoItemObrigatorio(item.obrigatorio);
+  }
+
+  async function handleSaveEditEvento(id: string) {
+    if (!editEventoItemNome.trim()) return toast.error("O nome do item não pode ser vazio");
+    
+    const { error } = await supabase.from("checklist_eventos").update({
+      item_nome: editEventoItemNome,
+      obrigatorio: editEventoItemObrigatorio
+    }).eq("id", id);
+
+    if (error) {
+      toast.error("Erro ao atualizar item do evento");
+    } else {
+      setItensEvento(itensEvento.map(i => i.id === id ? { ...i, item_nome: editEventoItemNome, obrigatorio: editEventoItemObrigatorio } : i));
+      setEditingEventoItemId(null);
+      toast.success("Item do evento atualizado com sucesso!");
     }
   }
 
@@ -387,77 +424,127 @@ function ChecklistPage() {
                   <MapPin className="size-12 mb-4 opacity-50" />
                   <p>Selecione um evento acima para carregar o checklist.</p>
                 </div>
-              ) : displayedItensEvento.length === 0 ? (
-                <div className="text-center py-12 flex flex-col items-center">
-                  <ListTodo className="size-16 text-slate-300 mb-4" />
-                  <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">Nenhum checklist gerado</h3>
-                  <p className="text-slate-500 mt-2 mb-6 max-w-md">
-                    Este evento ainda não tem um checklist. Você pode importar os itens automaticamente usando a sua Configuração Padrão.
-                  </p>
-                  <Button onClick={handleGerarChecklist} disabled={loading} size="lg" className="gap-2 transition-transform hover:scale-105">
-                    <Play className="size-4" /> Iniciar Checklist do Evento
-                  </Button>
-                </div>
               ) : (
                 <div className="space-y-6">
-                  {/* Progress Bar */}
-                  <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-slate-700 dark:text-slate-300">Progresso da Conferência</h4>
-                      <p className="text-sm text-slate-500">{concluidosCount} de {displayedItensEvento.length} itens concluídos</p>
+                  {displayedItensEvento.length === 0 && (
+                    <div className="text-center py-8 flex flex-col items-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-900/50">
+                      <ListTodo className="size-12 text-slate-300 mb-4" />
+                      <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">Checklist Padrão Não Importado</h3>
+                      <p className="text-slate-500 mt-2 mb-6 max-w-md">
+                        Você pode importar os itens automaticamente usando a sua Configuração Padrão.
+                      </p>
+                      <Button onClick={handleGerarChecklist} disabled={loading} className="gap-2 transition-transform hover:scale-105">
+                        <Play className="size-4" /> Importar Checklist Padrão
+                      </Button>
                     </div>
-                    <div className="text-right">
-                      <span className={`text-3xl font-black transition-colors duration-500 ${progresso === 100 ? 'text-emerald-500' : 'text-primary'}`}>{progresso}%</span>
-                    </div>
-                  </div>
+                  )}
 
-                  <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
-                    <div className={`h-full transition-all duration-500 ease-out ${progresso === 100 ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${progresso}%` }}></div>
-                  </div>
-
-                  {/* Checklist Items */}
-                  <div className="grid gap-3">
-                    {displayedItensEvento.map(item => (
-                      <div 
-                        key={item.id} 
-                        className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer ${
-                          item.concluido 
-                            ? 'border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 opacity-70' 
-                            : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:shadow-sm bg-white dark:bg-slate-900'
-                        }`}
-                        onClick={() => toggleItemConcluido(item.id, item.concluido)}
-                      >
-                        <button className="flex-shrink-0 outline-none">
-                          {item.concluido ? (
-                            <CheckCircle2 className="size-8 text-emerald-500 transition-transform hover:scale-110" />
-                          ) : (
-                            <Circle className="size-8 text-slate-300 dark:text-slate-600 transition-transform hover:scale-110" />
-                          )}
-                        </button>
-                        <div className="flex-1">
-                          <h4 className={`font-semibold text-lg transition-colors ${item.concluido ? 'text-slate-500 line-through' : 'text-slate-700 dark:text-slate-200'}`}>
-                            {item.item_nome}
-                          </h4>
+                  {displayedItensEvento.length > 0 && (
+                    <>
+                      {/* Header Controls */}
+                      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 flex items-center justify-between flex-1 w-full">
+                          <div>
+                            <h4 className="font-bold text-slate-700 dark:text-slate-300">Progresso da Conferência</h4>
+                            <p className="text-sm text-slate-500">{concluidosCount} de {displayedItensEvento.length} itens concluídos</p>
+                          </div>
+                          <div className="text-right">
+                            <span className={`text-3xl font-black transition-colors duration-500 ${progresso === 100 ? 'text-emerald-500' : 'text-primary'}`}>{progresso}%</span>
+                          </div>
                         </div>
-                        {item.obrigatorio && !item.concluido && (
-                          <span className="text-xs font-bold px-2 py-1 bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 rounded-md uppercase">
-                            Obrigatório
-                          </span>
-                        )}
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50 -mr-2"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveItemEvento(item.id);
-                          }}
-                        >
-                          <Trash2 className="size-4" />
+                        <Button variant="outline" onClick={handleGerarChecklist} disabled={loading} className="shrink-0">
+                          <Play className="size-4 mr-2" /> Importar Faltantes do Padrão
                         </Button>
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                        <div className={`h-full transition-all duration-500 ease-out ${progresso === 100 ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: `${progresso}%` }}></div>
+                      </div>
+
+                      {/* Checklist Items */}
+                      <div className="grid gap-3">
+                        {displayedItensEvento.map(item => {
+                          const isEditing = editingEventoItemId === item.id;
+                          return (
+                          <div 
+                            key={item.id} 
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-300 cursor-pointer ${
+                              item.concluido 
+                                ? 'border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/10 opacity-70' 
+                                : 'border-slate-200 dark:border-slate-800 hover:border-primary/50 hover:shadow-sm bg-white dark:bg-slate-900'
+                            }`}
+                            onClick={() => {
+                              if (!isEditing) toggleItemConcluido(item.id, item.concluido);
+                            }}
+                          >
+                            <button className="flex-shrink-0 outline-none">
+                              {item.concluido ? (
+                                <CheckCircle2 className="size-8 text-emerald-500 transition-transform hover:scale-110" />
+                              ) : (
+                                <Circle className="size-8 text-slate-300 dark:text-slate-600 transition-transform hover:scale-110" />
+                              )}
+                            </button>
+                            <div className="flex-1" onClick={(e) => isEditing && e.stopPropagation()}>
+                              {isEditing ? (
+                                <div className="flex flex-col gap-2">
+                                  <Input 
+                                    value={editEventoItemNome} 
+                                    onChange={e => setEditEventoItemNome(e.target.value)} 
+                                    className="h-9"
+                                    autoFocus
+                                  />
+                                  <div className="flex items-center gap-2">
+                                    <Switch checked={editEventoItemObrigatorio} onCheckedChange={setEditEventoItemObrigatorio} />
+                                    <span className="text-xs">Obrigatório</span>
+                                  </div>
+                                </div>
+                              ) : (
+                                <h4 className={`font-semibold text-lg transition-colors ${item.concluido ? 'text-slate-500 line-through' : 'text-slate-700 dark:text-slate-200'}`}>
+                                  {item.item_nome}
+                                </h4>
+                              )}
+                            </div>
+                            {!isEditing && item.obrigatorio && !item.concluido && (
+                              <span className="text-xs font-bold px-2 py-1 bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 rounded-md uppercase">
+                                Obrigatório
+                              </span>
+                            )}
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              {isEditing ? (
+                                <>
+                                  <Button size="icon" variant="ghost" onClick={() => handleSaveEditEvento(item.id)} className="text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+                                    <Save className="size-4" />
+                                  </Button>
+                                  <Button size="icon" variant="ghost" onClick={() => setEditingEventoItemId(null)} className="text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800">
+                                    <X className="size-4" />
+                                  </Button>
+                                </>
+                              ) : (
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="text-slate-400 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800"
+                                    onClick={() => startEditingEvento(item)}
+                                  >
+                                    <Pencil className="size-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/50"
+                                    onClick={() => handleRemoveItemEvento(item.id)}
+                                  >
+                                    <Trash2 className="size-4" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )})}
+                      </div>
+                    </>
+                  )}
 
                   {/* Add Extra Item Form */}
                   <div className="mt-8 pt-6 border-t border-slate-200 dark:border-slate-800">

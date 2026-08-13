@@ -76,6 +76,8 @@ function getNextBirthday(dateStr: string) {
   return bday;
 }
 
+import { usePermissions } from "@/hooks/usePermissions";
+
 function DadosEquipePage() {
   const { profile } = Route.useRouteContext();
   const [equipe, setEquipe] = useState<ProfileData[]>([]);
@@ -83,7 +85,7 @@ function DadosEquipePage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("pessoais");
 
-  const isAllowed = profile && ['admin', 'dev', 'produtor', 'assistente_producao', 'tour_manager'].includes(profile.role);
+  const { canAccessDadosEquipe: isAllowed } = usePermissions(profile);
 
   useEffect(() => {
     if (isAllowed) loadData();

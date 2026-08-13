@@ -51,7 +51,8 @@ function PerfilPage() {
     banco_conta: "",
     pix_tipo: "",
     pix_chave: "",
-    data_nascimento: ""
+    data_nascimento: "",
+    restricao_alimentar: ""
   });
 
   useEffect(() => {
@@ -72,7 +73,8 @@ function PerfilPage() {
         banco_conta: profile.banco_conta || "",
         pix_tipo: profile.pix_tipo || "",
         pix_chave: profile.pix_chave || "",
-        data_nascimento: profile.data_nascimento || ""
+        data_nascimento: profile.data_nascimento || "",
+        restricao_alimentar: profile.restricao_alimentar || ""
       });
     }
   }, [profile]);
@@ -110,6 +112,7 @@ function PerfilPage() {
         pix_tipo: formData.pix_tipo,
         pix_chave: formData.pix_chave,
         data_nascimento: formData.data_nascimento || null,
+        restricao_alimentar: formData.restricao_alimentar,
         updated_at: new Date().toISOString()
       })
       .eq("id", profile.id);
@@ -184,6 +187,11 @@ function PerfilPage() {
             <div className="space-y-2">
               <Label>Telefone (WhatsApp) *</Label>
               <Input name="telefone" value={formData.telefone} onChange={handleChange} placeholder="(00) 00000-0000" required />
+            </div>
+            <div className="space-y-2 md:col-span-2 pt-2 border-t border-slate-100 dark:border-white/10 mt-2">
+              <Label>Restrição Alimentar (Catering)</Label>
+              <Input name="restricao_alimentar" value={formData.restricao_alimentar} onChange={handleChange} placeholder="Ex: Vegano, Intolerante a lactose, Alergia a amendoim, Nenhuma..." />
+              <p className="text-xs text-slate-500">Esta informação ajudará a produção na organização dos camarins e catering.</p>
             </div>
           </CardContent>
         </Card>

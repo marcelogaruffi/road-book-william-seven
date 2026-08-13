@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
   Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote,
-  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone, ShoppingCart, CheckSquare
+  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone, ShoppingCart, CheckSquare, PlusCircle
 } from "lucide-react";
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -198,6 +198,13 @@ function AuthedLayout() {
                <LayoutDashboard className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Dashboard</span>}
              </Link>
+             
+          {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor') && (
+            <Link to="/novo-projeto" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-primary hover:bg-primary/10 font-bold transition-colors rounded-xl`} activeProps={{ className: "bg-primary text-white hover:bg-primary/90" }}>
+              <PlusCircle className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+              {sidebarOpen && <span>Novo Projeto Completo</span>}
+            </Link>
+          )}
           <Link to="/minhas-escalas" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                <ClipboardList className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
                {sidebarOpen && <span>Minhas Escalas</span>}
@@ -388,7 +395,7 @@ function AuthedLayout() {
               <div className="space-y-1">
                 <Link to="/espetaculos" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                   <Music className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                  {sidebarOpen && <span>Tipos de Shows</span>}
+                  {sidebarOpen && <span>Cadastro de Shows</span>}
                 </Link>
                 <Link to="/cadastros" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
                  <UserPlus className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
