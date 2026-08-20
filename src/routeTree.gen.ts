@@ -40,6 +40,7 @@ import { Route as AuthenticatedChecklistRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedVideoIndexRouteImport } from './routes/_authenticated/video.index'
 import { Route as AuthenticatedSomIndexRouteImport } from './routes/_authenticated/som.index'
+import { Route as AuthenticatedSomOperacaoIndexRouteImport } from './routes/_authenticated/som-operacao.index'
 import { Route as AuthenticatedPartiturasIndexRouteImport } from './routes/_authenticated/partituras.index'
 import { Route as AuthenticatedPalcoIndexRouteImport } from './routes/_authenticated/palco.index'
 import { Route as AuthenticatedMeusFigurinosIndexRouteImport } from './routes/_authenticated/meus-figurinos.index'
@@ -51,6 +52,7 @@ import { Route as AuthenticatedVersaoMotoristaSlugRouteImport } from './routes/_
 import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticated/tour.new'
 import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated/tour.$id'
 import { Route as AuthenticatedSomEvento_idRouteImport } from './routes/_authenticated/som.$evento_id'
+import { Route as AuthenticatedSomOperacaoEvento_idRouteImport } from './routes/_authenticated/som-operacao.$evento_id'
 import { Route as AuthenticatedRoadbookNewRouteImport } from './routes/_authenticated/roadbook.new'
 import { Route as AuthenticatedRoadbookIdRouteImport } from './routes/_authenticated/roadbook.$id'
 import { Route as AuthenticatedPrintSlugRouteImport } from './routes/_authenticated/print.$slug'
@@ -217,6 +219,12 @@ const AuthenticatedSomIndexRoute = AuthenticatedSomIndexRouteImport.update({
   path: '/som/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSomOperacaoIndexRoute =
+  AuthenticatedSomOperacaoIndexRouteImport.update({
+    id: '/som-operacao/',
+    path: '/som-operacao/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedPartiturasIndexRoute =
   AuthenticatedPartiturasIndexRouteImport.update({
     id: '/partituras/',
@@ -280,6 +288,12 @@ const AuthenticatedSomEvento_idRoute =
     path: '/som/$evento_id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedSomOperacaoEvento_idRoute =
+  AuthenticatedSomOperacaoEvento_idRouteImport.update({
+    id: '/som-operacao/$evento_id',
+    path: '/som-operacao/$evento_id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRoadbookNewRoute =
   AuthenticatedRoadbookNewRouteImport.update({
     id: '/roadbook/new',
@@ -336,6 +350,7 @@ export interface FileRoutesByFullPath {
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
+  '/som-operacao/$evento_id': typeof AuthenticatedSomOperacaoEvento_idRoute
   '/som/$evento_id': typeof AuthenticatedSomEvento_idRoute
   '/tour/$id': typeof AuthenticatedTourIdRoute
   '/tour/new': typeof AuthenticatedTourNewRoute
@@ -347,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/meus-figurinos/': typeof AuthenticatedMeusFigurinosIndexRoute
   '/palco/': typeof AuthenticatedPalcoIndexRoute
   '/partituras/': typeof AuthenticatedPartiturasIndexRoute
+  '/som-operacao/': typeof AuthenticatedSomOperacaoIndexRoute
   '/som/': typeof AuthenticatedSomIndexRoute
   '/video/': typeof AuthenticatedVideoIndexRoute
 }
@@ -383,6 +399,7 @@ export interface FileRoutesByTo {
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
+  '/som-operacao/$evento_id': typeof AuthenticatedSomOperacaoEvento_idRoute
   '/som/$evento_id': typeof AuthenticatedSomEvento_idRoute
   '/tour/$id': typeof AuthenticatedTourIdRoute
   '/tour/new': typeof AuthenticatedTourNewRoute
@@ -394,6 +411,7 @@ export interface FileRoutesByTo {
   '/meus-figurinos': typeof AuthenticatedMeusFigurinosIndexRoute
   '/palco': typeof AuthenticatedPalcoIndexRoute
   '/partituras': typeof AuthenticatedPartiturasIndexRoute
+  '/som-operacao': typeof AuthenticatedSomOperacaoIndexRoute
   '/som': typeof AuthenticatedSomIndexRoute
   '/video': typeof AuthenticatedVideoIndexRoute
 }
@@ -432,6 +450,7 @@ export interface FileRoutesById {
   '/_authenticated/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/_authenticated/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/_authenticated/roadbook/new': typeof AuthenticatedRoadbookNewRoute
+  '/_authenticated/som-operacao/$evento_id': typeof AuthenticatedSomOperacaoEvento_idRoute
   '/_authenticated/som/$evento_id': typeof AuthenticatedSomEvento_idRoute
   '/_authenticated/tour/$id': typeof AuthenticatedTourIdRoute
   '/_authenticated/tour/new': typeof AuthenticatedTourNewRoute
@@ -443,6 +462,7 @@ export interface FileRoutesById {
   '/_authenticated/meus-figurinos/': typeof AuthenticatedMeusFigurinosIndexRoute
   '/_authenticated/palco/': typeof AuthenticatedPalcoIndexRoute
   '/_authenticated/partituras/': typeof AuthenticatedPartiturasIndexRoute
+  '/_authenticated/som-operacao/': typeof AuthenticatedSomOperacaoIndexRoute
   '/_authenticated/som/': typeof AuthenticatedSomIndexRoute
   '/_authenticated/video/': typeof AuthenticatedVideoIndexRoute
 }
@@ -481,6 +501,7 @@ export interface FileRouteTypes {
     | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
+    | '/som-operacao/$evento_id'
     | '/som/$evento_id'
     | '/tour/$id'
     | '/tour/new'
@@ -492,6 +513,7 @@ export interface FileRouteTypes {
     | '/meus-figurinos/'
     | '/palco/'
     | '/partituras/'
+    | '/som-operacao/'
     | '/som/'
     | '/video/'
   fileRoutesByTo: FileRoutesByTo
@@ -528,6 +550,7 @@ export interface FileRouteTypes {
     | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
+    | '/som-operacao/$evento_id'
     | '/som/$evento_id'
     | '/tour/$id'
     | '/tour/new'
@@ -539,6 +562,7 @@ export interface FileRouteTypes {
     | '/meus-figurinos'
     | '/palco'
     | '/partituras'
+    | '/som-operacao'
     | '/som'
     | '/video'
   id:
@@ -576,6 +600,7 @@ export interface FileRouteTypes {
     | '/_authenticated/print/$slug'
     | '/_authenticated/roadbook/$id'
     | '/_authenticated/roadbook/new'
+    | '/_authenticated/som-operacao/$evento_id'
     | '/_authenticated/som/$evento_id'
     | '/_authenticated/tour/$id'
     | '/_authenticated/tour/new'
@@ -587,6 +612,7 @@ export interface FileRouteTypes {
     | '/_authenticated/meus-figurinos/'
     | '/_authenticated/palco/'
     | '/_authenticated/partituras/'
+    | '/_authenticated/som-operacao/'
     | '/_authenticated/som/'
     | '/_authenticated/video/'
   fileRoutesById: FileRoutesById
@@ -821,6 +847,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSomIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/som-operacao/': {
+      id: '/_authenticated/som-operacao/'
+      path: '/som-operacao'
+      fullPath: '/som-operacao/'
+      preLoaderRoute: typeof AuthenticatedSomOperacaoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/partituras/': {
       id: '/_authenticated/partituras/'
       path: '/partituras'
@@ -898,6 +931,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSomEvento_idRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/som-operacao/$evento_id': {
+      id: '/_authenticated/som-operacao/$evento_id'
+      path: '/som-operacao/$evento_id'
+      fullPath: '/som-operacao/$evento_id'
+      preLoaderRoute: typeof AuthenticatedSomOperacaoEvento_idRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/roadbook/new': {
       id: '/_authenticated/roadbook/new'
       path: '/roadbook/new'
@@ -955,6 +995,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
   AuthenticatedRoadbookNewRoute: typeof AuthenticatedRoadbookNewRoute
+  AuthenticatedSomOperacaoEvento_idRoute: typeof AuthenticatedSomOperacaoEvento_idRoute
   AuthenticatedSomEvento_idRoute: typeof AuthenticatedSomEvento_idRoute
   AuthenticatedTourIdRoute: typeof AuthenticatedTourIdRoute
   AuthenticatedTourNewRoute: typeof AuthenticatedTourNewRoute
@@ -966,6 +1007,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMeusFigurinosIndexRoute: typeof AuthenticatedMeusFigurinosIndexRoute
   AuthenticatedPalcoIndexRoute: typeof AuthenticatedPalcoIndexRoute
   AuthenticatedPartiturasIndexRoute: typeof AuthenticatedPartiturasIndexRoute
+  AuthenticatedSomOperacaoIndexRoute: typeof AuthenticatedSomOperacaoIndexRoute
   AuthenticatedSomIndexRoute: typeof AuthenticatedSomIndexRoute
   AuthenticatedVideoIndexRoute: typeof AuthenticatedVideoIndexRoute
 }
@@ -996,6 +1038,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,
   AuthenticatedRoadbookNewRoute: AuthenticatedRoadbookNewRoute,
+  AuthenticatedSomOperacaoEvento_idRoute:
+    AuthenticatedSomOperacaoEvento_idRoute,
   AuthenticatedSomEvento_idRoute: AuthenticatedSomEvento_idRoute,
   AuthenticatedTourIdRoute: AuthenticatedTourIdRoute,
   AuthenticatedTourNewRoute: AuthenticatedTourNewRoute,
@@ -1007,6 +1051,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMeusFigurinosIndexRoute: AuthenticatedMeusFigurinosIndexRoute,
   AuthenticatedPalcoIndexRoute: AuthenticatedPalcoIndexRoute,
   AuthenticatedPartiturasIndexRoute: AuthenticatedPartiturasIndexRoute,
+  AuthenticatedSomOperacaoIndexRoute: AuthenticatedSomOperacaoIndexRoute,
   AuthenticatedSomIndexRoute: AuthenticatedSomIndexRoute,
   AuthenticatedVideoIndexRoute: AuthenticatedVideoIndexRoute,
 }

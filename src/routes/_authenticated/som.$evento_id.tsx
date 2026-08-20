@@ -56,6 +56,23 @@ function MapaSomForm() {
     updateJson('equipamentos_lista', list);
   };
 
+  const addCue = () => {
+    const list = mapa?.json_data?.cues_lista || [];
+    updateJson('cues_lista', [...list, { id: crypto.randomUUID(), faixa: '', nome_faixa: '', duracao: '', cena: '', deixa_prep: '', deixa_go: '' }]);
+  };
+
+  const removeCue = (id: string) => {
+    const list = (mapa?.json_data?.cues_lista || []).filter((e: any) => e.id !== id);
+    updateJson('cues_lista', list);
+  };
+
+  const updateCue = (id: string, field: string, value: string) => {
+    const list = (mapa?.json_data?.cues_lista || []).map((e: any) => 
+      e.id === id ? { ...e, [field]: value } : e
+    );
+    updateJson('cues_lista', list);
+  };
+
   const loadData = async () => {
     setLoading(true);
     const [mapaRes, evRes] = await Promise.all([
@@ -315,6 +332,106 @@ function MapaSomForm() {
               </AccordionContent>
             </AccordionItem>
 
+            <AccordionItem value="bloco-d" className="border border-slate-200 dark:border-white/10 rounded-xl px-4 bg-slate-50/50 dark:bg-black/20 data-[state=open]:bg-white dark:data-[state=open]:bg-white/5 transition-all">
+              <AccordionTrigger className="text-lg font-bold hover:no-underline">Bloco D: Deixas Musicais (Cues)</AccordionTrigger>
+              <AccordionContent className="space-y-6 pt-4 pb-6">
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white">
+                      <Music className="size-5 text-blue-500" />
+                      Roteiro de Deixas e Faixas
+                    </Label>
+                    <Button type="button" onClick={addCue} size="sm" className="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30">
+                      <Plus className="size-4 mr-2" />
+                      Adicionar Deixa
+                    </Button>
+                  </div>
+                  <p className="text-sm text-slate-500">Registre as deixas de preparação e do GO para soltar as faixas de áudio.</p>
+                  
+                  <div className="space-y-3">
+                    {(jd.cues_lista || []).length === 0 ? (
+                      <div className="text-center p-6 border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl text-slate-500">
+                        Nenhuma deixa musical cadastrada.
+                      </div>
+                    ) : (
+                      (jd.cues_lista || []).map((cue: any) => (
+                        <div key={cue.id} className="flex flex-col gap-3 p-4 bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-xl">
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="w-full sm:w-24">
+                              <Label className="text-xs text-slate-500 mb-1 block">Faixa Nº</Label>
+                              <Input 
+                                value={cue.faixa} 
+                                onChange={e => updateCue(cue.id, 'faixa', e.target.value)} 
+                                placeholder="Ex: 01" 
+                                className="bg-white dark:bg-black/50 text-center font-bold"
+                              />
+                            </div>
+                            <div className="w-full sm:flex-1">
+                              <Label className="text-xs text-slate-500 mb-1 block">Nome da Faixa</Label>
+                              <Input 
+                                value={cue.nome_faixa} 
+                                onChange={e => updateCue(cue.id, 'nome_faixa', e.target.value)} 
+                                placeholder="Ex: Abertura / Intro" 
+                                className="bg-white dark:bg-black/50 font-medium"
+                              />
+                            </div>
+                            <div className="w-full sm:w-24">
+                              <Label className="text-xs text-slate-500 mb-1 block">Duração</Label>
+                              <Input 
+                                value={cue.duracao} 
+                                onChange={e => updateCue(cue.id, 'duracao', e.target.value)} 
+                                placeholder="Ex: 3:45" 
+                                className="bg-white dark:bg-black/50 text-center"
+                              />
+                            </div>
+                            <div className="w-full sm:w-32">
+                              <Label className="text-xs text-slate-500 mb-1 block">Cena</Label>
+                              <Input 
+                                value={cue.cena} 
+                                onChange={e => updateCue(cue.id, 'cena', e.target.value)} 
+                                placeholder="Ex: Cena 1" 
+                                className="bg-white dark:bg-black/50"
+                              />
+                            </div>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => removeCue(cue.id)} 
+                              className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 sm:mt-6 shrink-0 self-end sm:self-auto"
+                            >
+                              <Trash2 className="size-4" />
+                            </Button>
+                          </div>
+                          
+                          <div className="flex flex-col sm:flex-row gap-3">
+                            <div className="w-full sm:flex-1">
+                              <Label className="text-xs text-slate-500 mb-1 block">Deixa de Preparação (Standby)</Label>
+                              <Textarea 
+                                value={cue.deixa_prep} 
+                                onChange={e => updateCue(cue.id, 'deixa_prep', e.target.value)} 
+                                placeholder="Ex: Ator entra pelo lado esquerdo do palco" 
+                                className="bg-white dark:bg-black/50 min-h-[60px]"
+                              />
+                            </div>
+                            <div className="w-full sm:flex-1">
+                              <Label className="text-xs text-slate-500 mb-1 block">Deixa do GO</Label>
+                              <Textarea 
+                                value={cue.deixa_go} 
+                                onChange={e => updateCue(cue.id, 'deixa_go', e.target.value)} 
+                                placeholder="Ex: Fala: 'Está na hora de ir!'" 
+                                className="bg-white dark:bg-black/50 min-h-[60px]"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           </Accordion>
 
           <div className="flex justify-end pt-8">

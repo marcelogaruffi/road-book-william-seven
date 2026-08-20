@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { 
   ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
   Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote,
-  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone, ShoppingCart, CheckSquare, PlusCircle
+  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone, ShoppingCart, CheckSquare, PlusCircle, Play
 } from "lucide-react";
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -308,10 +308,16 @@ function AuthedLayout() {
           )}
 
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('tecnico_som') || hasRole('roadie')) && (
-            <Link to="/som" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
-                 <Mic2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-                 {sidebarOpen && <span>Design de Som</span>}
-               </Link>
+            <div className="space-y-1 w-full">
+              <Link to="/som" className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
+                <Mic2 className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
+                {sidebarOpen && <span>Design de Som</span>}
+              </Link>
+              <Link to="/som-operacao" className={`w-full flex items-center justify-start ${sidebarOpen ? 'pl-12 pr-4' : 'px-0 justify-center'} h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "text-amber-600 dark:text-amber-500 font-semibold" }}>
+                {!sidebarOpen && <Play className="size-4" />}
+                {sidebarOpen && <span>Operação de Som</span>}
+              </Link>
+            </div>
           )}
           
           {(userRole === 'admin' || userRole === 'dev' || userRole === 'produtor' || userRole === 'assistente_producao' || hasRole('stage_manager') || hasRole('tecnico_video')) && (
