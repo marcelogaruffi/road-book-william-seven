@@ -212,9 +212,20 @@ function Dashboard() {
       const nextEvent = upcomingRoadbooks[0];
       const daysUntil = Math.ceil((getRoadbookStartDateTime(nextEvent).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       
+      if (daysUntil < 0) {
+        return { 
+          title: `Ação! ${firstName} 🔥`, 
+          sub: `Temos um evento rolando neste momento em ${nextEvent.cidade}. Acesse o roteiro para acompanhar os detalhes!`, 
+          icon: StageIcon, 
+          color: 'from-red-500 to-rose-600', 
+          link: profile?.role === 'motorista' ? `/versao-motorista/${nextEvent.slug}` : `/rb/${nextEvent.slug}`, 
+          btnText: 'Abrir Roteiro' 
+        };
+      }
+
       if (daysUntil === 0) {
         return { 
-          title: `É Hoje, ${firstName}! 🎸`, 
+          title: `É Hoje, ${firstName}! 🌟`, 
           sub: `O espetáculo em ${nextEvent.cidade} acontece hoje. Acesse o roteiro para todos os detalhes do dia!`, 
           icon: StageIcon, 
           color: 'from-emerald-500 to-teal-600', 
@@ -226,7 +237,7 @@ function Dashboard() {
       if (daysUntil <= 3) {
         return { 
           title: `Falta pouco, ${firstName}!`, 
-          sub: `Estamos a ${daysUntil} dias do evento em ${nextEvent.cidade}. Já arrumou as malas?`, 
+          sub: `Estamos a ${daysUntil} ${daysUntil === 1 ? 'dia' : 'dias'} do evento em ${nextEvent.cidade}. Já arrumou as malas?`, 
           icon: Bus, 
           color: 'from-indigo-500 to-violet-600', 
           link: profile?.role === 'motorista' ? `/versao-motorista/${nextEvent.slug}` : `/rb/${nextEvent.slug}`, 
