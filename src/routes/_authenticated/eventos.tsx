@@ -592,16 +592,17 @@ function EventosComponent() {
                 
                 {showDropdown && (
                   <>
-                  <div className="fixed inset-0 z-[60]" onClick={() => setShowDropdown(false)}></div>
+                  <div className="fixed inset-0 z-[60]" onMouseDown={() => setShowDropdown(false)}></div>
                   <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border rounded-xl shadow-xl z-[70] p-3 max-h-72 overflow-y-auto flex flex-col gap-3">
                     <Input 
-                      placeholder="Buscar profissional..." 
-                      value={searchEquipe}
-                      onChange={(e) => setSearchEquipe(e.target.value)}
-                      className="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"
-                      onClick={(e) => e.stopPropagation()}
-                      autoFocus
-                    />
+                      id="search-equipe-input"
+                        placeholder="Buscar profissional..." 
+                        value={searchEquipe}
+                        onChange={(e) => setSearchEquipe(e.target.value)}
+                        className="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"
+                        onClick={(e) => e.stopPropagation()}
+                        autoFocus
+                      />
                     <div className="flex flex-col gap-4">
                       {[
                         { key: 'admin', label: 'Administradores', roles: ['admin'] },
@@ -637,7 +638,7 @@ function EventosComponent() {
                               {groupProfs.map(p => (
                                  <div 
                                     key={p.id} 
-                                    onClick={() => { toggleEquipe(p.id, group.roles[0]); setSearchEquipe(''); setShowDropdown(false); }}
+                                    onClick={() => { toggleEquipe(p.id, group.roles[0]); setSearchEquipe(''); setTimeout(() => document.getElementById('search-equipe-input')?.focus(), 10); }}
                                     className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors group"
                                  >
                                    <span className="font-semibold text-slate-800 dark:text-white text-sm flex items-center gap-2">
