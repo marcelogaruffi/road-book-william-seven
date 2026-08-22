@@ -31,7 +31,7 @@ import { formatPhone } from "@/lib/utils";
 import { makeRoadbookSlug } from "@/lib/slug";
 
 type TourOpt = { id: string; nome: string };
-type EventoOpt = { id: string; espetaculo: string; cidade: string; data: string; data_inicio: string | null; data_fim: string | null; local: string; };
+type EventoOpt = { id: string; espetaculo: string; cidade: string; data: string; data_inicio: string | null; data_fim: string | null; local: string; horario: string | null; };
 
 export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const navigate = useNavigate();
@@ -69,7 +69,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     (async () => {
       const [toursRes, eventosRes, roadbooksRes, espRes] = await Promise.all([
         supabase.from("tours").select("id,nome").order("nome"),
-        supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local").order("data", { ascending: false }),
+        supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local,horario").order("data", { ascending: false }),
         supabase.from("roadbooks").select("evento_id").not("evento_id", "is", null),
         supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo")
       ]);
@@ -136,6 +136,9 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     if (d.automacoes?.restaurante_teatro_nome) s.add(d.automacoes.restaurante_teatro_nome);
     if (d.automacoes?.shopping_nome) s.add(d.automacoes.shopping_nome);
     d.automacoes?.outros_locais?.forEach(l => { if (l.nome) s.add(l.nome); });
+    (Array.isArray(d.programacao) ? d.programacao : []).forEach((p) => {
+      if (p.local) s.add(p.local);
+    });
     return Array.from(s).filter(Boolean);
   }, [d]);
 
@@ -647,14 +650,40 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             if (val === "none") return;
             const ev = eventos.find(e => e.id === val);
             if (ev) {
-              setD(s => ({
-                ...s,
-                evento_id: ev.id,
-                espetaculo: ev.espetaculo || s.espetaculo,
-                cidade: ev.cidade || s.cidade,
-                data_inicial: ev.data_inicio || ev.data || s.data_inicial,
-                data_final: ev.data_fim || ev.data || s.data_final,
-              }));
+              setD(s => {
+                const evData = ev.data || ev.data_inicio || s.data_inicial;
+                let newProgramacao = Array.isArray(s.programacao) ? s.programacao : [];
+                const hasApresentacao = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === evData && p.hora_inicio === (ev.horario || ""));
+                
+                if (!hasApresentacao && evData && ev.horario) {
+                  let hora_fim = "";
+                  const [h, m] = ev.horario.split(':');
+                  if (h && m) {
+                    const endH = (parseInt(h) + 1).toString().padStart(2, '0');
+                    hora_fim = `${endH}:${m}`;
+                  }
+                  newProgramacao = [...newProgramacao, {
+                    data: evData,
+                    hora_inicio: ev.horario,
+                    hora_fim: hora_fim,
+                    titulo: "Apresentação",
+                    tipo: "Espetáculo",
+                    local: ev.local || "",
+                    observacao: ""
+                  }];
+                }
+
+                return {
+                  ...s,
+                  evento_id: ev.id,
+                  espetaculo: ev.espetaculo || s.espetaculo,
+                  cidade: ev.cidade || s.cidade,
+                  data_inicial: ev.data_inicio || ev.data || s.data_inicial,
+                  data_final: ev.data_fim || ev.data || s.data_final,
+                  teatro_nome: ev.local || s.teatro_nome,
+                  programacao: newProgramacao
+                };
+              });
             }
           }}
         >
@@ -725,15 +754,40 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                     }
                     const ev = eventos.find(e => e.id === val);
                     if (ev) {
-                      setD(s => ({
-                        ...s,
-                        evento_id: ev.id,
-                        espetaculo: ev.espetaculo || s.espetaculo,
-                        cidade: ev.cidade || s.cidade,
-                        data_inicial: ev.data_inicio || ev.data || s.data_inicial,
-                        data_final: ev.data_fim || ev.data || s.data_final,
-                        teatro_nome: ev.local || s.teatro_nome,
-                      }));
+                      setD(s => {
+                        const evData = ev.data || ev.data_inicio || s.data_inicial;
+                        let newProgramacao = Array.isArray(s.programacao) ? s.programacao : [];
+                        const hasApresentacao = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === evData && p.hora_inicio === (ev.horario || ""));
+                        
+                        if (!hasApresentacao && evData && ev.horario) {
+                          let hora_fim = "";
+                          const [h, m] = ev.horario.split(':');
+                          if (h && m) {
+                            const endH = (parseInt(h) + 1).toString().padStart(2, '0');
+                            hora_fim = `${endH}:${m}`;
+                          }
+                          newProgramacao = [...newProgramacao, {
+                            data: evData,
+                            hora_inicio: ev.horario,
+                            hora_fim: hora_fim,
+                            titulo: "Apresentação",
+                            tipo: "Espetáculo",
+                            local: ev.local || "",
+                            observacao: ""
+                          }];
+                        }
+
+                        return {
+                          ...s,
+                          evento_id: ev.id,
+                          espetaculo: ev.espetaculo || s.espetaculo,
+                          cidade: ev.cidade || s.cidade,
+                          data_inicial: ev.data_inicio || ev.data || s.data_inicial,
+                          data_final: ev.data_fim || ev.data || s.data_final,
+                          teatro_nome: ev.local || s.teatro_nome,
+                          programacao: newProgramacao
+                        };
+                      });
                       toast.success("Dados preenchidos a partir do evento!");
                     }
                   }}
