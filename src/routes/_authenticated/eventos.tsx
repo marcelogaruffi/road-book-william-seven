@@ -160,7 +160,7 @@ function EventosComponent() {
          const { data: cacheData } = await supabase.from('evento_escalas_financeiro').select('escala_id, cache_valor').in('escala_id', escData.map(e => e.id));
          const cMap: any = {};
          escData.forEach(e => {
-           if (e.funcao) {
+           if (e.funcao && profissionais.some(p => p.id === e.usuario_id)) {
              novasEscalas.push({ usuario_id: e.usuario_id, funcao: e.funcao });
              const c = cacheData?.find(x => x.escala_id === e.id);
              if (c && c.cache_valor > 0) {
@@ -171,14 +171,18 @@ function EventosComponent() {
          setCaches(cMap);
        } else if (ev.equipe && ev.equipe.length > 0) {
          // Fallback for old events without scales
-         novasEscalas = ev.equipe.map(uid => {
-           const p = profissionais.find(pr => pr.id === uid);
-           return { usuario_id: uid, funcao: p?.role || 'user' };
-         });
+         novasEscalas = ev.equipe
+           .filter(uid => profissionais.some(p => p.id === uid))
+           .map(uid => {
+             const p = profissionais.find(pr => pr.id === uid);
+             return { usuario_id: uid, funcao: p?.role || 'user' };
+           });
        }
     } else {
        if (ev.equipe && ev.equipe.length > 0) {
-         novasEscalas = ev.equipe.map(uid => ({ usuario_id: uid, funcao: 'user' }));
+         novasEscalas = ev.equipe
+           .filter(uid => profissionais.some(p => p.id === uid))
+           .map(uid => ({ usuario_id: uid, funcao: 'user' }));
        }
     }
     setEscalasAtuais(novasEscalas);
