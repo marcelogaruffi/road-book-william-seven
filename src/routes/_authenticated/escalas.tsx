@@ -167,6 +167,8 @@ function EscalasPage() {
     
     toast.success(count + " escala(s) criadas com sucesso.");
     setSavingLote(false);
+    setSelectedProf("");
+    setSelectedFuncao("");
     setSelectedEvents([]);
     loadData();
     loadLoteData();
@@ -180,7 +182,10 @@ function EscalasPage() {
     return eventName.includes(term) || city.includes(term) || userName.includes(term) || esc.status.includes(term);
   });
   
-  const uniqueFuncoes = Array.from(new Set(profissionais.flatMap(p => [p.role, ...(p.funcoes || [])]))).filter(Boolean).sort();
+  const selectedProfObj = profissionais.find(p => p.id === selectedProf);
+  const availableFuncoes = selectedProfObj 
+    ? Array.from(new Set([selectedProfObj.role, ...(selectedProfObj.funcoes || [])])).filter(Boolean).sort()
+    : [];
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -272,22 +277,23 @@ function EscalasPage() {
                               </div>
                             </td>
                             <td className="px-6 py-4">
-                              <Badge variant="outline" className={`border font-semibold ${statusColor}`}>
-                                {statusLabel}
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className={`border font-semibold ${statusColor}`}>
+                                  {statusLabel}
+                                </Badge>
+                                {esc.status === 'pendente' && (
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => handleAccept(esc.id)}
+                                    className="h-6 px-2 text-[10px] uppercase font-bold bg-green-500 hover:bg-green-600 text-white rounded-md shadow-sm"
+                                    title="Dar Aceite Manualmente"
+                                  >
+                                    <Check className="size-3 mr-1" /> Aceitar
+                                  </Button>
+                                )}
+                              </div>
                             </td>
                             <td className="px-6 py-4 text-right flex justify-end gap-1">
-                              {esc.status === 'pendente' && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="icon" 
-                                  onClick={() => handleAccept(esc.id)}
-                                  className="text-slate-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20"
-                                  title="Dar Aceite Manualmente"
-                                >
-                                  <Check className="size-4" />
-                                </Button>
-                              )}
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
@@ -332,14 +338,14 @@ function EscalasPage() {
                 </div>
                 
                 <div className="space-y-3">
-                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Função (Cargo)</label>
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Função</label>
                   <select 
                     className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background h-12"
                     value={selectedFuncao}
                     onChange={e => setSelectedFuncao(e.target.value)}
                   >
                     <option value="">Selecione a função...</option>
-                    {uniqueFuncoes.map(f => (
+                    {availableFuncoes.map(f => (
                       <option key={f as string} value={f as string}>{(f as string).replace('_', ' ').toUpperCase()}</option>
                     ))}
                   </select>
