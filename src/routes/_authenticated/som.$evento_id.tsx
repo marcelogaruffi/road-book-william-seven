@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mic2, ArrowLeft, Calendar, MapPin, Save, Ticket, Plus, Trash2, ListChecks } from 'lucide-react';
+import { Mic2, ArrowLeft, Calendar, MapPin, Save, Ticket, Plus, Trash2, ListChecks, FileUp } from 'lucide-react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,25 @@ function MapaSomForm() {
   useEffect(() => {
     loadData();
   }, [evento_id]);
+
+
+  const addSomInputList = () => {
+    const list = mapa?.json_data?.input_list_tabela || [];
+    const proximoCanal = (list.length + 1).toString();
+    updateJson('input_list_tabela', [...list, { id: crypto.randomUUID(), canal: proximoCanal, equipamento: '', obs: '' }]);
+  };
+
+  const removeSomInputList = (id: string) => {
+    const list = (mapa?.json_data?.input_list_tabela || []).filter((e: any) => e.id !== id);
+    updateJson('input_list_tabela', list);
+  };
+
+  const updateSomInputList = (id: string, field: string, value: string) => {
+    const list = (mapa?.json_data?.input_list_tabela || []).map((e: any) => 
+      e.id === id ? { ...e, [field]: value } : e
+    );
+    updateJson('input_list_tabela', list);
+  };
 
   const addEquipamento = () => {
     const list = mapa?.json_data?.equipamentos_lista || [];
@@ -151,7 +170,7 @@ function MapaSomForm() {
           <Accordion type="single" collapsible className="w-full space-y-4" defaultValue="bloco-a">
             
             <AccordionItem value="bloco-a" className="border border-slate-200 dark:border-white/10 rounded-xl px-4 bg-slate-50/50 dark:bg-black/20 data-[state=open]:bg-white dark:data-[state=open]:bg-white/5 transition-all">
-              <AccordionTrigger className="text-lg font-bold hover:no-underline">Bloco A: P.A. e Consoles</AccordionTrigger>
+              <AccordionTrigger className="text-lg font-bold hover:no-underline">Bloco A: Rider Local e Notas Gerais</AccordionTrigger>
               <AccordionContent className="space-y-6 pt-4 pb-6">
                 <div className="space-y-2">
                   <Label>Sistema de P.A. do Local</Label>
