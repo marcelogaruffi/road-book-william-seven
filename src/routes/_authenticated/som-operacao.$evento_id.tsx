@@ -99,13 +99,13 @@ function SomOperacaoScreen() {
   const loadData = async () => {
     try {
       const { data, error } = await supabase
-        .from('eventos_roadbook')
+        .from('mapas_som')
         .select('*')
-        .eq('id', evento_id)
+        .eq('evento_id', evento_id)
         .single();
 
-      if (error) throw error;
-      setMapa(data);
+      if (error && error.code !== 'PGRST116') throw error;
+      if (data) setMapa(data);
     } catch (error) {
       console.error('Erro ao carregar mapa:', error);
       toast.error('Erro ao carregar os dados.');
@@ -119,16 +119,15 @@ function SomOperacaoScreen() {
     setSaving(true);
 
     try {
-      const jd = mapa.json_data || {};
       const newJsonData = {
-        ...jd,
+        ...(mapa.json_data || {}),
         cues_lista: updatedCues
       };
 
       const { error } = await supabase
-        .from('eventos_roadbook')
+        .from('mapas_som')
         .update({ json_data: newJsonData })
-        .eq('id', evento_id);
+        .eq('id', mapa.id);
 
       if (error) throw error;
       
