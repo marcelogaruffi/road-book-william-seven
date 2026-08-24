@@ -104,7 +104,7 @@ export default function TemplateRidersTab({ role, context = 'ambos' }: { role?: 
   }
 
   function addRow(setList: any, list: Equipamento[]) {
-    setList([...list, { id: crypto.randomUUID(), qtd: '1', nome: '', detalhes: '' }]);
+    setList([...list, { id: Math.random().toString(36).substring(2, 9), qtd: '1', nome: '', detalhes: '' }]);
   }
 
   function updateRow(setList: any, list: Equipamento[], id: string, field: string, value: string) {

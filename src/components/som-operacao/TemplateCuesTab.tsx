@@ -94,7 +94,7 @@ export default function TemplateCuesTab() {
   }
 
   function addRow() {
-    setCuesList([...cuesList, { id: crypto.randomUUID(), faixa: '', nome_faixa: '', duracao: '', cena: '', deixa_prep: '', deixa_go: '' }]);
+    setCuesList([...cuesList, { id: Math.random().toString(36).substring(2, 9), faixa: '', nome_faixa: '', duracao: '', cena: '', deixa_prep: '', deixa_go: '' }]);
   }
 
   function updateRow(id: string, field: keyof Cue, value: string) {

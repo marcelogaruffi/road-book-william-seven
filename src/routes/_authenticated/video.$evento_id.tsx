@@ -45,7 +45,7 @@ function MapaVideoForm() {
 
   const addEquipamento = () => {
     const list = mapa?.json_data?.equipamentos_lista || [];
-    updateJson('equipamentos_lista', [...list, { id: crypto.randomUUID(), qtd: '1', nome: '', detalhes: '' }]);
+    updateJson('equipamentos_lista', [...list, { id: Math.random().toString(36).substring(2, 9), qtd: '1', nome: '', detalhes: '' }]);
   };
 
   const removeEquipamento = (id: string) => {

@@ -25,7 +25,7 @@ export function MalasViagemTab({
 
   const addMala = () => {
     const newMala: MalaViagem = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2, 9),
       descricao: "",
       status: "pendente"
     };

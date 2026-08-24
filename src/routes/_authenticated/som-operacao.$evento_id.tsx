@@ -170,7 +170,7 @@ function SomOperacaoScreen() {
       : 0;
       
     const newCue = {
-      id: crypto.randomUUID(),
+      id: Math.random().toString(36).substring(2, 9),
       faixa: (maxFaixa + 1).toString().padStart(2, '0'),
       nome_faixa: 'Nova Faixa',
       deixa_prep: '',
