@@ -106,7 +106,7 @@ function EspetaculosPage() {
     if (!uid) throw new Error("Sessão expirada");
     
     const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filePath = `\${uid}/\${folder}/\${Date.now()}-\${cleanName}`;
+    const filePath = `${uid}/${folder}/${Date.now()}-${cleanName}`;
     
     const { error } = await supabase.storage.from("midias_eventos").upload(filePath, file);
     if (error) throw error;
@@ -350,7 +350,7 @@ function EspetaculosPage() {
           </div>
           
           <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-primary transition-all duration-300 ease-in-out" style={{ width: `\${progressPercent}%` }} />
+            <div className="h-full bg-primary transition-all duration-300 ease-in-out" style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
         
@@ -624,7 +624,7 @@ function EspetaculosPage() {
                   const Icon = item.icon;
                   return (
                     <div key={i} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center text-center">
-                      <Icon className={`size-8 mb-2 \${(hasText || hasAttach) ? item.color : 'text-slate-300 dark:text-slate-700'}`} />
+                      <Icon className={`size-8 mb-2 ${(hasText || hasAttach) ? item.color : 'text-slate-300 dark:text-slate-700'}`} />
                       <span className="font-black text-slate-700 dark:text-slate-300 text-sm">{item.title}</span>
                       <div className="flex gap-1.5 mt-2">
                         {hasText && <span className="text-[9px] uppercase font-bold bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded-sm">Texto</span>}
