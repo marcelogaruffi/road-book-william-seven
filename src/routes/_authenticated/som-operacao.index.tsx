@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Search, Play } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import TemplateCuesTab from '@/components/som-operacao/TemplateCuesTab';
 
 export const Route = createFileRoute('/_authenticated/som-operacao/')({
   head: () => ({
@@ -120,60 +121,71 @@ function SomOperacaoIndex() {
           Operação de Som
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-          Selecione um evento para abrir a tela de operação de deixas (COXIA).
+          Selecione um evento agendado para operar as deixas (cues) de som.
         </p>
       </div>
 
-      <div className="space-y-8 mt-8">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-          <Input 
-            placeholder="Buscar evento por cidade ou espetáculo..." 
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-12 bg-white dark:bg-card border-slate-200 dark:border-white/10 rounded-xl"
-          />
-        </div>
+      <Tabs defaultValue="eventos" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
+          <TabsTrigger value="eventos" className="rounded-lg h-full font-bold">Eventos (Shows)</TabsTrigger>
+          <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Modelos (Cues Padrão)</TabsTrigger>
+        </TabsList>
 
-        {loading ? (
-          <div className="flex justify-center p-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <TabsContent value="eventos" className="space-y-8 mt-8">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
+            <Input 
+              placeholder="Buscar evento por cidade ou espetáculo..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-12 bg-white dark:bg-card border-slate-200 dark:border-white/10 rounded-xl"
+            />
           </div>
-        ) : proximos.length === 0 && realizados.length === 0 ? (
-          <div className="text-center py-20 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
-            <Play className="size-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
-            <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">Nenhum evento encontrado</h3>
-            <p className="text-slate-500 mt-2">Você não está escalado para nenhum evento no momento.</p>
-          </div>
-        ) : (
-          <div className="space-y-12">
-            {proximos.length > 0 ? (
-              <div>
-                <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6">Próximos Eventos</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {proximos.map(renderEventoCard)}
+
+          {loading ? (
+            <div className="flex justify-center p-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : proximos.length === 0 && realizados.length === 0 ? (
+            <div className="text-center py-20 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
+              <Play className="size-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+              <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">Nenhum evento encontrado</h3>
+              <p className="text-slate-500 mt-2">Você não está escalado para nenhum evento no momento.</p>
+            </div>
+          ) : (
+            <div className="space-y-12">
+              {proximos.length > 0 ? (
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6">Próximos Eventos</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {proximos.map(renderEventoCard)}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-center py-10 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
-                <p className="text-slate-500 font-medium">Nenhum evento futuro encontrado.</p>
-              </div>
-            )}
-            
-            {realizados.length > 0 && (
-              <div>
-                <div className="flex items-center gap-3 mb-6 opacity-70">
-                  <h3 className="text-xl font-bold tracking-tight text-slate-500 dark:text-slate-400">Eventos Realizados</h3>
-                  <div className="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
+              ) : (
+                <div className="text-center py-10 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
+                  <p className="text-slate-500 font-medium">Nenhum evento futuro encontrado.</p>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-90">
-                  {realizados.map(renderEventoCard)}
+              )}
+              
+              {realizados.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-6 opacity-70">
+                    <h3 className="text-xl font-bold tracking-tight text-slate-500 dark:text-slate-400">Eventos Realizados</h3>
+                    <div className="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-90">
+                    {realizados.map(renderEventoCard)}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="modelos" className="mt-0">
+          <TemplateCuesTab />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

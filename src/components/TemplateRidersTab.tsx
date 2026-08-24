@@ -30,30 +30,35 @@ export default function TemplateRidersTab({ role, context = 'ambos' }: { role?: 
   const [editNome, setEditNome] = useState("");
   const [somList, setSomList] = useState<Equipamento[]>([]);
   const [luzList, setLuzList] = useState<Equipamento[]>([]);
+  const [rawTemplate, setRawTemplate] = useState<Template | null>(null);
 
   useEffect(() => {
     loadTemplates();
   }, []);
 
+  const getErrorMessage = (error: any) => {
+    return error?.message || "Erro desconhecido";
+  };
+
   async function loadTemplates() {
     setLoading(true);
-    const { data, error } = await supabase.from('templates_espetaculos').select('*');
-    if (error) {
-      toast.error("Erro ao carregar templates");
-    } else {
-      setTemplates(data || []);
+    const { data, error } = await supabase.from('templates_espetaculos').select('*').order('nome_espetaculo');
+    if (!error && data) {
+      setTemplates(data as Template[]);
     }
     setLoading(false);
   }
 
   function handleEdit(t: Template) {
     setEditNome(t.nome_espetaculo);
+    setRawTemplate(t);
     setSomList(t.rider_som?.equipamentos_lista || []);
     setLuzList(t.rider_luz?.equipamentos_lista || []);
   }
 
   function clearForm() {
     setEditNome("");
+    setRawTemplate(null);
     setSomList([]);
     setLuzList([]);
   }
@@ -66,10 +71,13 @@ export default function TemplateRidersTab({ role, context = 'ambos' }: { role?: 
     }
     setSaving(true);
     
+    const currentRiderSom = rawTemplate?.rider_som || {};
+    const currentRiderLuz = rawTemplate?.rider_luz || {};
+
     const payload = {
       nome_espetaculo: editNome.trim(),
-      rider_som: { equipamentos_lista: somList },
-      rider_luz: { equipamentos_lista: luzList },
+      rider_som: { ...currentRiderSom, equipamentos_lista: somList },
+      rider_luz: { ...currentRiderLuz, equipamentos_lista: luzList },
       updated_at: new Date().toISOString()
     };
 
