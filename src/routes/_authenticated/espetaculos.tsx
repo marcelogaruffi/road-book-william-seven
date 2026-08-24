@@ -209,7 +209,8 @@ function EspetaculosPage() {
     placeholder: string
   ) => {
     const Icon = icon;
-    const textValue = (currentShow[textKey] as string) || "";
+    let textValue = (currentShow[textKey] as string) || "";
+    if (textValue === "[object Object]") textValue = "";
     const attachmentUrl = currentShow.assets_midia?.[attachmentKey];
 
     return (
@@ -465,17 +466,33 @@ function EspetaculosPage() {
                       <Input className="flex-1 h-10 text-sm bg-white dark:bg-black font-semibold" placeholder="Nome..." value={novaFicha.nome} onChange={e => setNovaFicha({...novaFicha, nome: e.target.value})} />
                     </div>
                   </div>
-                  <Button onClick={addFicha} type="button" className="h-10 bg-primary hover:bg-primary/90 text-white font-bold px-4 shadow-sm text-sm"><Plus className="size-4 mr-1"/> Add</Button>
+                  <Button onClick={addFicha} type="button" className="h-10 bg-primary hover:bg-primary/90 text-white font-bold px-4 shadow-sm text-sm"><Plus className="size-4 mr-1"/> Adicionar</Button>
                 </div>
               </div>
-              <div className="grid md:grid-cols-2 gap-2 mt-4">
-                {currentShow.ficha_tecnica?.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-md transition-shadow">
-                    <div>
-                      <div className="font-black text-primary text-[10px] uppercase tracking-wider">{item.funcao}</div>
-                      <div className="font-bold text-slate-700 dark:text-slate-200 text-sm">{item.nome}</div>
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
+                {Object.entries(
+                  (currentShow.ficha_tecnica || []).reduce((acc, item, idx) => {
+                    if (!acc[item.funcao]) acc[item.funcao] = [];
+                    acc[item.funcao].push({ ...item, originalIndex: idx });
+                    return acc;
+                  }, {} as Record<string, {funcao: string, nome: string, originalIndex: number}[]>)
+                ).map(([funcao, items]) => (
+                  <div key={funcao} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-100 dark:border-white/5 shadow-sm overflow-hidden">
+                    <div className="bg-slate-50 dark:bg-slate-950 px-3 py-2 border-b border-slate-100 dark:border-white/5 font-black text-primary text-[10px] uppercase tracking-wider">
+                      {funcao}
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => removeFicha(idx)} className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 size-8"><Trash2 className="size-4"/></Button>
+                    <div className="divide-y divide-slate-100 dark:divide-white/5">
+                      {items.map(item => (
+                        <div key={item.originalIndex} className="flex justify-between items-center p-3 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors">
+                          <span className="font-bold text-slate-700 dark:text-slate-200 text-sm">{item.nome}</span>
+                          <Button variant="ghost" size="icon" onClick={() => {
+                            const ns = [...(currentShow.ficha_tecnica||[])];
+                            ns.splice(item.originalIndex, 1);
+                            setCurrentShow({...currentShow, ficha_tecnica: ns});
+                          }} className="text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 size-7"><X className="size-4"/></Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
                 {(!currentShow.ficha_tecnica || currentShow.ficha_tecnica.length === 0) && (
@@ -493,7 +510,7 @@ function EspetaculosPage() {
                 <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Users className="text-primary size-5"/> Personagens / Atores</h3>
                 <div className="flex gap-2 mb-4">
                   <Input className="h-10 text-sm bg-slate-50 dark:bg-black font-semibold" placeholder="Nome do personagem..." value={novoPersonagem} onChange={e => setNovoPersonagem(e.target.value)} onKeyDown={e => { if(e.key==='Enter') { setCurrentShow({...currentShow, personagens: [...(currentShow.personagens||[]), novoPersonagem]}); setNovoPersonagem(""); }}} />
-                  <Button className="h-10 px-6 font-bold text-sm shadow-sm" onClick={() => { if(novoPersonagem) { setCurrentShow({...currentShow, personagens: [...(currentShow.personagens||[]), novoPersonagem]}); setNovoPersonagem(""); } }}><Plus className="size-4 mr-1"/> Add</Button>
+                  <Button className="h-10 px-6 font-bold text-sm shadow-sm" onClick={() => { if(novoPersonagem) { setCurrentShow({...currentShow, personagens: [...(currentShow.personagens||[]), novoPersonagem]}); setNovoPersonagem(""); } }}><Plus className="size-4 mr-1"/> Adicionar</Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {currentShow.personagens?.map((p, i) => (
@@ -509,7 +526,7 @@ function EspetaculosPage() {
                 <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Music className="text-emerald-500 size-5"/> Instrumentos / Banda</h3>
                 <div className="flex gap-2 mb-4">
                   <Input className="h-10 text-sm bg-slate-50 dark:bg-black font-semibold" placeholder="Instrumento ou Músico..." value={novoInstrumento} onChange={e => setNovoInstrumento(e.target.value)} onKeyDown={e => { if(e.key==='Enter') { setCurrentShow({...currentShow, instrumentos: [...(currentShow.instrumentos||[]), novoInstrumento]}); setNovoInstrumento(""); }}} />
-                  <Button className="h-10 px-6 font-bold text-sm shadow-sm" onClick={() => { if(novoInstrumento) { setCurrentShow({...currentShow, instrumentos: [...(currentShow.instrumentos||[]), novoInstrumento]}); setNovoInstrumento(""); } }}><Plus className="size-4 mr-1"/> Add</Button>
+                  <Button className="h-10 px-6 font-bold text-sm shadow-sm" onClick={() => { if(novoInstrumento) { setCurrentShow({...currentShow, instrumentos: [...(currentShow.instrumentos||[]), novoInstrumento]}); setNovoInstrumento(""); } }}><Plus className="size-4 mr-1"/> Adicionar</Button>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {currentShow.instrumentos?.map((p, i) => (
@@ -592,14 +609,24 @@ function EspetaculosPage() {
                 <Users className="size-5 text-primary" /> Ficha Técnica
               </h3>
               {currentShow.ficha_tecnica && currentShow.ficha_tecnica.length > 0 ? (
-                <ul className="space-y-2">
-                  {currentShow.ficha_tecnica.map((item, i) => (
-                    <li key={i} className="flex justify-between items-center text-sm bg-slate-50 dark:bg-slate-950 p-3 rounded-lg border border-slate-100 dark:border-white/5">
-                      <span className="font-black text-slate-700 dark:text-slate-300 uppercase text-xs tracking-wide">{item.funcao}</span>
-                      <span className="font-bold text-slate-500">{item.nome}</span>
-                    </li>
+                <div className="space-y-3">
+                  {Object.entries(
+                    currentShow.ficha_tecnica.reduce((acc, item) => {
+                      if (!acc[item.funcao]) acc[item.funcao] = [];
+                      acc[item.funcao].push(item.nome);
+                      return acc;
+                    }, {} as Record<string, string[]>)
+                  ).map(([funcao, nomes]) => (
+                    <div key={funcao} className="bg-slate-50 dark:bg-slate-950 rounded-lg border border-slate-100 dark:border-white/5 overflow-hidden">
+                      <div className="bg-slate-100/50 dark:bg-slate-900 px-3 py-2 border-b border-slate-100 dark:border-white/5 font-black text-primary text-[10px] uppercase tracking-wider">
+                        {funcao}
+                      </div>
+                      <div className="px-3 py-2 font-bold text-slate-600 dark:text-slate-300 text-sm flex flex-col gap-1">
+                        {nomes.map((n, i) => <span key={i}>{n}</span>)}
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               ) : (
                 <p className="text-slate-500 font-semibold text-sm">Nenhuma ficha técnica cadastrada.</p>
               )}
