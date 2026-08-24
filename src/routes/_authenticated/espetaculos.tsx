@@ -99,7 +99,7 @@ function EspetaculosPage() {
 
   const addSomEquipamento = () => {
     const list = somData.equipamentos_lista || [];
-    updateSomData('equipamentos_lista', [...list, { id: crypto.randomUUID(), qtd: '1', nome: '', detalhes: '' }]);
+    updateSomData('equipamentos_lista', [...list, { id: Math.random().toString(36).substring(2, 9), qtd: '1', nome: '', detalhes: '' }]);
   };
 
   const removeSomEquipamento = (id: string) => {

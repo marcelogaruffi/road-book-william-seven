@@ -43,7 +43,7 @@ function MapaSomForm() {
   const addSomInputList = () => {
     const list = mapa?.json_data?.input_list_tabela || [];
     const proximoCanal = (list.length + 1).toString();
-    updateJson('input_list_tabela', [...list, { id: crypto.randomUUID(), canal: proximoCanal, equipamento: '', obs: '' }]);
+    updateJson('input_list_tabela', [...list, { id: Math.random().toString(36).substring(2, 9), canal: proximoCanal, equipamento: '', obs: '' }]);
   };
 
   const removeSomInputList = (id: string) => {
@@ -60,7 +60,7 @@ function MapaSomForm() {
 
   const addEquipamento = () => {
     const list = mapa?.json_data?.equipamentos_lista || [];
-    updateJson('equipamentos_lista', [...list, { id: crypto.randomUUID(), qtd: '1', nome: '', detalhes: '' }]);
+    updateJson('equipamentos_lista', [...list, { id: Math.random().toString(36).substring(2, 9), qtd: '1', nome: '', detalhes: '' }]);
   };
 
   const removeEquipamento = (id: string) => {
@@ -77,7 +77,7 @@ function MapaSomForm() {
 
   const addCue = () => {
     const list = mapa?.json_data?.cues_lista || [];
-    updateJson('cues_lista', [...list, { id: crypto.randomUUID(), faixa: '', nome_faixa: '', duracao: '', cena: '', deixa_prep: '', deixa_go: '' }]);
+    updateJson('cues_lista', [...list, { id: Math.random().toString(36).substring(2, 9), faixa: '', nome_faixa: '', duracao: '', cena: '', deixa_prep: '', deixa_go: '' }]);
   };
 
   const removeCue = (id: string) => {
