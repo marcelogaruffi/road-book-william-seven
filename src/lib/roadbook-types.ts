@@ -146,7 +146,20 @@ export type OutroLocal = {
   fotos?: Foto[];
 };
 
+
+export type MalaViagem = {
+  id: string;
+  responsavel_id?: string;
+  responsavel_nome?: string;
+  descricao: string;
+  peso?: string;
+  fragil?: boolean;
+  status?: 'despachada' | 'recebida' | 'extraviada' | 'pendente';
+  observacoes?: string;
+};
+
 export type Automacoes = {
+  malas?: MalaViagem[];
   timeline_overrides?: Record<string, string>;
   outros_locais?: OutroLocal[];
   map_coords?: Record<string, [number, number]>;

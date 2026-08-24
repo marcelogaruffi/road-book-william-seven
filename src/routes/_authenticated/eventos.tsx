@@ -98,7 +98,7 @@ function EventosComponent() {
     const [evRes, trRes, profRes, tempRes, confRes, escRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, nome, role, funcoes, caches_padrao').in('role', ['admin', 'dev', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'elenco', 'stage_manager', 'contra_regra', 'assistente_producao', 'camareiro', 'musico', 'tour_manager', 'roadie', 'cenotecnico', 'tecnico_video']),
+      supabase.from('profiles').select('id, nome, role, funcoes, caches_padrao').in('role', ['admin', 'dev', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'elenco', 'stage_manager', 'contra_regra', 'assistente_producao', 'camareiro', 'musico', 'tour_manager', 'roadie', 'cenotecnico', 'tecnico_video', 'rigger']),
       supabase.from('templates_espetaculos').select('nome_espetaculo'),
       supabase.from('configuracoes_sistema').select('permitir_sms_escala').eq('id', 1).maybeSingle(),
       supabase.from('evento_escalas').select('*')

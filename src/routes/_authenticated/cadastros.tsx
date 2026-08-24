@@ -33,7 +33,7 @@ type Profile = {
   telefone: string | null;
   foto_url: string | null;
   email?: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger";
   telefone?: string | null;
   telefone_verificado?: boolean | null;
 };
@@ -65,6 +65,7 @@ export const ROLE_BADGE_MAP: Record<string, { label: string, classes: string }> 
   tecnico_video: { label: 'Téc. de Vídeo', classes: 'bg-teal-100 text-teal-700 hover:bg-teal-100' },
   assessoria_imprensa: { label: 'Assessoria de Imprensa', classes: 'bg-violet-100 text-violet-700 hover:bg-violet-100' },
   midias_sociais: { label: 'Mídias Sociais', classes: 'bg-blue-200 text-blue-800 hover:bg-blue-200' },
+  rigger: { label: 'Rigger', classes: 'bg-stone-200 text-stone-800 hover:bg-stone-200' },
 };
 
 export const Route = createFileRoute("/_authenticated/cadastros")({
@@ -89,7 +90,7 @@ function UsersPage() {
   const [editCachesPadrao, setEditCachesPadrao] = useState<Record<string, string>>({});
   const [customFuncao, setCustomFuncao] = useState("");
   const [showCustomFuncaoInput, setShowCustomFuncaoInput] = useState(false);
-  const [inviteRole, setInviteRole] = useState<'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'|'stage_manager'|'contra_regra'|'assistente_producao'|'camareiro'|'elenco'|'musico'|'tour_manager'|'roadie'|'cenotecnico'|'tecnico_video'>('produtor');
+  const [inviteRole, setInviteRole] = useState<'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'|'stage_manager'|'contra_regra'|'assistente_producao'|'camareiro'|'elenco'|'musico'|'tour_manager'|'roadie'|'cenotecnico'|'tecnico_video'|'rigger'>('produtor');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Crop states
@@ -296,6 +297,7 @@ function UsersPage() {
                   <option value="roadie">Roadie</option>
                   <option value="cenotecnico">Cenotécnico</option>
                   <option value="tecnico_video">Técnico de Vídeo</option>
+                  <option value="rigger">Rigger</option>
 
                 </select>
               </div>
@@ -552,6 +554,7 @@ function UsersPage() {
                   <option value="roadie">Roadie</option>
                   <option value="cenotecnico">Cenotécnico</option>
                   <option value="tecnico_video">Técnico de Vídeo</option>
+                  <option value="rigger">Rigger</option>
 
                 </select>
               )}

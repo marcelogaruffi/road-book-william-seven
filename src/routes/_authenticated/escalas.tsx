@@ -67,7 +67,7 @@ function EscalasPage() {
   };
   
   const loadLoteData = async () => {
-    const { data: pData } = await supabase.from('profiles').select('id, nome, role, funcoes').in('role', ['admin', 'dev', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'elenco', 'stage_manager', 'contra_regra', 'assistente_producao', 'camareiro', 'musico', 'tour_manager', 'roadie', 'cenotecnico', 'tecnico_video']).order('nome');
+    const { data: pData } = await supabase.from('profiles').select('id, nome, role, funcoes').in('role', ['admin', 'dev', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'elenco', 'stage_manager', 'contra_regra', 'assistente_producao', 'camareiro', 'musico', 'tour_manager', 'roadie', 'cenotecnico', 'tecnico_video', 'rigger']).order('nome');
     if (pData) setProfissionais(pData);
     
     const today = new Date().toISOString().split('T')[0];
