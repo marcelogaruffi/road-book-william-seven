@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Route as AuthedRoute } from "./route";
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import TemplateRidersTab from "@/components/TemplateRidersTab";
+import TemplateRiderSomViewer from "@/components/TemplateRiderSomViewer";
 
 export const Route = createFileRoute('/_authenticated/som/')({
   head: () => ({ meta: [{ title: 'Painel de Som' }] }),
@@ -174,7 +174,7 @@ function SomComponent() {
       <Tabs defaultValue="eventos" className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
           <TabsTrigger value="eventos" className="rounded-lg h-full font-bold">Mapas de Som</TabsTrigger>
-          <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Modelos (Riders Padrão)</TabsTrigger>
+          <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Rider Padrão</TabsTrigger>
         </TabsList>
 
         <TabsContent value="eventos" className="space-y-8 mt-8">
@@ -229,7 +229,7 @@ function SomComponent() {
         </TabsContent>
 
         <TabsContent value="modelos" className="mt-0">
-          <TemplateRidersTab role={role} context="som" />
+          <TemplateRiderSomViewer role={role} />
         </TabsContent>
       </Tabs>
     </div>
