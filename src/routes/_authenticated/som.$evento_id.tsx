@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mic2, ArrowLeft, Calendar, MapPin, Save, Ticket, Plus, Trash2, ListChecks, FileUp, LinkIcon, X } from 'lucide-react';
+import { Mic2, ArrowLeft, Calendar, MapPin, Save, Ticket, Plus, Trash2, ListChecks, FileUp, LinkIcon, X, Music } from 'lucide-react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -163,6 +163,21 @@ function MapaSomForm() {
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/som' })} className="rounded-full">
           <ArrowLeft className="size-5" />
+        </Button>
+        <div className="flex-1" />
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="text-red-500 border-red-200 hover:bg-red-50 dark:border-red-900/30 dark:hover:bg-red-900/20 mr-4"
+          onClick={async () => {
+            if (confirm('Tem certeza que deseja apagar as edições e recomeçar este mapa do zero/modelo? Isso excluirá o mapa atual permanentemente.')) {
+              await supabase.from('mapas_som').delete().eq('evento_id', evento_id);
+              navigate({ to: '/som' });
+            }
+          }}
+        >
+          <Trash2 className="size-4 mr-2" />
+          Recomeçar / Trocar Modelo
         </Button>
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Rider Técnico de Som</h1>
@@ -367,7 +382,7 @@ function MapaSomForm() {
                           updateJson('arquivo_nome', file.name);
                           toast.success('Upload concluído!', { id: toastId });
                         } catch (err: any) {
-                          toast.error(`Erro no upload: ${getErrorMessage(err)}`, { id: toastId });
+                          toast.error(`Erro no upload: ${err?.message || 'Erro desconhecido'}`, { id: toastId });
                         }
                       }}
                     />
