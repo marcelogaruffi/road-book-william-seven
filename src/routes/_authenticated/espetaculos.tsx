@@ -109,7 +109,8 @@ function EspetaculosPage() {
       const { data: { publicUrl } } = supabase.storage.from('midias_eventos').getPublicUrl(filePath);
       
       const m = {...(currentShow.assets_midia||{})};
-      m.anexos_som = [...(m.anexos_som || []), publicUrl];
+      const novoAnexo = { url: publicUrl, nome: file.name };
+      m.anexos_som = [...(m.anexos_som || []), novoAnexo];
       setCurrentShow(s => ({ ...s, assets_midia: m }));
       
       toast.success('Arquivo anexado com sucesso!');
@@ -703,18 +704,42 @@ function EspetaculosPage() {
                 <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-white/5">
                   <Label className="font-semibold text-sm">Arquivos do Rider (PDFs ou Imagens)</Label>
                   <div className="grid sm:grid-cols-2 gap-3">
-                    {(currentShow.assets_midia?.anexos_som || []).map((url: string, index: number) => (
-                      <div key={index} className="border rounded-xl p-3 flex justify-between items-center bg-white dark:bg-slate-900 shadow-sm">
-                        <a href={url} target="_blank" rel="noreferrer" className="font-bold text-sm text-blue-500 hover:underline flex items-center gap-2 truncate max-w-[80%]">
-                          <LinkIcon className="size-4 shrink-0"/> Ver Arquivo {index + 1}
-                        </a>
-                        <Button variant="ghost" size="icon" className="text-red-500 shrink-0 size-8" onClick={() => {
-                          const m = {...(currentShow.assets_midia||{})};
-                          m.anexos_som = m.anexos_som.filter((_, i) => i !== index);
-                          setCurrentShow({...currentShow, assets_midia: m});
-                        }}><X className="size-4"/></Button>
-                      </div>
-                    ))}
+                    {(currentShow.assets_midia?.anexos_som || []).map((anexo: any, index: number) => {
+                        const url = typeof anexo === 'string' ? anexo : anexo.url;
+                        const nome = typeof anexo === 'string' ? `Arquivo ${index + 1}` : anexo.nome;
+                        
+                        return (
+                          <div key={index} className="border rounded-xl p-3 flex flex-col gap-2 bg-white dark:bg-slate-900 shadow-sm">
+                            <div className="flex justify-between items-center">
+                              <a href={url} target="_blank" rel="noreferrer" className="font-bold text-sm text-blue-500 hover:underline flex items-center gap-2 truncate max-w-[80%]">
+                                <LinkIcon className="size-4 shrink-0"/> Ver Arquivo
+                              </a>
+                              <Button variant="ghost" size="icon" className="text-red-500 shrink-0 size-8" onClick={() => {
+                                const m = {...(currentShow.assets_midia||{})};
+                                m.anexos_som = m.anexos_som.filter((_: any, i: number) => i !== index);
+                                setCurrentShow({...currentShow, assets_midia: m});
+                              }}><X className="size-4"/></Button>
+                            </div>
+                            <Input 
+                              value={nome}
+                              onChange={(e) => {
+                                const m = {...(currentShow.assets_midia||{})};
+                                const lista = [...(m.anexos_som || [])];
+                                const current = lista[index];
+                                if (typeof current === 'string') {
+                                  lista[index] = { url: current, nome: e.target.value };
+                                } else {
+                                  lista[index] = { ...current, nome: e.target.value };
+                                }
+                                m.anexos_som = lista;
+                                setCurrentShow({...currentShow, assets_midia: m});
+                              }}
+                              placeholder="Nome do arquivo..."
+                              className="h-8 text-sm bg-slate-50 dark:bg-black/50"
+                            />
+                          </div>
+                        );
+                      })}
                     
                     <div 
                         className="border-2 border-dashed rounded-xl h-[52px] flex items-center justify-center text-slate-400 relative hover:bg-slate-50 dark:hover:bg-slate-900/50 bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer"
