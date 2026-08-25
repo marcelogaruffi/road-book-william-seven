@@ -8,6 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Route as AuthedRoute } from "./route";
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TemplateRiderSomViewer from "@/components/TemplateRiderSomViewer";
 
@@ -40,6 +45,24 @@ function SomComponent() {
   const [mapas, setMapas] = useState<MapaSom[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [initDialogEvento, setInitDialogEvento] = useState<Evento | null>(null);
+  const [initMode, setInitMode] = useState<'zero' | 'padrao' | 'clonar'>('zero');
+  const [selectedPadrao, setSelectedPadrao] = useState<string>('');
+  const [selectedCloneId, setSelectedCloneId] = useState<string>('');
+  const [templatesDisponiveis, setTemplatesDisponiveis] = useState<any[]>([]);
+  
+  // Fetch templates when dialog opens
+  useEffect(() => {
+    if (initDialogEvento) {
+      supabase.from('templates_espetaculos').select('nome_espetaculo').order('nome_espetaculo').then(({ data }) => {
+        if (data) setTemplatesDisponiveis(data);
+      });
+      setInitMode('zero');
+      setSelectedPadrao('');
+      setSelectedCloneId('');
+    }
+  }, [initDialogEvento]);
+
 
   useEffect(() => {
     loadData();
@@ -232,6 +255,71 @@ function SomComponent() {
           <TemplateRiderSomViewer role={role} />
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!initDialogEvento} onOpenChange={(val) => { if (!val) setInitDialogEvento(null); }}>
+        <DialogContent className="sm:max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle>Iniciar Mapa de Som</DialogTitle>
+            <DialogDescription>Como deseja preencher as informações iniciais deste mapa?</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <RadioGroup value={initMode} onValueChange={(val: any) => setInitMode(val)} className="space-y-3">
+              <div className="flex items-center space-x-2 bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/10">
+                <RadioGroupItem value="zero" id="r-zero" />
+                <Label htmlFor="r-zero" className="cursor-pointer font-semibold flex-1">Começar do Zero</Label>
+              </div>
+              <div className="flex items-center space-x-2 bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/10">
+                <RadioGroupItem value="padrao" id="r-padrao" />
+                <Label htmlFor="r-padrao" className="cursor-pointer font-semibold flex-1">Importar um Rider Padrão</Label>
+              </div>
+              {initMode === 'padrao' && (
+                <div className="pl-8 -mt-2 animate-in slide-in-from-top-2">
+                  <Select value={selectedPadrao} onValueChange={setSelectedPadrao}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione um Rider Padrão..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templatesDisponiveis.map(t => (
+                        <SelectItem key={t.nome_espetaculo} value={t.nome_espetaculo}>{t.nome_espetaculo}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="flex items-center space-x-2 bg-slate-50 dark:bg-white/5 p-3 rounded-xl border border-slate-100 dark:border-white/10">
+                <RadioGroupItem value="clonar" id="r-clonar" />
+                <Label htmlFor="r-clonar" className="cursor-pointer font-semibold flex-1">Clonar mapa de outro Show</Label>
+              </div>
+              {initMode === 'clonar' && (
+                <div className="pl-8 -mt-2 animate-in slide-in-from-top-2">
+                  <Select value={selectedCloneId} onValueChange={setSelectedCloneId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione um show já mapeado..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {eventos.filter(e => mapas.some(m => m.evento_id === e.id)).map(e => (
+                        <SelectItem key={e.id} value={e.id}>
+                          {e.espetaculo} - {e.cidade} ({new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR')})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </RadioGroup>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setInitDialogEvento(null)}>Cancelar</Button>
+            <Button onClick={confirmInitMapa} className="bg-blue-600 hover:bg-blue-700 text-white font-bold" disabled={(initMode === 'padrao' && !selectedPadrao) || (initMode === 'clonar' && !selectedCloneId)}>
+              Iniciar Mapa
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
