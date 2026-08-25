@@ -92,6 +92,30 @@ function EspetaculosPage() {
     }
   })();
 
+  
+  const handleRiderSomUpload = async (file: File) => {
+    if (!file) return;
+    toast.info('Fazendo upload...');
+    const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '');
+    const { data: user } = await supabase.auth.getUser();
+    const uid = user?.user?.id || 'public';
+    const filePath = `${uid}/midias_eventos/${Date.now()}-${cleanName}`;
+    
+    const { error: uploadError } = await supabase.storage.from('midias_eventos').upload(filePath, file);
+    
+    if (uploadError) {
+      toast.error('Erro no upload: ' + uploadError.message);
+    } else {
+      const { data: { publicUrl } } = supabase.storage.from('midias_eventos').getPublicUrl(filePath);
+      
+      const m = {...(currentShow.assets_midia||{})};
+      m.anexos_som = [...(m.anexos_som || []), publicUrl];
+      setCurrentShow(s => ({ ...s, assets_midia: m }));
+      
+      toast.success('Arquivo anexado com sucesso!');
+    }
+  };
+
   const updateSomData = (key: string, value: any) => {
     const newData = { ...somData, [key]: value };
     setCurrentShow({ ...currentShow, rider_som: JSON.stringify(newData) });
@@ -106,6 +130,26 @@ function EspetaculosPage() {
     const list = (somData.equipamentos_lista || []).filter((e: any) => e.id !== id);
     updateSomData('equipamentos_lista', list);
   };
+
+
+  const addSomInputList = () => {
+    const list = somData.input_list_tabela || [];
+    const proximoCanal = (list.length + 1).toString();
+    updateSomData('input_list_tabela', [...list, { id: Math.random().toString(36).substring(2, 9), canal: proximoCanal, equipamento: '', obs: '' }]);
+  };
+
+  const removeSomInputList = (id: string) => {
+    const list = (somData.input_list_tabela || []).filter((e: any) => e.id !== id);
+    updateSomData('input_list_tabela', list);
+  };
+
+  const updateSomInputList = (id: string, field: string, value: string) => {
+    const list = (somData.input_list_tabela || []).map((e: any) => 
+      e.id === id ? { ...e, [field]: value } : e
+    );
+    updateSomData('input_list_tabela', list);
+  };
+
 
   const updateSomEquipamento = (id: string, field: string, value: string) => {
     const list = (somData.equipamentos_lista || []).map((e: any) => 
@@ -672,36 +716,17 @@ function EspetaculosPage() {
                       </div>
                     ))}
                     
-                    <div className="border-2 border-dashed rounded-xl h-[52px] flex items-center justify-center text-slate-400 relative hover:bg-slate-50 dark:hover:bg-slate-900/50 bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer">
-                      <span className="text-sm font-semibold flex items-center"><Plus className="size-4 mr-1"/> Anexar Arquivo</span>
-                      <input type="file" onChange={async (e) => {
-                        // Custom handler inside to append to array
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        
-                        // We will borrow uploadAnexo logic but adapt it for arrays
-                        toast.info('Fazendo upload...');
-                        const fileExt = file.name.split('.').pop();
-                        const cleanName = file.name.replace(/[^a-zA-Z0-9.-_]/g, '');
-                        const { data: user } = await supabase.auth.getUser();
-                        const uid = user?.user?.id || 'public';
-                        const filePath = `${uid}/midias_eventos/${Date.now()}-${cleanName}`;
-                        
-                        const { error: uploadError } = await supabase.storage.from('midias_eventos').upload(filePath, file);
-                        
-                        if (uploadError) {
-                          toast.error('Erro no upload: ' + uploadError.message);
-                        } else {
-                          const { data: { publicUrl } } = supabase.storage.from('midias_eventos').getPublicUrl(filePath);
-                          
-                          const m = {...(currentShow.assets_midia||{})};
-                          m.anexos_som = [...(m.anexos_som || []), publicUrl];
-                          setCurrentShow(s => ({ ...s, assets_midia: m }));
-                          
-                          toast.success('Arquivo anexado com sucesso!');
-                        }
-                      }} className="absolute inset-0 opacity-0 cursor-pointer" />
-                    </div>
+                    <div 
+                        className="border-2 border-dashed rounded-xl h-[52px] flex items-center justify-center text-slate-400 relative hover:bg-slate-50 dark:hover:bg-slate-900/50 bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer"
+                        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                        onDrop={(e) => { e.preventDefault(); e.stopPropagation(); const file = e.dataTransfer.files?.[0]; if (file) handleRiderSomUpload(file); }}
+                      >
+                        <span className="text-sm font-semibold flex items-center"><Plus className="size-4 mr-1"/> Anexar Arquivo (ou arraste aqui)</span>
+                        <input type="file" onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleRiderSomUpload(file);
+                        }} className="absolute inset-0 opacity-0 cursor-pointer" />
+                      </div>
                   </div>
                 </div>
 
