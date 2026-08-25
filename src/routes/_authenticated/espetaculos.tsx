@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Music, Plus, Trash2, Pencil, Save, X, Users, ChevronRight, ChevronLeft, Clapperboard, Map, Mic2, Lightbulb, FileText, Settings, Image as ImageIcon, FileUp, Link as LinkIcon, CheckCircle2 } from "lucide-react";
@@ -76,6 +77,7 @@ function EspetaculosPage() {
   const [currentShow, setCurrentShow] = useState<Espetaculo>(emptyShow);
   const [step, setStep] = useState(1);
   const [isEditing, setIsEditing] = useState(false);
+  const [viewRiderModal, setViewRiderModal] = useState<string | null>(null);
   const [originalName, setOriginalName] = useState("");
 
   const [novaFicha, setNovaFicha] = useState({ funcao: "", nome: "", outroNome: "" });
@@ -857,17 +859,21 @@ function EspetaculosPage() {
               </h3>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { title: "Rider de Som", icon: Mic2, color: "text-emerald-500", key: "rider_som", attach: "anexo_som" },
-                  { title: "Rider de Luz", icon: Lightbulb, color: "text-amber-500", key: "rider_luz", attach: "anexo_luz" },
-                  { title: "Rider Vídeo", icon: Clapperboard, color: "text-purple-500", key: "rider_video", attach: "anexo_video" },
-                  { title: "Mapa Palco", icon: Map, color: "text-blue-500", key: "mapa_palco_url", attach: "anexo_palco" },
-                  { title: "Figurinos", icon: Users, color: "text-pink-500", key: "figurinos_url", attach: "anexo_figurino" },
-                ].map((item, i) => {
+                    { title: "Rider de Som", icon: Mic2, color: "text-emerald-500", key: "rider_som", attach: "anexos_som" },
+                    { title: "Rider de Luz", icon: Lightbulb, color: "text-amber-500", key: "rider_luz", attach: "anexos_luz" },
+                    { title: "Rider Vídeo", icon: Clapperboard, color: "text-purple-500", key: "rider_video", attach: "anexos_video" },
+                    { title: "Mapa Palco", icon: Map, color: "text-blue-500", key: "mapa_palco_url", attach: "anexos_palco" },
+                    { title: "Figurinos", icon: Users, color: "text-pink-500", key: "figurinos_url", attach: "anexos_figurino" },
+                  ].map((item, i) => {
                   const hasText = !!currentShow[item.key as keyof Espetaculo];
                   const hasAttach = !!currentShow.assets_midia?.[item.attach];
                   const Icon = item.icon;
                   return (
-                    <div key={i} className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center text-center">
+                    <div 
+                      key={i} 
+                      onClick={() => { if (hasText || hasAttach) setViewRiderModal(item.key) }}
+                      className={`bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center text-center ${(hasText || hasAttach) ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors' : 'opacity-70'}`}
+                    >
                       <Icon className={`size-8 mb-2 ${(hasText || hasAttach) ? item.color : 'text-slate-300 dark:text-slate-700'}`} />
                       <span className="font-black text-slate-700 dark:text-slate-300 text-sm">{item.title}</span>
                       <div className="flex gap-1.5 mt-2">
