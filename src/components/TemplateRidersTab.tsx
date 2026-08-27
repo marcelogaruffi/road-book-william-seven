@@ -51,9 +51,19 @@ export default function TemplateRidersTab({ role, context = 'ambos' }: { role?: 
 
   function handleEdit(t: Template) {
     setEditNome(t.nome_espetaculo);
-    setRawTemplate(t);
-    setSomList(t.rider_som?.equipamentos_lista || []);
-    setLuzList(t.rider_luz?.equipamentos_lista || []);
+    
+    let pSom = t.rider_som as any;
+    if (typeof pSom === 'string') {
+      try { pSom = JSON.parse(pSom); } catch(e) { pSom = {}; }
+    }
+    let pLuz = t.rider_luz as any;
+    if (typeof pLuz === 'string') {
+      try { pLuz = JSON.parse(pLuz); } catch(e) { pLuz = {}; }
+    }
+    
+    setRawTemplate({ ...t, rider_som: pSom, rider_luz: pLuz });
+    setSomList(pSom?.equipamentos_lista || []);
+    setLuzList(pLuz?.equipamentos_lista || []);
   }
 
   function clearForm() {

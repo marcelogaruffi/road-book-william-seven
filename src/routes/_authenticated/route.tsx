@@ -263,6 +263,7 @@ function AuthedLayout() {
                 <SGroup title="Técnica" icon={Settings}>
                   <SLink to="/iluminacao" icon={Lightbulb} label="Iluminação" />
                   <SLink to="/som" icon={Mic2} label="Áudio / Som" />
+                  <SLink to="/som-operacao" icon={Play} label="Operação de Som" />
                   <SLink to="/video" icon={Video} label="Vídeo" />
                 </SGroup>
 

@@ -54,8 +54,20 @@ export default function TemplateCuesTab() {
 
   function handleEdit(t: Template) {
     setEditNome(t.nome_espetaculo);
-    setRawTemplate(t);
-    setCuesList(t.rider_som?.cues_lista || []);
+    
+    // Convert rider_som to object if it's a string
+    let parsedRider = t.rider_som;
+    if (typeof parsedRider === 'string') {
+      try {
+        parsedRider = JSON.parse(parsedRider);
+      } catch (e) {
+        parsedRider = {};
+      }
+    }
+    
+    setRawTemplate({ ...t, rider_som: parsedRider });
+    const cList = parsedRider?.cues_lista;
+    setCuesList(Array.isArray(cList) ? cList : []);
   }
 
   function clearForm() {

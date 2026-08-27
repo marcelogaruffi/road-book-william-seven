@@ -27,6 +27,7 @@ export default function TemplateRiderSomViewer({ role }: { role?: string }) {
 
   const somData = (() => {
     if (!selectedTemplate) return null;
+    if (typeof selectedTemplate.rider_som === 'object') return selectedTemplate.rider_som;
     try {
       return selectedTemplate.rider_som ? JSON.parse(selectedTemplate.rider_som) : {};
     } catch {

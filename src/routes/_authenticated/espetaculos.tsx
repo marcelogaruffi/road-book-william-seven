@@ -87,8 +87,10 @@ function EspetaculosPage() {
   
   
   const somData = (() => {
+    if (!currentShow.rider_som) return {};
+    if (typeof currentShow.rider_som === 'object') return currentShow.rider_som;
     try {
-      return currentShow.rider_som ? JSON.parse(currentShow.rider_som) : {};
+      return JSON.parse(currentShow.rider_som);
     } catch {
       return { notas_gerais: currentShow.rider_som || '' };
     }

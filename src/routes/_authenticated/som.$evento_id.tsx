@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Mic2, ArrowLeft, Calendar, MapPin, Save, Ticket, Plus, Trash2, ListChecks, FileUp, LinkIcon, X, Music } from 'lucide-react';
+import { Mic2, ArrowLeft, Calendar, MapPin, Save, Ticket, Plus, Trash2, ListChecks, FileUp, LinkIcon, X, Music, Download } from 'lucide-react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -90,6 +90,36 @@ function MapaSomForm() {
       e.id === id ? { ...e, [field]: value } : e
     );
     updateJson('cues_lista', list);
+  };
+
+  const importTemplateCues = async () => {
+    if (!mapa?.espetaculo) {
+      toast.error("Espetáculo não identificado.");
+      return;
+    }
+    try {
+      const { data, error } = await supabase.from('templates_espetaculos').select('rider_som').eq('nome_espetaculo', mapa.espetaculo).single();
+      if (error) throw error;
+      let r = data?.rider_som;
+      if (typeof r === 'string') {
+        try { r = JSON.parse(r); } catch(e) { r = {}; }
+      }
+      let templateCues = r?.cues_lista;
+      if (!Array.isArray(templateCues)) templateCues = [];
+      
+      if (templateCues.length === 0) {
+        toast.error("Nenhuma deixa padrão cadastrada na aba de Modelos para este espetáculo.");
+        return;
+      }
+      
+      const list = Array.isArray(mapa?.json_data?.cues_lista) ? mapa.json_data.cues_lista : [];
+      const newCues = templateCues.map((c: any) => ({ ...c, id: Math.random().toString(36).substring(2, 9) }));
+      
+      updateJson('cues_lista', [...list, ...newCues]);
+      toast.success(`${newCues.length} deixas puxadas com sucesso! Não se esqueça de salvar o mapa.`);
+    } catch (err: any) {
+      toast.error("Erro ao importar deixas: " + err.message);
+    }
   };
 
   const loadData = async () => {
@@ -397,15 +427,21 @@ function MapaSomForm() {
               <AccordionContent className="space-y-6 pt-4 pb-6">
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                     <Label className="text-lg font-bold flex items-center gap-2 text-slate-800 dark:text-white">
                       <Music className="size-5 text-blue-500" />
                       Roteiro de Deixas e Faixas
                     </Label>
-                    <Button type="button" onClick={addCue} size="sm" className="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30">
-                      <Plus className="size-4 mr-2" />
-                      Adicionar Deixa
-                    </Button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button type="button" onClick={importTemplateCues} size="sm" className="flex-1 sm:flex-none bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30">
+                        <Download className="size-4 mr-2" />
+                        Puxar Deixas Padrão
+                      </Button>
+                      <Button type="button" onClick={addCue} size="sm" className="flex-1 sm:flex-none bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:hover:bg-blue-500/30">
+                        <Plus className="size-4 mr-2" />
+                        Adicionar
+                      </Button>
+                    </div>
                   </div>
                   <p className="text-sm text-slate-500">Registre as deixas de preparação e do GO para soltar as faixas de áudio.</p>
                   
