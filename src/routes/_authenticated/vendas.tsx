@@ -191,7 +191,7 @@ function VendasPage() {
     doc.line(14, 32, doc.internal.pageSize.getWidth() - 14, 32);
     
     const tableData = vendasFiltradas.map(v => [
-      new Date(v.data_venda).toLocaleDateString("pt-BR"),
+      new Date(v.data_venda.substring(0, 10) + 'T12:00:00Z').toLocaleDateString("pt-BR"),
       v.produto?.nome || "-",
       v.evento ? `${v.evento.cidade} (${v.evento.local})` : "-",
       v.quantidade.toString(),
@@ -277,7 +277,7 @@ function VendasPage() {
 
     vendasFiltradas.forEach(v => {
       sheet.addRow({
-        data: new Date(v.data_venda).toLocaleDateString("pt-BR"),
+        data: new Date(v.data_venda.substring(0, 10) + 'T12:00:00Z').toLocaleDateString("pt-BR"),
         prod: v.produto?.nome,
         cidade: v.evento ? `${v.evento.cidade} - ${v.evento.local}` : "",
         qtd: v.quantidade,
@@ -341,7 +341,7 @@ function VendasPage() {
                   <Label>Evento / Cidade *</Label>
                   <select required value={vendaEventoId} onChange={e => setVendaEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                     <option value="">Selecione o evento...</option>
-                    {eventos.map(evt => <option key={evt.id} value={evt.id}>{evt.cidade} ({new Date(evt.data).toLocaleDateString('pt-BR')})</option>)}
+                    {eventos.map(evt => <option key={evt.id} value={evt.id}>{evt.cidade} ({new Date((evt.data || '').substring(0, 10) + 'T12:00:00Z').toLocaleDateString('pt-BR')})</option>)}
                   </select>
                 </div>
                 <div className="flex-1 space-y-2">
@@ -389,7 +389,7 @@ function VendasPage() {
                   <tbody className="divide-y">
                     {vendasFiltradas.map(v => (
                       <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="px-4 py-3">{new Date(v.data_venda).toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-3">{new Date(v.data_venda.substring(0, 10) + 'T12:00:00Z').toLocaleDateString('pt-BR')}</td>
                         <td className="px-4 py-3 font-medium">{v.produto?.nome}</td>
                         <td className="px-4 py-3 text-muted-foreground"><MapPin className="size-3 inline mr-1"/>{v.evento?.cidade}</td>
                         <td className="px-4 py-3 text-right">{v.quantidade}</td>
