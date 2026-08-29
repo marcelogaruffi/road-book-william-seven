@@ -31,7 +31,7 @@ type RegistroVenda = {
   valor_total: number;
   data_venda: string;
   produto?: { nome: string };
-  evento?: { cidade: string; local: string };
+  evento?: { cidade: string; local: string; data: string };
 };
 
 type Evento = {
@@ -66,7 +66,7 @@ function VendasPage() {
       const [prodRes, evtRes, vendRes] = await Promise.all([
         supabase.from("vendas_produtos").select("*").order("nome"),
         supabase.from("eventos").select("id, cidade, local, data").order("data", { ascending: false }),
-        supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local)").order("data_venda", { ascending: false })
+        supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local, data)").order("data_venda", { ascending: false })
       ]);
 
       if (prodRes.data) setProdutos(prodRes.data);
@@ -191,7 +191,7 @@ function VendasPage() {
     doc.line(14, 32, doc.internal.pageSize.getWidth() - 14, 32);
     
     const tableData = vendasFiltradas.map(v => [
-      new Date(v.data_venda.substring(0, 10) + 'T12:00:00Z').toLocaleDateString("pt-BR"),
+      v.evento?.data ? new Date(v.evento.data.substring(0, 10) + 'T12:00:00Z').toLocaleDateString("pt-BR") : "-",
       v.produto?.nome || "-",
       v.evento ? `${v.evento.cidade} (${v.evento.local})` : "-",
       v.quantidade.toString(),
@@ -277,7 +277,7 @@ function VendasPage() {
 
     vendasFiltradas.forEach(v => {
       sheet.addRow({
-        data: new Date(v.data_venda.substring(0, 10) + 'T12:00:00Z').toLocaleDateString("pt-BR"),
+        data: v.evento?.data ? new Date(v.evento.data.substring(0, 10) + 'T12:00:00Z').toLocaleDateString("pt-BR") : "",
         prod: v.produto?.nome,
         cidade: v.evento ? `${v.evento.cidade} - ${v.evento.local}` : "",
         qtd: v.quantidade,
@@ -389,7 +389,7 @@ function VendasPage() {
                   <tbody className="divide-y">
                     {vendasFiltradas.map(v => (
                       <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="px-4 py-3">{new Date(v.data_venda.substring(0, 10) + 'T12:00:00Z').toLocaleDateString('pt-BR')}</td>
+                        <td className="px-4 py-3">{v.evento?.data ? new Date(v.evento.data.substring(0, 10) + 'T12:00:00Z').toLocaleDateString('pt-BR') : '-'}</td>
                         <td className="px-4 py-3 font-medium">{v.produto?.nome}</td>
                         <td className="px-4 py-3 text-muted-foreground"><MapPin className="size-3 inline mr-1"/>{v.evento?.cidade}</td>
                         <td className="px-4 py-3 text-right">{v.quantidade}</td>
