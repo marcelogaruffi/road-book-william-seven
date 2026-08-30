@@ -96,6 +96,24 @@ function SomOperacaoScreen() {
     }
   }, [isOperationMode]);
 
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(e => console.error(e));
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(e => console.error(e));
+      }
+    }
+  };
+
   const loadData = async () => {
     try {
       const { data, error } = await supabase
@@ -257,6 +275,9 @@ function SomOperacaoScreen() {
 
   const stopOperation = () => {
     setIsOperationMode(false);
+    if (document.fullscreenElement && document.exitFullscreen) {
+      document.exitFullscreen().catch(e => console.error(e));
+    }
   };
 
   if (loading) return <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
@@ -279,11 +300,14 @@ function SomOperacaoScreen() {
       <div className="fixed inset-0 z-[100] bg-[#0B0F19] overflow-hidden flex flex-col w-full h-screen text-left font-sans">
         {/* HEADER */}
         <div className="flex items-center justify-between p-4 md:p-6 bg-black/40 border-b border-white/5">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={stopOperation} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10">
+          <div className="flex items-center gap-2 md:gap-4">
+            <Button variant="ghost" size="icon" onClick={stopOperation} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10" title="Sair (Esc)">
               <X className="size-6" />
             </Button>
-            <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2">
+            <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="rounded-full text-slate-400 hover:text-white hover:bg-white/10 hidden sm:flex" title="Tela Cheia">
+              {isFullscreen ? <Minimize className="size-6" /> : <Maximize className="size-6" />}
+            </Button>
+            <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-2 ml-2">
               <span className="text-red-600 font-bold tracking-widest text-sm md:text-base">COXIA</span>
               <span className="text-slate-500 font-normal hidden sm:inline">- {mapa.nome}</span>
             </h2>

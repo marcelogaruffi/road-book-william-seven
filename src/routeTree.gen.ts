@@ -44,6 +44,7 @@ import { Route as AuthenticatedSomOperacaoIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedPartiturasIndexRouteImport } from './routes/_authenticated/partituras.index'
 import { Route as AuthenticatedPalcoIndexRouteImport } from './routes/_authenticated/palco.index'
 import { Route as AuthenticatedMeusFigurinosIndexRouteImport } from './routes/_authenticated/meus-figurinos.index'
+import { Route as AuthenticatedMalasIndexRouteImport } from './routes/_authenticated/malas.index'
 import { Route as AuthenticatedIluminacaoIndexRouteImport } from './routes/_authenticated/iluminacao.index'
 import { Route as AuthenticatedFigurinosIndexRouteImport } from './routes/_authenticated/figurinos.index'
 import { Route as AuthenticatedCamarinsIndexRouteImport } from './routes/_authenticated/camarins.index'
@@ -56,6 +57,7 @@ import { Route as AuthenticatedSomOperacaoEvento_idRouteImport } from './routes/
 import { Route as AuthenticatedRoadbookNewRouteImport } from './routes/_authenticated/roadbook.new'
 import { Route as AuthenticatedRoadbookIdRouteImport } from './routes/_authenticated/roadbook.$id'
 import { Route as AuthenticatedPrintSlugRouteImport } from './routes/_authenticated/print.$slug'
+import { Route as AuthenticatedMalasEvento_idRouteImport } from './routes/_authenticated/malas.$evento_id'
 import { Route as AuthenticatedIluminacaoEvento_idRouteImport } from './routes/_authenticated/iluminacao.$evento_id'
 
 const VerifyPhoneRoute = VerifyPhoneRouteImport.update({
@@ -242,6 +244,11 @@ const AuthenticatedMeusFigurinosIndexRoute =
     path: '/meus-figurinos/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMalasIndexRoute = AuthenticatedMalasIndexRouteImport.update({
+  id: '/malas/',
+  path: '/malas/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedIluminacaoIndexRoute =
   AuthenticatedIluminacaoIndexRouteImport.update({
     id: '/iluminacao/',
@@ -310,6 +317,12 @@ const AuthenticatedPrintSlugRoute = AuthenticatedPrintSlugRouteImport.update({
   path: '/print/$slug',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMalasEvento_idRoute =
+  AuthenticatedMalasEvento_idRouteImport.update({
+    id: '/malas/$evento_id',
+    path: '/malas/$evento_id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedIluminacaoEvento_idRoute =
   AuthenticatedIluminacaoEvento_idRouteImport.update({
     id: '/iluminacao/$evento_id',
@@ -347,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
   '/iluminacao/$evento_id': typeof AuthenticatedIluminacaoEvento_idRoute
+  '/malas/$evento_id': typeof AuthenticatedMalasEvento_idRoute
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
@@ -359,6 +373,7 @@ export interface FileRoutesByFullPath {
   '/camarins/': typeof AuthenticatedCamarinsIndexRoute
   '/figurinos/': typeof AuthenticatedFigurinosIndexRoute
   '/iluminacao/': typeof AuthenticatedIluminacaoIndexRoute
+  '/malas/': typeof AuthenticatedMalasIndexRoute
   '/meus-figurinos/': typeof AuthenticatedMeusFigurinosIndexRoute
   '/palco/': typeof AuthenticatedPalcoIndexRoute
   '/partituras/': typeof AuthenticatedPartiturasIndexRoute
@@ -396,6 +411,7 @@ export interface FileRoutesByTo {
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
   '/iluminacao/$evento_id': typeof AuthenticatedIluminacaoEvento_idRoute
+  '/malas/$evento_id': typeof AuthenticatedMalasEvento_idRoute
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/roadbook/new': typeof AuthenticatedRoadbookNewRoute
@@ -408,6 +424,7 @@ export interface FileRoutesByTo {
   '/camarins': typeof AuthenticatedCamarinsIndexRoute
   '/figurinos': typeof AuthenticatedFigurinosIndexRoute
   '/iluminacao': typeof AuthenticatedIluminacaoIndexRoute
+  '/malas': typeof AuthenticatedMalasIndexRoute
   '/meus-figurinos': typeof AuthenticatedMeusFigurinosIndexRoute
   '/palco': typeof AuthenticatedPalcoIndexRoute
   '/partituras': typeof AuthenticatedPartiturasIndexRoute
@@ -447,6 +464,7 @@ export interface FileRoutesById {
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
   '/_authenticated/iluminacao/$evento_id': typeof AuthenticatedIluminacaoEvento_idRoute
+  '/_authenticated/malas/$evento_id': typeof AuthenticatedMalasEvento_idRoute
   '/_authenticated/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/_authenticated/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
   '/_authenticated/roadbook/new': typeof AuthenticatedRoadbookNewRoute
@@ -459,6 +477,7 @@ export interface FileRoutesById {
   '/_authenticated/camarins/': typeof AuthenticatedCamarinsIndexRoute
   '/_authenticated/figurinos/': typeof AuthenticatedFigurinosIndexRoute
   '/_authenticated/iluminacao/': typeof AuthenticatedIluminacaoIndexRoute
+  '/_authenticated/malas/': typeof AuthenticatedMalasIndexRoute
   '/_authenticated/meus-figurinos/': typeof AuthenticatedMeusFigurinosIndexRoute
   '/_authenticated/palco/': typeof AuthenticatedPalcoIndexRoute
   '/_authenticated/partituras/': typeof AuthenticatedPartiturasIndexRoute
@@ -498,6 +517,7 @@ export interface FileRouteTypes {
     | '/turne-completa/$slug'
     | '/turne/$slug'
     | '/iluminacao/$evento_id'
+    | '/malas/$evento_id'
     | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
@@ -510,6 +530,7 @@ export interface FileRouteTypes {
     | '/camarins/'
     | '/figurinos/'
     | '/iluminacao/'
+    | '/malas/'
     | '/meus-figurinos/'
     | '/palco/'
     | '/partituras/'
@@ -547,6 +568,7 @@ export interface FileRouteTypes {
     | '/turne-completa/$slug'
     | '/turne/$slug'
     | '/iluminacao/$evento_id'
+    | '/malas/$evento_id'
     | '/print/$slug'
     | '/roadbook/$id'
     | '/roadbook/new'
@@ -559,6 +581,7 @@ export interface FileRouteTypes {
     | '/camarins'
     | '/figurinos'
     | '/iluminacao'
+    | '/malas'
     | '/meus-figurinos'
     | '/palco'
     | '/partituras'
@@ -597,6 +620,7 @@ export interface FileRouteTypes {
     | '/turne-completa/$slug'
     | '/turne/$slug'
     | '/_authenticated/iluminacao/$evento_id'
+    | '/_authenticated/malas/$evento_id'
     | '/_authenticated/print/$slug'
     | '/_authenticated/roadbook/$id'
     | '/_authenticated/roadbook/new'
@@ -609,6 +633,7 @@ export interface FileRouteTypes {
     | '/_authenticated/camarins/'
     | '/_authenticated/figurinos/'
     | '/_authenticated/iluminacao/'
+    | '/_authenticated/malas/'
     | '/_authenticated/meus-figurinos/'
     | '/_authenticated/palco/'
     | '/_authenticated/partituras/'
@@ -875,6 +900,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeusFigurinosIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/malas/': {
+      id: '/_authenticated/malas/'
+      path: '/malas'
+      fullPath: '/malas/'
+      preLoaderRoute: typeof AuthenticatedMalasIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/iluminacao/': {
       id: '/_authenticated/iluminacao/'
       path: '/iluminacao'
@@ -959,6 +991,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrintSlugRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/malas/$evento_id': {
+      id: '/_authenticated/malas/$evento_id'
+      path: '/malas/$evento_id'
+      fullPath: '/malas/$evento_id'
+      preLoaderRoute: typeof AuthenticatedMalasEvento_idRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/iluminacao/$evento_id': {
       id: '/_authenticated/iluminacao/$evento_id'
       path: '/iluminacao/$evento_id'
@@ -992,6 +1031,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedViagensRoute: typeof AuthenticatedViagensRoute
   AuthenticatedIluminacaoEvento_idRoute: typeof AuthenticatedIluminacaoEvento_idRoute
+  AuthenticatedMalasEvento_idRoute: typeof AuthenticatedMalasEvento_idRoute
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
   AuthenticatedRoadbookNewRoute: typeof AuthenticatedRoadbookNewRoute
@@ -1004,6 +1044,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCamarinsIndexRoute: typeof AuthenticatedCamarinsIndexRoute
   AuthenticatedFigurinosIndexRoute: typeof AuthenticatedFigurinosIndexRoute
   AuthenticatedIluminacaoIndexRoute: typeof AuthenticatedIluminacaoIndexRoute
+  AuthenticatedMalasIndexRoute: typeof AuthenticatedMalasIndexRoute
   AuthenticatedMeusFigurinosIndexRoute: typeof AuthenticatedMeusFigurinosIndexRoute
   AuthenticatedPalcoIndexRoute: typeof AuthenticatedPalcoIndexRoute
   AuthenticatedPartiturasIndexRoute: typeof AuthenticatedPartiturasIndexRoute
@@ -1035,6 +1076,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedViagensRoute: AuthenticatedViagensRoute,
   AuthenticatedIluminacaoEvento_idRoute: AuthenticatedIluminacaoEvento_idRoute,
+  AuthenticatedMalasEvento_idRoute: AuthenticatedMalasEvento_idRoute,
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,
   AuthenticatedRoadbookNewRoute: AuthenticatedRoadbookNewRoute,
@@ -1048,6 +1090,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCamarinsIndexRoute: AuthenticatedCamarinsIndexRoute,
   AuthenticatedFigurinosIndexRoute: AuthenticatedFigurinosIndexRoute,
   AuthenticatedIluminacaoIndexRoute: AuthenticatedIluminacaoIndexRoute,
+  AuthenticatedMalasIndexRoute: AuthenticatedMalasIndexRoute,
   AuthenticatedMeusFigurinosIndexRoute: AuthenticatedMeusFigurinosIndexRoute,
   AuthenticatedPalcoIndexRoute: AuthenticatedPalcoIndexRoute,
   AuthenticatedPartiturasIndexRoute: AuthenticatedPartiturasIndexRoute,

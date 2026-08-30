@@ -10,7 +10,7 @@ import {
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Contact2 } from "lucide-react";
+import { Users, Contact2, Luggage } from "lucide-react";
 import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
 
 type Profile = {
@@ -241,7 +241,7 @@ function AuthedLayout() {
 
                 <SGroup title="Produção" icon={ClipboardList}>
                   <SLink to="/eventos" icon={Calendar} label="Eventos e Shows" />
-                  <SLink to="/viagens" icon={Bus} label="Guias de Viagem & Malas" />
+                  <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour.new" icon={RouteIcon} label="Nova Turnê" show={isProdutor} />
                 </SGroup>
 
@@ -258,6 +258,7 @@ function AuthedLayout() {
                   <SLink to="/palco" icon={StageIcon} label="Montagem de Palco" />
                   <SLink to="/figurinos" icon={ClothesRackIcon} label="Figurinos" />
                   <SLink to="/camarins" icon={StarDoorIcon} label="Camarins" />
+                  <SLink to="/malas" icon={Luggage} label="Malas e Cases" />
                 </SGroup>
 
                 <SGroup title="Técnica" icon={Settings}>
