@@ -98,19 +98,37 @@ function SomOperacaoScreen() {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const fDoc = document as any;
+      setIsFullscreen(!!(fDoc.fullscreenElement || fDoc.webkitFullscreenElement));
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
   }, []);
 
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(e => console.error(e));
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(e => console.error(e));
+    try {
+      const doc = document.documentElement as any;
+      const fDoc = document as any;
+
+      if (!fDoc.fullscreenElement && !fDoc.webkitFullscreenElement) {
+        if (doc.requestFullscreen) {
+          doc.requestFullscreen().catch((e: any) => console.warn(e));
+        } else if (doc.webkitRequestFullscreen) {
+          doc.webkitRequestFullscreen();
+        }
+      } else {
+        if (fDoc.exitFullscreen) {
+          fDoc.exitFullscreen().catch((e: any) => console.warn(e));
+        } else if (fDoc.webkitExitFullscreen) {
+          fDoc.webkitExitFullscreen();
+        }
       }
+    } catch (e) {
+      console.warn("Fullscreen API error", e);
     }
   };
 
@@ -275,8 +293,17 @@ function SomOperacaoScreen() {
 
   const stopOperation = () => {
     setIsOperationMode(false);
-    if (document.fullscreenElement && document.exitFullscreen) {
-      document.exitFullscreen().catch(e => console.error(e));
+    try {
+      const fDoc = document as any;
+      if (fDoc.fullscreenElement || fDoc.webkitFullscreenElement) {
+        if (fDoc.exitFullscreen) {
+          fDoc.exitFullscreen().catch((e: any) => console.warn(e));
+        } else if (fDoc.webkitExitFullscreen) {
+          fDoc.webkitExitFullscreen();
+        }
+      }
+    } catch (e) {
+      console.warn("Fullscreen exit error", e);
     }
   };
 

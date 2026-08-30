@@ -56,7 +56,7 @@ export function MalasTemplateTab() {
         if (v.id === volumeId) {
           return {
             ...v,
-            itens: v.itens.map(i => {
+            itens: (v.itens || []).map(i => {
               if (i.id === itemId) {
                 if (i.foto_path) {
                   supabase.storage.from("roadbook-docs").remove([i.foto_path]).catch(() => {});
@@ -144,7 +144,7 @@ export function MalasTemplateTab() {
   function addItem(volumeId: string) {
     setVolumes(volumes.map(v => {
       if (v.id === volumeId) {
-        return { ...v, itens: [...v.itens, { id: Math.random().toString(36).substring(2, 9), nome: '', quantidade: 1 }] };
+        return { ...v, itens: [...(v.itens || []), { id: Math.random().toString(36).substring(2, 9), nome: '', quantidade: 1 }] };
       }
       return v;
     }));
@@ -155,7 +155,7 @@ export function MalasTemplateTab() {
       if (v.id === volumeId) {
         return {
           ...v,
-          itens: v.itens.map(i => i.id === itemId ? { ...i, [field]: value } : i)
+          itens: (v.itens || []).map(i => i.id === itemId ? { ...i, [field]: value } : i)
         };
       }
       return v;
@@ -165,7 +165,7 @@ export function MalasTemplateTab() {
   function removeItem(volumeId: string, itemId: string) {
     setVolumes(volumes.map(v => {
       if (v.id === volumeId) {
-        return { ...v, itens: v.itens.filter(i => i.id !== itemId) };
+        return { ...v, itens: (v.itens || []).filter(i => i.id !== itemId) };
       }
       return v;
     }));
@@ -246,7 +246,7 @@ export function MalasTemplateTab() {
                           
                           <AccordionContent className="pt-2 pb-6 px-2">
                             <div className="space-y-2">
-                              {vol.itens.map(item => (
+                              {(vol.itens || []).map(item => (
                                 <div key={item.id} className="flex items-center gap-2">
                                   <Input 
                                     type="number"
