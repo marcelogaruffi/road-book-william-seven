@@ -193,7 +193,7 @@ function MalasEventoOperacao() {
 
               return (
                 <Card key={vol.id} className={`border-0 shadow-md rounded-2xl transition-colors ${isVolComplete ? 'bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30' : 'bg-white dark:bg-card'}`}>
-                  <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-4 flex flex-row items-center justify-between">
+                  <CardHeader className={`sticky top-0 z-10 rounded-t-2xl border-b border-slate-100 dark:border-white/5 pb-4 flex flex-row items-center justify-between transition-colors backdrop-blur-md ${isVolComplete ? 'bg-emerald-50/90 dark:bg-emerald-950/90' : 'bg-white/90 dark:bg-card/90'}`}>
                     <div>
                       <CardTitle className="text-xl flex items-center gap-2">
                         {isVolComplete ? <Check className="text-emerald-500 size-5" /> : <Luggage className="text-slate-400 size-5" />}
@@ -201,7 +201,7 @@ function MalasEventoOperacao() {
                       </CardTitle>
                     </div>
                     <Badge variant="outline" className={isVolComplete ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : ''}>
-                      {itens.filter(i => i.checked).length} / {itens.length} itens
+                      {itens.filter(i => i.checked).length} / {itens.length} itens ({volProgress}%)
                     </Badge>
                   </CardHeader>
                   <CardContent className="p-0">
