@@ -1,0 +1,24 @@
+
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+
+const env = fs.readFileSync('.env', 'utf8');
+const supabaseUrl = env.match(/SUPABASE_URL="([^"]+)"/)[1].trim();
+const supabaseKey = env.match(/SUPABASE_ANON_KEY="([^"]+)"/)[1].trim();
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+async function run() {
+  const { data: authData } = await supabase.auth.signUp({
+    email: 'admin_test_query_11_' + Date.now() + '@williamseven.com',
+    password: 'senha_super_secreta_123',
+  });
+  
+  const { data } = await supabase.from('eventos').select('*').limit(1);
+  if (data && data.length > 0) {
+    console.log(Object.keys(data[0]));
+  } else {
+    console.log('still empty or blocked by RLS');
+  }
+}
+run();
+

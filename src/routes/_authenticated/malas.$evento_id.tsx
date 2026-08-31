@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronLeft, Luggage, Save, ShieldAlert, FileWarning } from 'lucide-react';
+import { Check, ChevronLeft, Luggage, Save, ShieldAlert, FileWarning, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 import type { MalaVolume, MalaItem } from '@/components/MalasTemplateTab';
@@ -100,6 +100,37 @@ function MalasEventoOperacao() {
     }
   }
 
+  function handleAddExtraItem(volId: string) {
+    const nome = prompt("Digite o nome do novo item para esta mala (Ex: 'Extensão 10m'):");
+    if (!nome) return;
+    const qtyStr = prompt("Quantidade:", "1");
+    if (!qtyStr) return;
+    const qty = parseInt(qtyStr, 10);
+    
+    setVolumes(volumes.map(v => {
+      if (v.id === volId) {
+        return {
+          ...v,
+          itens: [...(v.itens || []), { id: crypto.randomUUID(), nome, quantidade: isNaN(qty) ? 1 : qty, checked: false }]
+        };
+      }
+      return v;
+    }));
+    toast.info("Lembre-se de clicar em 'Salvar Checklist' no topo da página!");
+  }
+
+  function handleDeleteItem(volId: string, itemId: string, e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm("Remover este item do checklist DESSA CIDADE? (Não altera as outras cidades)")) return;
+    setVolumes(volumes.map(v => {
+      if (v.id === volId) {
+        return { ...v, itens: (v.itens || []).filter(i => i.id !== itemId) };
+      }
+      return v;
+    }));
+  }
+
   if (loading) return <div className="p-12 text-center">Carregando checklist de malas...</div>;
 
   if (!roadbook) {
@@ -170,7 +201,7 @@ function MalasEventoOperacao() {
         </Card>
       ) : (
         <div className="space-y-6">
-          <div className="flex items-center gap-4 bg-white dark:bg-card p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5">
+          <div className="flex items-center gap-4 bg-white dark:bg-card p-4 rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 transition-colors">
             <div className="flex-1 h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
               <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }}></div>
             </div>
@@ -184,7 +215,7 @@ function MalasEventoOperacao() {
           )}
 
           <div className="grid gap-6">
-            {volumes.map(vol => {
+            {volumes.map((vol, vIdx) => {
               const itens = vol.itens || [];
               const volProgress = itens.length > 0 
                 ? Math.round((itens.filter(i => i.checked).length / itens.length) * 100)
@@ -193,16 +224,21 @@ function MalasEventoOperacao() {
 
               return (
                 <Card key={vol.id} className={`border-0 shadow-md rounded-2xl transition-colors ${isVolComplete ? 'bg-emerald-50/30 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30' : 'bg-white dark:bg-card'}`}>
-                  <CardHeader className={`sticky top-0 z-10 rounded-t-2xl border-b border-slate-100 dark:border-white/5 pb-4 flex flex-row items-center justify-between transition-colors backdrop-blur-md ${isVolComplete ? 'bg-emerald-50/90 dark:bg-emerald-950/90' : 'bg-white/90 dark:bg-card/90'}`}>
+                  <CardHeader className={`sticky top-0 z-10 rounded-t-2xl border-b border-slate-100 dark:border-white/5 pb-4 flex flex-row items-center justify-between transition-colors backdrop-blur-xl ${isVolComplete ? 'bg-emerald-100/95 dark:bg-emerald-900/95' : 'bg-white/95 dark:bg-slate-900/95'}`}>
                     <div>
                       <CardTitle className="text-xl flex items-center gap-2">
                         {isVolComplete ? <Check className="text-emerald-500 size-5" /> : <Luggage className="text-slate-400 size-5" />}
                         {vol.nome}
                       </CardTitle>
                     </div>
-                    <Badge variant="outline" className={isVolComplete ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : ''}>
-                      {itens.filter(i => i.checked).length} / {itens.length} itens ({volProgress}%)
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" size="sm" onClick={() => handleAddExtraItem(vol.id)} className="h-8 text-xs border-slate-200 dark:border-white/10 dark:bg-black/20">
+                        <Plus className="size-3 mr-1" /> Adicionar
+                      </Button>
+                      <Badge variant="outline" className={isVolComplete ? 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : ''}>
+                        {itens.filter(i => i.checked).length} / {itens.length} itens ({volProgress}%)
+                      </Badge>
+                    </div>
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="divide-y divide-slate-100 dark:divide-white/5">
@@ -226,6 +262,9 @@ function MalasEventoOperacao() {
                           <div className={`px-3 py-1 rounded-lg font-bold text-sm bg-slate-100 dark:bg-slate-800 ${item.checked ? 'opacity-50' : 'text-slate-600 dark:text-slate-300'}`}>
                             {item.quantidade}x
                           </div>
+                          <Button variant="ghost" size="icon" onClick={(e) => handleDeleteItem(vol.id, item.id, e)} className="size-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors shrink-0">
+                            <Trash2 className="size-4" />
+                          </Button>
                         </label>
                       ))}
                     </div>

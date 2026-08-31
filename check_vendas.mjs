@@ -1,0 +1,13 @@
+
+import { createClient } from '@supabase/supabase-js';
+import fs from 'fs';
+const env = fs.readFileSync('.env', 'utf8');
+const supabaseUrl = env.match(/SUPABASE_URL="([^"]+)"/)[1].trim();
+const supabaseKey = env.match(/SUPABASE_ANON_KEY="([^"]+)"/)[1].trim();
+const supabase = createClient(supabaseUrl, supabaseKey);
+async function run() {
+  const { data } = await supabase.from('vendas_registros').select('data_venda').limit(1);
+  console.log(data);
+}
+run();
+

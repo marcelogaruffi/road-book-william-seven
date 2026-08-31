@@ -136,7 +136,7 @@ function AuthedLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50/50 dark:bg-background transition-colors duration-500 overflow-x-clip">
+    <div className="flex min-h-screen bg-slate-50/50 dark:bg-background transition-colors duration-500">
       {isSimulating && (
         <div className="fixed top-0 left-0 w-full z-50 bg-red-600 text-white p-2 px-4 flex items-center justify-between shadow-md">
           <div className="font-bold flex items-center gap-2">
@@ -339,7 +339,7 @@ function AuthedLayout() {
       )}
 
       {/* CONTEÚDO PRINCIPAL */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] overflow-x-clip print:m-0 print:p-0`}>
+      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] print:m-0 print:p-0`}>
         <Outlet />
       </main>
       {/* SIMULADOR DIALOG */}

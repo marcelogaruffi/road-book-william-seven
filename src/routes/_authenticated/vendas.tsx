@@ -46,6 +46,7 @@ function VendasPage() {
   const [vendas, setVendas] = useState<RegistroVenda[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [loading, setLoading] = useState(false);
+  const [estoque, setEstoque] = useState<Record<string, number>>({});
 
   // Form states
   const [novoProdutoNome, setNovoProdutoNome] = useState("");
@@ -63,12 +64,16 @@ function VendasPage() {
   async function fetchDados() {
     setLoading(true);
     try {
-      const [prodRes, evtRes, vendRes] = await Promise.all([
+      const [prodRes, evtRes, vendRes, estoqueRes] = await Promise.all([
         supabase.from("vendas_produtos").select("*").order("nome"),
         supabase.from("eventos").select("id, cidade, local, data").order("data", { ascending: false }),
-        supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local, data)").order("data_venda", { ascending: false })
+        supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local, data)").order("data_venda", { ascending: false }),
+        supabase.from("templates_espetaculos").select("assets_midia").eq("nome_espetaculo", "ESTOQUE_GLOBAL").maybeSingle()
       ]);
 
+      if (estoqueRes.data && estoqueRes.data.assets_midia?.estoque) {
+        setEstoque(estoqueRes.data.assets_midia.estoque);
+      }
       if (prodRes.data) setProdutos(prodRes.data);
       if (evtRes.data) setEventos(evtRes.data);
       if (vendRes.data) setVendas(vendRes.data);
@@ -76,6 +81,36 @@ function VendasPage() {
       console.error(e);
     }
     setLoading(false);
+  }
+
+  async function updateEstoque(produtoId: string, novoEstoque: number) {
+    const updated = { ...estoque, [produtoId]: novoEstoque };
+    setEstoque(updated);
+    
+    const { data } = await supabase.from('templates_espetaculos').select('assets_midia').eq('nome_espetaculo', 'ESTOQUE_GLOBAL').maybeSingle();
+    
+    if (data) {
+      await supabase.from('templates_espetaculos').update({
+        assets_midia: { ...(data.assets_midia || {}), estoque: updated }
+      }).eq('nome_espetaculo', 'ESTOQUE_GLOBAL');
+    } else {
+      await supabase.from('templates_espetaculos').insert({
+        nome_espetaculo: 'ESTOQUE_GLOBAL',
+        descricao: 'Controle de Estoque Global',
+        assets_midia: { estoque: updated }
+      });
+    }
+  }
+
+  async function handleAddEstoque(produtoId: string) {
+    const current = estoque[produtoId] || 0;
+    const qtyStr = prompt(`Definir estoque exato para este produto (Atual: ${current}):`, current.toString());
+    if (!qtyStr) return;
+    const qty = parseInt(qtyStr, 10);
+    if (isNaN(qty) || qty < 0) return toast.error("Quantidade inválida");
+    
+    await updateEstoque(produtoId, qty);
+    toast.success("Estoque atualizado para " + qty + " unidades!");
   }
 
   async function handleAddProduto(e: React.FormEvent) {
@@ -135,6 +170,9 @@ function VendasPage() {
         });
       }
 
+      const current = estoque[vendaProdutoId] || 0;
+      await updateEstoque(vendaProdutoId, current - qtd);
+
       toast.success("Venda registrada com sucesso!");
       setVendaQtd("1");
       setVendaProdutoId("");
@@ -144,9 +182,17 @@ function VendasPage() {
 
   async function handleDeleteVenda(id: string) {
     if (!confirm("Tem certeza que deseja excluir este registro?")) return;
+    const venda = vendas.find(v => v.id === id);
     const { error } = await supabase.from("vendas_registros").delete().eq("id", id);
-    if (error) toast.error("Erro ao excluir");
-    else fetchDados();
+    if (error) {
+      toast.error("Erro ao excluir");
+    } else {
+      if (venda) {
+        const current = estoque[venda.produto_id] || 0;
+        await updateEstoque(venda.produto_id, current + venda.quantidade);
+      }
+      fetchDados();
+    }
   }
 
   async function exportPDF() {
@@ -348,7 +394,7 @@ function VendasPage() {
                   <Label>Produto *</Label>
                   <select required value={vendaProdutoId} onChange={e => setVendaProdutoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                     <option value="">Selecione o produto...</option>
-                    {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} (R$ {p.preco_unitario.toFixed(2)})</option>)}
+                    {produtos.map(p => <option key={p.id} value={p.id}>{p.nome} (Estoque: {estoque[p.id] || 0}) - R$ {p.preco_unitario.toFixed(2)}</option>)}
                   </select>
                 </div>
                 <div className="w-24 space-y-2">
@@ -435,16 +481,24 @@ function VendasPage() {
                   <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500">
                     <tr>
                       <th className="px-4 py-3">Produto</th>
+                      <th className="px-4 py-3 text-right">Estoque</th>
                       <th className="px-4 py-3 text-right">Preço Un.</th>
+                      <th className="px-4 py-3 text-center">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {produtos.map(p => (
+                    {produtos.map(p => {
+                      const qtdeEstoque = estoque[p.id] || 0;
+                      return (
                       <tr key={p.id}>
                         <td className="px-4 py-3 font-medium">{p.nome}</td>
+                        <td className="px-4 py-3 text-right font-bold text-blue-600 dark:text-blue-400">{qtdeEstoque} un.</td>
                         <td className="px-4 py-3 text-right">R$ {p.preco_unitario.toFixed(2).replace(".", ",")}</td>
+                        <td className="px-4 py-3 text-center">
+                          <Button variant="outline" size="sm" onClick={() => handleAddEstoque(p.id)}><Plus className="size-3 mr-1" /> Estoque</Button>
+                        </td>
                       </tr>
-                    ))}
+                    );})}
                   </tbody>
                 </table>
               </div>
