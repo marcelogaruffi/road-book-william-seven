@@ -13,6 +13,9 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    esbuild: {
+      drop: ["console", "debugger"],
+    },
     server: {
       port: 8080,
       strictPort: true,

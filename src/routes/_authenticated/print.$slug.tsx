@@ -31,32 +31,40 @@ export const Route = createFileRoute("/_authenticated/print/$slug")({
     if (error) throw error;
     if (!data) throw notFound();
     const rb = rowToRoadbook(data);
+    let logoEspetaculo = rb.logo_espetaculo_override || null;
+    let logoCia = rb.logo_cia_override || null;
+    let logoProducao = rb.logo_producao_override || null;
 
-    // If bucket is public, we can just use getPublicUrl
-    const getUrl = (path: string) => {
-      if (!path) return "";
-      return supabase.storage.from("roadbook-docs").getPublicUrl(path).data.publicUrl;
-    };
+    if (!logoEspetaculo || !logoCia) {
+      const { data: espData } = await supabase.from("templates_espetaculos").select("logo_espetaculo_url, logo_cia_url").eq("nome_espetaculo", rb.espetaculo).maybeSingle();
+      if (espData) {
+        if (!logoEspetaculo) logoEspetaculo = espData.logo_espetaculo_url;
+        if (!logoCia) logoCia = espData.logo_cia_url;
+      }
+    }
 
-    rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: f.url || getUrl(f.path) }));
-    rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: f.url || getUrl(f.path) }));
-    rb.documentos = rb.documentos.map((d) => ({ ...d, url: d.url || getUrl(d.path) }));
-    rb.voo_ida.cartoes_embarque = (rb.voo_ida.cartoes_embarque ?? []).map((c) => ({ ...c, url: c.url || getUrl(c.path) }));
-    rb.voo_volta.cartoes_embarque = (rb.voo_volta.cartoes_embarque ?? []).map((c) => ({ ...c, url: c.url || getUrl(c.path) }));
-
+    if (!logoProducao && rb.tour_id) {
+      const { data: tourData } = await supabase.from("tours").select("logo_producao, exibir_logo_espetaculo, exibir_logo_cia, exibir_logo_producao").eq("id", rb.tour_id).maybeSingle();
+      if (tourData) {
+        logoProducao = tourData.logo_producao;
+      }
+    }
+    
+    // We attach them to the rb object to pass to the component
+    (rb as any)._resolved_logos = { logoEspetaculo, logoCia, logoProducao };
     return rb;
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade} - Seven Produções Artísticas` : "Road Book - Seven Produções Artísticas";
+    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade} - Seven Produções Artísticas` : "Guia de Viagem - Seven Produções Artísticas";
     return { meta: [
-      { title }, { name: "description", content: `Road Book ${title}` },
+      { title }, { name: "description", content: `Guia de Viagem ${title}` },
       { property: "og:title", content: title },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
     ] };
   },
   notFoundComponent: () => (
     <div className="min-h-screen flex items-center justify-center p-8 text-center">
-      <div><h1 className="text-2xl font-semibold">Road Book não encontrado</h1></div>
+      <div><h1 className="text-2xl font-semibold">Guia de Viagem não encontrado</h1></div>
     </div>
   ),
   errorComponent: ({ error }: { error: any }) => (
@@ -1265,7 +1273,7 @@ export function PrintRoadbookView({ r, isFirst = true, isLast = true, fetchDelay
                         <div className="space-y-3 break-inside-auto">
                           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📁 Documentos Técnicos</h3>
                           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs">
-                            <p className="text-slate-400 mb-2 italic">Acesse a versão online do Road Book para abrir e baixar estes arquivos:</p>
+                            <p className="text-slate-400 mb-2 italic">Acesse a versão online do Guia de Viagem para abrir e baixar estes arquivos:</p>
                             <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                               {pdfs.map((doc, idx) => (
                                 <div key={idx} className="flex items-center gap-2 text-slate-700 border-b border-slate-50 pb-1">
@@ -2458,7 +2466,7 @@ function PublicPage() {
   const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
   
   useEffect(() => {
-    document.title = "Road Book - Seven Produções Artísticas";
+    document.title = "Guia de Viagem - Seven Produções Artísticas";
     
     let wasDark = false;
     const beforePrint = () => {

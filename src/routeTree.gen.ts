@@ -39,6 +39,7 @@ import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authen
 import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedVideoIndexRouteImport } from './routes/_authenticated/video.index'
+import { Route as AuthenticatedTourIndexRouteImport } from './routes/_authenticated/tour.index'
 import { Route as AuthenticatedSomIndexRouteImport } from './routes/_authenticated/som.index'
 import { Route as AuthenticatedSomOperacaoIndexRouteImport } from './routes/_authenticated/som-operacao.index'
 import { Route as AuthenticatedPartiturasIndexRouteImport } from './routes/_authenticated/partituras.index'
@@ -216,6 +217,11 @@ const AuthenticatedVideoIndexRoute = AuthenticatedVideoIndexRouteImport.update({
   path: '/video/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedTourIndexRoute = AuthenticatedTourIndexRouteImport.update({
+  id: '/tour/',
+  path: '/tour/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSomIndexRoute = AuthenticatedSomIndexRouteImport.update({
   id: '/som/',
   path: '/som/',
@@ -379,6 +385,7 @@ export interface FileRoutesByFullPath {
   '/partituras/': typeof AuthenticatedPartiturasIndexRoute
   '/som-operacao/': typeof AuthenticatedSomOperacaoIndexRoute
   '/som/': typeof AuthenticatedSomIndexRoute
+  '/tour/': typeof AuthenticatedTourIndexRoute
   '/video/': typeof AuthenticatedVideoIndexRoute
 }
 export interface FileRoutesByTo {
@@ -430,6 +437,7 @@ export interface FileRoutesByTo {
   '/partituras': typeof AuthenticatedPartiturasIndexRoute
   '/som-operacao': typeof AuthenticatedSomOperacaoIndexRoute
   '/som': typeof AuthenticatedSomIndexRoute
+  '/tour': typeof AuthenticatedTourIndexRoute
   '/video': typeof AuthenticatedVideoIndexRoute
 }
 export interface FileRoutesById {
@@ -483,6 +491,7 @@ export interface FileRoutesById {
   '/_authenticated/partituras/': typeof AuthenticatedPartiturasIndexRoute
   '/_authenticated/som-operacao/': typeof AuthenticatedSomOperacaoIndexRoute
   '/_authenticated/som/': typeof AuthenticatedSomIndexRoute
+  '/_authenticated/tour/': typeof AuthenticatedTourIndexRoute
   '/_authenticated/video/': typeof AuthenticatedVideoIndexRoute
 }
 export interface FileRouteTypes {
@@ -536,6 +545,7 @@ export interface FileRouteTypes {
     | '/partituras/'
     | '/som-operacao/'
     | '/som/'
+    | '/tour/'
     | '/video/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -587,6 +597,7 @@ export interface FileRouteTypes {
     | '/partituras'
     | '/som-operacao'
     | '/som'
+    | '/tour'
     | '/video'
   id:
     | '__root__'
@@ -639,6 +650,7 @@ export interface FileRouteTypes {
     | '/_authenticated/partituras/'
     | '/_authenticated/som-operacao/'
     | '/_authenticated/som/'
+    | '/_authenticated/tour/'
     | '/_authenticated/video/'
   fileRoutesById: FileRoutesById
 }
@@ -865,6 +877,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedVideoIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/tour/': {
+      id: '/_authenticated/tour/'
+      path: '/tour'
+      fullPath: '/tour/'
+      preLoaderRoute: typeof AuthenticatedTourIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/som/': {
       id: '/_authenticated/som/'
       path: '/som'
@@ -1050,6 +1069,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPartiturasIndexRoute: typeof AuthenticatedPartiturasIndexRoute
   AuthenticatedSomOperacaoIndexRoute: typeof AuthenticatedSomOperacaoIndexRoute
   AuthenticatedSomIndexRoute: typeof AuthenticatedSomIndexRoute
+  AuthenticatedTourIndexRoute: typeof AuthenticatedTourIndexRoute
   AuthenticatedVideoIndexRoute: typeof AuthenticatedVideoIndexRoute
 }
 
@@ -1096,6 +1116,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPartiturasIndexRoute: AuthenticatedPartiturasIndexRoute,
   AuthenticatedSomOperacaoIndexRoute: AuthenticatedSomOperacaoIndexRoute,
   AuthenticatedSomIndexRoute: AuthenticatedSomIndexRoute,
+  AuthenticatedTourIndexRoute: AuthenticatedTourIndexRoute,
   AuthenticatedVideoIndexRoute: AuthenticatedVideoIndexRoute,
 }
 

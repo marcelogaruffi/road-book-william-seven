@@ -50,11 +50,14 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
 
         if (realEventoId) {
           const { data: escData } = await supabase.from('evento_escalas').select('id, funcao, profiles!inner(nome)').eq('evento_id', realEventoId);
+          const { data: apreData } = await supabase.from('evento_apresentacoes').select('id').eq('evento_id', realEventoId);
+          const numSessoes = apreData && apreData.length > 0 ? apreData.length : 1;
+
           if (escData && escData.length > 0) {
             const escIds = escData.map((e: any) => e.id);
             const { data: finData } = await supabase.from('evento_escalas_financeiro').select('escala_id, cache_valor').in('escala_id', escIds);
             if (finData) {
-              somaCaches = finData.reduce((acc: number, curr: any) => acc + (Number(curr.cache_valor) || 0), 0);
+              somaCaches = finData.reduce((acc: number, curr: any) => acc + ((Number(curr.cache_valor) || 0) * numSessoes), 0);
               
               // Build details
               detalhes = escData.map(esc => {
@@ -62,7 +65,7 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
                  return {
                    nome: esc.profiles?.nome || 'Desconhecido',
                    funcao: esc.funcao || 'Membro',
-                   valor: Number(fin?.cache_valor || 0)
+                   valor: (Number(fin?.cache_valor) || 0) * numSessoes
                  };
               }).filter(d => d.valor > 0);
             }

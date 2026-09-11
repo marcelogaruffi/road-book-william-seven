@@ -39,6 +39,7 @@ function FigurinosPage() {
   const [selectedTipo, setSelectedTipo] = useState<"lista" | "conferencia">("lista");
   
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [espetaculosList, setEspetaculosList] = useState<{nome: string, personagens: string[]}[]>([]);
   
   const [figurinosPadrao, setFigurinosPadrao] = useState<FigurinoPadrao[]>([]);
@@ -86,7 +87,8 @@ function FigurinosPage() {
   useEffect(() => {
     if (selectedEventoId && activeTab === 'evento') {
       fetchFigurinosEvento(selectedEventoId);
-      const evt = eventos.find(e => e.id === selectedEventoId);
+      const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
       if (evt) {
         setSelectedShowImport(evt.espetaculo);
         const esp = espetaculosList.find(e => e.nome === evt.espetaculo);
@@ -114,10 +116,10 @@ function FigurinosPage() {
     setLoading(true);
     try {
       const [evtRes, espRes] = await Promise.all([
-        supabase.from("eventos").select("id, cidade, local, data, espetaculo").order("data", { ascending: false }),
+        supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)").order("data", { ascending: false }),
         supabase.from("templates_espetaculos").select("nome_espetaculo, personagens").order("nome_espetaculo", { ascending: true })
       ]);
-      if (evtRes.data) setEventos(evtRes.data);
+      if (evtRes.data) setApresentacoes(evtRes.data as any);
       if (espRes.data) {
         const esps = espRes.data.map(e => ({ nome: e.nome_espetaculo, personagens: (e.personagens as string[]) || [] }));
         setEspetaculosList(esps);
@@ -134,7 +136,7 @@ function FigurinosPage() {
   }
 
   async function fetchFigurinosEvento(eventoId: string) {
-    const { data } = await supabase.from("figurinos_eventos").select("*").eq("evento_id", eventoId).order("ordem", { ascending: true });
+    const { data } = await supabase.from("figurinos_eventos").select("*").eq("apresentacao_id", eventoId).order("ordem", { ascending: true });
     setFigurinosEvento(data as FigurinoEvento[] || []);
   }
 
@@ -178,7 +180,7 @@ function FigurinosPage() {
         if (error) throw error;
         setFigurinosPadrao([...figurinosPadrao, data as FigurinoPadrao]);
       } else {
-        const { data, error } = await supabase.from("figurinos_eventos").insert({ ...figData, evento_id: selectedEventoId, ordem: figurinosEvento.length, concluido: false }).select().single();
+        const { data, error } = await supabase.from("figurinos_eventos").insert({ ...figData, evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, ordem: figurinosEvento.length, concluido: false }).select().single();
         if (error) throw error;
         setFigurinosEvento([...figurinosEvento, data as FigurinoEvento]);
       }
@@ -260,7 +262,7 @@ function FigurinosPage() {
     try {
       const { data: padrao } = await supabase.from("figurinos_padrao").select("*").eq("espetaculo_nome", selectedShowImport);
       const itemsParaInserir = (padrao || []).filter(p => !figurinosEvento.some(fe => fe.personagem === p.personagem && fe.tipo_item === p.tipo_item)).map(item => ({ 
-        evento_id: selectedEventoId, personagem: item.personagem, tipo_item: item.tipo_item, tamanho: item.tamanho, 
+        evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, personagem: item.personagem, tipo_item: item.tipo_item, tamanho: item.tamanho, 
         tipo_tecido: item.tipo_tecido, descricao: item.descricao, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false 
       }));
       if (itemsParaInserir.length > 0) {
@@ -293,7 +295,8 @@ function FigurinosPage() {
   }, [currentList]);
 
   const exportToExcel = async () => {
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Figurinos');
 
@@ -364,7 +367,8 @@ function FigurinosPage() {
   };
 
   const exportToPDF = async () => {
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     const doc = new jsPDF("landscape");
     let startY = 38;
     
@@ -469,7 +473,7 @@ function FigurinosPage() {
                 {activeTab === 'evento' ? (
                   <select value={selectedEventoId} onChange={e => setSelectedEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     <option value="">Selecione um evento...</option>
-                    {eventos.map(evt => <option key={evt.id} value={evt.id}>{evt.cidade} - {evt.local} ({new Date(evt.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'})})</option>)}
+                    {apresentacoes.map(apr => <option key={apr.id} value={apr.id}>{apr.eventos?.cidade} - {apr.local || apr.eventos?.local} ({new Date(apr.data + "T12:00:00Z").toLocaleDateString("pt-BR")} às {apr.horario})</option>)}
                   </select>
                 ) : (
                   <select value={selectedEspetaculoPadrao} onChange={e => setSelectedEspetaculoPadrao(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">

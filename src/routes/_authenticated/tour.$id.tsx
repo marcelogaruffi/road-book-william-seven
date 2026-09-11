@@ -51,6 +51,9 @@ function EditTour() {
     setBusy(true);
     const { error } = await supabase.from("tours").update({
       nome: tour.nome, espetaculo: tour.espetaculo, producao: tour.producao,
+      exibir_logo_espetaculo: tour.exibir_logo_espetaculo ?? true,
+      exibir_logo_cia: tour.exibir_logo_cia ?? true,
+      exibir_logo_producao: tour.exibir_logo_producao ?? true,
     }).eq("id", tour.id);
     setBusy(false);
     if (error) toast.error(getErrorMessage(error)); else toast.success("Salvo");
@@ -82,7 +85,23 @@ function EditTour() {
               ))}
             </select>
           </div>
-          <div><Label>Produção</Label><Input value={tour.producao ?? ""} onChange={(e) => setTour({ ...tour, producao: e.target.value })} /></div>
+          
+          
+          <div className="pt-4 border-t space-y-4">
+            <h3 className="font-bold text-slate-700">Visibilidade nos Guias de Viagem</h3>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="exibirLogoEspetaculo" checked={tour.exibir_logo_espetaculo ?? true} onChange={e => setTour({...tour, exibir_logo_espetaculo: e.target.checked})} />
+              <label htmlFor="exibirLogoEspetaculo" className="text-sm">Exibir Logo do Espetáculo</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="exibirLogoCia" checked={tour.exibir_logo_cia ?? true} onChange={e => setTour({...tour, exibir_logo_cia: e.target.checked})} />
+              <label htmlFor="exibirLogoCia" className="text-sm">Exibir Logo da Cia</label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="checkbox" id="exibirLogoProducao" checked={tour.exibir_logo_producao ?? true} onChange={e => setTour({...tour, exibir_logo_producao: e.target.checked})} />
+              <label htmlFor="exibirLogoProducao" className="text-sm">Exibir Logo da Produção</label>
+            </div>
+          </div>
           <div className="flex justify-end"><Button onClick={save} disabled={busy}>{busy ? "Salvando..." : "Salvar"}</Button></div>
         </CardContent>
       </Card>

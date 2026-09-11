@@ -77,7 +77,7 @@ export function DuplicateRoadbookDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Duplicar Road Book</DialogTitle>
+          <DialogTitle>Duplicar Guia de Viagem</DialogTitle>
           <DialogDescription>Uma cópia completa será criada com novos dados básicos.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">

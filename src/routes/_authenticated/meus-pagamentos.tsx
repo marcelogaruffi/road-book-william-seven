@@ -32,7 +32,7 @@ function MeusPagamentosPage() {
       .from('evento_escalas')
       .select(`
         id,
-        evento:evento_id(id, espetaculo, cidade, data)
+        evento:evento_id(id, espetaculo, cidade, data, apresentacoes:evento_apresentacoes(id))
       `)
       .eq('usuario_id', profile.id)
       .eq('status', 'aceita')
@@ -66,9 +66,13 @@ function MeusPagamentosPage() {
       const cacheObj = caches.find(c => c.escala_id === esc.id);
       const pgtoObj = pgtos.find(p => p.escala_id === esc.id);
       
+      const num_sessoes = esc.evento?.apresentacoes?.length || 1;
+      const cache_base = Number(cacheObj?.cache_valor) || 0;
       return {
         ...esc,
-        valor_combinado: Number(cacheObj?.cache_valor) || 0,
+        cache_base,
+        num_sessoes,
+        valor_combinado: cache_base * num_sessoes,
         status_pagamento: cacheObj?.status_pagamento || 'pendente',
         nota_fiscal_url: cacheObj?.nota_fiscal_url || null,
         recibo_url: cacheObj?.recibo_url || null,
@@ -156,11 +160,25 @@ function MeusPagamentosPage() {
       
       <CardContent className="p-0 flex-1 flex flex-col">
         <div className="p-5 flex-1 space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
-            <span className="text-sm font-medium text-slate-500">Cachê do Evento:</span>
-            <span className="text-base font-bold text-slate-800 dark:text-slate-200">
-              R$ {item.valor_combinado.toFixed(2)}
-            </span>
+          <div className="flex flex-col gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            {item.num_sessoes > 1 && (
+              <>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Cachê Base:</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">R$ {item.cache_base.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">Sessões:</span>
+                  <span className="font-medium text-slate-700 dark:text-slate-300">{item.num_sessoes}x</span>
+                </div>
+              </>
+            )}
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-sm font-medium text-slate-500">Cachê {item.num_sessoes > 1 ? 'Total' : 'do Evento'}:</span>
+              <span className="text-base font-bold text-slate-800 dark:text-slate-200">
+                R$ {item.valor_combinado.toFixed(2)}
+              </span>
+            </div>
           </div>
           
           <div className="space-y-3">

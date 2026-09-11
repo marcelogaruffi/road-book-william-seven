@@ -76,6 +76,22 @@ function NewTour() {
               </select>
             </div>
             <div><Label>Produção</Label><Input value={producao} onChange={(e) => setProducao(e.target.value)} /></div>
+          
+            <div className="pt-4 border-t space-y-4">
+              <h3 className="font-bold text-slate-700">Visibilidade nos Guias de Viagem</h3>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="exibirLogoEspetaculo" checked={exibirLogoEspetaculo} onChange={e => setExibirLogoEspetaculo(e.target.checked)} />
+                <label htmlFor="exibirLogoEspetaculo" className="text-sm">Exibir Logo do Espetáculo</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="exibirLogoCia" checked={exibirLogoCia} onChange={e => setExibirLogoCia(e.target.checked)} />
+                <label htmlFor="exibirLogoCia" className="text-sm">Exibir Logo da Cia</label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" id="exibirLogoProducao" checked={exibirLogoProducao} onChange={e => setExibirLogoProducao(e.target.checked)} />
+                <label htmlFor="exibirLogoProducao" className="text-sm">Exibir Logo da Produção</label>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <div className="flex gap-3 justify-end mt-6">

@@ -164,20 +164,21 @@ function EspetaculosPage() {
   };
 
 
-  const totalSteps = 10;
+  const totalSteps = 11;
   const progressPercent = Math.round((step / totalSteps) * 100);
 
   useEffect(() => {
     if (view === "list") fetchEspetaculos();
   }, [view]);
 
-  async function fetchEspetaculos() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("templates_espetaculos")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (error) toast.error(error.message);
+      async function fetchEspetaculos() {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("templates_espetaculos")
+        .select("*")
+        .neq("nome_espetaculo", "ESTOQUE_GLOBAL")
+        .order("created_at", { ascending: false });
+      if (error) toast.error(error.message);
     else setEspetaculos(data || []);
     setLoading(false);
   }
@@ -209,6 +210,36 @@ function EspetaculosPage() {
       toast.dismiss();
       toast.error("Erro: " + err.message);
     }
+  };
+
+  const uploadFotoDivulgacao = async (e: any) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    try {
+      toast.loading(`Enviando ${files.length} foto(s)...`);
+      
+      const newFotos: any[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const url = await handleFileUpload(files[i], "fotos");
+        newFotos.push({ url, creditos: '' });
+      }
+
+      setCurrentShow(s => {
+        const currentFotos = [...(s.assets_midia?.fotos_divulgacao || [])];
+        return { 
+          ...s, 
+          assets_midia: { ...(s.assets_midia || {}), fotos_divulgacao: [...currentFotos, ...newFotos] } 
+        };
+      });
+      
+      toast.dismiss();
+      toast.success(`${files.length} foto(s) adicionada(s)!`);
+    } catch (err: any) {
+      toast.dismiss();
+      toast.error("Erro: " + err.message);
+    }
+    // Limpar o input para permitir selecionar os mesmos arquivos novamente se necessário
+    e.target.value = '';
   };
 
   const uploadAnexo = async (e: any, key: string) => {
@@ -372,20 +403,21 @@ function EspetaculosPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {espetaculos.map((show) => (
-              <Card key={show.nome_espetaculo} className="overflow-hidden hover:shadow-lg transition-all cursor-pointer group border-slate-200 dark:border-white/10" onClick={() => { setCurrentShow(show); setView("dashboard"); }}>
-                <div className="aspect-video w-full bg-slate-100 dark:bg-slate-800 relative overflow-hidden flex items-center justify-center">
-                  {show.logo_espetaculo_url ? (
-                    <img src={show.logo_espetaculo_url} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" />
-                  ) : (
-                    <Music className="size-8 text-slate-300 dark:text-slate-600" />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <h3 className="text-lg font-black text-white truncate shadow-black drop-shadow-md">{show.nome_espetaculo}</h3>
-                    <p className="text-xs font-semibold text-white/90 truncate drop-shadow-md">{show.grupo_cia || "Sem companhia"}</p>
+              <Card key={show.nome_espetaculo} className="flex flex-col overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all cursor-pointer group border-slate-200 dark:border-slate-800/60 rounded-3xl bg-white dark:bg-slate-900/40" onClick={() => { setCurrentShow(show); setView("dashboard"); }}>
+                  <div className={`aspect-video w-full bg-slate-50 dark:bg-slate-900/60 flex items-center justify-center border-b border-slate-100 dark:border-slate-800/60 ${show.assets_midia?.miniatura_url ? '' : 'p-6'}`}>
+                    {show.assets_midia?.miniatura_url ? (
+                      <img src={show.assets_midia.miniatura_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : show.logo_espetaculo_url ? (
+                      <img src={show.logo_espetaculo_url} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <Music className="size-12 text-slate-200 dark:text-slate-800" />
+                    )}
                   </div>
-                </div>
-              </Card>
+                  <div className="p-5 flex-1 flex flex-col justify-center">
+                      <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 truncate">{show.nome_espetaculo}</h3>
+                      <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 truncate mt-1">{show.grupo_cia || "Sem companhia"}</p>
+                  </div>
+                </Card>
             ))}
           </div>
         )}
@@ -423,13 +455,12 @@ function EspetaculosPage() {
                   <ChevronLeft className="size-4 mr-1" /> Voltar
                 </Button>
               )}
-              {step < totalSteps ? (
+              <Button size="sm" variant="outline" onClick={saveWizard} className="font-bold border-green-500 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 shadow-sm">
+                <Save className="size-4 mr-1" /> {step < totalSteps ? "Salvar" : "Finalizar"}
+              </Button>
+              {step < totalSteps && (
                 <Button size="sm" onClick={() => setStep(step + 1)} className="font-bold bg-primary hover:bg-primary/90 text-white shadow-md">
                   Próximo <ChevronRight className="size-4 ml-1" />
-                </Button>
-              ) : (
-                <Button size="sm" onClick={saveWizard} className="font-bold bg-green-500 hover:bg-green-600 text-white shadow-md">
-                  <Save className="size-4 mr-2" /> Salvar
                 </Button>
               )}
             </div>
@@ -528,6 +559,84 @@ function EspetaculosPage() {
 
           {step === 4 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-white/10 pb-3">Fotos de Divulgação</h3>
+              <div className="space-y-4 max-w-2xl">
+                {(currentShow.assets_midia?.fotos_divulgacao || []).map((foto: any, index: number) => (
+                  <div key={index} className="flex gap-4 items-start p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800">
+                    {foto.url ? (
+                      <img src={foto.url} alt="Divulgação" className="w-32 h-24 object-cover rounded-lg shadow-sm border border-slate-200 dark:border-slate-700" />
+                    ) : (
+                      <div className="w-32 h-24 bg-slate-200 dark:bg-slate-800 rounded-lg flex items-center justify-center">
+                        <ImageIcon className="size-6 text-slate-400" />
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-3">
+                      <div>
+                        <Label className="text-xs font-bold text-slate-500 uppercase">Créditos (Fotógrafo)</Label>
+                        <Input 
+                          value={foto.creditos || ''} 
+                          onChange={e => {
+                            const novas = [...(currentShow.assets_midia?.fotos_divulgacao || [])];
+                            novas[index].creditos = e.target.value;
+                            setCurrentShow({...currentShow, assets_midia: {...currentShow.assets_midia, fotos_divulgacao: novas}});
+                          }} 
+                          placeholder="Nome de quem tirou a foto..." 
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center mt-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer group">
+                            <input 
+                              type="checkbox" 
+                              checked={currentShow.assets_midia?.capa_url === foto.url}
+                              onChange={(e) => {
+                                setCurrentShow({...currentShow, assets_midia: {...currentShow.assets_midia, capa_url: e.target.checked ? foto.url : null}});
+                              }}
+                              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary accent-primary" 
+                            />
+                            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Capa da sessão</span>
+                          </label>
+
+                          <label className="flex items-center gap-2 cursor-pointer group">
+                            <input 
+                              type="checkbox" 
+                              checked={currentShow.assets_midia?.miniatura_url === foto.url}
+                              onChange={(e) => {
+                                setCurrentShow({...currentShow, assets_midia: {...currentShow.assets_midia, miniatura_url: e.target.checked ? foto.url : null}});
+                              }}
+                              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary accent-primary" 
+                            />
+                            <span className="text-sm font-semibold text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">Miniatura (Card)</span>
+                          </label>
+                        </div>
+                        <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" onClick={() => {
+                          const novas = [...(currentShow.assets_midia?.fotos_divulgacao || [])];
+                          novas.splice(index, 1);
+                          let novaCapa = currentShow.assets_midia?.capa_url;
+                          if (novaCapa === foto.url) novaCapa = null; 
+                          let novaMini = currentShow.assets_midia?.miniatura_url;
+                          if (novaMini === foto.url) novaMini = null;
+                          setCurrentShow({...currentShow, assets_midia: {...currentShow.assets_midia, fotos_divulgacao: novas, capa_url: novaCapa, miniatura_url: novaMini}});
+                        }}>
+                          <Trash2 className="size-4 mr-2" /> Remover
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="relative border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl h-24 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors bg-white dark:bg-slate-900 cursor-pointer group">
+                  <Plus className="size-6 mb-1 text-slate-300 group-hover:text-primary transition-colors" />
+                  <span className="font-semibold text-sm group-hover:text-primary transition-colors">Adicionar Foto(s)</span>
+                  <input type="file" accept="image/*" multiple onChange={uploadFotoDivulgacao} className="absolute inset-0 opacity-0 cursor-pointer" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 5 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-white/10 pb-3">Ficha Técnica</h3>
               <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
                 <div className="grid sm:grid-cols-[1fr_2fr_auto] gap-3 items-end">
@@ -589,7 +698,7 @@ function EspetaculosPage() {
             </div>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
               <section className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm">
                 <h3 className="text-lg font-black text-slate-800 dark:text-white mb-4 flex items-center gap-2"><Users className="text-primary size-5"/> Personagens / Atores</h3>
@@ -625,7 +734,7 @@ function EspetaculosPage() {
             </div>
           )}
 
-          {step === 6 && (
+          {step === 7 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
               <h3 className="text-xl font-bold text-slate-800 dark:text-white border-b border-slate-200 dark:border-white/10 pb-3 flex items-center gap-2">
                 <Mic2 className="size-5 text-emerald-500" /> Rider de Áudio / Som Cadastrado
@@ -765,10 +874,10 @@ function EspetaculosPage() {
               </div>
             </div>
           )}
-          {step === 7 && renderTechStep("Rider de Iluminação", "Mapa de luz, equipamentos e afinação", Lightbulb, "rider_luz", "anexo_luz", "Detalhes de refletores, mapa de DMX, cores, efeitos...")}
-          {step === 8 && renderTechStep("Rider de Vídeo", "Projetores, painéis de LED e mappings", Clapperboard, "rider_video", "anexo_video", "Resolução, cabeamento, projetores exigidos...")}
-          {step === 9 && renderTechStep("Mapa de Palco", "Disposição cenográfica e praticáveis", Map, "mapa_palco_url", "anexo_palco", "Instruções de montagem, dimensões mínimas...")}
-          {step === 10 && renderTechStep("Figurinos & Camarins", "Rider de camarim, espelhos e araras", Users, "figurinos_url", "anexo_figurino", "Toalhas, espelhos de corpo, água, ferro de passar...")}
+          {step === 8 && renderTechStep("Rider de Iluminação", "Mapa de luz, equipamentos e afinação", Lightbulb, "rider_luz", "anexo_luz", "Detalhes de refletores, mapa de DMX, cores, efeitos...")}
+          {step === 9 && renderTechStep("Rider de Vídeo", "Projetores, painéis de LED e mappings", Clapperboard, "rider_video", "anexo_video", "Resolução, cabeamento, projetores exigidos...")}
+          {step === 10 && renderTechStep("Mapa de Palco", "Disposição cenográfica e praticáveis", Map, "mapa_palco_url", "anexo_palco", "Instruções de montagem, dimensões mínimas...")}
+          {step === 11 && renderTechStep("Figurinos & Camarins", "Rider de camarim, espelhos e araras", Users, "figurinos_url", "anexo_figurino", "Toalhas, espelhos de corpo, água, ferro de passar...")}
         </div>
       </div>
     );
@@ -783,14 +892,42 @@ function EspetaculosPage() {
         
         {/* Banner */}
         <div className="relative h-64 bg-slate-900 shrink-0 flex items-end px-4 sm:px-12 py-8 border-b-4 border-primary">
-          {currentShow.logo_espetaculo_url && (
+          {currentShow.assets_midia?.capa_url ? (
+            <img src={currentShow.assets_midia.capa_url} style={{ objectPosition: `center ${currentShow.assets_midia?.capa_pos_y ?? 50}%` }} className="absolute inset-0 w-full h-full object-cover" />
+          ) : currentShow.logo_espetaculo_url ? (
             <img src={currentShow.logo_espetaculo_url} className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm mix-blend-screen" />
-          )}
+          ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
           
           <Button variant="secondary" size="sm" onClick={() => setView("list")} className="absolute top-6 left-6 font-bold z-20">
             <ChevronLeft className="size-4 mr-1"/> Voltar para Lista
           </Button>
+
+          {currentShow.assets_midia?.capa_url && (
+            <div className="absolute top-6 right-6 z-20 flex gap-3 items-center bg-black/60 px-4 py-2 rounded-full backdrop-blur-md border border-white/10 shadow-lg">
+              <span className="text-white text-xs font-bold uppercase tracking-wider">Ajustar Posição</span>
+              <input 
+                type="range" 
+                min="0" max="100" 
+                value={currentShow.assets_midia?.capa_pos_y ?? 50} 
+                onChange={(e) => {
+                   const y = parseInt(e.target.value);
+                   setCurrentShow(s => ({...s, assets_midia: {...(s.assets_midia||{}), capa_pos_y: y}}));
+                }}
+                onMouseUp={async (e) => {
+                   const y = parseInt((e.target as HTMLInputElement).value);
+                   await supabase.from("templates_espetaculos").update({ assets_midia: {...currentShow.assets_midia, capa_pos_y: y} }).eq("nome_espetaculo", currentShow.nome_espetaculo);
+                   toast.success("Posição salva!");
+                }}
+                onTouchEnd={async (e) => {
+                   const y = parseInt((e.target as HTMLInputElement).value);
+                   await supabase.from("templates_espetaculos").update({ assets_midia: {...currentShow.assets_midia, capa_pos_y: y} }).eq("nome_espetaculo", currentShow.nome_espetaculo);
+                   toast.success("Posição salva!");
+                }}
+                className="w-32 accent-white h-1.5 bg-white/20 rounded-lg appearance-none cursor-ew-resize" 
+              />
+            </div>
+          )}
 
           <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-end w-full gap-6">
             <div className="flex items-center gap-6">

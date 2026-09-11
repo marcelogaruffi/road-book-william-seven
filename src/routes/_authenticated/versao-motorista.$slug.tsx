@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/versao-motorista/$slug")({
   },
   notFoundComponent: () => (
     <div className="min-h-screen flex items-center justify-center p-8 text-center">
-      <div><h1 className="text-2xl font-semibold">Road Book não encontrado</h1></div>
+      <div><h1 className="text-2xl font-semibold">Guia de Viagem não encontrado</h1></div>
     </div>
   ),
   component: DriverPrintPage,

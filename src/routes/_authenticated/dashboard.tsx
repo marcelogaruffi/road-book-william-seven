@@ -332,14 +332,6 @@ function Dashboard() {
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Bem-vindo de volta! Aqui está o resumo das suas turnês.</p>
           </div>
-          {profile?.role !== 'motorista' && (<div className="flex gap-3 items-center">
-            <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-all rounded-xl px-5 h-12 border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5">
-              <Link to="/tour/new"><Plus className="size-4 mr-2" />Nova Turnê</Link>
-            </Button>
-            <Button asChild className="shadow-[0_8px_20px_rgba(var(--primary),0.2)] hover:shadow-[0_12px_25px_rgba(var(--primary),0.3)] transition-all rounded-xl px-6 h-12 bg-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-semibold text-white">
-              <Link to="/roadbook/new"><Plus className="size-5 mr-2" />Novo Guia de Viagem</Link>
-            </Button>
-          </div>)}
         </div>
 
         {/* ALERTA DE ESCALAS PENDENTES */}

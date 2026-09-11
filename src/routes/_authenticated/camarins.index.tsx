@@ -53,6 +53,7 @@ function CamarinsPage() {
   const [selectedTipo, setSelectedTipo] = useState<"lista" | "conferencia" | "catering">("lista");
   
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
   
   const [itensPadrao, setItensPadrao] = useState<CamarimPadrao[]>([]);
@@ -113,7 +114,8 @@ function CamarinsPage() {
     if (selectedEventoId && activeTab === 'evento') {
       fetchItensEvento(selectedEventoId);
       fetchOcupantes(selectedEventoId, null);
-      const evt = eventos.find(e => e.id === selectedEventoId);
+      const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
       if (evt) {
         setSelectedShowImport(evt.espetaculo);
         fetchEquipe(evt.equipe || []);
@@ -138,7 +140,7 @@ function CamarinsPage() {
 
   async function fetchOcupantes(eventoId: string | null, espetaculoNome: string | null) {
     let query = supabase.from("camarins_ocupantes").select("*");
-    if (eventoId) query = query.eq("evento_id", eventoId);
+    if (eventoId) query = query.eq("apresentacao_id", eventoId);
     else if (espetaculoNome) query = query.eq("espetaculo_nome", espetaculoNome);
     const { data } = await query;
     setOcupantes(data as CamarimOcupante[] || []);
@@ -148,10 +150,10 @@ function CamarinsPage() {
     setLoading(true);
     try {
       const [evtRes, espRes] = await Promise.all([
-        supabase.from("eventos").select("id, cidade, local, data, espetaculo, equipe").order("data", { ascending: false }),
+        supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)").order("data", { ascending: false }),
         supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo", { ascending: true })
       ]);
-      if (evtRes.data) setEventos(evtRes.data as Evento[]);
+      if (evtRes.data) setApresentacoes(evtRes.data as any);
       if (espRes.data) {
         const esps = espRes.data.map(e => e.nome_espetaculo);
         setEspetaculosList(esps);
@@ -182,7 +184,7 @@ function CamarinsPage() {
   }
 
   async function fetchItensEvento(eventoId: string) {
-    const { data } = await supabase.from("camarins_eventos").select("*").eq("evento_id", eventoId).order("ordem", { ascending: true });
+    const { data } = await supabase.from("camarins_eventos").select("*").eq("apresentacao_id", eventoId).order("ordem", { ascending: true });
     setItensEvento(data as CamarimEvento[] || []);
   }
 
@@ -240,7 +242,7 @@ function CamarinsPage() {
         if (error) throw error;
         setItensPadrao([...itensPadrao, data as CamarimPadrao]);
       } else {
-        const { data, error } = await supabase.from("camarins_eventos").insert({ ...itemData, evento_id: selectedEventoId, ordem: itensEvento.length, concluido: false }).select().single();
+        const { data, error } = await supabase.from("camarins_eventos").insert({ ...itemData, evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, ordem: itensEvento.length, concluido: false }).select().single();
         if (error) throw error;
         setItensEvento([...itensEvento, data as CamarimEvento]);
       }
@@ -323,7 +325,7 @@ function CamarinsPage() {
     if (activeTab === "configuracao") {
       query = query.eq("espetaculo_nome", selectedEspetaculoPadrao);
     } else {
-      query = query.eq("evento_id", selectedEventoId);
+      query = query.eq("apresentacao_id", selectedEventoId);
     }
     
     const { error } = await query;
@@ -343,7 +345,7 @@ function CamarinsPage() {
     try {
       const { data: padrao } = await supabase.from("camarins_padrao").select("*").eq("espetaculo_nome", selectedShowImport);
       const itemsParaInserir = (padrao || []).filter(p => !itensEvento.some(fe => fe.camarim === p.camarim && fe.item === p.item)).map(item => ({ 
-        evento_id: selectedEventoId, camarim: item.camarim, item: item.item, quantidade: item.quantidade, 
+        evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, camarim: item.camarim, item: item.item, quantidade: item.quantidade, 
         observacao: item.observacao, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false 
       }));
       if (itemsParaInserir.length > 0) {
@@ -357,7 +359,7 @@ function CamarinsPage() {
         const ocupantesParaInserir = ocupantesPadrao
           .filter(p => !ocupantes.some(o => o.camarim_nome === p.camarim_nome))
           .map(p => ({
-            evento_id: selectedEventoId,
+            evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
             camarim_nome: p.camarim_nome,
             ocupantes: p.ocupantes
           }));
@@ -419,7 +421,8 @@ function CamarinsPage() {
 
   const exportPlacasPDF = async () => {
     const doc = new jsPDF("portrait");
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     
     let starBase64 = "";
     try {
@@ -505,7 +508,8 @@ function CamarinsPage() {
   }, [currentList, emptyCamarins]);
 
   const exportCateringExcel = async () => {
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Catering');
 
@@ -557,7 +561,8 @@ function CamarinsPage() {
   };
 
   const exportCateringPDF = async () => {
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     const doc = new jsPDF("portrait");
     
     let logoBase64 = "";
@@ -614,7 +619,8 @@ function CamarinsPage() {
   };
 
   const exportToExcel = async () => {
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     const workbook = new ExcelJS.Workbook();
     
     let logoBase64 = "";
@@ -693,7 +699,8 @@ function CamarinsPage() {
   };
 
   const exportToPDF = async () => {
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     const doc = new jsPDF("portrait");
     
     let logoBase64 = "";
@@ -802,7 +809,7 @@ function CamarinsPage() {
                 {activeTab === 'evento' ? (
                   <select value={selectedEventoId} onChange={e => setSelectedEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     <option value="">Selecione um evento...</option>
-                    {eventos.map(evt => <option key={evt.id} value={evt.id}>{evt.cidade} - {evt.local} ({new Date(evt.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'})})</option>)}
+                    {apresentacoes.map(apr => <option key={apr.id} value={apr.id}>{apr.eventos?.cidade} - {apr.local || apr.eventos?.local} ({new Date(apr.data + "T12:00:00Z").toLocaleDateString("pt-BR")} às {apr.horario})</option>)}
                   </select>
                 ) : (
                   <select value={selectedEspetaculoPadrao} onChange={e => setSelectedEspetaculoPadrao(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">

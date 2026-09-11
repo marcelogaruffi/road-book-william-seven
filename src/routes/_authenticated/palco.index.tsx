@@ -58,6 +58,7 @@ function PalcoPage() {
   const [selectedTipo, setSelectedTipo] = useState<"mapa_palco" | "props" | "conferencia" | "infra">("mapa_palco");
   
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
   
   const [arquivosPadrao, setArquivosPadrao] = useState<ArquivoPadrao[]>([]);
@@ -111,7 +112,8 @@ function PalcoPage() {
     if (selectedEventoId) {
       fetchArquivosEvento(selectedEventoId);
       fetchPropsEvento(selectedEventoId);
-      const evt = eventos.find(e => e.id === selectedEventoId);
+      const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
       if (evt) setSelectedShowImport(evt.espetaculo);
     } else {
       setArquivosEvento([]);
@@ -140,10 +142,10 @@ function PalcoPage() {
     setLoading(true);
     try {
       const [evtRes, espRes] = await Promise.all([
-        supabase.from("eventos").select("*").order("data", { ascending: false }),
+        supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo)").order("data", { ascending: false }),
         supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo", { ascending: true })
       ]);
-      if (evtRes.data) setEventos(evtRes.data);
+      if (evtRes.data) setApresentacoes(evtRes.data as any);
       if (espRes.data) {
         const esps = espRes.data.map(e => e.nome_espetaculo);
         setEspetaculosList(esps);
@@ -208,7 +210,7 @@ function PalcoPage() {
       } else {
         const novaOrdem = arquivosEvento.length;
         const { data, error } = await supabase.from("arquivos_eventos").insert({
-          evento_id: selectedEventoId, nome: novoNomeMapa, arquivo_url: publicUrl, tipo: "mapa_palco", ordem: novaOrdem
+          evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, nome: novoNomeMapa, arquivo_url: publicUrl, tipo: "mapa_palco", ordem: novaOrdem
         }).select().single();
         if (error) throw error;
         setArquivosEvento([...arquivosEvento, data as ArquivoEvento]);
@@ -245,7 +247,7 @@ function PalcoPage() {
         if (error) throw error;
         setPropsPadrao([...propsPadrao, data as PropPadrao]);
       } else {
-        const { data, error } = await supabase.from("props_eventos").insert({ ...propData, evento_id: selectedEventoId, ordem: propsEvento.length, concluido: false }).select().single();
+        const { data, error } = await supabase.from("props_eventos").insert({ ...propData, evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, ordem: propsEvento.length, concluido: false }).select().single();
         if (error) throw error;
         setPropsEvento([...propsEvento, data as PropEvento]);
       }
@@ -329,14 +331,14 @@ function PalcoPage() {
     setLoading(true);
     try {
       const { data: mPadrao } = await supabase.from("arquivos_padrao").select("*").eq("espetaculo_nome", selectedShowImport).eq("tipo", "mapa_palco");
-      const mapasParaInserir = (mPadrao || []).filter(mp => !arquivosEvento.some(me => me.arquivo_url === mp.arquivo_url)).map(item => ({ evento_id: selectedEventoId, nome: item.nome, arquivo_url: item.arquivo_url, tipo: item.tipo, ordem: item.ordem }));
+      const mapasParaInserir = (mPadrao || []).filter(mp => !arquivosEvento.some(me => me.arquivo_url === mp.arquivo_url)).map(item => ({ evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, nome: item.nome, arquivo_url: item.arquivo_url, tipo: item.tipo, ordem: item.ordem }));
       if (mapasParaInserir.length > 0) {
         const { data } = await supabase.from("arquivos_eventos").insert(mapasParaInserir).select();
         setArquivosEvento([...arquivosEvento, ...(data as ArquivoEvento[])]);
       }
 
       const { data: pPadrao } = await supabase.from("props_padrao").select("*").eq("espetaculo_nome", selectedShowImport);
-      const propsParaInserir = (pPadrao || []).filter(pp => !propsEvento.some(pe => pe.item === pp.item)).map(item => ({ evento_id: selectedEventoId, item: item.item, ato: item.ato, cena: item.cena, preset_location: item.preset_location, descricao: item.descricao, personagem: item.personagem, termino_uso: item.termino_uso, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false }));
+      const propsParaInserir = (pPadrao || []).filter(pp => !propsEvento.some(pe => pe.item === pp.item)).map(item => ({ evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, item: item.item, ato: item.ato, cena: item.cena, preset_location: item.preset_location, descricao: item.descricao, personagem: item.personagem, termino_uso: item.termino_uso, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false }));
       if (propsParaInserir.length > 0) {
         const { data } = await supabase.from("props_eventos").insert(propsParaInserir).select();
         setPropsEvento([...propsEvento, ...(data as PropEvento[])]);
@@ -413,7 +415,8 @@ function PalcoPage() {
 
   const exportToExcel = async () => {
     const list = activeTab === 'evento' ? propsEvento : propsPadrao;
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Lista de Props');
@@ -492,7 +495,8 @@ function PalcoPage() {
 
   const exportToPDF = async () => {
     const list = activeTab === 'evento' ? propsEvento : propsPadrao;
-    const evt = eventos.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
     
     const doc = new jsPDF("landscape");
     let startY = 38;
@@ -605,7 +609,7 @@ function PalcoPage() {
                   <Label>Selecione o Evento</Label>
                   <select value={selectedEventoId} onChange={e => setSelectedEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors focus:ring-2 focus:ring-primary/50">
                     <option value="">Selecione um evento...</option>
-                    {eventos.map(evt => <option key={evt.id} value={evt.id}>{evt.cidade} - {evt.local} ({new Date(evt.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'})})</option>)}
+                    {apresentacoes.map(apr => <option key={apr.id} value={apr.id}>{apr.eventos?.cidade} - {apr.local || apr.eventos?.local} ({new Date(apr.data + "T12:00:00Z").toLocaleDateString("pt-BR")} às {apr.horario})</option>)}
                   </select>
                 </div>
                 {(selectedTipo === 'mapa_palco' || selectedTipo === 'props') && (

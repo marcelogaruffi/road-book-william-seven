@@ -36,6 +36,7 @@ function VideoComponent() {
   const isDevOrAdmin = ['admin', 'dev', 'produtor'].includes(role || '');
   
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [mapas, setMapas] = useState<MapaVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -45,14 +46,23 @@ function VideoComponent() {
   }, [profile, isSimulating]);
 
   const loadData = async () => {
+    
     setLoading(true);
     const [evRes, mapasRes] = await Promise.all([
-      supabase.from('eventos').select('*').order('data', { ascending: true }),
-      supabase.from('mapas_video').select('id, evento_id')
+      supabase.from('evento_apresentacoes').select('id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)').order('data', { ascending: true }),
+      supabase.from('mapas_video').select('id, evento_id, apresentacao_id')
     ]);
 
     if (evRes.data) {
-      let finalEv = evRes.data as Evento[];
+      let finalEv = (evRes.data as any[]).map(a => ({
+        id: a.id,
+        evento_id: a.evento_id,
+        data: a.data,
+        horario: a.horario,
+        cidade: a.eventos?.cidade,
+        espetaculo: a.eventos?.espetaculo,
+        equipe: a.eventos?.equipe || []
+      })) as any[];
       if (isSimulating && profile && !isDevOrAdmin) {
         finalEv = finalEv.filter(e => (e.equipe || []).includes(profile.id));
       } else if (!isSimulating && !isDevOrAdmin && profile) {
@@ -86,7 +96,8 @@ function VideoComponent() {
     
     // Criar novo registro
     const { data, error } = await supabase.from('mapas_video').insert({
-      evento_id: evento.id,
+      evento_id: (evento as any).evento_id || evento.id,
+      apresentacao_id: evento.id,
       user_id: userData.user?.id,
       cidade: evento.cidade,
       data_apresentacao: evento.data,

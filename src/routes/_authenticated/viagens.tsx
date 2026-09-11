@@ -30,21 +30,20 @@ type Roadbook = {
   data_inicial: string | null;
   data_final: string | null;
   tour_id: string | null;
+  automacoes?: any;
   programacao?: any[];
 };
 
 type Tour = { id: string; slug: string; nome: string; espetaculo: string | null };
 
 export const Route = createFileRoute("/_authenticated/viagens")({
-  validateSearch: (search: Record<string, unknown>): { all?: boolean } => {
-    return { all: search?.all === true || search?.all === 'true' }
-  },
   head: () => ({ meta: [{ title: "Viagens - Seven Produções Artísticas" }] }),
   component: Viagens,
 });
 
 function Viagens() {
   const [items, setItems] = useState<Roadbook[]>([]);
+  const [logosEspetaculos, setLogosEspetaculos] = useState<Record<string, string>>({});
   
   const fmtDate = (d?: string | null) => {
     if (!d) return "";
@@ -60,17 +59,16 @@ function Viagens() {
   const [escalasPendentes, setEscalasPendentes] = useState<number>(0);
 
   const isAdminRole = profile ? ['admin', 'dev', 'produtor', 'assistente_producao', 'tour_manager'].includes(profile.role) : false;
-  const search = Route.useSearch();
-  const isAllParam = search.all === true;
-  const showAll = isAdminRole && isAllParam;
+  const showAll = isAdminRole;
 
   async function load() {
     setLoading(true);
-      const [{ data: rb, error: e1 }, { data: tr, error: e2 }, { data: evts }, { data: esc }] = await Promise.all([
-      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id,evento_id,programacao").order("data_inicial", { ascending: true }),
+      const [{ data: rb, error: e1 }, { data: tr, error: e2 }, { data: evts }, { data: esc }, { data: tempRes }] = await Promise.all([
+      supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,festival,data_inicial,data_final,tour_id,evento_id,programacao,automacoes").order("data_inicial", { ascending: true }),
       supabase.from("tours").select("id,slug,nome,espetaculo").order("created_at", { ascending: false }),
       (profile && !showAll) || isSimulating ? supabase.from("eventos").select("id, equipe") : Promise.resolve({ data: [] }),
-      profile ? supabase.from("evento_escalas").select("evento_id, status").eq("usuario_id", profile.id) : Promise.resolve({ data: [] })
+      profile ? supabase.from("evento_escalas").select("evento_id, status").eq("usuario_id", profile.id) : Promise.resolve({ data: [] }),
+      supabase.from("templates_espetaculos").select("nome_espetaculo, logo_espetaculo_url").neq("nome_espetaculo", "ESTOQUE_GLOBAL")
     ]);
     
     let roadbooksFinal = rb as Roadbook[] || [];
@@ -92,6 +90,13 @@ function Viagens() {
     if (e2) toast.error(e2.message);
     setItems(roadbooksFinal);
     setTours((tr as Tour[]) ?? []);
+    if (tempRes) {
+      const logos: Record<string, string> = {};
+      tempRes.forEach(t => {
+        if (t.logo_espetaculo_url) logos[t.nome_espetaculo] = t.logo_espetaculo_url;
+      });
+      setLogosEspetaculos(logos);
+    }
     setEscalasPendentes(esc?.filter(e => e.status === 'pendente').length || 0);
     setLoading(false);
   }
@@ -136,20 +141,22 @@ function Viagens() {
     return colors[index % colors.length];
   };
 
+  const safeTime = (t: string | null | undefined, def: string) => (t || def).substring(0, 5) + ":00-03:00";
+
   const getRoadbookStartDateTime = (rb: Roadbook): Date => {
     if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
-      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${safeTime(a.hora_inicio || a.hora, "00:00")}`).getTime() - new Date(`${b.data}T${safeTime(b.hora_inicio || b.hora, "00:00")}`).getTime());
       const firstProg = progs[0];
-      return new Date(`${firstProg.data}T${firstProg.hora_inicio || firstProg.hora || "00:00"}:00-03:00`);
+      return new Date(`${firstProg.data}T${safeTime(firstProg.hora_inicio || firstProg.hora, "00:00")}`);
     }
     return new Date(`${rb.data_inicial || "2000-01-01"}T00:00:00-03:00`);
   };
 
   const getRoadbookEndDateTime = (rb: Roadbook): Date => {
     if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
-      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${safeTime(a.hora_inicio || a.hora, "00:00")}`).getTime() - new Date(`${b.data}T${safeTime(b.hora_inicio || b.hora, "00:00")}`).getTime());
       const lastProg = progs[progs.length - 1];
-      return new Date(`${lastProg.data}T${lastProg.hora_fim || lastProg.hora_inicio || lastProg.hora || "23:59"}:00-03:00`);
+      return new Date(`${lastProg.data}T${safeTime(lastProg.hora_fim || lastProg.hora_inicio || lastProg.hora, "23:59")}`);
     }
     return new Date(`${rb.data_final || rb.data_inicial || "2000-01-01"}T23:59:59-03:00`);
   };
@@ -168,57 +175,175 @@ function Viagens() {
   const hoje = now.toISOString().split('T')[0];
   const realizados = items.filter(r => getRoadbookEndDateTime(r) < now).sort((a, b) => getRoadbookStartDateTime(b).getTime() - getRoadbookStartDateTime(a).getTime());
 
-  const renderRoadbookCard = (r: Roadbook, index: number) => (
-    <Card key={r.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_2px_15px_rgb(0,0,0,0.3)] bg-white dark:bg-card/60 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300 rounded-[1.5rem] relative overflow-hidden">
-      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-100 dark:bg-white/5 group-hover:bg-primary transition-colors duration-300"></div>
+  const renderRoadbookCard = (r: Roadbook, index: number) => {
+    const isPast = getRoadbookEndDateTime(r) < now;
+    let monthStr = '';
+    let dayStr = '';
+    if (r.data_inicial) {
+      const dt1 = new Date(r.data_inicial + 'T12:00:00Z');
+      monthStr = dt1.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+      dayStr = dt1.toLocaleDateString('pt-BR', { day: '2-digit' });
       
-      <div className="min-w-0 flex-1 pl-3">
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <Badge className="bg-sky-100 text-sky-700 hover:bg-sky-200 dark:bg-sky-500/20 dark:text-sky-300 dark:hover:bg-sky-500/30 border-none font-bold rounded-lg px-3 py-0.5">
-            <Calendar className="size-3 mr-1.5 inline-block -mt-0.5" />
-            {fmtDate(r.data_inicial)}
-          </Badge>
-          {r.festival && (
-            <Badge variant="secondary" className="bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-200 dark:bg-fuchsia-500/20 dark:text-fuchsia-300 dark:hover:bg-fuchsia-500/30 border-none font-bold rounded-lg px-3 py-0.5">
-              {r.festival}
-            </Badge>
-          )}
-        </div>
-        <h3 className="font-black text-xl text-slate-800 dark:text-white mb-1.5">{r.espetaculo}</h3>
-        <div className="flex items-center text-sm font-semibold text-slate-500 dark:text-slate-400 gap-1.5">
-          <MapPin className="size-4" />
-          <span>{r.cidade}{r.estado ? ` - ${r.estado}` : ""}</span>
-        </div>
-      </div>
-      
-      {/* Responsive Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0 md:pr-2 items-center border-t border-slate-100 dark:border-white/5 md:border-0 pt-4 md:pt-0 mt-2 md:mt-0">
-        <Button variant="outline" className="rounded-xl h-11 w-full sm:w-auto bg-slate-50 shadow-sm hover:bg-primary hover:text-white hover:border-primary border-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-300 dark:hover:bg-primary dark:hover:text-white transition-colors font-bold" asChild>
-          {profile?.role === 'motorista' ? (<a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Ver Roteiro</a>) : (<a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Guia de Viagem</a>)}
-        </Button>
+      if (r.data_final && r.data_final !== r.data_inicial) {
+        const dt2 = new Date(r.data_final + 'T12:00:00Z');
+        const m2 = dt2.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+        const d2 = dt2.toLocaleDateString('pt-BR', { day: '2-digit' });
         
-        {isAdminRole && (
-        <div className="grid grid-cols-4 sm:flex gap-2 w-full sm:w-auto sm:border-l sm:border-slate-200 dark:sm:border-white/10 sm:pl-3 sm:ml-1">
-          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Versão para motorista">
-            <a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg>
-            </a>
-          </Button>
-          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Editar">
-            <Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4.5" /></Link>
-          </Button>
-          <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" onClick={() => setDup(r)} title="Duplicar">
-            <Copy className="size-4.5" />
-          </Button>
-          <Button variant="outline" onClick={() => setDeleteRbId(r.id)} className="rounded-xl h-11 w-full sm:w-11 px-0 bg-red-50/50 shadow-sm hover:bg-red-100 border-red-200 text-red-500 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20 transition-colors" title="Excluir">
-            <Trash2 className="size-4.5" />
-          </Button>
-        </div>
-        )}
-      </div>
-    </Card>
-  );
+        if (monthStr === m2) {
+          dayStr = `${dayStr} a ${d2}`;
+        } else {
+          dayStr = `${dayStr}/${monthStr} - ${d2}/${m2}`;
+          monthStr = 'PERÍODO';
+        }
+      }
+    }
 
+    const logoUrl = logosEspetaculos[r.espetaculo];
+    const bannerUrl = r.automacoes?.foto_capa_url || logoUrl;
+
+    return (
+      <Card key={r.id} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col relative h-full">
+        {/* Banner with overlapping Date Square */}
+        <div className="h-40 bg-indigo-50 dark:bg-slate-800 flex items-center justify-center relative group/banner shrink-0">
+          
+          <div className="absolute inset-0 overflow-hidden">
+            {bannerUrl ? (
+              <img 
+                id={`banner-${r.id}`}
+                src={bannerUrl} 
+                className={`w-full h-full group-hover/banner:scale-105 transition-transform duration-500 ${r.automacoes?.capa_contain ? 'object-contain' : 'object-cover'}`} 
+                style={{ objectPosition: `50% ${r.automacoes?.capa_pos_y ?? 50}%` }}
+                alt="Capa" 
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-indigo-800 dark:text-indigo-400 font-black text-2xl opacity-40 group-hover/banner:scale-110 transition-transform">
+                  {r.espetaculo?.toUpperCase() || 'ROADBOOK'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {isAdminRole && bannerUrl && (
+            <div className="absolute top-2 left-2 z-20 flex gap-2 items-center bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 opacity-0 group-hover/banner:opacity-100 transition-opacity">
+              <span className="text-white text-[10px] font-bold uppercase tracking-wider">Ajustar</span>
+              <input 
+                type="range" 
+                min="0" max="100" 
+                className="w-16 h-1 accent-white cursor-pointer"
+                defaultValue={r.automacoes?.capa_pos_y ?? 50} 
+                onChange={(e) => {
+                   const img = document.getElementById(`banner-${r.id}`);
+                   if (img) img.style.objectPosition = `50% ${e.target.value}%`;
+                }}
+                onMouseUp={async (e) => {
+                   const y = parseInt((e.target as HTMLInputElement).value);
+                   const novas = { ...(r.automacoes || {}), capa_pos_y: y };
+                   await supabase.from("roadbooks").update({ automacoes: novas }).eq("id", r.id);
+                   toast.success("Posição salva!");
+                }}
+                onTouchEnd={async (e) => {
+                   const y = parseInt((e.target as HTMLInputElement).value);
+                   const novas = { ...(r.automacoes || {}), capa_pos_y: y };
+                   await supabase.from("roadbooks").update({ automacoes: novas }).eq("id", r.id);
+                   toast.success("Posição salva!");
+                }}
+              />
+              <div className="w-px h-4 bg-white/20 mx-1"></div>
+              <label className="flex items-center gap-1 cursor-pointer text-white text-[10px] font-bold uppercase tracking-wider">
+                <input 
+                  type="checkbox" 
+                  className="accent-white cursor-pointer"
+                  defaultChecked={r.automacoes?.capa_contain || false}
+                  onChange={async (e) => {
+                    const contain = e.target.checked;
+                    const img = document.getElementById(`banner-${r.id}`);
+                    if (img) {
+                      img.classList.remove('object-cover', 'object-contain');
+                      img.classList.add(contain ? 'object-contain' : 'object-cover');
+                    }
+                    const novas = { ...(r.automacoes || {}), capa_contain: contain };
+                    await supabase.from("roadbooks").update({ automacoes: novas }).eq("id", r.id);
+                    toast.success(contain ? "Imagem ajustada (Caber)" : "Imagem preenchida (Cortar)");
+                  }}
+                />
+                Caber
+              </label>
+            </div>
+          )}
+
+          {/* Quadrado da Data Flutuante */}
+          <div className="absolute -bottom-4 right-4 bg-white dark:bg-slate-900 shadow-lg rounded-xl flex flex-col items-center justify-center min-w-[3.5rem] px-3 h-16 border-2 border-slate-300 dark:border-slate-600 z-10 group-hover/banner:-translate-y-1 transition-transform">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">{monthStr}</span>
+            <span className="text-lg font-black text-slate-800 dark:text-slate-100 leading-none tracking-tighter whitespace-nowrap">{dayStr}</span>
+          </div>
+        </div>
+        <a href={profile?.role === 'motorista' ? `/versao-motorista/${r.slug}` : `/rb/${r.slug}`} target="_blank" rel="noreferrer" className="absolute inset-0 z-0"></a>
+
+        <div className="p-4 pt-5 flex flex-col flex-1 bg-white dark:bg-slate-900/50">
+          <div className="flex-1 relative z-10">
+            {isAdminRole && (
+              <div className="absolute -top-3 right-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-lg p-1 shadow-sm">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" asChild title="Editar">
+                  <Link to="/roadbook/$id" params={{ id: r.id }}><Pencil className="size-4" /></Link>
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary" onClick={() => setDup(r)} title="Duplicar">
+                  <Copy className="size-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-red-500" onClick={() => setDeleteRbId(r.id)} title="Excluir">
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            )}
+
+            <a href={profile?.role === 'motorista' ? `/versao-motorista/${r.slug}` : `/rb/${r.slug}`} target="_blank" rel="noreferrer">
+              <h4 className="text-lg font-black text-[var(--foreground)] leading-tight truncate pr-16 hover:text-indigo-600 transition-colors" title={r.cidade + (r.estado ? ' - ' + r.estado : '')}>
+                {r.cidade} {r.estado ? `- ${r.estado}` : ''}
+              </h4>
+            </a>
+            
+            <p className="text-xs text-[var(--muted-foreground)] font-medium mt-1 truncate" title={r.festival || ''}>
+              📍 {r.festival ? r.festival : (r.cidade + (r.estado ? ` - ${r.estado}` : ''))}
+            </p>
+            
+            <div className="flex flex-col gap-1 mt-3 mb-2">
+              <p className="text-xs text-[var(--muted-foreground)] font-medium flex items-center gap-1.5">
+                <Calendar className="size-3.5 text-slate-400" /> {fmtDate(r.data_inicial)}
+                {r.data_final && r.data_final !== r.data_inicial ? ` até ${fmtDate(r.data_final)}` : ''}
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800 mt-auto relative z-10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-2">
+              {r.tour_id && tours.find(t => t.id === r.tour_id) && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md truncate max-w-[100px]">
+                  {tours.find(t => t.id === r.tour_id)?.nome || ''}
+                </span>
+              )}
+            </div>
+            
+            <div className="flex gap-1">
+              {profile?.role !== 'motorista' && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors" asChild title="Abrir Guia">
+                  <a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer">
+                    <ExternalLink className="size-4" />
+                  </a>
+                </Button>
+              )}
+              {(isAdminRole || profile?.role === 'motorista') && (
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors" asChild title="Acessar Roteiro (Motorista)">
+                  <a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer">
+                    <Bus className="size-4" />
+                  </a>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-12">
@@ -233,85 +358,14 @@ function Viagens() {
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Gerencie suas turnês e guias de viagem.</p>
           </div>
-          {showAll && (<div className="flex gap-3 items-center">
-            <Button asChild variant="outline" className="shadow-sm hover:shadow-md transition-all rounded-xl px-5 h-12 border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5">
-              <Link to="/tour/new"><Plus className="size-4 mr-2" />Nova Turnê</Link>
-            </Button>
+          {showAll && (
             <Button asChild className="shadow-[0_8px_20px_rgba(var(--primary),0.2)] hover:shadow-[0_12px_25px_rgba(var(--primary),0.3)] transition-all rounded-xl px-6 h-12 bg-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-semibold text-white">
               <Link to="/roadbook/new"><Plus className="size-5 mr-2" />Novo Guia de Viagem</Link>
             </Button>
-          </div>)}
+          )}
         </div>
       </section>
 
-      {/* TURNÊS */}
-      {showAll && (
-      <section id="turnes" className="space-y-6 pt-4 scroll-mt-24">
-        <div className="flex items-center gap-3 px-2">
-          <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Turnês</h2>
-          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
-        </div>
-        
-        {tours.length === 0 ? (
-          <Card className="p-12 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
-            <p className="text-slate-500 dark:text-slate-400 font-medium">Você ainda não tem turnês criadas.</p>
-          </Card>
-        ) : (
-          <div className="grid xl:grid-cols-3 md:grid-cols-2 gap-6">
-            {tours.map((t, i) => {
-              const count = items.filter((r) => r.tour_id === t.id).length;
-              const gradient = getGradient(i);
-              const iconColor = getIconColor(i);
-              
-              return (
-                <Card key={t.id} className="p-6 flex flex-col gap-5 group border-0 shadow-[0_2px_15px_rgb(0,0,0,0.02)] dark:shadow-[0_4px_20px_rgb(0,0,0,0.2)] bg-white dark:bg-card/40 dark:backdrop-blur-md dark:border dark:border-white/5 hover:shadow-[0_12px_30px_rgb(0,0,0,0.06)] dark:hover:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 rounded-[2rem] relative overflow-hidden">
-                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-br ${gradient} transition-opacity duration-500 pointer-events-none`}></div>
-                  
-                  <div className="flex items-start justify-between gap-4 relative z-10">
-                    <div className={`p-3.5 rounded-2xl ${iconColor} shrink-0 shadow-sm ring-1 ring-white/20`}>
-                      <Bus className="size-6" />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0 pt-1">
-                      <h3 className="font-bold text-xl text-slate-800 dark:text-white truncate">{t.nome}</h3>
-                      {t.espetaculo && <p className="text-sm text-slate-500 dark:text-slate-400 font-medium truncate mt-0.5">{t.espetaculo}</p>}
-                    </div>
-                    
-                    {profile?.role !== 'motorista' && (<DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400">
-                          <MoreVertical className="size-5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-2xl shadow-xl dark:border-white/10 w-48 p-2">
-                        <DropdownMenuItem asChild className="rounded-xl py-2.5">
-                           <a href={`/turne/${t.slug}`} target="_blank" rel="noreferrer" className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200"><ExternalLink className="size-4 mr-3" /> Abrir Turnê</a>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem asChild className="rounded-xl py-2.5">
-                           <Link to="/tour/$id" params={{ id: t.id }} className="cursor-pointer font-semibold text-slate-700 dark:text-slate-200"><Pencil className="size-4 mr-3" /> Editar Detalhes</Link>
-                        </DropdownMenuItem>
-                        <div className="h-px bg-slate-100 dark:bg-white/10 my-1 -mx-2"></div>
-                        <DropdownMenuItem onClick={() => setDeleteTourId(t.id)} className="text-red-500 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-500/10 rounded-xl py-2.5 font-semibold">
-                          <Trash2 className="size-4 mr-3" /> Excluir Turnê
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                )}
-                  </div>
-
-                  <div className="mt-auto relative z-10 flex items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-                    <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 dark:bg-white/5 dark:text-slate-300 dark:border-white/10 rounded-full px-3 py-1 font-semibold">{count} Cidades</Badge>
-                    <Button variant="link" className="px-0 text-primary font-bold h-auto hover:no-underline group-hover:translate-x-1 transition-transform" asChild>
-                       <a href={`/turne/${t.slug}`} target="_blank" rel="noreferrer">Ver detalhes <ChevronRight className="size-4 ml-1" /></a>
-                    </Button>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-        )}
-      </section>
-      )}
 
       {/* EVENTO ATUAL */}
       {eventosAtuais.length > 0 && (
@@ -320,7 +374,7 @@ function Viagens() {
             <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Viagem em Andamento</h2>
             <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
           </div>
-          <div className="grid gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
             {eventosAtuais.map(renderRoadbookCard)}
           </div>
         </section>
@@ -343,7 +397,7 @@ function Viagens() {
             )}
           </Card>
         ) : (
-          <div className="grid gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
             {futuros.map(renderRoadbookCard)}
           </div>
         )}
@@ -356,7 +410,7 @@ function Viagens() {
             <h2 className="text-2xl font-black tracking-tight text-slate-500 dark:text-slate-400">Viagens Passadas</h2>
             <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
           </div>
-          <div className="grid gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
             {realizados.map(renderRoadbookCard)}
           </div>
         </section>

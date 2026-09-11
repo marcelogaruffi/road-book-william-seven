@@ -63,8 +63,8 @@ function MapaVideoForm() {
   const loadData = async () => {
     setLoading(true);
     const [mapaRes, evRes] = await Promise.all([
-      supabase.from('mapas_video').select('*').eq('evento_id', evento_id).single(),
-      supabase.from('eventos').select('*').eq('id', evento_id).single()
+      supabase.from('mapas_video').select('*').eq('apresentacao_id', evento_id).single(),
+      supabase.from('evento_apresentacoes').select('id, data, horario, eventos(cidade, espetaculo)').eq('id', evento_id).single()
     ]);
     if (mapaRes.data) {
       if (!mapaRes.data.json_data) mapaRes.data.json_data = {};

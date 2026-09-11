@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { createFileRoute } from '@tanstack/react-router';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X, ClipboardList, Lightbulb, Mic2, MessageSquareText, Loader2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X, ClipboardList, Lightbulb, Mic2, MessageSquareText, Loader2, Megaphone } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from "sonner";
@@ -31,6 +31,8 @@ type Evento = {
   local: string;
   espetaculo: string;
   equipe: string[];
+  produtora_nome?: string | null;
+  produtora_logo_url?: string | null;
 };
 
 type Profile = {
@@ -51,14 +53,18 @@ function EventosComponent() {
   const [tours, setTours] = useState<Tour[]>([]);
   const [profissionais, setProfissionais] = useState<Profile[]>([]);
   const [templatesEspetaculos, setTemplatesEspetaculos] = useState<string[]>([]);
+  const [logosEspetaculos, setLogosEspetaculos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   const [openDialog, setOpenDialog] = useState(false);
+  const [viewMode, setViewMode] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form states
-  const [cidade, setCidade] = useState('');
+    const [cidade, setCidade] = useState('');
   const [turneId, setTurneId] = useState('');
+  const [produtoraNome, setProdutoraNome] = useState('');
+  const [produtoraLogoUrl, setProdutoraLogoUrl] = useState('');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [dataApres, setDataApres] = useState('');
@@ -88,6 +94,17 @@ function EventosComponent() {
   const [currentEventName, setCurrentEventName] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [escalas, setEscalas] = useState<any[]>([]);
+  const [apresentacoesList, setApresentacoesList] = useState<any[]>([{ data: "", horario: "", local: "" }]);
+
+  useEffect(() => {
+    if (turneId && turneId !== 'none') {
+      const t = tours.find(x => x.id === turneId);
+      if (t) {
+        if (t.produtora_nome) setProdutoraNome(t.produtora_nome);
+        if (t.logo_producao) setProdutoraLogoUrl(t.logo_producao);
+      }
+    }
+  }, [turneId, tours]);
 
   useEffect(() => {
     loadData();
@@ -95,17 +112,24 @@ function EventosComponent() {
 
   const loadData = async () => {
     setLoading(true);
-    const [evRes, trRes, profRes, tempRes, confRes, escRes] = await Promise.all([
+    const [evRes, trRes, profRes, tempRes, confRes, escRes, aprRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
       supabase.from('profiles').select('id, nome, role, funcoes, caches_padrao').in('role', ['admin', 'dev', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'elenco', 'stage_manager', 'contra_regra', 'assistente_producao', 'camareiro', 'musico', 'tour_manager', 'roadie', 'cenotecnico', 'tecnico_video', 'rigger']),
-      supabase.from('templates_espetaculos').select('nome_espetaculo'),
+      supabase.from('templates_espetaculos').select('nome_espetaculo, logo_espetaculo_url').neq('nome_espetaculo', 'ESTOQUE_GLOBAL'),
       supabase.from('configuracoes_sistema').select('permitir_sms_escala').eq('id', 1).maybeSingle(),
-      supabase.from('evento_escalas').select('*')
+      supabase.from('evento_escalas').select('*'),
+        supabase.from('evento_apresentacoes').select('*')
     ]);
 
     if (evRes.data) {
       let finalEv = evRes.data;
+        const allAps = aprRes?.data || [];
+        finalEv = finalEv.map(e => ({ ...e, apresentacoes: allAps.filter(a => a.evento_id === e.id).sort((a,b) => {
+          const tA = new Date((a.data||'2000-01-01') + 'T' + (a.horario||'00:00'));
+          const tB = new Date((b.data||'2000-01-01') + 'T' + (b.horario||'00:00'));
+          return tA.getTime() - tB.getTime();
+        }) }));
       if (isSimulating && profile && !['admin', 'dev', 'produtor'].includes(profile.role)) {
         finalEv = finalEv.filter(e => ((e.equipe as string[]) || []).includes(profile.id));
       }
@@ -113,7 +137,14 @@ function EventosComponent() {
     }
     if (trRes.data) setTours(trRes.data);
     if (profRes.data) setProfissionais(profRes.data);
-    if (tempRes.data) setTemplatesEspetaculos(tempRes.data.map(t => t.nome_espetaculo));
+    if (tempRes.data) {
+      setTemplatesEspetaculos(tempRes.data.map(t => t.nome_espetaculo));
+      const logos: Record<string, string> = {};
+      tempRes.data.forEach(t => {
+        if (t.logo_espetaculo_url) logos[t.nome_espetaculo] = t.logo_espetaculo_url;
+      });
+      setLogosEspetaculos(logos);
+    }
     if (confRes?.data) setPermitirSms(confRes.data.permitir_sms_escala);
     if (escRes?.data) setEscalas(escRes.data);
     setLoading(false);
@@ -122,9 +153,12 @@ function EventosComponent() {
   const canEdit = ['dev', 'admin', 'produtor'].includes(role || '');
 
   const handleOpenNew = () => {
+    setViewMode(false);
     setEditingId(null);
     setCidade('');
     setTurneId('');
+    setProdutoraNome('');
+    setProdutoraLogoUrl('');
     setDataInicio('');
     setDataFim('');
     setDataApres('');
@@ -133,6 +167,7 @@ function EventosComponent() {
     setEspetaculo('');
     setEscalasAtuais([]);
     setEscalasOriginais([]);
+      setApresentacoesList([{ data: '', horario: '', local: '' }]);
     
     setSearchEquipe('');
     setShowDropdown(false);
@@ -149,6 +184,8 @@ function EventosComponent() {
     setHorario(ev.horario);
     setLocal(ev.local);
     setEspetaculo(ev.espetaculo);
+    setProdutoraNome(ev.produtora_nome || '');
+    setProdutoraLogoUrl(ev.produtora_logo_url || '');
     setShowDropdown(false);
     
     setCaches({});
@@ -187,6 +224,7 @@ function EventosComponent() {
     }
     setEscalasAtuais(novasEscalas);
     setEscalasOriginais([...novasEscalas]);
+      setApresentacoesList(ev.apresentacoes && ev.apresentacoes.length > 0 ? ev.apresentacoes : [{ data: ev.data || '', horario: ev.horario || '', local: ev.local || '' }]);
     
     setOpenDialog(true);
   };
@@ -221,25 +259,42 @@ function EventosComponent() {
     }
   };
 
+
+
   const handleSave = async () => {
-    if (!cidade || !dataApres || !horario || !local || !espetaculo) {
-      toast.warning('Preencha os campos obrigatórios.');
+    // Sort apresentacoes
+    if (apresentacoesList.length > 0) {
+       apresentacoesList.sort((a,b) => {
+         const tA = new Date((a.data||'2000-01-01') + 'T' + (a.horario||'00:00'));
+         const tB = new Date((b.data||'2000-01-01') + 'T' + (b.horario||'00:00'));
+         return tA.getTime() - tB.getTime();
+       });
+    }
+    
+    const finalData = apresentacoesList.length > 0 ? apresentacoesList[0].data : dataApres;
+    const finalHorario = apresentacoesList.length > 0 ? apresentacoesList[0].horario : horario;
+    const finalLocal = apresentacoesList.length > 0 ? apresentacoesList[0].local : local;
+
+    if (!cidade || !finalData || !finalHorario || !finalLocal || !espetaculo) {
+      toast.warning('Preencha os campos obrigatorios.');
       return;
     }
 
     const payload = {
       cidade,
+      produtora_nome: produtoraNome || null,
+      produtora_logo_url: produtoraLogoUrl || null,
       turne_id: turneId || null,
       data_inicio: dataInicio || null,
       data_fim: dataFim || null,
-      data: dataApres,
-      horario,
-      local,
+      data: finalData,
+      horario: finalHorario,
+      local: finalLocal,
       espetaculo,
       equipe
     };
 
-    let error;
+  let error;
     let savedEventId = editingId;
     if (editingId) {
       const res = await supabase.from('eventos').update(payload).eq('id', editingId);
@@ -254,65 +309,74 @@ function EventosComponent() {
     if (error) {
       toast.error(getErrorMessage(error));
     } else {
-      toast.success('Evento salvo com sucesso.');
-      setOpenDialog(false);
-      loadData();
       
-      // Delete removed scales
-      const removedEscalas = escalasOriginais.filter(eo => !escalasAtuais.some(ea => ea.usuario_id === eo.usuario_id && ea.funcao === eo.funcao));
-      if (removedEscalas.length > 0 && savedEventId) {
-        for (const re of removedEscalas) {
-           await supabase.from('evento_escalas').delete().match({ evento_id: savedEventId, usuario_id: re.usuario_id, funcao: re.funcao });
-        }
-      }
+        // Save Apresentacoes
+        if (savedEventId) {
+          const { data: currentAps } = await supabase.from('evento_apresentacoes').select('id').eq('evento_id', savedEventId);
+          const currentIds = (currentAps || []).map((a:any) => a.id);
+          const keepIds = apresentacoesList.map(a => a.id).filter(Boolean);
+          const toDelete = currentIds.filter((id:any) => !keepIds.includes(id));
+          
+          if (toDelete.length > 0) {
+            await supabase.from('evento_apresentacoes').delete().in('id', toDelete);
+          }
 
-      // Find explicitly added scales
-      const novasEscalas = escalasAtuais.filter(ea => !escalasOriginais.some(eo => eo.usuario_id === ea.usuario_id && eo.funcao === ea.funcao));
-      
-      if (novasEscalas.length > 0 && savedEventId) {
-        const escalasToInsert = novasEscalas.map(ne => ({
-          evento_id: savedEventId,
-          usuario_id: ne.usuario_id,
-          status: 'pendente',
-          funcao: ne.funcao
-        }));
-        await supabase.from('evento_escalas').insert(escalasToInsert);
-        
-        // Group notifications by user so they receive only one
-        const userNotifs: Record<string, { funcoes: string[], totalCache: number }> = {};
-        for (const ne of novasEscalas) {
-           if (!userNotifs[ne.usuario_id]) userNotifs[ne.usuario_id] = { funcoes: [], totalCache: 0 };
-           userNotifs[ne.usuario_id].funcoes.push(ne.funcao.replace('_', ' '));
-           const valStr = caches[`${ne.usuario_id}_${ne.funcao}`] || '0';
-           const val = parseFloat(valStr.replace(/\./g, '').replace(',', '.')) || 0;
-           userNotifs[ne.usuario_id].totalCache += val;
-        }
+          const toUpsert = apresentacoesList.map((a) => ({
+             id: a.id || undefined,
+             evento_id: savedEventId,
+             data: a.data,
+             horario: a.horario,
+             local: a.local
+          }));
+          
+          if (toUpsert.length > 0) {
+             const { data: upsertedAps, error: upsertErr } = await supabase.from('evento_apresentacoes').upsert(toUpsert.map(u => ({...u, id: u.id || crypto.randomUUID()}))).select();
+             if (upsertErr) { toast.error('Erro no BD (Apresentacoes): ' + upsertErr.message); console.error(upsertErr); return; }
+             
+             const numAps = upsertedAps ? upsertedAps.length : 1;
+             
+             // Multiply Scales!
+             const removedEscalas = escalasOriginais.filter(eo => !escalasAtuais.some(ea => ea.usuario_id === eo.usuario_id && ea.funcao === eo.funcao));
+             if (removedEscalas.length > 0) {
+                for (const re of removedEscalas) {
+                   await supabase.from('evento_escalas').delete().match({ evento_id: savedEventId, usuario_id: re.usuario_id, funcao: re.funcao });
+                }
+             }
 
-        const notificacoes = Object.keys(userNotifs).map(uid => {
-          const n = userNotifs[uid];
-          const funcStr = n.funcoes.join(' e ');
-          const cacheStr = n.totalCache > 0 ? ` totalizando R$ ${n.totalCache.toLocaleString('pt-BR', {minimumFractionDigits: 2})}` : '';
-          return {
-            usuario_id: uid,
-            tipo: 'escala',
-            titulo: 'Nova Escala de Trabalho',
-            mensagem: `Você foi escalado(a) como ${funcStr} para ${espetaculo} em ${cidade}${cacheStr}! Data: ${new Date(dataApres + 'T12:00:00Z').toLocaleDateString('pt-BR')}. Acesse para responder.`,
-            link: '/'
-          };
-        });
-        await supabase.from('notificacoes').insert(notificacoes);
-
-        if (permitirSms) {
-          const smsUids = Object.keys(userNotifs);
-          if (smsUids.length > 0) {
-            setSmsMembersToNotify(smsUids);
-            setSmsMessage(`Olá! Você foi escalado(a) para o espetáculo ${espetaculo} em ${cidade}. Acesse o painel de gestão do William Seven para mais detalhes sobre cachê e datas!`);
-            setShowSmsDialog(true);
+             for (const ea of escalasAtuais) {
+                const { data: existingScales } = await supabase.from('evento_escalas').select('id').match({ evento_id: savedEventId, usuario_id: ea.usuario_id, funcao: ea.funcao });
+                const currentCount = existingScales ? existingScales.length : 0;
+                
+                if (currentCount < numAps) {
+                   const toAdd = numAps - currentCount;
+                   const insertData = Array(toAdd).fill({
+                      evento_id: savedEventId,
+                      usuario_id: ea.usuario_id,
+                      funcao: ea.funcao,
+                      cache: caches[`${ea.usuario_id}_${ea.funcao}`] || null,
+                      status: 'pendente'
+                   });
+                   await supabase.from('evento_escalas').insert(insertData);
+                   
+                   // Notificacao
+                   if (toAdd > 0 && numAps === existingScales?.length) { // Wait, the existing code didn't check
+                   }
+                } else if (currentCount > numAps) {
+                   const toRemove = currentCount - numAps;
+                   if (existingScales && existingScales.length >= toRemove) {
+                      const idsToRemove = existingScales.slice(0, toRemove).map((x:any) => x.id);
+                      await supabase.from('evento_escalas').delete().in('id', idsToRemove);
+                   }
+                }
+             }
           }
         }
-      }
 
-      // Update Financials for ALL current scales (since cache might have changed)
+        toast.success('Evento salvo com sucesso.');
+        setOpenDialog(false);
+        loadData();
+        
+        // Update Financials for ALL current scales (since cache might have changed)
       if (['admin', 'dev', 'produtor'].includes(role || '') && savedEventId) {
         const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', savedEventId);
         if (escData) {
@@ -419,46 +483,92 @@ function EventosComponent() {
   const proximos = eventos.filter(e => (e.data_fim || e.data) >= hoje);
   const realizados = eventos.filter(e => (e.data_fim || e.data) < hoje).reverse();
 
-  const renderEventoCard = (ev: Evento) => (
-    <Card key={ev.id} className="p-5 flex flex-col md:flex-row md:items-center gap-5 justify-between group rounded-[1.5rem]">
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-2">
-          <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-none font-bold">
-            <Calendar className="size-3 mr-1" /> {fmtDate(ev.data)} às {ev.horario?.substring(0,5)}
-          </Badge>
-          {ev.turne_id && (
-            <Badge variant="outline" className="text-slate-500">
-              Turnê: {getTourName(ev.turne_id)}
-            </Badge>
-          )}
-        </div>
-        <h3 className="font-black text-xl text-slate-800 dark:text-white mb-1">{ev.espetaculo}</h3>
-        <div className="flex items-center text-sm font-semibold text-slate-500 gap-4">
-          <span className="flex items-center"><MapPin className="size-4 mr-1"/> {ev.cidade} - {ev.local}</span>
-          <span className="flex items-center"><Users className="size-4 mr-1"/> {ev.equipe?.length || 0} membros na equipe</span>
-        </div>
-      </div>
+              const renderEventoCard = (ev: Evento) => {
+    let monthStr = '';
+    let dayStr = '';
+    if (ev.data) {
+      const dt = new Date(ev.data + 'T12:00:00Z');
+      monthStr = dt.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '');
+      dayStr = dt.toLocaleDateString('pt-BR', { day: '2-digit' });
+    }
 
-      {canEdit && (
-        <div className="flex flex-wrap gap-2 justify-end w-full md:w-auto">
-          {permitirSms && (
-            <Button variant="outline" size="sm" onClick={() => notifyAll(ev)} className="rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50" title="Notificar Equipe via SMS">
-              <Mic2 className="size-4 mr-1" /> Avisar escala via SMS
-            </Button>
+    const logoUrl = logosEspetaculos[ev.espetaculo];
+
+    return (
+      <Card key={ev.id} className="bg-[var(--card)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all group flex flex-col cursor-pointer">
+        
+        {/* Banner with overlapping Date Square */}
+        <div className="h-40 bg-indigo-50 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden" onClick={() => { setViewMode(true); handleOpenEdit(ev); }}>
+          
+          {logoUrl ? (
+            <img src={logoUrl} className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-500" alt="Logo" />
+          ) : (
+            <span className="text-indigo-800 dark:text-indigo-400 font-black text-2xl opacity-40 group-hover:scale-110 transition-transform">
+              {ev.espetaculo?.toUpperCase() || 'EVENTO'}
+            </span>
           )}
-          <Button variant="outline" size="sm" onClick={() => handleViewRider(ev)} className="rounded-xl border-slate-200" title="Ver Riders de Palco">
-            <Lightbulb className="size-4 mr-1" /> Riders
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(ev)} className="rounded-xl text-slate-400 hover:text-primary hover:bg-primary/10">
-            <Edit className="size-4" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.id)} className="rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10">
-            <Trash2 className="size-4" />
-          </Button>
+
+          {/* Quadrado da Data Flutuante */}
+          <div className="absolute -bottom-4 right-4 bg-white dark:bg-slate-900 shadow-lg rounded-xl flex flex-col items-center justify-center w-14 h-16 border border-slate-100 dark:border-slate-800 z-10 group-hover:-translate-y-1 transition-transform">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-red-500">{monthStr}</span>
+            <span className="text-xl font-black text-slate-800 dark:text-slate-100 leading-none">{dayStr}</span>
+          </div>
         </div>
-      )}
-    </Card>
-  );
+
+        <div className="p-4 pt-5 flex flex-col flex-1">
+          <div onClick={() => { setViewMode(true); handleOpenEdit(ev); }} className="flex-1">
+            <h4 className="text-xl font-black text-[var(--foreground)] truncate pr-16" title={ev.espetaculo}>{ev.espetaculo}</h4>
+            <p className="text-sm text-[var(--muted-foreground)] font-medium mt-1 truncate" title={ev.cidade + (ev.local ? ' - ' + ev.local : '')}>
+              📍 {ev.cidade} {ev.local ? ` - ${ev.local}` : ''}
+            </p>
+            
+            <div className="flex flex-col gap-1 mt-2">
+              {ev.apresentacoes && ev.apresentacoes.length > 0 ? (
+                ev.apresentacoes.map((ap, i) => (
+                  <p key={i} className="text-xs text-[var(--muted-foreground)] font-medium flex items-center gap-1.5">
+                    <Calendar className="size-3.5" /> {fmtDate(ap.data)} {ap.horario ? 'às ' + ap.horario.substring(0,5) : ''}
+                  </p>
+                ))
+              ) : (
+                <p className="text-xs text-[var(--muted-foreground)] font-medium flex items-center gap-1.5">
+                  <Calendar className="size-3.5" /> {fmtDate(ev.data)} {ev.horario ? 'às ' + ev.horario.substring(0,5) : ''}
+                </p>
+              )}
+            </div>
+          </div>
+          
+          <div className="mt-4 pt-3 border-t border-[var(--border)] flex justify-between items-center flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex gap-2">
+              <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md flex items-center gap-1">
+                <Users className="size-3" /> {ev.equipe?.length || 0}
+              </span>
+              {ev.turne_id && (
+                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md truncate max-w-[120px]">
+                  {getTourName(ev.turne_id)}
+                </span>
+              )}
+            </div>
+            
+            {canEdit && (
+              <div className="flex gap-1">
+                {permitirSms && (
+                  <Button variant="ghost" size="icon" onClick={() => notifyAll(ev)} className="h-8 w-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg" title="Notificar via SMS">
+                    <Mic2 className="size-4" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" onClick={() => { setViewMode(false); handleOpenEdit(ev); }} className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg" title="Editar">
+                  <Edit className="size-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => handleDelete(ev.id)} className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg" title="Excluir">
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -487,9 +597,9 @@ function EventosComponent() {
           {proximos.length > 0 ? (
             <div>
               <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6">Próximos Eventos</h3>
-              <div className="grid gap-4">
-                {proximos.map(renderEventoCard)}
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {proximos.map(renderEventoCard)}
+            </div>
             </div>
           ) : (
             <div className="text-center py-10 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
@@ -503,9 +613,9 @@ function EventosComponent() {
                 <h3 className="text-xl font-bold tracking-tight text-slate-500 dark:text-slate-400">Eventos Realizados</h3>
                 <div className="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
               </div>
-              <div className="grid gap-4 opacity-90">
-                {realizados.map(renderEventoCard)}
-              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 opacity-90">
+              {realizados.map(renderEventoCard)}
+            </div>
             </div>
           )}
         </div>
@@ -515,8 +625,17 @@ function EventosComponent() {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem]">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black">{editingId ? 'Editar Evento' : 'Novo Evento'}</DialogTitle>
-          </DialogHeader>
+              <div className="flex items-center justify-between pr-4">
+                <DialogTitle className="text-2xl font-black">
+                  {viewMode ? 'Informações do Evento' : (editingId ? 'Editar Evento' : 'Novo Evento')}
+                </DialogTitle>
+                {viewMode && canEdit && (
+                  <Button variant="outline" size="sm" onClick={() => setViewMode(false)} className="rounded-lg font-bold h-8 px-3 text-indigo-600 border-indigo-200 hover:bg-indigo-50 shadow-sm mt-1">
+                    <Edit className="size-3.5 mr-1" /> Editar
+                  </Button>
+                )}
+              </div>
+            </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-4">
             <div className="space-y-2 md:col-span-2">
@@ -526,7 +645,7 @@ function EventosComponent() {
                   <Plus className="size-4 mr-1" /> Novo Espetáculo
                 </Button>
               </div>
-              <select 
+              <select disabled={viewMode} 
                 value={espetaculo} 
                 onChange={e => setEspetaculo(e.target.value)}
                 className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -538,9 +657,32 @@ function EventosComponent() {
               </select>
             </div>
 
+                        <div className="space-y-2 md:col-span-1">
+              <Label className="font-bold text-slate-700 dark:text-slate-300">Produtora</Label>
+              <Input disabled={viewMode} value={produtoraNome} onChange={e => setProdutoraNome(e.target.value)} placeholder="Nome da Produtora" className="h-12 rounded-xl" />
+            </div>
+            <div className="space-y-2 md:col-span-1">
+              <Label className="font-bold text-slate-700 dark:text-slate-300">Logo da Produtora</Label>
+              <div className="flex items-center gap-2">
+                {produtoraLogoUrl && <img src={produtoraLogoUrl} alt="Logo" className="h-10 object-contain rounded-md border p-1 bg-white" />}
+                <label className="inline-flex items-center gap-2 text-sm border rounded-md px-3 py-2 cursor-pointer hover:bg-accent h-12 w-full justify-center">
+                  <Plus className="size-4" /> Anexar Logo
+                  <input type="file" disabled={viewMode} accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if(!file) return;
+                    const { data: user } = await supabase.auth.getUser();
+                    const filePath = `${user?.user?.id}/produtoras/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+                    await supabase.storage.from('roadbook-docs').upload(filePath, file);
+                    const { data } = supabase.storage.from('roadbook-docs').getPublicUrl(filePath);
+                    setProdutoraLogoUrl(data.publicUrl);
+                  }} />
+                </label>
+              </div>
+            </div>
+
             <div className="space-y-2 md:col-span-2">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Vincular à Turnê (Opcional)</Label>
-              <select 
+              <select disabled={viewMode} 
                 value={turneId} 
                 onChange={e => setTurneId(e.target.value)}
                 className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -552,32 +694,60 @@ function EventosComponent() {
 
             <div className="space-y-2">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Cidade *</Label>
-              <Input value={cidade} onChange={e => setCidade(e.target.value)} className="h-12 rounded-xl" />
+              <Input disabled={viewMode} value={cidade} onChange={e => setCidade(e.target.value)} className="h-12 rounded-xl" />
             </div>
 
-            <div className="space-y-2">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Local da Apresentação *</Label>
-              <Input value={local} onChange={e => setLocal(e.target.value)} className="h-12 rounded-xl" />
-            </div>
+            <div className="md:col-span-2 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="font-bold text-slate-700 dark:text-slate-300">Apresentações (Sessões) *</Label>
+                  {!viewMode && (
+                    <Button variant="outline" size="sm" onClick={() => setApresentacoesList([...apresentacoesList, { data: '', horario: '', local: local }])} className="h-8 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
+                      <Plus className="size-3 mr-1" /> Adicionar Sessão
+                    </Button>
+                  )}
+                </div>
+                
+                {apresentacoesList.length === 0 && (
+                  <div className="text-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 text-sm">
+                    Clique no botão acima para adicionar datas e locais.
+                  </div>
+                )}
 
-            <div className="space-y-2">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Data da Apresentação *</Label>
-              <Input type="date" value={dataApres} onChange={e => setDataApres(e.target.value)} className="h-12 rounded-xl" />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Horário *</Label>
-              <Input type="time" value={horario} onChange={e => setHorario(e.target.value)} className="h-12 rounded-xl" />
-            </div>
+                <div className="space-y-3">
+                  {apresentacoesList.map((ap, idx) => (
+                    <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 relative">
+                      <div className="flex-[0.8] space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-bold">Data *</Label>
+                        <Input type="date" disabled={viewMode} value={ap.data} onChange={e => { const nl = [...apresentacoesList]; nl[idx].data = e.target.value; setApresentacoesList(nl); if (idx === 0) setDataApres(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
+                      </div>
+                      <div className="flex-[0.6] space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-bold">Horário *</Label>
+                        <Input type="time" disabled={viewMode} value={ap.horario} onChange={e => { const nl = [...apresentacoesList]; nl[idx].horario = e.target.value; setApresentacoesList(nl); if (idx === 0) setHorario(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
+                      </div>
+                      <div className="flex-[1.5] space-y-1">
+                        <Label className="text-[10px] uppercase text-slate-500 font-bold">Local *</Label>
+                        <Input disabled={viewMode} value={ap.local} onChange={e => { const nl = [...apresentacoesList]; nl[idx].local = e.target.value; setApresentacoesList(nl); if (idx === 0) setLocal(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
+                      </div>
+                      {!viewMode && apresentacoesList.length > 1 && (
+                        <div className="pt-5 shrink-0">
+                          <Button variant="ghost" size="icon" onClick={() => { const nl = [...apresentacoesList]; nl.splice(idx, 1); setApresentacoesList(nl); }} className="h-10 w-10 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
 
             <div className="space-y-2">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Data de Início da Viagem</Label>
-              <Input type="date" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="h-12 rounded-xl" />
+              <Input disabled={viewMode} type="date" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="h-12 rounded-xl" />
             </div>
 
             <div className="space-y-2">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Data de Fim da Viagem</Label>
-              <Input type="date" value={dataFim} onChange={e => setDataFim(e.target.value)} className="h-12 rounded-xl" />
+              <Input disabled={viewMode} type="date" value={dataFim} onChange={e => setDataFim(e.target.value)} className="h-12 rounded-xl" />
             </div>
 
             {/* EQUIPE MULTISELECT */}
@@ -588,7 +758,7 @@ function EventosComponent() {
               <div className="relative">
                 <div 
                   className="flex min-h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background cursor-pointer hover:border-slate-400 transition-colors"
-                  onClick={() => setShowDropdown(!showDropdown)}
+                  onClick={() => !viewMode && setShowDropdown(!showDropdown)}
                 >
                   <span className="text-slate-500">Adicionar profissionais...</span>
                   <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className={`opacity-50 transition-transform ${showDropdown ? 'rotate-180' : ''}`}><path d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819L7.43179 8.56819C7.60753 8.74393 7.89245 8.74393 8.06819 8.56819L10.5682 6.06819C10.7439 5.89245 10.7439 5.60753 10.5682 5.43179C10.3924 5.25605 10.1075 5.25605 9.93179 5.43179L7.5 7.86358L5.06819 5.43179C4.89245 5.25605 4.60753 5.25605 4.43179 5.43179Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
@@ -598,7 +768,7 @@ function EventosComponent() {
                   <>
                   <div className="fixed inset-0 z-[60]" onMouseDown={() => setShowDropdown(false)}></div>
                   <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border rounded-xl shadow-xl z-[70] p-3 max-h-72 overflow-y-auto flex flex-col gap-3">
-                    <Input 
+                    <Input disabled={viewMode} 
                       id="search-equipe-input"
                         placeholder="Buscar profissional..." 
                         value={searchEquipe}
@@ -710,12 +880,11 @@ function EventosComponent() {
                             </div>
                           </div>
                           
-                          <button 
-                             onClick={() => toggleEquipe(esc.usuario_id, esc.funcao)}
+                          {!viewMode && (<button onClick={() => toggleEquipe(esc.usuario_id, esc.funcao)}
                              className="size-8 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500 text-slate-400 transition-colors"
                           >
                              <X className="size-4" />
-                          </button>
+                            </button>)}
                         </div>
                       );
                     })}
@@ -725,12 +894,24 @@ function EventosComponent() {
           </div>
 
           <DialogFooter className="mt-4 gap-2">
-            <Button variant="outline" onClick={() => setShowCachêêesDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
-              💰 Cachês da Equipe
-            </Button>
-            <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">Cancelar</Button>
-            <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md"><Save className="size-4 mr-2"/> Salvar Evento</Button>
-          </DialogFooter>
+              <Button variant="outline" onClick={() => setShowCachǦǦesDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
+                💰 Cachês da Equipe
+              </Button>
+              {viewMode ? (
+                <Button onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-8 font-bold shadow-md bg-indigo-600 hover:bg-indigo-700 text-white">
+                  Fechar
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md">
+                    <Save className="size-4 mr-2"/> Salvar Evento
+                  </Button>
+                </>
+              )}
+            </DialogFooter>
         </DialogContent>
       </Dialog>
       
@@ -803,7 +984,7 @@ function EventosComponent() {
           <div className="p-6 space-y-4">
             <div className="space-y-2">
               <Label className="text-slate-700 font-bold">Mensagem do SMS</Label>
-              <Textarea 
+              <Textarea disabled={viewMode} 
                 value={smsMessage} 
                 onChange={(e) => setSmsMessage(e.target.value)} 
                 className="min-h-[100px] resize-none bg-slate-50 text-base"

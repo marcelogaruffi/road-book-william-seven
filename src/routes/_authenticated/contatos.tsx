@@ -529,7 +529,7 @@ function ContatosPage() {
               Diretório Equipe ({filteredDiretorio.length})
             </TabsTrigger>
             <TabsTrigger value="turne" className="flex-1 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold text-[15px]">
-              Contatos de Turnê (Roadbooks)
+              Contatos de Turnê (Guias de Viagem)
             </TabsTrigger>
           </TabsList>
           

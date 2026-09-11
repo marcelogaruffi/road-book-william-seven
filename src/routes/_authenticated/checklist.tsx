@@ -70,6 +70,7 @@ function ChecklistPage() {
   const [activeTab, setActiveTab] = useState("conferencia");
   const [selectedSetor, setSelectedSetor] = useState(defaultSetor);
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [itensPadrao, setItensPadrao] = useState<ChecklistPadrao[]>([]);
   const [itensEvento, setItensEvento] = useState<ChecklistEvento[]>([]);
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
@@ -114,12 +115,12 @@ function ChecklistPage() {
     try {
       const [padraoRes, evtRes, espRes] = await Promise.all([
         supabase.from("checklist_padrao").select("*").order("ordem", { ascending: true }).order("created_at", { ascending: true }),
-        supabase.from("eventos").select("id, cidade, local, data, espetaculo").order("data", { ascending: false }),
+        supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)").order("data", { ascending: false }),
         supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo", { ascending: true })
       ]);
 
       if (padraoRes.data) setItensPadrao(padraoRes.data);
-      if (evtRes.data) setEventos(evtRes.data);
+      if (evtRes.data) setApresentacoes(evtRes.data as any);
       if (espRes.data) setEspetaculosList(espRes.data.map(e => e.nome_espetaculo));
     } catch (e) {
       console.error(e);
@@ -130,7 +131,7 @@ function ChecklistPage() {
   }
 
   async function fetchChecklistEvento(eventoId: string) {
-    const { data, error } = await supabase.from("checklist_eventos").select("*").eq("evento_id", eventoId).order("ordem", { ascending: true });
+    const { data, error } = await supabase.from("checklist_eventos").select("*").eq("apresentacao_id", eventoId).order("ordem", { ascending: true });
     if (error) {
       toast.error("Erro ao buscar checklist do evento");
     } else {
@@ -252,7 +253,7 @@ function ChecklistPage() {
     const itensParaInserir = itensDesteShow
       .filter(item => !existingNames.has(item.item_nome.toLowerCase().trim()))
       .map(item => ({
-        evento_id: selectedEventoId,
+        evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
         item_nome: item.item_nome,
         obrigatorio: item.obrigatorio,
         ordem: item.ordem,
@@ -301,7 +302,7 @@ function ChecklistPage() {
     const novaOrdem = itensEvento.length > 0 ? Math.max(...itensEvento.map(i => i.ordem)) + 1 : 0;
     
     const { data, error } = await supabase.from("checklist_eventos").insert({
-      evento_id: selectedEventoId,
+      evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
       item_nome: novoItemExtraNome,
       obrigatorio: novoItemExtraObrigatorio,
       concluido: false,

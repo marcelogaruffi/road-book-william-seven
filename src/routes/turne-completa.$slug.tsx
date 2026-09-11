@@ -117,7 +117,7 @@ function TurneCompleta() {
   }, []);
 
   if (roadbooks.length === 0) {
-    return <div className="p-8 text-center">Nenhum roadbook nesta turnê.</div>;
+    return <div className="p-8 text-center">Nenhum Guia de Viagem nesta turnê.</div>;
   }
 
   const selectedRoadbooks = roadbooks.filter(r => selectedIds.includes(r.id));

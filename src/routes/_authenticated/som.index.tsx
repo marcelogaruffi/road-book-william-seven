@@ -42,6 +42,7 @@ function SomComponent() {
   const isDevOrAdmin = ['admin', 'dev', 'produtor'].includes(role || '');
   
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [mapas, setMapas] = useState<MapaSom[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,14 +70,23 @@ function SomComponent() {
   }, [profile, isSimulating]);
 
   const loadData = async () => {
+    
     setLoading(true);
     const [evRes, mapasRes] = await Promise.all([
-      supabase.from('eventos').select('*').order('data', { ascending: true }),
-      supabase.from('mapas_som').select('id, evento_id')
+      supabase.from('evento_apresentacoes').select('id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)').order('data', { ascending: true }),
+      supabase.from('mapas_som').select('id, evento_id, apresentacao_id')
     ]);
 
     if (evRes.data) {
-      let finalEv = evRes.data as Evento[];
+      let finalEv = (evRes.data as any[]).map(a => ({
+        id: a.id,
+        evento_id: a.evento_id,
+        data: a.data,
+        horario: a.horario,
+        cidade: a.eventos?.cidade,
+        espetaculo: a.eventos?.espetaculo,
+        equipe: a.eventos?.equipe || []
+      })) as any[];
       // Filtra apenas eventos onde o técnico está escalado, a menos que seja admin/dev/produtor
       if (isSimulating && profile && !isDevOrAdmin) {
         finalEv = finalEv.filter(e => (e.equipe || []).includes(profile.id));
@@ -129,9 +139,7 @@ function SomComponent() {
       }
     } else if (initMode === 'clonar' && selectedCloneId) {
       const { data: cloneData } = await supabase
-        .from('mapas_som')
-        .select('json_data')
-        .eq('evento_id', selectedCloneId)
+        .from('mapas_som').select('json_data').eq('apresentacao_id', selectedCloneId)
         .single();
       if (cloneData && cloneData.json_data) {
         initialJsonData = cloneData.json_data;
@@ -139,7 +147,8 @@ function SomComponent() {
     }
 
     const { data, error } = await supabase.from('mapas_som').insert({
-      evento_id: evento.id,
+      evento_id: (evento as any).evento_id || evento.id,
+      apresentacao_id: evento.id,
       user_id: userData.user?.id,
       cidade: evento.cidade,
       data_apresentacao: evento.data,
@@ -165,7 +174,7 @@ function SomComponent() {
   const realizados = filtered.filter(e => e.data < hoje).reverse();
 
   const renderEventoCard = (evento: Evento) => {
-    const hasMapa = mapas.some(m => m.evento_id === evento.id);
+    const hasMapa = mapas.some(m => m.apresentacao_id === evento.id);
     
     return (
       <Card key={evento.id} className="border-0 shadow-lg dark:bg-card/80 backdrop-blur-sm rounded-2xl overflow-hidden hover:-translate-y-1 transition-transform duration-300">
@@ -184,7 +193,7 @@ function SomComponent() {
             <div className="flex items-center text-slate-600 dark:text-slate-300">
               <Calendar className="size-4 mr-3 text-slate-400" />
               <span className="font-medium text-sm">
-                {evento.data ? new Date(evento.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data Indefinida'}
+                {evento.data ? new Date(evento.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data Indefinida'} {evento.horario ? `às ${evento.horario}` : ''}
               </span>
             </div>
           </div>

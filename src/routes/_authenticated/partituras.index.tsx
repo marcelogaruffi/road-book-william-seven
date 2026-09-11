@@ -46,6 +46,7 @@ function PartiturasPage() {
   const [selectedTipo, setSelectedTipo] = useState<"partitura" | "musica">("partitura");
   
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
   
   const [arquivosPadrao, setArquivosPadrao] = useState<ArquivoPadrao[]>([]);
@@ -78,7 +79,8 @@ function PartiturasPage() {
   useEffect(() => {
     if (selectedEventoId) {
       fetchArquivosEvento(selectedEventoId);
-      const evt = eventos.find(e => e.id === selectedEventoId);
+      const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const evt = apr?.eventos;
       if (evt) setSelectedShowImport(evt.espetaculo);
     } else {
       setArquivosEvento([]);
@@ -98,11 +100,11 @@ function PartiturasPage() {
     setLoading(true);
     try {
       const [evtRes, espRes] = await Promise.all([
-        supabase.from("eventos").select("id, cidade, local, data, espetaculo").order("data", { ascending: false }),
+        supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)").order("data", { ascending: false }),
         supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo", { ascending: true })
       ]);
 
-      if (evtRes.data) setEventos(evtRes.data);
+      if (evtRes.data) setApresentacoes(evtRes.data as any);
       if (espRes.data) setEspetaculosList(espRes.data.map(e => e.nome_espetaculo));
     } catch (e) {
       console.error(e);
@@ -113,7 +115,7 @@ function PartiturasPage() {
   }
 
   async function fetchArquivosEvento(eventoId: string) {
-    const { data, error } = await supabase.from("arquivos_eventos").select("*").eq("evento_id", eventoId).order("ordem", { ascending: true });
+    const { data, error } = await supabase.from("arquivos_eventos").select("*").eq("apresentacao_id", eventoId).order("ordem", { ascending: true });
     if (error) {
       toast.error("Erro ao buscar arquivos do evento");
     } else {
@@ -177,7 +179,7 @@ function PartiturasPage() {
       } else {
         const novaOrdem = arquivosEvento.length;
         const { data, error } = await supabase.from("arquivos_eventos").insert({
-          evento_id: selectedEventoId,
+          evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
           nome: novoNome,
           arquivo_url: publicUrl,
           tipo: selectedTipo,
@@ -224,7 +226,7 @@ function PartiturasPage() {
       const itensParaInserir = itensDesteShow
         .filter(item => !existingUrls.has(item.arquivo_url))
         .map(item => ({
-          evento_id: selectedEventoId,
+          evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
           nome: item.nome,
           arquivo_url: item.arquivo_url,
           tipo: item.tipo,

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { RoadbookForm } from "@/components/RoadbookForm";
 import { type RoadbookData, rowToRoadbook } from "@/lib/roadbook-types";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/roadbook/$id")({
   head: () => ({ meta: [{ title: "Editar Guia de Viagem" }] }),

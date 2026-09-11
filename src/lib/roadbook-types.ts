@@ -184,6 +184,13 @@ export type Automacoes = {
 };
 
 export type RoadbookData = {
+  exibir_logo_espetaculo?: boolean;
+  exibir_logo_cia?: boolean;
+  exibir_logo_producao?: boolean;
+  logo_producao_override?: string | null;
+  logo_cia_override?: string | null;
+  logo_espetaculo_override?: string | null;
+  foto_capa_url?: string | null;
   id?: string;
   slug?: string;
   tour_id?: string | null;
@@ -314,8 +321,15 @@ export function rowToRoadbook(row: any): RoadbookData {
     hotel_cafe_inicio: ((row.automacoes as Automacoes)?.info_hotel?.cafe_inicio) || "",
     hotel_cafe_fim: ((row.automacoes as Automacoes)?.info_hotel?.cafe_fim) || "",
     hotel_wifi: ((row.automacoes as Automacoes)?.info_hotel?.wifi) || "",
-    espetaculo_logo_url: (row.automacoes as Automacoes)?.espetaculo_logo_url || "",
-    financas_receitas: Array.isArray(row.financas_receitas) ? row.financas_receitas : [],
+          espetaculo_logo_url: (row.automacoes as Automacoes)?.espetaculo_logo_url || "",
+      exibir_logo_espetaculo: (row.automacoes as Automacoes)?.exibir_logo_espetaculo ?? true,
+      exibir_logo_cia: (row.automacoes as Automacoes)?.exibir_logo_cia ?? true,
+      exibir_logo_producao: (row.automacoes as Automacoes)?.exibir_logo_producao ?? true,
+      logo_producao_override: (row.automacoes as Automacoes)?.logo_producao_override || null,
+      logo_cia_override: (row.automacoes as Automacoes)?.logo_cia_override || null,
+      logo_espetaculo_override: (row.automacoes as Automacoes)?.logo_espetaculo_override || null,
+      foto_capa_url: (row.automacoes as Automacoes)?.foto_capa_url || null,
+      financas_receitas: Array.isArray(row.financas_receitas) ? row.financas_receitas : [],
     financas_despesas: Array.isArray(row.financas_despesas) ? row.financas_despesas : [],
   };
 }
@@ -360,17 +374,24 @@ export function roadbookToPayload(d: RoadbookData, userId: string) {
     hotel_fotos: d.hotel_fotos as any,
     voo_ida: d.voo_ida as any,
     voo_volta: d.voo_volta as any,
-    automacoes: {
-      ...(typeof d.automacoes === 'object' ? d.automacoes : {}),
-      hotel_extras: Array.isArray(d.programacao) ? d.programacao : [],
-      info_hotel: {
-        observacoes: d.hotel_observacoes,
-        cafe_inicio: d.hotel_cafe_inicio,
-        cafe_fim: d.hotel_cafe_fim,
-        wifi: d.hotel_wifi,
-      },
-      espetaculo_logo_url: d.espetaculo_logo_url,
-    } as any,
+          automacoes: {
+        ...(typeof d.automacoes === 'object' ? d.automacoes : {}),
+        hotel_extras: Array.isArray(d.programacao) ? d.programacao : [],
+        info_hotel: {
+          observacoes: d.hotel_observacoes,
+          cafe_inicio: d.hotel_cafe_inicio,
+          cafe_fim: d.hotel_cafe_fim,
+          wifi: d.hotel_wifi,
+        },
+        espetaculo_logo_url: d.espetaculo_logo_url,
+        exibir_logo_espetaculo: d.exibir_logo_espetaculo,
+        exibir_logo_cia: d.exibir_logo_cia,
+        exibir_logo_producao: d.exibir_logo_producao,
+        logo_producao_override: d.logo_producao_override,
+        logo_cia_override: d.logo_cia_override,
+        logo_espetaculo_override: d.logo_espetaculo_override,
+        foto_capa_url: d.foto_capa_url || null,
+      } as any,
   };
 }
 

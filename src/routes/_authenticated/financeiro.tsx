@@ -29,7 +29,7 @@ function FinanceiroPage() {
     (async () => {
       const { data, error } = await supabase.from("roadbooks").select("id, espetaculo, cidade, data_inicial").order("data_inicial", { ascending: false });
       if (error) {
-        toast.error("Erro ao carregar roadbooks: " + getErrorMessage(error));
+        toast.error("Erro ao carregar guias de viagem: " + getErrorMessage(error));
       } else {
         setRoadbooks(data || []);
       }

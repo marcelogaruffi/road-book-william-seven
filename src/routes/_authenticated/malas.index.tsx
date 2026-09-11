@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Route as AuthedRoute } from "./route";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MalasTemplateTab } from '@/components/MalasTemplateTab';
+import { EstoqueGlobalTab } from '@/components/EstoqueGlobalTab';
 
 export const Route = createFileRoute('/_authenticated/malas/')({
   head: () => ({ meta: [{ title: 'Malas e Cases' }] }),
@@ -104,10 +105,11 @@ function MalasComponent() {
         </p>
       </div>
 
-      <Tabs defaultValue="eventos" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
+            <Tabs defaultValue="eventos" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
           <TabsTrigger value="eventos" className="rounded-lg h-full font-bold">Eventos (Checklist)</TabsTrigger>
           <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Modelos (Padrão)</TabsTrigger>
+          <TabsTrigger value="estoque" className="rounded-lg h-full font-bold">Estoque Global</TabsTrigger>
         </TabsList>
 
         <TabsContent value="eventos" className="space-y-8 mt-8">
@@ -161,8 +163,16 @@ function MalasComponent() {
           )}
         </TabsContent>
 
-        <TabsContent value="modelos" className="mt-0">
+                        <TabsContent value="modelos" className="mt-0">
           <MalasTemplateTab />
+        </TabsContent>
+
+        <TabsContent value="estoque" className="mt-0">
+          <EstoqueGlobalTab />
+        </TabsContent>
+
+        <TabsContent value="estoque" className="mt-0">
+          <EstoqueGlobalTab />
         </TabsContent>
       </Tabs>
     </div>

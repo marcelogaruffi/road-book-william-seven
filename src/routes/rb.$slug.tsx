@@ -31,32 +31,45 @@ export const Route = createFileRoute("/rb/$slug")({
     if (error) throw error;
     if (!data) throw notFound();
     const rb = rowToRoadbook(data);
+    let logoEspetaculo = rb.logo_espetaculo_override || null;
+    let logoCia = rb.logo_cia_override || null;
+    let logoProducao = rb.logo_producao_override || null;
 
-    // If bucket is public, we can just use getPublicUrl
-    const getUrl = (path: string) => {
-      if (!path) return "";
-      return supabase.storage.from("roadbook-docs").getPublicUrl(path).data.publicUrl;
-    };
+    if (!logoEspetaculo || !logoCia) {
+      const { data: espData } = await supabase.from("templates_espetaculos").select("logo_espetaculo_url, logo_cia_url").eq("nome_espetaculo", rb.espetaculo).maybeSingle();
+      if (espData) {
+        if (!logoEspetaculo) logoEspetaculo = espData.logo_espetaculo_url;
+        if (!logoCia) logoCia = espData.logo_cia_url;
+      }
+    }
 
-    rb.teatro_fotos = rb.teatro_fotos.map((f) => ({ ...f, url: f.url || getUrl(f.path) }));
-    rb.hotel_fotos = rb.hotel_fotos.map((f) => ({ ...f, url: f.url || getUrl(f.path) }));
-    rb.documentos = rb.documentos.map((d) => ({ ...d, url: d.url || getUrl(d.path) }));
-    rb.voo_ida.cartoes_embarque = (rb.voo_ida.cartoes_embarque ?? []).map((c) => ({ ...c, url: c.url || getUrl(c.path) }));
-    rb.voo_volta.cartoes_embarque = (rb.voo_volta.cartoes_embarque ?? []).map((c) => ({ ...c, url: c.url || getUrl(c.path) }));
+    if (!logoProducao && rb.evento_id) {
+      const { data: evData } = await supabase.from("eventos").select("produtora_logo_url").eq("id", rb.evento_id).maybeSingle();
+      if (evData?.produtora_logo_url) logoProducao = evData.produtora_logo_url;
+    }
 
+    if (!logoProducao && rb.tour_id) {
+      const { data: tourData } = await supabase.from("tours").select("logo_producao, exibir_logo_espetaculo, exibir_logo_cia, exibir_logo_producao").eq("id", rb.tour_id).maybeSingle();
+      if (tourData) {
+        logoProducao = tourData.logo_producao;
+      }
+    }
+    
+    // We attach them to the rb object to pass to the component
+    (rb as any)._resolved_logos = { logoEspetaculo, logoCia, logoProducao };
     return rb;
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade}` : "Road Book";
+    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade}` : "Guia de Viagem";
     return { meta: [
-      { title }, { name: "description", content: `Road Book ${title}` },
+      { title }, { name: "description", content: `Guia de Viagem ${title}` },
       { property: "og:title", content: title },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
     ] };
   },
   notFoundComponent: () => (
     <div className="min-h-screen flex items-center justify-center p-8 text-center">
-      <div><h1 className="text-2xl font-semibold">Road Book não encontrado</h1></div>
+      <div><h1 className="text-2xl font-semibold">Guia de Viagem não encontrado</h1></div>
     </div>
   ),
   errorComponent: ({ error }: { error: any }) => (
@@ -564,18 +577,26 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       {isFirst && (
         <header className="pt-16 pb-12 relative z-10 px-5 text-center no-print">
           <div className="w-full max-w-3xl mx-auto space-y-4">
-            {/* Logo Bar */}
-            <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200 dark:border-white/10">
-              <img src="/logo-seven.png" alt="Seven Produções" className="h-12 w-auto object-contain dark:brightness-200" />
-              {r.espetaculo_logo_url && (
-                <>
-                  <div className="w-px h-10 bg-slate-300 dark:bg-white/20"></div>
-                  <img src={r.espetaculo_logo_url} alt={`${r.espetaculo} Logo`} className="h-12 w-auto object-contain dark:brightness-200" />
-                </>
-              )}
-            </div>
-            
-            {r.festival && (
+                          {/* Logo Bar */}
+              <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200 dark:border-white/10">
+                {(r as any)._resolved_logos?.logoEspetaculo && r.exibir_logo_espetaculo && (
+                  <img src={(r as any)._resolved_logos.logoEspetaculo} alt="Espetáculo" className="h-12 w-auto object-contain dark:brightness-200" />
+                )}
+                {(r as any)._resolved_logos?.logoCia && r.exibir_logo_cia && (
+                  <>
+                    <div className="w-px h-10 bg-slate-300 dark:bg-white/20"></div>
+                    <img src={(r as any)._resolved_logos.logoCia} alt="Cia" className="h-12 w-auto object-contain dark:brightness-200" />
+                  </>
+                )}
+                {(r as any)._resolved_logos?.logoProducao && r.exibir_logo_producao && (
+                  <>
+                    <div className="w-px h-10 bg-slate-300 dark:bg-white/20"></div>
+                    <img src={(r as any)._resolved_logos.logoProducao} alt="Produção" className="h-12 w-auto object-contain dark:brightness-200" />
+                  </>
+                )}
+              </div>
+              
+              {r.festival && (
               <p className="text-xs uppercase tracking-[0.25em] text-primary font-bold flex items-center justify-center gap-1.5">
                 {r.festival}
               </p>
@@ -963,7 +984,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
               </div>
               {fi.redes && <RedesLinks text={fi.redes} />}
               {fi.programacao_oficial && <ProgramacaoOficial text={fi.programacao_oficial} />}
-              {fi.observacoes && <p className="text-muted-foreground whitespace-pre-line">{fi.observacoes}</p>}
+              {fi.observacoes && <p className="text-muted-foreground whitespace-pre-line"><LinkifiedText text={fi.observacoes} /></p>}
             </div>
             <PhotoGallery fotos={r.festival_info?.fotos ?? []} label="Fotos do festival" categorias={["Fachada", "Apresentação", "Divulgação", "Outros"]} onOpen={(f, all, i) => setLightbox({ item: f, allItems: all, index: i })} />
           </Section>
@@ -1019,7 +1040,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         })()}
 
         <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground">
-          Road Book · William Seven<br />
+          Guia de Viagem · William Seven<br />
           Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
         </footer>
       </main>
@@ -1451,7 +1472,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                   <div className="space-y-3">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-slate-500 border-b pb-1">📁 Documentos Técnicos</h3>
                     <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs">
-                      <p className="text-slate-400 mb-2 italic">Acesse a versão online do Road Book para abrir e baixar estes arquivos:</p>
+                      <p className="text-slate-400 mb-2 italic">Acesse a versão online do Guia de Viagem para abrir e baixar estes arquivos:</p>
                       <div className="grid grid-cols-2 gap-x-6 gap-y-2">
                         {r.documentos.map((doc, idx) => (
                           <div key={idx} className="flex items-center gap-2 text-slate-700 border-b border-slate-50 pb-1">
@@ -1830,37 +1851,43 @@ function PhotoGallery({ fotos, label, categorias, onOpen }: { fotos: Foto[]; lab
   );
 }
 
-function ProgramacaoOficial({ text }: { text: string }) {
-  const trimmed = text.trim();
-  if (/^https?:\/\//i.test(trimmed) && !/\s/.test(trimmed)) {
-    return (
-      <p className="text-muted-foreground">
-        <span className="text-foreground font-medium">Programação oficial: </span>
-        <a href={trimmed} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{trimmed}</a>
-      </p>
-    );
-  }
+export function LinkifiedText({ text }: { text: string }) {
+  if (!text) return null;
+  // Regex to match URLs (http, https, www) and Instagram handles (@handle)
+  const regex = /(https?:\/\/[^\s]+|www\.[^\s]+|@[\w._]+)/ig;
+  const parts = text.split(regex);
+  
   return (
-    <p className="text-muted-foreground whitespace-pre-line">
-      <span className="text-foreground font-medium">Programação oficial: </span>{text}
-    </p>
-  );
-}
-
-function RedesLinks({ text }: { text: string }) {
-  // Detect URLs and @handles, render the rest as text
-  const parts = text.split(/(\s+)/);
-  return (
-    <p className="text-muted-foreground">
+    <>
       {parts.map((p, i) => {
         if (/^https?:\/\//i.test(p)) {
           return <a key={i} href={p} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{p}</a>;
+        }
+        if (/^www\./i.test(p)) {
+          return <a key={i} href={`https://${p}`} target="_blank" rel="noopener noreferrer" className="text-primary underline break-all">{p}</a>;
         }
         if (/^@[\w._]+$/.test(p)) {
           return <a key={i} href={`https://instagram.com/${p.replace(/^@/, "")}`} target="_blank" rel="noopener noreferrer" className="text-primary">{p}</a>;
         }
         return <span key={i}>{p}</span>;
       })}
+    </>
+  );
+}
+
+function ProgramacaoOficial({ text }: { text: string }) {
+  return (
+    <p className="text-muted-foreground whitespace-pre-line">
+      <span className="text-foreground font-medium">Programação oficial: </span>
+      <LinkifiedText text={text} />
+    </p>
+  );
+}
+
+function RedesLinks({ text }: { text: string }) {
+  return (
+    <p className="text-muted-foreground whitespace-pre-line">
+      <LinkifiedText text={text} />
     </p>
   );
 }

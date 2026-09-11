@@ -21,6 +21,7 @@ export const Route = createFileRoute('/_authenticated/som-operacao/')({
 function SomOperacaoIndex() {
   const navigate = useNavigate();
   const [eventos, setEventos] = useState<any[]>([]);
+  const [apresentacoes, setApresentacoes] = useState<any[]>([]);
   const [mapas, setMapas] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,7 +49,7 @@ function SomOperacaoIndex() {
     }
     
     const [evRes, mapasRes] = await Promise.all([
-      supabase.from('eventos').select('*').order('data', { ascending: true }),
+      supabase.from('evento_apresentacoes').select('id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)').order('data', { ascending: true }),
       supabase.from('mapas_som').select('*')
     ]);
     
@@ -96,7 +97,7 @@ function SomOperacaoIndex() {
             <div className="flex items-center text-slate-600 dark:text-slate-300">
               <Calendar className="size-4 mr-3 text-slate-400" />
               <span className="font-medium text-sm">
-                {evento.data ? new Date(evento.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data Indefinida'}
+                {evento.data ? new Date(evento.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data Indefinida'} {evento.horario ? `às ${evento.horario}` : ''}
               </span>
             </div>
           </div>

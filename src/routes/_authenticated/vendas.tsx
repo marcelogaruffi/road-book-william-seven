@@ -64,16 +64,16 @@ function VendasPage() {
   async function fetchDados() {
     setLoading(true);
     try {
-      const [prodRes, evtRes, vendRes, estoqueRes] = await Promise.all([
-        supabase.from("vendas_produtos").select("*").order("nome"),
-        supabase.from("eventos").select("id, cidade, local, data").order("data", { ascending: false }),
-        supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local, data)").order("data_venda", { ascending: false }),
-        supabase.from("templates_espetaculos").select("assets_midia").eq("nome_espetaculo", "ESTOQUE_GLOBAL").maybeSingle()
-      ]);
+              const [prodRes, evtRes, vendRes, estoqueRes] = await Promise.all([
+          supabase.from("vendas_produtos").select("*").order("nome"),
+          supabase.from("eventos").select("id, cidade, local, data").order("data", { ascending: false }),
+          supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local, data)").order("data_venda", { ascending: false }),
+          supabase.from("estoque_global").select("itens, merch").limit(1).maybeSingle()
+        ]);
 
-      if (estoqueRes.data && estoqueRes.data.assets_midia?.estoque) {
-        setEstoque(estoqueRes.data.assets_midia.estoque);
-      }
+        if (estoqueRes.data && estoqueRes.data.merch) {
+          setEstoque(estoqueRes.data.merch);
+        }
       if (prodRes.data) setProdutos(prodRes.data);
       if (evtRes.data) setEventos(evtRes.data);
       if (vendRes.data) setVendas(vendRes.data);
@@ -83,24 +83,21 @@ function VendasPage() {
     setLoading(false);
   }
 
-  async function updateEstoque(produtoId: string, novoEstoque: number) {
-    const updated = { ...estoque, [produtoId]: novoEstoque };
-    setEstoque(updated);
-    
-    const { data } = await supabase.from('templates_espetaculos').select('assets_midia').eq('nome_espetaculo', 'ESTOQUE_GLOBAL').maybeSingle();
-    
-    if (data) {
-      await supabase.from('templates_espetaculos').update({
-        assets_midia: { ...(data.assets_midia || {}), estoque: updated }
-      }).eq('nome_espetaculo', 'ESTOQUE_GLOBAL');
-    } else {
-      await supabase.from('templates_espetaculos').insert({
-        nome_espetaculo: 'ESTOQUE_GLOBAL',
-        descricao: 'Controle de Estoque Global',
-        assets_midia: { estoque: updated }
-      });
+      async function updateEstoque(produtoId: string, novoEstoque: number) {
+      const updated = { ...estoque, [produtoId]: novoEstoque };
+      setEstoque(updated);
+      
+      const { data } = await supabase.from('estoque_global').select('id, merch').limit(1).maybeSingle();
+      if (data) {
+        await supabase.from('estoque_global').update({
+          merch: updated
+        }).eq('id', data.id);
+      } else {
+        await supabase.from('estoque_global').insert({
+          merch: updated
+        });
+      }
     }
-  }
 
   async function handleAddEstoque(produtoId: string) {
     const current = estoque[produtoId] || 0;

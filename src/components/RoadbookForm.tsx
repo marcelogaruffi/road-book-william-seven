@@ -31,7 +31,7 @@ import { formatPhone } from "@/lib/utils";
 import { makeRoadbookSlug } from "@/lib/slug";
 
 type TourOpt = { id: string; nome: string };
-type EventoOpt = { id: string; espetaculo: string; cidade: string; data: string; data_inicio: string | null; data_fim: string | null; local: string; horario: string | null; };
+type EventoOpt = { id: string; espetaculo: string; cidade: string; data: string; data_inicio: string | null; data_fim: string | null; local: string; horario: string | null; turne_id?: string | null; produtora_logo_url?: string | null; };
 
 export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const navigate = useNavigate();
@@ -41,6 +41,48 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const [eventos, setEventos] = useState<EventoOpt[]>([]);
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [fotosDivulgacao, setFotosDivulgacao] = useState<any[]>([]);
+  const [defaultLogos, setDefaultLogos] = useState<{espetaculo: string|null; cia: string|null; producao: string|null}>({espetaculo: null, cia: null, producao: null});
+
+  useEffect(() => {
+    if (!d.espetaculo) { 
+      setFotosDivulgacao([]); 
+      setDefaultLogos(prev => ({ ...prev, espetaculo: null, cia: null }));
+      return; 
+    }
+    (async () => {
+      const { data: tpl } = await supabase
+        .from('templates_espetaculos')
+        .select('assets_midia, logo_espetaculo_url, logo_cia_url')
+        .eq('nome_espetaculo', d.espetaculo)
+        .maybeSingle();
+      if (tpl) {
+        setFotosDivulgacao((tpl.assets_midia as any)?.fotos_divulgacao || []);
+        setDefaultLogos(prev => ({ ...prev, espetaculo: tpl.logo_espetaculo_url || null, cia: tpl.logo_cia_url || null }));
+      } else {
+        setFotosDivulgacao([]);
+        setDefaultLogos(prev => ({ ...prev, espetaculo: null, cia: null }));
+      }
+    })();
+  }, [d.espetaculo]);
+
+  useEffect(() => {
+    let logo: string | null = null;
+    if (d.evento_id) {
+      const ev = eventos.find(e => e.id === d.evento_id);
+      if (ev?.produtora_logo_url) logo = ev.produtora_logo_url;
+    }
+    
+    if (logo) {
+       setDefaultLogos(prev => ({ ...prev, producao: logo }));
+    } else if (d.tour_id) {
+       supabase.from("tours").select("logo_producao").eq("id", d.tour_id).maybeSingle().then(res => {
+         setDefaultLogos(prev => ({ ...prev, producao: res.data?.logo_producao || null }));
+       });
+    } else {
+       setDefaultLogos(prev => ({ ...prev, producao: null }));
+    }
+  }, [d.tour_id, d.evento_id, eventos]);
 
   const [mapPickerOpen, setMapPickerOpen] = useState(false);
   const [mapPickerKey, setMapPickerKey] = useState("");
@@ -69,7 +111,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     (async () => {
       const [toursRes, eventosRes, roadbooksRes, espRes] = await Promise.all([
         supabase.from("tours").select("id,nome").order("nome"),
-        supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local,horario").order("data", { ascending: false }),
+        supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local,horario,turne_id,produtora_logo_url").order("data", { ascending: false }),
         supabase.from("roadbooks").select("evento_id").not("evento_id", "is", null),
         supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo")
       ]);
@@ -85,15 +127,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     })();
   }, [initial.evento_id]);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        navigate({ to: "/dashboard" });
-      }
-    }
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [navigate]);
+
 
   function up<K extends keyof RoadbookData>(k: K, v: RoadbookData[K]) {
     setD((s) => ({ ...s, [k]: v }));
@@ -467,6 +501,24 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   }
 
   // OUTROS LOCAIS
+  async function uploadLogoOverride(file: File, field: "logo_espetaculo_override" | "logo_cia_override" | "logo_producao_override") {
+    setUploading(true);
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      if (!userRes.user) throw new Error("Sessão expirada");
+      const ext = file.name.split('.').pop();
+      const path = `${userRes.user.id}/${d.id || 'draft'}/logos/${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      const { error } = await supabase.storage.from('roadbook-docs').upload(path, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('roadbook-docs').getPublicUrl(path);
+      up(field, publicUrl);
+    } catch (err: any) {
+      toast.error(err.message || "Erro no upload");
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function addOutroLocal() {
     const list = d.automacoes?.outros_locais ?? [];
     up("automacoes", {
@@ -627,7 +679,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         }
         toast.success("Criado! Página pública: /rb/" + inserted!.slug);
       }
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/viagens" });
     } catch (err: any) {
       toast.error(getErrorMessage(err) ?? "Erro ao salvar");
     } finally {
@@ -727,6 +779,9 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
             <TabsTrigger value="voos" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
               <Plane className="size-4 mr-2" /> Voos
             </TabsTrigger>
+            <TabsTrigger value="timeline" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
+              <Clock className="size-4 mr-2" /> Linha do Tempo
+            </TabsTrigger>
             <TabsTrigger value="festival" className="rounded-2xl px-5 py-2.5 data-[state=active]:bg-white dark:data-[state=active]:bg-slate-200 data-[state=active]:text-primary dark:data-[state=active]:text-slate-900 data-[state=active]:shadow-md transition-all font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white">
               <Sparkles className="size-4 mr-2" /> Festival
             </TabsTrigger>
@@ -780,6 +835,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                         return {
                           ...s,
                           evento_id: ev.id,
+                          tour_id: ev.turne_id || s.tour_id,
                           espetaculo: ev.espetaculo || s.espetaculo,
                           cidade: ev.cidade || s.cidade,
                           data_inicial: ev.data_inicio || ev.data || s.data_inicial,
@@ -882,28 +938,182 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               </div>
             </CardContent>
           </Card>
-          
+
+          {fotosDivulgacao.length > 0 && (
+            <div className="mt-6">
+              <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
+                <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-4 mb-4">
+                  <CardTitle className="text-lg font-black flex items-center gap-2">
+                    <Upload className="size-5 text-primary" /> Foto de Capa do Guia
+                  </CardTitle>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Selecione uma das fotos de divulgação do espetáculo para usar como capa deste guia de viagem.</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {fotosDivulgacao.map((foto: any, idx: number) => {
+                      const isSelected = d.foto_capa_url === foto.url;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => up('foto_capa_url', isSelected ? null : foto.url)}
+                          className={`relative rounded-xl overflow-hidden aspect-video border-2 transition-all focus:outline-none ${isSelected ? 'border-primary ring-2 ring-primary/30 shadow-lg scale-[1.02]' : 'border-transparent hover:border-slate-300 dark:hover:border-slate-600'}`}
+                        >
+                          <img src={foto.url} className="w-full h-full object-cover" alt={foto.creditos || `Foto ${idx + 1}`} />
+                          {isSelected && (
+                            <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                              <div className="bg-primary text-white rounded-full p-1">
+                                <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                              </div>
+                            </div>
+                          )}
+                          {foto.creditos && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] font-medium px-2 py-1 truncate">
+                              📷 {foto.creditos}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {d.foto_capa_url && (
+                    <button type="button" onClick={() => up('foto_capa_url', null)} className="mt-3 text-xs text-red-500 hover:text-red-600 font-semibold flex items-center gap-1">
+                      <Trash2 className="size-3" /> Remover seleção
+                    </button>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           <div className="mt-6">
             <Card className="rounded-2xl border-slate-200/60 dark:border-white/10 dark:bg-card/40 backdrop-blur-xl shadow-lg">
               <CardHeader className="border-b border-slate-100 dark:border-white/5 pb-6 mb-6">
-                <CardTitle className="text-xl font-black flex items-center gap-2"><Palette className="size-5 text-primary" /> Visual e Compartilhamento</CardTitle>
+                <CardTitle className="text-xl font-black flex items-center gap-2"><Palette className="size-5 text-primary" /> Logos do Cabeçalho</CardTitle>
               </CardHeader>
-              <CardContent className="grid sm:grid-cols-2 gap-6">
-                <Field label="Cor Principal">
-                    <div className="flex gap-2">
-                        <Input type="color" className="w-16 h-10 p-1" value={d.cor_tema || "#3b82f6"} onChange={(e) => up("cor_tema", e.target.value)} />
-                        <Input className="flex-1" placeholder="#3b82f6" value={d.cor_tema || ""} onChange={(e) => up("cor_tema", e.target.value)} />
+              <CardContent className="space-y-6">
+                <div className="grid sm:grid-cols-3 gap-6">
+                  {/* Espetáculo */}
+                  <div className="space-y-3 p-4 border rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-bold">Espetáculo</Label>
+                      <input type="checkbox" checked={d.exibir_logo_espetaculo !== false} onChange={e => up("exibir_logo_espetaculo", e.target.checked)} className="size-4 cursor-pointer" />
                     </div>
-                </Field>
-                <Field label="Modo Escuro (Padrão)">
-                    <Select value={d.dark_mode ? "true" : "false"} onValueChange={(v) => up("dark_mode", v === "true")}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="true">Escuro</SelectItem>
-                            <SelectItem value="false">Claro</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </Field>
+                    {d.exibir_logo_espetaculo !== false && (
+                      <div className="space-y-2 mt-2">
+                        {d.logo_espetaculo_override ? (
+                          <div className="relative group rounded-lg overflow-hidden border aspect-video flex items-center justify-center bg-white">
+                            <img src={d.logo_espetaculo_override} alt="Espetáculo" className="w-full h-full object-contain p-2" />
+                            <button type="button" onClick={() => up("logo_espetaculo_override", null)} className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="size-3" /></button>
+                          </div>
+                        ) : defaultLogos.espetaculo ? (
+                          <div className="relative group rounded-lg overflow-hidden border aspect-video flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-800/50">
+                            <img src={defaultLogos.espetaculo} alt="Espetáculo (Padrão)" className="w-full h-full object-contain p-2 opacity-80 dark:brightness-200" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <label className="cursor-pointer text-white flex flex-col items-center w-full h-full justify-center">
+                                <Upload className="size-5 mb-1" />
+                                <span className="text-xs font-semibold">Substituir</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                  if (e.target.files?.[0]) uploadLogoOverride(e.target.files[0], "logo_espetaculo_override");
+                                }} disabled={uploading} />
+                              </label>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <div className="flex flex-col items-center justify-center py-4 text-center">
+                              <Upload className="size-5 text-slate-400 mb-1" />
+                              <span className="text-[10px] text-slate-500 leading-tight">Nenhum Padrão<br/>Upload</span>
+                            </div>
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                              if (e.target.files?.[0]) uploadLogoOverride(e.target.files[0], "logo_espetaculo_override");
+                            }} disabled={uploading} />
+                          </label>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {/* Produção */}
+                  <div className="space-y-3 p-4 border rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-bold">Produtora</Label>
+                      <input type="checkbox" checked={d.exibir_logo_producao !== false} onChange={e => up("exibir_logo_producao", e.target.checked)} className="size-4 cursor-pointer" />
+                    </div>
+                    {d.exibir_logo_producao !== false && (
+                      <div className="space-y-2 mt-2">
+                        {d.logo_producao_override ? (
+                          <div className="relative group rounded-lg overflow-hidden border aspect-video flex items-center justify-center bg-white">
+                            <img src={d.logo_producao_override} alt="Produção" className="w-full h-full object-contain p-2" />
+                            <button type="button" onClick={() => up("logo_producao_override", null)} className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="size-3" /></button>
+                          </div>
+                        ) : defaultLogos.producao ? (
+                          <div className="relative group rounded-lg overflow-hidden border aspect-video flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-800/50">
+                            <img src={defaultLogos.producao} alt="Produção (Padrão)" className="w-full h-full object-contain p-2 opacity-80 dark:brightness-200" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <label className="cursor-pointer text-white flex flex-col items-center w-full h-full justify-center">
+                                <Upload className="size-5 mb-1" />
+                                <span className="text-xs font-semibold">Substituir</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                  if (e.target.files?.[0]) uploadLogoOverride(e.target.files[0], "logo_producao_override");
+                                }} disabled={uploading} />
+                              </label>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <div className="flex flex-col items-center justify-center py-4 text-center">
+                              <Upload className="size-5 text-slate-400 mb-1" />
+                              <span className="text-[10px] text-slate-500 leading-tight">Nenhum Padrão<br/>Upload</span>
+                            </div>
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                              if (e.target.files?.[0]) uploadLogoOverride(e.target.files[0], "logo_producao_override");
+                            }} disabled={uploading} />
+                          </label>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {/* Cia */}
+                  <div className="space-y-3 p-4 border rounded-xl bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="flex items-center justify-between">
+                      <Label className="font-bold">Cia</Label>
+                      <input type="checkbox" checked={d.exibir_logo_cia !== false} onChange={e => up("exibir_logo_cia", e.target.checked)} className="size-4 cursor-pointer" />
+                    </div>
+                    {d.exibir_logo_cia !== false && (
+                      <div className="space-y-2 mt-2">
+                        {d.logo_cia_override ? (
+                          <div className="relative group rounded-lg overflow-hidden border aspect-video flex items-center justify-center bg-white">
+                            <img src={d.logo_cia_override} alt="Cia" className="w-full h-full object-contain p-2" />
+                            <button type="button" onClick={() => up("logo_cia_override", null)} className="absolute top-1 right-1 bg-black/60 hover:bg-red-500 text-white rounded p-1 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="size-3" /></button>
+                          </div>
+                        ) : defaultLogos.cia ? (
+                          <div className="relative group rounded-lg overflow-hidden border aspect-video flex flex-col items-center justify-center bg-slate-50/50 dark:bg-slate-800/50">
+                            <img src={defaultLogos.cia} alt="Cia (Padrão)" className="w-full h-full object-contain p-2 opacity-80 dark:brightness-200" />
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                              <label className="cursor-pointer text-white flex flex-col items-center w-full h-full justify-center">
+                                <Upload className="size-5 mb-1" />
+                                <span className="text-xs font-semibold">Substituir</span>
+                                <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                  if (e.target.files?.[0]) uploadLogoOverride(e.target.files[0], "logo_cia_override");
+                                }} disabled={uploading} />
+                              </label>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed rounded-lg cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                            <div className="flex flex-col items-center justify-center py-4 text-center">
+                              <Upload className="size-5 text-slate-400 mb-1" />
+                              <span className="text-[10px] text-slate-500 leading-tight">Nenhum Padrão<br/>Upload</span>
+                            </div>
+                            <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                              if (e.target.files?.[0]) uploadLogoOverride(e.target.files[0], "logo_cia_override");
+                            }} disabled={uploading} />
+                          </label>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -1381,7 +1591,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       </Tabs>
 
       <div className="flex gap-3 justify-end sticky bottom-4">
-        <Button type="button" variant="outline" onClick={() => navigate({ to: "/dashboard" })}>Cancelar</Button>
+        <Button type="button" variant="outline" onClick={() => navigate({ to: "/viagens" })}>Cancelar</Button>
         <Button type="submit" disabled={saving}>{saving ? "Salvando..." : "Salvar Guia de Viagem"}</Button>
       </div>
 

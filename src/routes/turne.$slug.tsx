@@ -15,6 +15,17 @@ export const Route = createFileRoute("/turne/$slug")({
     const { data: tour, error } = await supabase.from("tours").select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!tour) throw notFound();
+
+    let logoEspetaculo = null;
+    let logoCia = null;
+    if (tour.espetaculo) {
+        const { data: espData } = await supabase.from('templates_espetaculos').select('logo_espetaculo_url, logo_cia_url').eq('nome_espetaculo', tour.espetaculo).maybeSingle();
+        if (espData) {
+            logoEspetaculo = espData.logo_espetaculo_url;
+            logoCia = espData.logo_cia_url;
+        }
+    }
+    (tour as any)._resolved_logos = { logoEspetaculo, logoCia };
     const { data: cities } = await supabase
       .from("roadbooks")
       .select("id,slug,espetaculo,cidade,estado,data_inicial,data_final,festival")
@@ -25,7 +36,7 @@ export const Route = createFileRoute("/turne/$slug")({
   head: ({ loaderData }) => {
     const title = loaderData ? `${loaderData.tour.nome} — Turnê - Seven Produções Artísticas` : "Turnê - Seven Produções Artísticas";
     return { meta: [
-      { title }, { name: "description", content: `Road Book Geral da Turnê ${loaderData?.tour.nome ?? ""}` },
+      { title }, { name: "description", content: `Guia de Viagem Geral da Turnê ${loaderData?.tour.nome ?? ""}` },
       { property: "og:title", content: title },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
     ]};
@@ -160,8 +171,20 @@ function Page() {
           <h1 className="text-4xl sm:text-6xl font-black tracking-tight text-slate-800 dark:text-white bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
             {tour.nome}
           </h1>
-          {tour.espetaculo && <p className="text-lg font-medium text-slate-500 dark:text-slate-400">{tour.espetaculo}</p>}
-          {tour.producao && <p className="text-sm font-semibold text-slate-400">Produção: {tour.producao}</p>}
+          
+            <div className="flex flex-wrap justify-center items-center gap-6 mt-4 mb-2">
+              {(tour as any)._resolved_logos?.logoEspetaculo && (tour.exibir_logo_espetaculo ?? true) && (
+                <img src={(tour as any)._resolved_logos.logoEspetaculo} alt="Espetáculo" className="h-14 object-contain" />
+              )}
+              {(tour as any)._resolved_logos?.logoCia && (tour.exibir_logo_cia ?? true) && (
+                <img src={(tour as any)._resolved_logos.logoCia} alt="Cia" className="h-14 object-contain" />
+              )}
+              {tour.logo_producao && (tour.exibir_logo_producao ?? true) && (
+                <img src={tour.logo_producao} alt="Produção" className="h-14 object-contain" />
+              )}
+            </div>
+            
+            
           
           {(currentCity || nextCity) && (
             <div className="mt-8 pt-4 flex flex-wrap justify-center gap-6">

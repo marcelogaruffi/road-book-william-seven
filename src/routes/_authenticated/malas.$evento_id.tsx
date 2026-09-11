@@ -41,18 +41,29 @@ function MalasEventoOperacao() {
       
       if (autos.operacao_malas && autos.operacao_malas.length > 0) {
         setVolumes(autos.operacao_malas);
-      } else if (evData) {
-        // Fallback to template if not started
-        const { data: tData } = await supabase.from('templates_espetaculos').select('assets_midia').eq('nome_espetaculo', evData.espetaculo).maybeSingle();
-        if (tData && tData.assets_midia?.malas_padrao) {
-          // Initialize checklist
-          const padrao = (tData.assets_midia.malas_padrao || []).map((v: any) => ({
-            ...v,
-            itens: (v.itens || []).map((i: any) => ({ ...i, checked: false }))
-          }));
-          setVolumes(padrao);
+              } else if (evData) {
+          // 1. Try to load from template
+          const { data: tData } = await supabase.from('templates_espetaculos').select('assets_midia').eq('nome_espetaculo', evData.espetaculo).maybeSingle();
+          let padrao = [];
+          if (tData && tData.assets_midia?.malas_padrao) {
+             padrao = tData.assets_midia.malas_padrao;
+          } else {
+             // 2. If no template, fallback to global stock
+             const { data: globalData } = await supabase.from('estoque_global').select('itens').limit(1).maybeSingle();
+             if (globalData && globalData.itens) {
+                padrao = globalData.itens;
+             }
+          }
+          
+          if (padrao.length > 0) {
+            // Initialize checklist
+            const initialized = padrao.map((v: any) => ({
+              ...v,
+              itens: (v.itens || []).map((i: any) => ({ ...i, checked: false }))
+            }));
+            setVolumes(initialized);
+          }
         }
-      }
     }
     
     setLoading(false);

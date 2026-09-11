@@ -68,7 +68,7 @@ function PublicoPage() {
 
   async function fetchData() {
     setLoading(true);
-    // Fetch Roadbooks for the dropdown - Ordenado alfabeticamente pela cidade
+    // Fetch Guias de Viagem for the dropdown - Ordenado alfabeticamente pela cidade
     const { data: rbData } = await supabase
       .from("roadbooks")
       .select("id, cidade, estado, espetaculo")
