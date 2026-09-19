@@ -133,32 +133,6 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
     setD((s) => ({ ...s, [k]: v }));
   }
 
-  async function uploadLogoEspetaculo(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const { data: userRes } = await supabase.auth.getUser();
-      const uid = userRes.user?.id;
-      if (!uid) throw new Error("Sessão expirada");
-      
-      const ext = file.name.split('.').pop() || 'png';
-      const filename = `logo-${Date.now()}.${ext}`;
-      const path = `${uid}/logos/${filename}`;
-      
-      const { error } = await supabase.storage.from("roadbook-docs").upload(path, file, { upsert: true, contentType: file.type });
-      if (error) throw error;
-      
-      const { data: publicData } = supabase.storage.from("roadbook-docs").getPublicUrl(path);
-      
-      up("espetaculo_logo_url", publicData.publicUrl);
-      toast.success("Logo enviado com sucesso!");
-    } catch (err: any) {
-      toast.error(getErrorMessage(err) ?? "Erro no upload do logo");
-    } finally {
-      setUploading(false);
-    }
-  }
 
   // ============ PROGRAMACAO grouped by day ============
   const availableLocais = useMemo(() => {
@@ -895,28 +869,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                   ))}
                 </select>
               </div>
-              <div className="flex flex-col gap-2">
-                <Label>Logo do Espetáculo</Label>
-                <div className="flex items-center gap-4 border rounded-md p-2">
-                  {d.espetaculo_logo_url ? (
-                    <div className="relative group size-12 bg-slate-50 dark:bg-slate-900 rounded-md border flex items-center justify-center overflow-hidden shrink-0">
-                      <img src={d.espetaculo_logo_url} alt={`Logo de ${d.espetaculo}`} className="max-h-full max-w-full object-contain" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                        <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-white hover:text-red-400" onClick={() => up("espetaculo_logo_url", "")}>
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="size-12 bg-slate-100 dark:bg-slate-800 rounded-md border border-dashed flex items-center justify-center shrink-0">
-                      <span className="text-[10px] text-slate-400 font-medium">Logo</span>
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <Input type="file" accept="image/*" onChange={uploadLogoEspetaculo} disabled={uploading} className="h-9 cursor-pointer text-xs" />
-                  </div>
-                </div>
-              </div>
+
               <Field label="Festival"><Input value={d.festival} onChange={(e) => up("festival", e.target.value)} /></Field>
               <Field label="Cidade *"><Input required value={d.cidade} onChange={(e) => up("cidade", e.target.value)} /></Field>
               <Field label="Estado"><Input value={d.estado} onChange={(e) => up("estado", e.target.value)} maxLength={2} /></Field>

@@ -315,13 +315,13 @@ function Viagens() {
           </div>
           
           <div className="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800 mt-auto relative z-10" onClick={(e) => e.stopPropagation()}>
-            <div className="flex gap-2">
-              {r.tour_id && tours.find(t => t.id === r.tour_id) && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md truncate max-w-[100px]">
-                  {tours.find(t => t.id === r.tour_id)?.nome || ''}
-                </span>
-              )}
-            </div>
+              <div className="flex gap-2 flex-1 mr-2">
+                {r.tour_id && tours.find(t => t.id === r.tour_id) && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md leading-tight line-clamp-2" title={tours.find(t => t.id === r.tour_id)?.nome || ''}>
+                    {tours.find(t => t.id === r.tour_id)?.nome || ''}
+                  </span>
+                )}
+              </div>
             
             <div className="flex gap-1">
               {profile?.role !== 'motorista' && (

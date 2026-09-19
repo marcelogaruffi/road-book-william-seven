@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { ExternalLink, Pencil, Plus } from "lucide-react";
 import { Route as AuthedRoute } from "./route";
 
-type Tour = { id: string; slug: string; nome: string; espetaculo: string | null; producao: string | null };
+type Tour = { id: string; slug: string; nome: string; espetaculo: string | null; producao: string | null; exibir_logo_espetaculo?: boolean; exibir_logo_cia?: boolean; exibir_logo_producao?: boolean; };
 type Roadbook = { id: string; slug: string; espetaculo: string; cidade: string; estado: string | null; data_inicial: string | null; data_final: string | null };
 
 export const Route = createFileRoute("/_authenticated/tour/$id")({
@@ -35,7 +35,7 @@ function EditTour() {
 
   async function load() {
     const [{ data: t }, { data: c }, { data: e }] = await Promise.all([
-      supabase.from("tours").select("id,slug,nome,espetaculo,producao").eq("id", id).maybeSingle(),
+      supabase.from("tours").select("id,slug,nome,espetaculo,producao,exibir_logo_espetaculo,exibir_logo_cia,exibir_logo_producao").eq("id", id).maybeSingle(),
       supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,data_inicial,data_final").eq("tour_id", id).order("data_inicial", { ascending: true, nullsFirst: false }),
       supabase.from("templates_espetaculos").select("nome_espetaculo"),
     ]);
@@ -56,7 +56,12 @@ function EditTour() {
       exibir_logo_producao: tour.exibir_logo_producao ?? true,
     }).eq("id", tour.id);
     setBusy(false);
-    if (error) toast.error(getErrorMessage(error)); else toast.success("Salvo");
+    if (error) {
+      toast.error(getErrorMessage(error));
+    } else {
+      toast.success("Salvo com sucesso!");
+      navigate({ to: "/tour" });
+    }
   }
 
   if (!tour) return <p className="text-muted-foreground">Carregando...</p>;
@@ -102,7 +107,10 @@ function EditTour() {
               <label htmlFor="exibirLogoProducao" className="text-sm">Exibir Logo da Produção</label>
             </div>
           </div>
-          <div className="flex justify-end"><Button onClick={save} disabled={busy}>{busy ? "Salvando..." : "Salvar"}</Button></div>
+          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button variant="outline" onClick={() => window.history.back()} disabled={busy}>Cancelar</Button>
+            <Button onClick={save} disabled={busy} className="bg-primary hover:bg-primary/90">{busy ? "Salvando..." : "Salvar"}</Button>
+          </div>
         </CardContent>
       </Card>
 

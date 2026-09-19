@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { MapPin, CalendarDays, ExternalLink, Route as RouteIcon, FileText, Moon, Sun } from "lucide-react";
 import { useState, useEffect } from "react";
 
-type Tour = { id: string; slug: string; nome: string; espetaculo: string | null; producao: string | null };
+type Tour = { id: string; slug: string; nome: string; espetaculo: string | null; producao: string | null; exibir_logo_espetaculo?: boolean; exibir_logo_cia?: boolean; exibir_logo_producao?: boolean; logo_producao?: string | null; };
 type City = {
   id: string; slug: string; espetaculo: string; cidade: string; estado: string | null;
   data_inicial: string | null; data_final: string | null; festival: string | null;

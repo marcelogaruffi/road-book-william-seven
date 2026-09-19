@@ -20,6 +20,9 @@ function NewTour() {
   const [espetaculo, setEspetaculo] = useState("");
   const [producao, setProducao] = useState("");
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
+  const [exibirLogoEspetaculo, setExibirLogoEspetaculo] = useState(true);
+  const [exibirLogoCia, setExibirLogoCia] = useState(true);
+  const [exibirLogoProducao, setExibirLogoProducao] = useState(true);
   const [busy, setBusy] = useState(false);
   
   useEffect(() => {
@@ -41,7 +44,16 @@ function NewTour() {
       for (let attempt = 0; attempt < 5; attempt++) {
         const trySlug = attempt === 0 ? base : `${base}-${Math.random().toString(36).slice(2, 6)}`;
         const { data: row, error } = await supabase.from("tours")
-          .insert({ user_id: uid, nome, espetaculo: espetaculo || null, producao: producao || null, slug: trySlug })
+          .insert({ 
+            user_id: uid, 
+            nome, 
+            espetaculo: espetaculo || null, 
+            producao: producao || null, 
+            slug: trySlug,
+            exibir_logo_espetaculo: exibirLogoEspetaculo,
+            exibir_logo_cia: exibirLogoCia,
+            exibir_logo_producao: exibirLogoProducao
+          })
           .select("id").single();
         if (!error && row) { inserted = row; break; }
         if (error && !`${getErrorMessage(error)}`.toLowerCase().includes("duplicate")) throw error;
@@ -95,7 +107,7 @@ function NewTour() {
           </CardContent>
         </Card>
         <div className="flex gap-3 justify-end mt-6">
-          <Button type="button" variant="outline" onClick={() => navigate({ to: "/dashboard" })}>Cancelar</Button>
+          <Button type="button" variant="outline" onClick={() => window.history.back()}>Cancelar</Button>
           <Button type="submit" disabled={busy}>{busy ? "Criando..." : "Criar turnê"}</Button>
         </div>
       </form>

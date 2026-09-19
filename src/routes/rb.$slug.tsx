@@ -6,7 +6,7 @@ import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
-  Navigation, Droplets, Plane, Clock, Map as MapIcon, Instagram, Printer, Moon, Sun
+  Navigation, Droplets, Plane, Clock, Map as MapIcon, Instagram, Printer, Moon, Sun, Sunrise, Sunset
 } from "lucide-react";
 import {
   rowToRoadbook, progTitle, progHora, TIPO_COLORS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS,
@@ -1051,7 +1051,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
         <thead className="table-header-group">
           <tr>
             <td className="px-12 pt-8 pb-4 border-b-0 bg-white">
-              <PrintHeader title={r.espetaculo} logoUrl={r.espetaculo_logo_url} />
+              <PrintHeader title={r.espetaculo} logoUrl={(r as any)._resolved_logos?.logoEspetaculo} />
             </td>
           </tr>
         </thead>
@@ -2340,7 +2340,7 @@ function useGeocode(cidade: string, _estado: string): GeoState {
 type DayData =
   | { status: "loading" }
   | { status: "error"; message: string }
-  | { status: "ok"; kind: "forecast" | "historical"; maxC: number; minC: number; rainPct: number };
+  | { status: "ok"; kind: "forecast" | "historical"; maxC: number; minC: number; rainPct: number; sunrise?: string; sunset?: string; };
 
 function daysBetween(a: Date, b: Date) {
   const ms = b.getTime() - a.getTime();
@@ -2372,17 +2372,21 @@ function DayWeather({ date }: { date: string }) {
           // Forecast
           const iso = date;
           const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}` +
-            `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+            `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset` +
             `&timezone=auto&start_date=${iso}&end_date=${iso}`;
           const res = await fetch(url);
           if (!res.ok) throw new Error("forecast http " + res.status);
           const j = await res.json();
           if (cancel) return;
+          const sunriseRaw = j?.daily?.sunrise?.[0];
+          const sunsetRaw = j?.daily?.sunset?.[0];
           setData({
             status: "ok", kind: "forecast",
             maxC: Math.round(j?.daily?.temperature_2m_max?.[0] ?? NaN),
             minC: Math.round(j?.daily?.temperature_2m_min?.[0] ?? NaN),
             rainPct: Math.round(j?.daily?.precipitation_probability_max?.[0] ?? 0),
+            sunrise: sunriseRaw ? sunriseRaw.split("T")[1] : undefined,
+            sunset: sunsetRaw ? sunsetRaw.split("T")[1] : undefined,
           });
         } else {
           // Historical average: last 5 years, same month/day
@@ -2393,7 +2397,7 @@ function DayWeather({ date }: { date: string }) {
           const results = await Promise.all(years.map(async (yr) => {
             const iso = `${yr}-${m}-${d}`;
             const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}` +
-              `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum` +
+              `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,sunrise,sunset` +
               `&timezone=auto&start_date=${iso}&end_date=${iso}`;
             const r = await fetch(url);
             if (!r.ok) return null;
@@ -2402,10 +2406,12 @@ function DayWeather({ date }: { date: string }) {
               max: jj?.daily?.temperature_2m_max?.[0],
               min: jj?.daily?.temperature_2m_min?.[0],
               precip: jj?.daily?.precipitation_sum?.[0],
+              sunrise: jj?.daily?.sunrise?.[0],
+              sunset: jj?.daily?.sunset?.[0],
             };
           }));
           if (cancel) return;
-          const valid = results.filter((x): x is { max: number; min: number; precip: number } =>
+          const valid = results.filter((x): x is { max: number; min: number; precip: number; sunrise: string; sunset: string } =>
             !!x && typeof x.max === "number" && typeof x.min === "number");
           if (valid.length === 0) throw new Error("Sem dados históricos");
           const avg = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
@@ -2413,7 +2419,13 @@ function DayWeather({ date }: { date: string }) {
           const minC = Math.round(avg(valid.map((v) => v.min)));
           // % of past years where it rained > 1mm on that date
           const rainyShare = valid.filter((v) => (v.precip ?? 0) > 1).length / valid.length;
-          setData({ status: "ok", kind: "historical", maxC, minC, rainPct: Math.round(rainyShare * 100) });
+          const sunriseRaw = valid[0]?.sunrise;
+          const sunsetRaw = valid[0]?.sunset;
+          setData({ 
+            status: "ok", kind: "historical", maxC, minC, rainPct: Math.round(rainyShare * 100),
+            sunrise: sunriseRaw ? sunriseRaw.split("T")[1] : undefined,
+            sunset: sunsetRaw ? sunsetRaw.split("T")[1] : undefined,
+          });
         }
       } catch (e: any) {
         if (!cancel) setData({ status: "error", message: e?.message || "Clima indisponível" });
@@ -2429,17 +2441,32 @@ function DayWeather({ date }: { date: string }) {
     return <div className="rounded-lg border bg-card p-3 text-xs text-muted-foreground flex items-center gap-2"><CloudSun className="size-3.5" />Clima indisponível: {data.message}</div>;
   }
   return (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3 font-medium bg-muted/40 px-3 py-1.5 rounded-md w-fit">
+    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3 font-medium bg-muted/40 px-3 py-1.5 rounded-md w-fit flex-wrap">
       <div className="flex items-center gap-1">
         <CloudSun className="size-3.5 text-primary" />
-        <span className="text-foreground">{isFinite(data.maxC) ? `${data.maxC}°C` : "—"}</span>
-        <span className="text-muted-foreground">/ {isFinite(data.minC) ? `${data.minC}°C` : "—"}</span>
+        <span className="text-foreground">{isFinite(data.maxC) ? `${data.maxC}°C` : "?"}</span>
+        <span className="text-muted-foreground">/ {isFinite(data.minC) ? `${data.minC}°C` : "?"}</span>
       </div>
       <div className="h-3 w-px bg-muted-foreground/30" />
       <div className="flex items-center gap-1">
         <Droplets className="size-3.5 text-blue-500" />
         <span>{data.rainPct}% de chance de chuva</span>
       </div>
+      {data.sunrise && data.sunset && (
+        <>
+          <div className="h-3 w-px bg-muted-foreground/30" />
+          <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-0.5" title="Nascer do Sol">
+              <Sunrise className="size-3.5 text-amber-500" />
+              <span>{data.sunrise}</span>
+            </div>
+            <div className="flex items-center gap-0.5" title="Pôr do Sol">
+              <Sunset className="size-3.5 text-orange-500" />
+              <span>{data.sunset}</span>
+            </div>
+          </div>
+        </>
+      )}
       <div className="h-3 w-px bg-muted-foreground/30" />
       <span className="text-[9px] text-muted-foreground/70 uppercase tracking-wide">
         {data.kind === "forecast" ? "Previsão" : "Clima Histórico"}

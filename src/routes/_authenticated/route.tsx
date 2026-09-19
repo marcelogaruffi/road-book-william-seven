@@ -242,7 +242,7 @@ function AuthedLayout() {
                 <SGroup title="Produção" icon={ClipboardList}>
                   <SLink to="/eventos" icon={Calendar} label="Eventos e Espetáculos" />
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
-                  <SLink to="/tour.new" icon={RouteIcon} label="Nova Turnê" show={isProdutor} />
+                  <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
                 </SGroup>
 
                 <SGroup title="Equipe" icon={Users}>
