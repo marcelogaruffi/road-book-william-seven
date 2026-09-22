@@ -36,7 +36,7 @@ export const Route = createFileRoute("/rb/$slug")({
     let logoProducao = rb.logo_producao_override || null;
 
     if (!logoEspetaculo || !logoCia) {
-      const { data: espData } = await supabase.from("templates_espetaculos").select("logo_espetaculo_url, logo_cia_url").eq("nome_espetaculo", rb.espetaculo).maybeSingle();
+      const { data: espData } = await supabase.from("templates_espetaculos").select("logo_espetaculo_url, logo_cia_url").ilike("nome_espetaculo", rb.espetaculo).maybeSingle();
       if (espData) {
         if (!logoEspetaculo) logoEspetaculo = espData.logo_espetaculo_url;
         if (!logoCia) logoCia = espData.logo_cia_url;

@@ -10,6 +10,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X, ClipboardList, Lightbulb, Mic2, MessageSquareText, Loader2, Megaphone } from 'lucide-react';
+import { LogoPicker } from '@/components/LogoPicker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ function EventosComponent() {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [viewMode, setViewMode] = useState(false);
+  const [logoPickerOpen, setLogoPickerOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form states
@@ -665,18 +667,15 @@ function EventosComponent() {
               <Label className="font-bold text-slate-700 dark:text-slate-300">Logo da Produtora</Label>
               <div className="flex items-center gap-2">
                 {produtoraLogoUrl && <img src={produtoraLogoUrl} alt="Logo" className="h-10 object-contain rounded-md border p-1 bg-white" />}
-                <label className="inline-flex items-center gap-2 text-sm border rounded-md px-3 py-2 cursor-pointer hover:bg-accent h-12 w-full justify-center">
+                <button type="button" disabled={viewMode} onClick={() => setLogoPickerOpen(true)} className="inline-flex items-center gap-2 text-sm border rounded-md px-3 py-2 cursor-pointer hover:bg-accent h-12 w-full justify-center">
                   <Plus className="size-4" /> Anexar Logo
-                  <input type="file" disabled={viewMode} accept="image/*" className="hidden" onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if(!file) return;
-                    const { data: user } = await supabase.auth.getUser();
-                    const filePath = `${user?.user?.id}/produtoras/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-                    await supabase.storage.from('roadbook-docs').upload(filePath, file);
-                    const { data } = supabase.storage.from('roadbook-docs').getPublicUrl(filePath);
-                    setProdutoraLogoUrl(data.publicUrl);
-                  }} />
-                </label>
+                </button>
+                <LogoPicker
+                  open={logoPickerOpen}
+                  onOpenChange={setLogoPickerOpen}
+                  onSelect={setProdutoraLogoUrl}
+                  uploadPath="produtoras"
+                />
               </div>
             </div>
 

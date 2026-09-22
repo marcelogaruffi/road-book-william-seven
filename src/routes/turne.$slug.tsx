@@ -19,7 +19,7 @@ export const Route = createFileRoute("/turne/$slug")({
     let logoEspetaculo = null;
     let logoCia = null;
     if (tour.espetaculo) {
-        const { data: espData } = await supabase.from('templates_espetaculos').select('logo_espetaculo_url, logo_cia_url').eq('nome_espetaculo', tour.espetaculo).maybeSingle();
+        const { data: espData } = await supabase.from('templates_espetaculos').select('logo_espetaculo_url, logo_cia_url').ilike('nome_espetaculo', tour.espetaculo).maybeSingle();
         if (espData) {
             logoEspetaculo = espData.logo_espetaculo_url;
             logoCia = espData.logo_cia_url;

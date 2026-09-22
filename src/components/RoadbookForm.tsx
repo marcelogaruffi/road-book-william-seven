@@ -29,6 +29,7 @@ export type { RoadbookData, ProgItem } from "@/lib/roadbook-types";
 export { emptyRoadbook } from "@/lib/roadbook-types";
 import { formatPhone } from "@/lib/utils";
 import { makeRoadbookSlug } from "@/lib/slug";
+import { LogoPicker } from "./LogoPicker";
 
 type TourOpt = { id: string; nome: string };
 type EventoOpt = { id: string; espetaculo: string; cidade: string; data: string; data_inicio: string | null; data_fim: string | null; local: string; horario: string | null; turne_id?: string | null; produtora_logo_url?: string | null; };
@@ -43,6 +44,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
   const [uploading, setUploading] = useState(false);
   const [fotosDivulgacao, setFotosDivulgacao] = useState<any[]>([]);
   const [defaultLogos, setDefaultLogos] = useState<{espetaculo: string|null; cia: string|null; producao: string|null}>({espetaculo: null, cia: null, producao: null});
+  const [logoPicker, setLogoPicker] = useState<{open: boolean; field: "logo_espetaculo_override" | "logo_cia_override" | "logo_producao_override" | null}>({open: false, field: null});
 
   useEffect(() => {
     if (!d.espetaculo) { 
@@ -679,25 +681,48 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
               setD(s => {
                 const evData = ev.data || ev.data_inicio || s.data_inicial;
                 let newProgramacao = Array.isArray(s.programacao) ? s.programacao : [];
-                const hasApresentacao = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === evData && p.hora_inicio === (ev.horario || ""));
-                
-                if (!hasApresentacao && evData && ev.horario) {
-                  let hora_fim = "";
-                  const [h, m] = ev.horario.split(':');
-                  if (h && m) {
-                    const endH = (parseInt(h) + 1).toString().padStart(2, '0');
-                    hora_fim = `${endH}:${m}`;
+                                  if (ev.apresentacoes && ev.apresentacoes.length > 0) {
+                    ev.apresentacoes.forEach((ap: any) => {
+                      const apData = ap.data || evData;
+                      const hasAp = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === apData && p.hora_inicio === (ap.horario || ""));
+                      if (!hasAp && apData && ap.horario) {
+                        let hora_fim = "";
+                        const [h, m] = ap.horario.split(':');
+                        if (h && m) {
+                          const endH = (parseInt(h) + 1).toString().padStart(2, '0');
+                          hora_fim = `${endH}:${m}`;
+                        }
+                        newProgramacao.push({
+                          data: apData,
+                          hora_inicio: ap.horario,
+                          hora_fim: hora_fim,
+                          titulo: "Apresentação",
+                          tipo: "Espetáculo",
+                          local: ap.local || ev.local || "",
+                          observacao: ""
+                        });
+                      }
+                    });
+                  } else {
+                    const hasApresentacao = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === evData && p.hora_inicio === (ev.horario || ""));
+                    if (!hasApresentacao && evData && ev.horario) {
+                      let hora_fim = "";
+                      const [h, m] = ev.horario.split(':');
+                      if (h && m) {
+                        const endH = (parseInt(h) + 1).toString().padStart(2, '0');
+                        hora_fim = `${endH}:${m}`;
+                      }
+                      newProgramacao.push({
+                        data: evData,
+                        hora_inicio: ev.horario,
+                        hora_fim: hora_fim,
+                        titulo: "Apresentação",
+                        tipo: "Espetáculo",
+                        local: ev.local || "",
+                        observacao: ""
+                      });
+                    }
                   }
-                  newProgramacao = [...newProgramacao, {
-                    data: evData,
-                    hora_inicio: ev.horario,
-                    hora_fim: hora_fim,
-                    titulo: "Apresentação",
-                    tipo: "Espetáculo",
-                    local: ev.local || "",
-                    observacao: ""
-                  }];
-                }
 
                 return {
                   ...s,
@@ -786,25 +811,48 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                       setD(s => {
                         const evData = ev.data || ev.data_inicio || s.data_inicial;
                         let newProgramacao = Array.isArray(s.programacao) ? s.programacao : [];
-                        const hasApresentacao = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === evData && p.hora_inicio === (ev.horario || ""));
-                        
-                        if (!hasApresentacao && evData && ev.horario) {
-                          let hora_fim = "";
-                          const [h, m] = ev.horario.split(':');
-                          if (h && m) {
-                            const endH = (parseInt(h) + 1).toString().padStart(2, '0');
-                            hora_fim = `${endH}:${m}`;
-                          }
-                          newProgramacao = [...newProgramacao, {
-                            data: evData,
-                            hora_inicio: ev.horario,
-                            hora_fim: hora_fim,
-                            titulo: "Apresentação",
-                            tipo: "Espetáculo",
-                            local: ev.local || "",
-                            observacao: ""
-                          }];
+                                          if (ev.apresentacoes && ev.apresentacoes.length > 0) {
+                    ev.apresentacoes.forEach((ap: any) => {
+                      const apData = ap.data || evData;
+                      const hasAp = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === apData && p.hora_inicio === (ap.horario || ""));
+                      if (!hasAp && apData && ap.horario) {
+                        let hora_fim = "";
+                        const [h, m] = ap.horario.split(':');
+                        if (h && m) {
+                          const endH = (parseInt(h) + 1).toString().padStart(2, '0');
+                          hora_fim = `${endH}:${m}`;
                         }
+                        newProgramacao.push({
+                          data: apData,
+                          hora_inicio: ap.horario,
+                          hora_fim: hora_fim,
+                          titulo: "Apresentação",
+                          tipo: "Espetáculo",
+                          local: ap.local || ev.local || "",
+                          observacao: ""
+                        });
+                      }
+                    });
+                  } else {
+                    const hasApresentacao = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === evData && p.hora_inicio === (ev.horario || ""));
+                    if (!hasApresentacao && evData && ev.horario) {
+                      let hora_fim = "";
+                      const [h, m] = ev.horario.split(':');
+                      if (h && m) {
+                        const endH = (parseInt(h) + 1).toString().padStart(2, '0');
+                        hora_fim = `${endH}:${m}`;
+                      }
+                      newProgramacao.push({
+                        data: evData,
+                        hora_inicio: ev.horario,
+                        hora_fim: hora_fim,
+                        titulo: "Apresentação",
+                        tipo: "Espetáculo",
+                        local: ev.local || "",
+                        observacao: ""
+                      });
+                    }
+                  }
 
                         return {
                           ...s,
@@ -1566,6 +1614,16 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
           )}
         </DialogContent>
       </Dialog>
+      <LogoPicker 
+        open={logoPicker.open} 
+        onOpenChange={(v) => setLogoPicker(s => ({ ...s, open: v }))}
+        onSelect={(url) => {
+          if (logoPicker.field) {
+            up(logoPicker.field, url);
+          }
+        }}
+        uploadPath={`${d.id || 'draft'}/logos`}
+      />
     </form>
   );
 }

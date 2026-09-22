@@ -39,33 +39,57 @@ function ToursPage() {
   }
 
   async function handleDelete(id: string, name: string) {
-    const ok = await customConfirm({
-      title: "Apagar Turnê",
-      description: `Tem certeza que deseja apagar a turnê "${name}"? Esta ação não pode ser desfeita e todos os eventos vinculados perderão a referência de turnê.`,
-      confirmText: "Sim, apagar",
-      cancelText: "Cancelar"
-    });
+    const ok = await customConfirm(
+      `Tem certeza que deseja apagar a turnê "${name}"? Esta ação não pode ser desfeita.`
+    );
     if (!ok) return;
 
-    const { error } = await supabase.from('tours').delete().eq('id', id);
+    const { data, error } = await supabase.from('tours').delete().eq('id', id).select();
     if (error) {
       toast.error("Erro ao deletar: " + error.message);
+    } else if (data && data.length === 0) {
+      toast.error("Você não tem permissão para apagar esta turnê (foi criada por outro usuário).");
     } else {
       toast.success("Turnê removida com sucesso");
       fetchTours();
     }
   }
 
-  // Separar em ativas (tem roadbooks futuros ou não tem roadbooks) e finalizadas (só roadbooks passados)
-  const now = new Date().toISOString().substring(0, 10);
+    const nowTime = new Date().getTime();
   
-  const isTourActive = (tour: any) => {
-    if (!tour.roadbooks || tour.roadbooks.length === 0) return true;
-    return tour.roadbooks.some((rb: any) => rb.data_inicial >= now);
-  };
+  // Ocultar a turnê "Junho" a pedido do usuário
+  const visibleTours = tours.filter(t => t.id !== '680c86cd-a51a-43d5-a352-56e99ecd563b');
 
-  const activeTours = tours.filter(isTourActive);
-  const finishedTours = tours.filter(t => !isTourActive(t));
+  const toursWithDates = visibleTours.map(tour => {
+    let earliestTime = Infinity;
+    let latestTime = 0;
+    let isHappening = false;
+
+    if (tour.roadbooks && tour.roadbooks.length > 0) {
+      const startTimes = tour.roadbooks.map((rb: any) => rb.data_inicial ? new Date(rb.data_inicial + 'T00:00:00').getTime() : Infinity);
+      const endTimes = tour.roadbooks.map((rb: any) => (rb.data_final || rb.data_inicial) ? new Date((rb.data_final || rb.data_inicial) + 'T23:59:59').getTime() : 0);
+      earliestTime = Math.min(...startTimes);
+      latestTime = Math.max(...endTimes);
+      
+      isHappening = tour.roadbooks.some((rb: any) => {
+        if (!rb.data_inicial) return false;
+        const rbStart = new Date(rb.data_inicial + 'T00:00:00').getTime();
+        const rbEnd = new Date((rb.data_final || rb.data_inicial) + 'T23:59:59').getTime();
+        return nowTime >= (rbStart - 2 * 24 * 60 * 60 * 1000) && nowTime <= rbEnd;
+      });
+    }
+
+    return {
+      ...tour,
+      earliestTime,
+      latestTime,
+      isHappening
+    };
+  });
+
+  const happeningTours = toursWithDates.filter(t => t.isHappening).sort((a, b) => a.earliestTime - b.earliestTime);
+  const futureTours = toursWithDates.filter(t => !t.isHappening && (t.latestTime >= nowTime || t.earliestTime === Infinity)).sort((a, b) => a.earliestTime - b.earliestTime);
+  const finishedTours = toursWithDates.filter(t => !t.isHappening && t.latestTime < nowTime && t.earliestTime !== Infinity).sort((a, b) => b.latestTime - a.latestTime);
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 pb-12">
@@ -103,14 +127,34 @@ function ToursPage() {
         </Card>
       ) : (
         <div className="space-y-12">
-          {activeTours.length > 0 && (
-            <section className="space-y-6 pt-4 scroll-mt-24">
-              <div className="flex items-center gap-3 px-2">
-                <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Turnês Ativas e Próximas</h2>
+          {happeningTours.length > 0 && (
+            <section className="space-y-6">
+              <div className="flex items-center">
+                <div className="bg-indigo-50 dark:bg-indigo-500/10 p-2.5 rounded-xl mr-4 border border-indigo-100 dark:border-indigo-500/20">
+                  <RouteIcon className="size-6 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <h2 className="text-2xl font-black tracking-tight text-indigo-600 dark:text-indigo-400">Acontecendo Agora</h2>
                 <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
-                {activeTours.map(tour => (
+                {happeningTours.map(tour => (
+                  <TourCard key={tour.id} tour={tour} isHappening={true} onDelete={() => handleDelete(tour.id, tour.nome)} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {futureTours.length > 0 && (
+            <section className="space-y-6">
+              <div className="flex items-center">
+                <div className="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-xl mr-4">
+                  <Calendar className="size-6 text-slate-500 dark:text-slate-400" />
+                </div>
+                <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Turnês Futuras</h2>
+                <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
+                {futureTours.map(tour => (
                   <TourCard key={tour.id} tour={tour} onDelete={() => handleDelete(tour.id, tour.nome)} />
                 ))}
               </div>
@@ -136,16 +180,11 @@ function ToursPage() {
   );
 }
 
-function TourCard({ tour, isFinished = false, onDelete }: { tour: any, isFinished?: boolean, onDelete: () => void }) {
+function TourCard({ tour, isFinished = false, isHappening = false, onDelete }: { tour: any, isFinished?: boolean, isHappening?: boolean, onDelete: () => void }) {
   const eventosCount = tour.roadbooks?.length || 0;
   
   const nowTime = new Date().getTime();
-  const isHappening = tour.roadbooks?.some((rb: any) => {
-    if (!rb.data_inicial) return false;
-    const rbTime = new Date(rb.data_inicial).getTime();
-    const diff = Math.abs(rbTime - nowTime);
-    return diff < 4 * 24 * 60 * 60 * 1000;
-  });
+  
 
   let monthStr = 'TBD';
   let dayStr = '--';

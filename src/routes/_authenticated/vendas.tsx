@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Package, ShoppingCart, Download, Plus, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
@@ -45,6 +46,8 @@ function VendasPage() {
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [vendas, setVendas] = useState<RegistroVenda[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
+  const [sessoes, setSessoes] = useState<any[]>([]);
+  const [editProdutoDialog, setEditProdutoDialog] = useState<{ open: boolean, id: string, nome: string, preco: string, estoqueStr: string }>({ open: false, id: '', nome: '', preco: '', estoqueStr: '' });
   const [loading, setLoading] = useState(false);
   const [estoque, setEstoque] = useState<Record<string, number>>({});
 
@@ -61,21 +64,54 @@ function VendasPage() {
     fetchDados();
   }, []);
 
+  
   async function fetchDados() {
     setLoading(true);
     try {
-              const [prodRes, evtRes, vendRes, estoqueRes] = await Promise.all([
-          supabase.from("vendas_produtos").select("*").order("nome"),
-          supabase.from("eventos").select("id, cidade, local, data").order("data", { ascending: false }),
-          supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local, data)").order("data_venda", { ascending: false }),
-          supabase.from("estoque_global").select("itens, merch").limit(1).maybeSingle()
-        ]);
+      const [prodRes, evtRes, aprRes, vendRes, estoqueRes] = await Promise.all([
+        supabase.from("vendas_produtos").select("*").order("nome"),
+        supabase.from("eventos").select("id, cidade, local, data").order("data", { ascending: false }),
+        supabase.from("evento_apresentacoes").select("*"),
+        supabase.from("vendas_registros").select("*, produto:vendas_produtos(nome), evento:eventos(cidade, local, data)").order("data_venda", { ascending: false }),
+        supabase.from("estoque_global").select("itens, merch").limit(1).maybeSingle()
+      ]);
 
-        if (estoqueRes.data && estoqueRes.data.merch) {
-          setEstoque(estoqueRes.data.merch);
-        }
+      if (estoqueRes.data && estoqueRes.data.merch) {
+        setEstoque(estoqueRes.data.merch);
+      }
       if (prodRes.data) setProdutos(prodRes.data);
-      if (evtRes.data) setEventos(evtRes.data);
+      if (evtRes.data) {
+        setEventos(evtRes.data);
+        const allSess: any[] = [];
+        evtRes.data.forEach(evt => {
+          let aps = (aprRes && aprRes.data || []).filter((a:any) => a.evento_id === evt.id);
+          if (Array.isArray(aps) && aps.length > 0) {
+            aps.forEach((ap: any) => {
+              const dt = ap.data || evt.data;
+              let dObj = new Date((dt || '').substring(0, 10) + 'T12:00:00Z');
+              let display = isNaN(dObj.getTime()) ? 'Data Indefinida' : dObj.toLocaleDateString('pt-BR');
+              if (ap.horario) display += ' às ' + ap.horario.substring(0,5);
+              allSess.push({
+                id: evt.id + "|" + dt + "|" + (ap.horario || ''),
+                evento_id: evt.id,
+                cidade: evt.cidade,
+                displayDate: display,
+                dataIso: dt
+              });
+            });
+          } else {
+            let dObj2 = new Date((evt.data || '').substring(0, 10) + 'T12:00:00Z');
+            allSess.push({
+              id: evt.id + "|" + evt.data,
+              evento_id: evt.id,
+              cidade: evt.cidade,
+              displayDate: isNaN(dObj2.getTime()) ? 'Data Indefinida' : dObj2.toLocaleDateString('pt-BR'),
+              dataIso: evt.data
+            });
+          }
+        });
+        setSessoes(allSess);
+      }
       if (vendRes.data) setVendas(vendRes.data);
     } catch (e) {
       console.error(e);
@@ -132,6 +168,31 @@ function VendasPage() {
     }
   }
 
+  
+  async function handleDeleteProduto(id: string) {
+    if (!confirm("Tem certeza que deseja apagar este produto?")) return;
+    const { error } = await supabase.from("vendas_produtos").delete().eq("id", id);
+    if (error) toast.error("Erro RLS (Delete): " + error.message);
+    else { toast.success("Produto apagado."); fetchDados(); }
+  }
+
+  async function salvarEdicaoProduto() {
+    const preco = parseFloat(editProdutoDialog.preco.replace(",", "."));
+    if (isNaN(preco)) return toast.error("Preço inválido");
+    
+    const { error } = await supabase.from("vendas_produtos").update({ nome: editProdutoDialog.nome, preco_unitario: preco }).eq("id", editProdutoDialog.id);
+    if (error) { return toast.error("Erro RLS (Edit): " + error.message); }
+    
+    const qty = parseInt(editProdutoDialog.estoqueStr, 10);
+    if (!isNaN(qty) && qty >= 0) {
+      await updateEstoque(editProdutoDialog.id, qty);
+    }
+
+    toast.success("Produto atualizado.");
+    setEditProdutoDialog(prev => ({...prev, open: false}));
+    fetchDados();
+  }
+
   async function handleAddVenda(e: React.FormEvent) {
     e.preventDefault();
     if (!vendaProdutoId || !vendaEventoId || !vendaQtd) return toast.error("Preencha todos os campos");
@@ -144,19 +205,21 @@ function VendasPage() {
 
     const valor_total = prod.preco_unitario * qtd;
 
-    const { error, data } = await supabase.from("vendas_registros").insert({
-      produto_id: vendaProdutoId,
-      evento_id: vendaEventoId,
-      quantidade: qtd,
-      valor_total
-    }).select().single();
+    const [realEvtId, dataSessao, horarioSessao] = vendaEventoId.split('|');
+      const { error, data } = await supabase.from("vendas_registros").insert({
+        produto_id: vendaProdutoId,
+        evento_id: realEvtId,
+        quantidade: qtd,
+        valor_total,
+        data_venda: dataSessao ? dataSessao : null
+      }).select().single();
 
     if (error) {
       toast.error("Erro ao registrar venda");
     } else {
       // Automatic financial integration
       // Try to find if this evento has a roadbook linked
-      const { data: rbData } = await supabase.from("roadbooks").select("id").eq("evento_id", vendaEventoId).maybeSingle();
+      const { data: rbData } = await supabase.from("roadbooks").select("id").eq("evento_id", realEvtId).maybeSingle();
       
       if (rbData) {
         await supabase.from("financas_receitas").insert({
@@ -332,7 +395,13 @@ function VendasPage() {
     saveAs(new Blob([buffer]), "relatorio-vendas.xlsx");
   }
 
-  const vendasFiltradas = vendaFiltroEvento === "todos" ? vendas : vendas.filter(v => v.evento_id === vendaFiltroEvento);
+  const vendasFiltradas = [...(vendaFiltroEvento === "todos" ? vendas : vendas.filter(v => v.evento_id === vendaFiltroEvento))].sort((a, b) => {
+    const dataA = new Date(a.data_venda || a.evento?.data || a.created_at || 0).getTime();
+    const dataB = new Date(b.data_venda || b.evento?.data || b.created_at || 0).getTime();
+    const valA = isNaN(dataA) ? 0 : dataA;
+    const valB = isNaN(dataB) ? 0 : dataB;
+    return valB - valA;
+  });
   const totalGeral = vendasFiltradas.reduce((acc, curr) => acc + curr.valor_total, 0);
   const itensVendidos = vendasFiltradas.reduce((acc, curr) => acc + curr.quantidade, 0);
 
@@ -346,7 +415,10 @@ function VendasPage() {
           </h1>
           <p className="text-muted-foreground mt-1">Gerencie a venda de merchandising (camisetas, chaveiros) nas turnês.</p>
         </div>
+        
         <div className="flex gap-2">
+
+          
           <Button variant="outline" onClick={exportExcel}><Download className="size-4 mr-2" /> Excel</Button>
           <Button variant="outline" onClick={exportPDF}><Download className="size-4 mr-2" /> PDF</Button>
         </div>
@@ -384,7 +456,7 @@ function VendasPage() {
                   <Label>Evento / Cidade *</Label>
                   <select required value={vendaEventoId} onChange={e => setVendaEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background">
                     <option value="">Selecione o evento...</option>
-                    {eventos.map(evt => <option key={evt.id} value={evt.id}>{evt.cidade} ({new Date((evt.data || '').substring(0, 10) + 'T12:00:00Z').toLocaleDateString('pt-BR')})</option>)}
+                    {sessoes.map((s, idx) => <option key={s.id + idx} value={s.id}>{s.cidade} ({s.displayDate})</option>)}
                   </select>
                 </div>
                 <div className="flex-1 space-y-2">
@@ -418,7 +490,7 @@ function VendasPage() {
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
+                <div className="overflow-x-auto w-full -mx-4 sm:mx-0 px-4 sm:px-0"><table className="w-full text-sm text-left whitespace-nowrap min-w-[600px]">
                   <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500">
                     <tr>
                       <th className="px-4 py-3">Data</th>
@@ -432,7 +504,7 @@ function VendasPage() {
                   <tbody className="divide-y">
                     {vendasFiltradas.map(v => (
                       <tr key={v.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="px-4 py-3">{v.evento?.data ? new Date(v.evento.data.substring(0, 10) + 'T12:00:00Z').toLocaleDateString('pt-BR') : '-'}</td>
+                        <td className="px-4 py-3">{v.data_venda ? new Date(v.data_venda.substring(0, 10) + "T12:00:00Z").toLocaleDateString("pt-BR") : (v.evento?.data ? new Date(v.evento.data.substring(0, 10) + 'T12:00:00Z').toLocaleDateString('pt-BR') : '-')}</td>
                         <td className="px-4 py-3 font-medium">{v.produto?.nome}</td>
                         <td className="px-4 py-3 text-muted-foreground"><MapPin className="size-3 inline mr-1"/>{v.evento?.cidade}</td>
                         <td className="px-4 py-3 text-right">{v.quantidade}</td>
@@ -448,7 +520,7 @@ function VendasPage() {
                       </tr>
                     )}
                   </tbody>
-                </table>
+                </table></div>
               </div>
             </CardContent>
           </Card>
@@ -474,7 +546,7 @@ function VendasPage() {
               </form>
 
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm text-left">
+                <div className="overflow-x-auto w-full -mx-4 sm:mx-0 px-4 sm:px-0"><table className="w-full text-sm text-left whitespace-nowrap min-w-[600px]">
                   <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500">
                     <tr>
                       <th className="px-4 py-3">Produto</th>
@@ -491,18 +563,45 @@ function VendasPage() {
                         <td className="px-4 py-3 font-medium">{p.nome}</td>
                         <td className="px-4 py-3 text-right font-bold text-blue-600 dark:text-blue-400">{qtdeEstoque} un.</td>
                         <td className="px-4 py-3 text-right">R$ {p.preco_unitario.toFixed(2).replace(".", ",")}</td>
-                        <td className="px-4 py-3 text-center">
-                          <Button variant="outline" size="sm" onClick={() => handleAddEstoque(p.id)}><Plus className="size-3 mr-1" /> Estoque</Button>
+                        <td className="px-4 py-3 text-center flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-blue-500" onClick={() => setEditProdutoDialog({ open: true, id: p.id, nome: p.nome, preco: p.preco_unitario.toString().replace('.', ','), estoqueStr: qtdeEstoque.toString() })}>✎</Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => handleDeleteProduto(p.id)}>🗑</Button>
+                          {/* Botão estoque removido */}
                         </td>
                       </tr>
                     );})}
                   </tbody>
-                </table>
+                </table></div>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      <Dialog open={editProdutoDialog.open} onOpenChange={open => !open && setEditProdutoDialog(prev => ({...prev, open: false}))}>
+        <DialogContent className="sm:max-w-md w-[90vw] rounded-2xl p-6">
+          <DialogHeader>
+            <DialogTitle className="text-xl">Editar Produto</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome do Produto</Label>
+              <Input value={editProdutoDialog.nome} onChange={e => setEditProdutoDialog(prev => ({...prev, nome: e.target.value}))} className="h-12 text-lg" />
+            </div>
+            <div className="space-y-2">
+              <Label>Preço Unitário</Label>
+              <Input value={editProdutoDialog.preco} onChange={e => setEditProdutoDialog(prev => ({...prev, preco: e.target.value}))} className="h-12 text-lg" />
+            </div>
+            <div className="space-y-2">
+              <Label>Quantidade em Estoque</Label>
+              <Input type="number" value={editProdutoDialog.estoqueStr} onChange={e => setEditProdutoDialog(prev => ({...prev, estoqueStr: e.target.value}))} className="h-12 text-lg" />
+            </div>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="w-full sm:w-auto h-12" onClick={() => setEditProdutoDialog(prev => ({...prev, open: false}))}>Cancelar</Button>
+            <Button className="w-full sm:w-auto h-12 bg-primary hover:bg-primary/90 text-white" onClick={salvarEdicaoProduto}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { LogoPicker } from '@/components/LogoPicker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -70,6 +71,7 @@ const FICHA_FUNCOES = [
 function EspetaculosPage() {
   const [espetaculos, setEspetaculos] = useState<Espetaculo[]>([]);
   const [loading, setLoading] = useState(false);
+  const [logoPickerOpen, setLogoPickerOpen] = useState<{open: boolean, field: 'logo_espetaculo_url' | 'logo_cia_url' | null}>({open: false, field: null});
   
   // Navigation State
   const [view, setView] = useState<"list" | "wizard" | "dashboard">("list");
@@ -497,7 +499,7 @@ function EspetaculosPage() {
                       <div className="h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-slate-400 relative hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors bg-white dark:bg-slate-900 shadow-sm">
                         <ImageIcon className="size-6 mb-2 opacity-50" />
                         <span className="text-xs font-semibold">Anexar Imagem</span>
-                        <input type="file" accept="image/*" onChange={e => uploadLogo(e, "logo_espetaculo_url")} className="absolute inset-0 opacity-0 cursor-pointer" />
+                        <button type="button" onClick={() => setLogoPickerOpen({open: true, field: "logo_espetaculo_url"})} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
                     )}
                   </div>
@@ -512,7 +514,7 @@ function EspetaculosPage() {
                       <div className="h-32 border-2 border-dashed rounded-xl flex flex-col items-center justify-center text-slate-400 relative hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors bg-white dark:bg-slate-900 shadow-sm">
                         <ImageIcon className="size-6 mb-2 opacity-50" />
                         <span className="text-xs font-semibold">Anexar Imagem</span>
-                        <input type="file" accept="image/*" onChange={e => uploadLogo(e, "logo_cia_url")} className="absolute inset-0 opacity-0 cursor-pointer" />
+                        <button type="button" onClick={() => setLogoPickerOpen({open: true, field: "logo_cia_url"})} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
                     )}
                   </div>
@@ -1155,6 +1157,18 @@ function EspetaculosPage() {
             </div>
           </DialogContent>
         </Dialog>
+      <LogoPicker
+        open={logoPickerOpen.open}
+        onOpenChange={(open) => setLogoPickerOpen(s => ({ ...s, open }))}
+        onSelect={(url) => {
+          if (logoPickerOpen.field === 'logo_espetaculo_url') {
+             setCurrentShow(s => ({ ...s, logo_espetaculo_url: url }));
+          } else if (logoPickerOpen.field === 'logo_cia_url') {
+             setCurrentShow(s => ({ ...s, logo_cia_url: url }));
+          }
+        }}
+        uploadPath="logos"
+      />
 
       </div>
     );
