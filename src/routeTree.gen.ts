@@ -27,6 +27,7 @@ import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authen
 import { Route as AuthenticatedMidiasRouteImport } from './routes/_authenticated/midias'
 import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
 import { Route as AuthenticatedImprensaRouteImport } from './routes/_authenticated/imprensa'
+import { Route as AuthenticatedFotosRouteImport } from './routes/_authenticated/fotos'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
 import { Route as AuthenticatedEspetaculosRouteImport } from './routes/_authenticated/espetaculos'
@@ -152,6 +153,11 @@ const AuthenticatedMeusPagamentosRoute =
 const AuthenticatedImprensaRoute = AuthenticatedImprensaRouteImport.update({
   id: '/imprensa',
   path: '/imprensa',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFotosRoute = AuthenticatedFotosRouteImport.update({
+  id: '/fotos',
+  path: '/fotos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
@@ -359,6 +365,7 @@ export interface FileRoutesByFullPath {
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/fotos': typeof AuthenticatedFotosRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
@@ -412,6 +419,7 @@ export interface FileRoutesByTo {
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/fotos': typeof AuthenticatedFotosRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
@@ -467,6 +475,7 @@ export interface FileRoutesById {
   '/_authenticated/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/_authenticated/eventos': typeof AuthenticatedEventosRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/fotos': typeof AuthenticatedFotosRoute
   '/_authenticated/imprensa': typeof AuthenticatedImprensaRoute
   '/_authenticated/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/_authenticated/midias': typeof AuthenticatedMidiasRoute
@@ -522,6 +531,7 @@ export interface FileRouteTypes {
     | '/espetaculos'
     | '/eventos'
     | '/financeiro'
+    | '/fotos'
     | '/imprensa'
     | '/meus-pagamentos'
     | '/midias'
@@ -575,6 +585,7 @@ export interface FileRouteTypes {
     | '/espetaculos'
     | '/eventos'
     | '/financeiro'
+    | '/fotos'
     | '/imprensa'
     | '/meus-pagamentos'
     | '/midias'
@@ -629,6 +640,7 @@ export interface FileRouteTypes {
     | '/_authenticated/espetaculos'
     | '/_authenticated/eventos'
     | '/_authenticated/financeiro'
+    | '/_authenticated/fotos'
     | '/_authenticated/imprensa'
     | '/_authenticated/meus-pagamentos'
     | '/_authenticated/midias'
@@ -804,6 +816,13 @@ declare module '@tanstack/react-router' {
       path: '/imprensa'
       fullPath: '/imprensa'
       preLoaderRoute: typeof AuthenticatedImprensaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fotos': {
+      id: '/_authenticated/fotos'
+      path: '/fotos'
+      fullPath: '/fotos'
+      preLoaderRoute: typeof AuthenticatedFotosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/financeiro': {
@@ -1060,6 +1079,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEspetaculosRoute: typeof AuthenticatedEspetaculosRoute
   AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedFotosRoute: typeof AuthenticatedFotosRoute
   AuthenticatedImprensaRoute: typeof AuthenticatedImprensaRoute
   AuthenticatedMeusPagamentosRoute: typeof AuthenticatedMeusPagamentosRoute
   AuthenticatedMidiasRoute: typeof AuthenticatedMidiasRoute
@@ -1107,6 +1127,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEspetaculosRoute: AuthenticatedEspetaculosRoute,
   AuthenticatedEventosRoute: AuthenticatedEventosRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedFotosRoute: AuthenticatedFotosRoute,
   AuthenticatedImprensaRoute: AuthenticatedImprensaRoute,
   AuthenticatedMeusPagamentosRoute: AuthenticatedMeusPagamentosRoute,
   AuthenticatedMidiasRoute: AuthenticatedMidiasRoute,

@@ -10,7 +10,7 @@ import {
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Contact2, Luggage } from "lucide-react";
+import { Users, Contact2, Luggage, Image as ImageIcon } from "lucide-react";
 import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
 
 type Profile = {
@@ -270,6 +270,7 @@ function AuthedLayout() {
 
                 <SGroup title="Comunicação e Mídia" icon={Smartphone}>
                   <SLink to="/imprensa" icon={Newspaper} label="Imprensa" show={isProdutor || userRole === 'assessoria_imprensa'} />
+                  <SLink to="/fotos" icon={ImageIcon} label="Fotos" show={isProdutor || userRole === 'midias_sociais'} />
                   <SLink to="/midias" icon={Smartphone} label="Mídias Sociais" show={isProdutor || userRole === 'midias_sociais'} />
                 </SGroup>
 

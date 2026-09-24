@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Route as AuthedRoute } from "./route";
-import { Smartphone, Image as ImageIcon, Calendar, Plus, Trash2, CheckCircle2, Clock, PlayCircle } from "lucide-react";
+import { Smartphone, Image as ImageIcon, Calendar, Plus, Trash2, CheckCircle2, Clock, PlayCircle, HardDrive, Link as LinkIcon, UploadCloud, FolderUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
@@ -20,54 +20,63 @@ export const Route = createFileRoute("/_authenticated/midias")({
   component: MidiasPage,
 });
 
-function MidiasPage() {
+export default function MidiasPage() {
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessMidias: isAllowed } = usePermissions(profile);
 
   const [cronograma, setCronograma] = useState<any[]>([]);
   const [espetaculos, setEspetaculos] = useState<any[]>([]);
+  const [midiasHd, setMidiasHd] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Modal states
+  // Modals
   const [isPostOpen, setIsPostOpen] = useState(false);
-  const [isAssetOpen, setIsAssetOpen] = useState(false);
+  const [isHdOpen, setIsHdOpen] = useState(false);
 
-  // Form states
-  const [newPost, setNewPost] = useState({ espetaculo: '', rede_social: 'Instagram', data_postagem: '', formato: 'Feed', status: 'Ideia', descricao: '', link_asset: '' });
-  const [assetEdit, setAssetEdit] = useState<{nome_espetaculo: string, link: string} | null>(null);
+  // States
+  const [newPost, setNewPost] = useState({ espetaculo: '', rede_social: 'Instagram', formato: 'Reels', data_postagem: '', descricao: '', status: 'Ideia' });
+  
+  const [newHd, setNewHd] = useState({ espetaculo: '', titulo: '', tipo: 'link', url: '', provedor: 'drive' });
+  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (isAllowed) {
-      fetchData();
-    }
+    if (isAllowed) fetchData();
   }, [isAllowed]);
 
   const fetchData = async () => {
     setLoading(true);
-    const [cronoRes, espRes] = await Promise.all([
+    const [cronoRes, espRes, hdRes] = await Promise.all([
       supabase.from('midias_cronograma').select('*').order('data_postagem', { ascending: true }),
-      supabase.from('templates_espetaculos').select('*')
+      supabase.from('templates_espetaculos').select('nome_espetaculo'),
+      supabase.from('midias_hd').select('*').order('created_at', { ascending: false }).catch(() => ({data: []})) // Catch case it doesn't exist yet
     ]);
 
     if (cronoRes.data) setCronograma(cronoRes.data);
-    if (espRes.data) setEspetaculos(espRes.data);
+    if (espRes.data) {
+      const names = Array.from(new Set(espRes.data.map(e => e.nome_espetaculo))).filter(Boolean) as string[];
+      setEspetaculos(names);
+    }
+    if (hdRes && hdRes.data) setMidiasHd(hdRes.data);
+    
     setLoading(false);
   };
 
+  const getStatusColor = (status: string) => {
+    switch(status) {
+      case 'Ideia': return 'bg-slate-100 text-slate-600';
+      case 'Produzindo': return 'bg-amber-100 text-amber-700';
+      case 'Agendado': return 'bg-blue-100 text-blue-700';
+      case 'Postado': return 'bg-emerald-100 text-emerald-700';
+      default: return 'bg-slate-100 text-slate-600';
+    }
+  };
+
   const savePost = async () => {
-    if (!newPost.espetaculo || !newPost.data_postagem) {
-      toast.error('Preencha espetáculo e data');
-      return;
-    }
+    if (!newPost.espetaculo || !newPost.data_postagem) return toast.error('Preencha o espetáculo e a data');
     const { data, error } = await supabase.from('midias_cronograma').insert([newPost]).select().single();
-    if (error) {
-      toast.error('Erro ao salvar postagem');
-    } else {
-      toast.success('Postagem agendada!');
-      setCronograma([...cronograma, data].sort((a, b) => new Date(a.data_postagem).getTime() - new Date(b.data_postagem).getTime()));
-      setIsPostOpen(false);
-      setNewPost({ ...newPost, descricao: '', link_asset: '' }); // reset some fields
-    }
+    if (error) toast.error('Erro ao salvar');
+    else { toast.success('Post planejado!'); setCronograma([...cronograma, data].sort((a,b) => a.data_postagem.localeCompare(b.data_postagem))); setIsPostOpen(false); }
   };
 
   const updatePostStatus = async (id: string, novoStatus: string) => {
@@ -79,88 +88,113 @@ function MidiasPage() {
   };
 
   const deletePost = async (id: string) => {
-    if (confirm('Deletar esta postagem?')) {
-      await supabase.from('midias_cronograma').delete().eq('id', id);
-      setCronograma(cronograma.filter(c => c.id !== id));
-      toast.success('Deletado com sucesso');
-    }
+    if (!confirm('Excluir este planejamento?')) return;
+    await supabase.from('midias_cronograma').delete().eq('id', id);
+    setCronograma(cronograma.filter(c => c.id !== id));
   };
 
-  const saveAsset = async () => {
-    if (!assetEdit) return;
-    const { error } = await supabase.from('templates_espetaculos')
-      .update({ assets_midia: { drive_link: assetEdit.link } })
-      .eq('nome_espetaculo', assetEdit.nome_espetaculo);
+  const saveHd = async () => {
+    if (!newHd.espetaculo || !newHd.titulo) return toast.error('Preencha o espetáculo e o título/descrição');
     
-    if (error) {
-      toast.error('Erro ao salvar link');
-    } else {
-      toast.success('Link do HD Virtual salvo!');
-      setEspetaculos(espetaculos.map(e => e.nome_espetaculo === assetEdit.nome_espetaculo ? { ...e, assets_midia: { drive_link: assetEdit.link } } : e));
-      setIsAssetOpen(false);
+    setIsUploading(true);
+    let finalUrl = newHd.url;
+    let finalProvedor = newHd.provedor;
+
+    try {
+      if (newHd.tipo === 'upload' && uploadFile) {
+        const fileExt = uploadFile.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${newHd.espetaculo.replace(/[^a-zA-Z0-9]/g, '_')}/${fileName}`;
+        
+        const { error: uploadError } = await supabase.storage.from('midias').upload(filePath, uploadFile);
+        
+        if (uploadError) {
+          throw new Error('Erro no upload do arquivo. Verifique se as políticas de Storage (RLS) estão configuradas no Supabase.');
+        }
+
+        const { data: publicUrlData } = supabase.storage.from('midias').getPublicUrl(filePath);
+        finalUrl = publicUrlData.publicUrl;
+        finalProvedor = 'supabase';
+      } else if (newHd.tipo === 'link') {
+        if (!finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+        
+        if (finalUrl.includes('drive.google')) finalProvedor = 'drive';
+        else if (finalUrl.includes('dropbox')) finalProvedor = 'dropbox';
+        else if (finalUrl.includes('icloud') || finalUrl.includes('apple')) finalProvedor = 'icloud';
+        else finalProvedor = 'link';
+      } else {
+        throw new Error('Selecione um arquivo para upload ou preencha o link.');
+      }
+
+      const payload = {
+        espetaculo: newHd.espetaculo,
+        titulo: newHd.titulo,
+        tipo: newHd.tipo,
+        url: finalUrl,
+        provedor: finalProvedor
+      };
+
+      const { data, error } = await supabase.from('midias_hd').insert([payload]).select().single();
+      
+      if (error) {
+        // Se a tabela não existir, avisa o usuário para rodar o SQL
+        if (error.code === '42P01') throw new Error('A tabela midias_hd não existe. Por favor, rode o script SQL no Supabase.');
+        throw new Error('Erro ao salvar no banco de dados.');
+      }
+
+      toast.success('Mídia / Link salvo com sucesso!');
+      setMidiasHd([data, ...midiasHd]);
+      setIsHdOpen(false);
+      setNewHd({ espetaculo: '', titulo: '', tipo: 'link', url: '', provedor: 'drive' });
+      setUploadFile(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Erro inesperado.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  if (!isAllowed) {
-    return (
-      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-24 px-6 text-center">
-        <div className="bg-red-500/10 text-red-500 p-6 rounded-3xl mb-6">
-          <Smartphone className="size-12" />
-        </div>
-        <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight">Acesso Negado</h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-4 max-w-md">
-          Você não tem permissão para acessar o painel de Mídias Sociais.
-        </p>
-      </div>
-    );
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Ideia': return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
-      case 'Produzindo': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-      case 'Agendado': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
-      case 'Postado': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-      default: return 'bg-slate-100 text-slate-700';
-    }
+  const deleteHd = async (id: string) => {
+    if (!confirm('Excluir este item do HD Virtual?')) return;
+    await supabase.from('midias_hd').delete().eq('id', id);
+    setMidiasHd(midiasHd.filter(m => m.id !== id));
   };
+
+  if (!isAllowed) return <div className="p-8 text-center text-red-500 font-medium">Acesso negado.</div>;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 pt-6 mb-16 md:mb-0">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
-            <Smartphone className="size-8 text-primary" />
-            Mídias Sociais
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-            Cronograma de postagens e repositório de assets.
-          </p>
-        </div>
+    <div className="flex flex-col h-full bg-slate-50/50">
+      <div className="px-8 py-6 border-b border-slate-200 bg-white">
+        <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
+          <Smartphone className="size-8 text-purple-600" /> Comunicação e Mídia
+        </h1>
+        <p className="text-slate-500 mt-1">Gestão de redes sociais, cronograma e assets criativos</p>
       </div>
 
-      <Tabs defaultValue="cronograma" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+      <Tabs defaultValue="cronograma" className="flex-1 flex flex-col p-8">
+        <TabsList className="grid w-full max-w-[400px] grid-cols-2 mb-8">
           <TabsTrigger value="cronograma" className="flex items-center gap-2"><Calendar className="size-4" /> Cronograma de Posts</TabsTrigger>
-          <TabsTrigger value="assets" className="flex items-center gap-2"><ImageIcon className="size-4" /> HD Virtual (Assets)</TabsTrigger>
+          
         </TabsList>
 
-        {/* TAB CRONOGRAMA */}
-        <TabsContent value="cronograma" className="mt-6 space-y-6">
-          <div className="flex justify-end">
+        <TabsContent value="cronograma" className="flex-1 mt-0">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2 text-slate-600 font-medium">
+              Calendário de Publicações
+            </div>
             <Dialog open={isPostOpen} onOpenChange={setIsPostOpen}>
               <DialogTrigger asChild>
-                <Button className="rounded-xl bg-purple-600 hover:bg-purple-700 text-white"><Plus className="size-4 mr-2" /> Agendar Postagem</Button>
+                <Button className="bg-purple-600 hover:bg-purple-700 shadow-sm"><Plus className="w-4 h-4 mr-2" /> Planejar Post</Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader><DialogTitle>Agendar Postagem</DialogTitle></DialogHeader>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Novo Post</DialogTitle></DialogHeader>
                 <div className="space-y-4 mt-4">
                   <div className="space-y-2">
-                    <Label>Espetáculo</Label>
+                    <Label>Espetáculo / Evento</Label>
                     <Select value={newPost.espetaculo} onValueChange={v => setNewPost({...newPost, espetaculo: v})}>
-                      <SelectTrigger><SelectValue placeholder="Selecione o espetáculo" /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Selecione..." /></SelectTrigger>
                       <SelectContent>
-                        {espetaculos.filter(e => e.nome_espetaculo).map(e => <SelectItem key={e.nome_espetaculo} value={e.nome_espetaculo}>{e.nome_espetaculo}</SelectItem>)}
+                        {espetaculos.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -182,9 +216,10 @@ function MidiasPage() {
                       <Select value={newPost.formato} onValueChange={v => setNewPost({...newPost, formato: v})}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Feed">Feed (Foto/Carrossel)</SelectItem>
-                          <SelectItem value="Reels">Reels / Vídeo Curto</SelectItem>
-                          <SelectItem value="Story">Story</SelectItem>
+                          <SelectItem value="Reels">Reels / Shorts</SelectItem>
+                          <SelectItem value="Feed">Foto Feed</SelectItem>
+                          <SelectItem value="Carrossel">Carrossel</SelectItem>
+                          <SelectItem value="Stories">Stories</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -266,61 +301,7 @@ function MidiasPage() {
           )}
         </TabsContent>
 
-        {/* TAB ASSETS */}
-        <TabsContent value="assets" className="mt-6 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {espetaculos.filter(esp => esp.nome_espetaculo).map(esp => {
-              const link = esp.assets_midia?.drive_link;
-              return (
-                <Card key={esp.nome_espetaculo} className="border-0 shadow-sm rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900/50">
-                  <CardHeader className="bg-white dark:bg-card">
-                    <CardTitle className="text-xl">{esp.nome_espetaculo}</CardTitle>
-                    <CardDescription>Repositório oficial de fotos e vídeos</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    {link ? (
-                      <div className="space-y-4">
-                        <Button className="w-full" asChild>
-                          <a href={link} target="_blank" rel="noreferrer">
-                            Acessar HD Virtual (Drive)
-                          </a>
-                        </Button>
-                        <Button variant="ghost" className="w-full text-xs text-slate-400 hover:text-slate-600" onClick={() => {
-                          setAssetEdit({nome_espetaculo: esp.nome_espetaculo, link: link});
-                          setIsAssetOpen(true);
-                        }}>Editar Link</Button>
-                      </div>
-                    ) : (
-                      <div className="text-center py-6 space-y-4">
-                        <div className="mx-auto w-12 h-12 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400">
-                          <ImageIcon className="size-6" />
-                        </div>
-                        <p className="text-sm text-slate-500 font-medium">Nenhum link configurado</p>
-                        <Button variant="outline" onClick={() => {
-                          setAssetEdit({nome_espetaculo: esp.nome_espetaculo, link: ''});
-                          setIsAssetOpen(true);
-                        }}>Adicionar Link</Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          <Dialog open={isAssetOpen} onOpenChange={setIsAssetOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>Link do HD Virtual (Assets)</DialogTitle></DialogHeader>
-              <div className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label>Link do Google Drive / Dropbox / OneDrive</Label>
-                  <Input value={assetEdit?.link || ''} onChange={e => setAssetEdit(prev => prev ? {...prev, link: e.target.value} : null)} placeholder="https://drive.google.com/..." />
-                </div>
-                <Button onClick={saveAsset} className="w-full">Salvar Link</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </TabsContent>
+        
       </Tabs>
     </div>
   );
