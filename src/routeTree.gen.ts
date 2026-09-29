@@ -32,6 +32,7 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
 import { Route as AuthenticatedEspetaculosRouteImport } from './routes/_authenticated/espetaculos'
 import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated/escalas'
+import { Route as AuthenticatedDivulgacoesRouteImport } from './routes/_authenticated/divulgacoes'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDadosPessoaisRouteImport } from './routes/_authenticated/dados-pessoais'
 import { Route as AuthenticatedDadosEquipeRouteImport } from './routes/_authenticated/dados-equipe'
@@ -181,6 +182,12 @@ const AuthenticatedEscalasRoute = AuthenticatedEscalasRouteImport.update({
   path: '/escalas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDivulgacoesRoute =
+  AuthenticatedDivulgacoesRouteImport.update({
+    id: '/divulgacoes',
+    path: '/divulgacoes',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -361,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/dados-equipe': typeof AuthenticatedDadosEquipeRoute
   '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/divulgacoes': typeof AuthenticatedDivulgacoesRoute
   '/escalas': typeof AuthenticatedEscalasRoute
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/eventos': typeof AuthenticatedEventosRoute
@@ -415,6 +423,7 @@ export interface FileRoutesByTo {
   '/dados-equipe': typeof AuthenticatedDadosEquipeRoute
   '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/divulgacoes': typeof AuthenticatedDivulgacoesRoute
   '/escalas': typeof AuthenticatedEscalasRoute
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/eventos': typeof AuthenticatedEventosRoute
@@ -471,6 +480,7 @@ export interface FileRoutesById {
   '/_authenticated/dados-equipe': typeof AuthenticatedDadosEquipeRoute
   '/_authenticated/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/divulgacoes': typeof AuthenticatedDivulgacoesRoute
   '/_authenticated/escalas': typeof AuthenticatedEscalasRoute
   '/_authenticated/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/_authenticated/eventos': typeof AuthenticatedEventosRoute
@@ -527,6 +537,7 @@ export interface FileRouteTypes {
     | '/dados-equipe'
     | '/dados-pessoais'
     | '/dashboard'
+    | '/divulgacoes'
     | '/escalas'
     | '/espetaculos'
     | '/eventos'
@@ -581,6 +592,7 @@ export interface FileRouteTypes {
     | '/dados-equipe'
     | '/dados-pessoais'
     | '/dashboard'
+    | '/divulgacoes'
     | '/escalas'
     | '/espetaculos'
     | '/eventos'
@@ -636,6 +648,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dados-equipe'
     | '/_authenticated/dados-pessoais'
     | '/_authenticated/dashboard'
+    | '/_authenticated/divulgacoes'
     | '/_authenticated/escalas'
     | '/_authenticated/espetaculos'
     | '/_authenticated/eventos'
@@ -851,6 +864,13 @@ declare module '@tanstack/react-router' {
       path: '/escalas'
       fullPath: '/escalas'
       preLoaderRoute: typeof AuthenticatedEscalasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/divulgacoes': {
+      id: '/_authenticated/divulgacoes'
+      path: '/divulgacoes'
+      fullPath: '/divulgacoes'
+      preLoaderRoute: typeof AuthenticatedDivulgacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -1075,6 +1095,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDadosEquipeRoute: typeof AuthenticatedDadosEquipeRoute
   AuthenticatedDadosPessoaisRoute: typeof AuthenticatedDadosPessoaisRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDivulgacoesRoute: typeof AuthenticatedDivulgacoesRoute
   AuthenticatedEscalasRoute: typeof AuthenticatedEscalasRoute
   AuthenticatedEspetaculosRoute: typeof AuthenticatedEspetaculosRoute
   AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
@@ -1123,6 +1144,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDadosEquipeRoute: AuthenticatedDadosEquipeRoute,
   AuthenticatedDadosPessoaisRoute: AuthenticatedDadosPessoaisRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDivulgacoesRoute: AuthenticatedDivulgacoesRoute,
   AuthenticatedEscalasRoute: AuthenticatedEscalasRoute,
   AuthenticatedEspetaculosRoute: AuthenticatedEspetaculosRoute,
   AuthenticatedEventosRoute: AuthenticatedEventosRoute,
