@@ -1,3 +1,4 @@
+import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { formatPhone } from '@/lib/utils';
 import { createFileRoute, useRouter } from "@tanstack/react-router";
@@ -34,7 +35,6 @@ type Profile = {
   foto_url: string | null;
   email?: string | null;
   role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger";
-  telefone?: string | null;
   telefone_verificado?: boolean | null;
 };
 

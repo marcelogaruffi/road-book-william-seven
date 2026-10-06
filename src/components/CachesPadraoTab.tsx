@@ -9,8 +9,10 @@ import { Save, Loader2, DollarSign, FileText, Download } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 import { CurrencyInput } from "@/components/CurrencyInput";
+import { getErrorMessage } from "@/lib/utils";
 
 export function CachesPadraoTab() {
   const [equipe, setEquipe] = useState<any[]>([]);
@@ -89,12 +91,12 @@ export function CachesPadraoTab() {
       
       doc.addImage(logoBase64, 'PNG', x, 10, imgWidth, imgHeight);
       doc.setFontSize(16);
-      doc.text("Cachês Padrão (Base) - Seven Produções Artísticas", pageWidth / 2, 10 + imgHeight + 8, { align: 'center' });
+      doc.text("Cachês Padrão (Base)", pageWidth / 2, 10 + imgHeight + 8, { align: 'center' });
       startY = 10 + imgHeight + 15;
     } catch (e) {
       const pageWidth = doc.internal.pageSize.getWidth();
       doc.setFontSize(16);
-      doc.text("Cachês Padrão (Base) - Seven Produções Artísticas", pageWidth / 2, 15, { align: 'center' });
+      doc.text("Cachês Padrão (Base)", pageWidth / 2, 15, { align: 'center' });
     }
     
     const tableData: string[][] = [];

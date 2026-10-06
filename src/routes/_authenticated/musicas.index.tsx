@@ -7,13 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Music, FileText, ArrowLeft, Plus, Trash2, MapPin, Play, GripVertical, UploadCloud, Eye, Download, FileAudio, File } from "lucide-react";
+import { Music, FileAudio, ArrowLeft, Plus, Trash2, MapPin, Play, GripVertical, UploadCloud, Eye, Download, File } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-export const Route = createFileRoute("/_authenticated/partituras/")({
-  head: () => ({ meta: [{ title: "Partituras e Músicas - Seven Produções Artísticas" }] }),
-  component: PartiturasPage,
+export const Route = createFileRoute("/_authenticated/musicas/")({
+  head: () => ({ meta: [{ title: "Músicas e Músicas - Seven Produções Artísticas" }] }),
+  component: MusicasPage,
 });
 
 type ArquivoPadrao = {
@@ -21,7 +21,7 @@ type ArquivoPadrao = {
   espetaculo_nome: string;
   nome: string;
   arquivo_url: string;
-  tipo: "partitura" | "musica";
+  tipo: "musica" | "musica";
   ordem: number;
 };
 
@@ -30,7 +30,7 @@ type ArquivoEvento = {
   evento_id: string;
   nome: string;
   arquivo_url: string;
-  tipo: "partitura" | "musica";
+  tipo: "musica" | "musica";
   ordem: number;
 };
 
@@ -42,9 +42,9 @@ type Evento = {
   espetaculo: string;
 };
 
-function PartiturasPage() {
+function MusicasPage() {
   const [activeTab, setActiveTab] = useState("evento");
-  const selectedTipo = "partitura";
+  const selectedTipo = "musica";
   
   const [eventos, setEventos] = useState<any[]>([]);
   const [espetaculosList, setEspetaculosList] = useState<string[]>([]);
@@ -337,7 +337,7 @@ function PartiturasPage() {
   const displayedArquivosEvento = arquivosEvento.filter(a => a.tipo === selectedTipo).sort((a,b) => a.ordem - b.ordem);
 
   const getAcceptTypes = () => {
-    return selectedTipo === "partitura" ? "application/pdf,image/*" : "audio/*";
+    return selectedTipo === "musica" ? "application/pdf,image/*" : "audio/*";
   };
 
   return (
@@ -345,8 +345,8 @@ function PartiturasPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
-            <FileText className="size-8 text-primary" />
-            Partituras
+            <FileAudio className="size-8 text-primary" />
+            Músicas
           </h1>
           <p className="text-slate-500 mt-1">Gerencie cifras, partituras e áudios de ensaio para os eventos.</p>
         </div>
@@ -396,7 +396,7 @@ function PartiturasPage() {
                       />
                     </div>
                     <div className="flex-1 space-y-2">
-                      <Label>Arquivo ({selectedTipo === 'partitura' ? 'PDF/Imagem' : 'Áudio'})</Label>
+                      <Label>Arquivo ({selectedTipo === 'musica' ? 'PDF/Imagem' : 'Áudio'})</Label>
                       <Input 
                         ref={fileInputRef}
                         required
@@ -432,12 +432,12 @@ function PartiturasPage() {
                           <GripVertical className="size-5 text-slate-400 shrink-0" />
                           <span className="font-mono text-sm font-bold text-slate-500 min-w-[1.5rem]">{index + 1}.</span>
                           <div className="flex items-center gap-3 font-semibold text-slate-800 dark:text-slate-200 flex-1 line-clamp-1">
-                            {selectedTipo === 'partitura' ? <FileText className="size-5 text-blue-500 shrink-0" /> : <Music className="size-5 text-emerald-500 shrink-0" />}
+                            {selectedTipo === 'musica' ? <FileAudio className="size-5 text-blue-500 shrink-0" /> : <Music className="size-5 text-emerald-500 shrink-0" />}
                             {arquivo.nome}
                           </div>
                           
                           <div className="flex items-center gap-2 shrink-0">
-                            {selectedTipo === 'partitura' ? (
+                            {selectedTipo === 'musica' ? (
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button variant="secondary" size="sm" className="gap-2 h-9">
@@ -533,7 +533,7 @@ function PartiturasPage() {
                       />
                     </div>
                     <div className="flex-1 space-y-2">
-                      <Label>Arquivo ({selectedTipo === 'partitura' ? 'PDF/Imagem' : 'Áudio'})</Label>
+                      <Label>Arquivo ({selectedTipo === 'musica' ? 'PDF/Imagem' : 'Áudio'})</Label>
                       <Input 
                         ref={fileInputRef}
                         required
@@ -568,12 +568,12 @@ function PartiturasPage() {
                           <GripVertical className="size-5 text-slate-400 shrink-0" />
                           <span className="font-mono text-sm font-bold text-slate-500 min-w-[1.5rem]">{index + 1}.</span>
                           <div className="flex items-center gap-3 font-semibold text-slate-700 dark:text-slate-300 flex-1 line-clamp-1">
-                            {selectedTipo === 'partitura' ? <FileText className="size-5 text-slate-400 shrink-0" /> : <Music className="size-5 text-slate-400 shrink-0" />}
+                            {selectedTipo === 'musica' ? <FileAudio className="size-5 text-slate-400 shrink-0" /> : <Music className="size-5 text-slate-400 shrink-0" />}
                             {arquivo.nome}
                           </div>
                           
                           <div className="flex items-center gap-2 shrink-0">
-                            {selectedTipo === 'partitura' ? (
+                            {selectedTipo === 'musica' ? (
                               <Dialog>
                                 <DialogTrigger asChild>
                                   <Button variant="outline" size="sm" className="gap-2 h-9">

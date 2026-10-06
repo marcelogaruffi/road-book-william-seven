@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { ReportExportButton } from "@/components/ReportExportButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -12,7 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 
 export const Route = createFileRoute("/_authenticated/vendas")({
   component: VendasPage,
@@ -285,7 +287,6 @@ function VendasPage() {
       doc.setFontSize(11);
       doc.setTextColor(100, 116, 139); // slate-500
       doc.setFont("helvetica", "normal");
-      doc.text("Seven Produções Artísticas", 55, 25);
     } catch (e) {
       console.warn("Logo não carregado", e);
       doc.setFont("helvetica", "bold");
@@ -419,8 +420,7 @@ function VendasPage() {
         <div className="flex gap-2">
 
           
-          <Button variant="outline" onClick={exportExcel}><Download className="size-4 mr-2" /> Excel</Button>
-          <Button variant="outline" onClick={exportPDF}><Download className="size-4 mr-2" /> PDF</Button>
+          <ReportExportButton onExportPdf={exportPDF} onExportExcel={exportExcel} />
         </div>
       </div>
 

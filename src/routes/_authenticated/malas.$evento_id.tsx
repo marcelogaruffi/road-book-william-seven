@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { MalasTemplateTab } from "@/components/MalasTemplateTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -146,36 +148,9 @@ function MalasEventoOperacao() {
 
   if (!roadbook) {
     return (
-      <div className="max-w-4xl mx-auto space-y-8">
-        <Button variant="ghost" asChild className="mb-4 text-slate-500 hover:text-slate-800 dark:hover:text-white">
-          <Link to="/malas"><ChevronLeft className="size-4 mr-2" /> Voltar para Painel</Link>
-        </Button>
-        <Card className="border-red-200 bg-red-50 dark:border-red-900/50 dark:bg-red-900/10 shadow-lg rounded-2xl">
-          <CardContent className="p-12 text-center space-y-4">
-            <FileWarning className="size-16 mx-auto text-red-400" />
-            <h2 className="text-2xl font-black text-red-600 dark:text-red-400">Guia de Viagem não encontrado</h2>
-            <p className="text-slate-600 dark:text-slate-300">
-              Para iniciar a operação de Malas deste evento ({evento?.espetaculo}), é necessário criar um <strong>Guia de Viagem</strong> para ele primeiro.
-            </p>
-            <div className="pt-4">
-              <Button asChild className="bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 px-6">
-                <Link to="/roadbook/new">Criar Guia de Viagem</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const allChecked = volumes.length > 0 && volumes.every(v => (v.itens || []).length > 0 && (v.itens || []).every(i => i.checked));
-  const totalItems = volumes.reduce((acc, v) => acc + (v.itens || []).length, 0);
-  const checkedItems = volumes.reduce((acc, v) => acc + (v.itens || []).filter(i => i.checked).length, 0);
-  const progress = totalItems === 0 ? 0 : Math.round((checkedItems / totalItems) * 100);
-
-  return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      <div className="flex items-center justify-between mb-4">
+    <>
+      <div className="w-full px-2 md:px-6 max-w-4xl mx-auto mb-6 mt-4">
+        <div className="flex items-center justify-between mb-4">
         <Button variant="ghost" asChild className="text-slate-500 hover:text-slate-800 dark:hover:text-white">
           <Link to="/malas"><ChevronLeft className="size-4 mr-2" /> Voltar</Link>
         </Button>
@@ -183,6 +158,15 @@ function MalasEventoOperacao() {
           <Save className="size-4 mr-2" /> {saving ? 'Salvando...' : 'Salvar Checklist'}
         </Button>
       </div>
+      </div>
+      <Tabs defaultValue="evento" className="w-full px-2 md:px-6 py-6 max-w-6xl mx-auto">
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1 mb-6 mx-auto">
+          <TabsTrigger value="evento" className="rounded-lg h-full font-bold">Mapa do Evento</TabsTrigger>
+          <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Modelos (Padrão)</TabsTrigger>
+        </TabsList>
+        <TabsContent value="evento" className="mt-0">
+          <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      
 
       <div className="bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-800 dark:to-slate-900 p-8 rounded-3xl shadow-xl text-white relative overflow-hidden">
         <Luggage className="absolute -right-10 -bottom-10 size-64 text-white/5 rotate-12" />
@@ -287,5 +271,13 @@ function MalasEventoOperacao() {
         </div>
       )}
     </div>
+      </TabsContent>
+      <TabsContent value="modelos" className="mt-0">
+        <MalasTemplateTab />
+      </TabsContent>
+    </Tabs>
+    </>
   );
+}
+
 }

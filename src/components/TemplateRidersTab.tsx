@@ -1,3 +1,4 @@
+﻿import { getErrorMessage } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -42,7 +43,7 @@ export default function TemplateRidersTab({ role, context = 'ambos' }: { role?: 
 
   async function loadTemplates() {
     setLoading(true);
-    const { data, error } = await supabase.from('templates_espetaculos').select('*').order('nome_espetaculo');
+    const { data, error } = await supabase.from('templates_espetaculos').select('*').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order('nome_espetaculo');
     if (!error && data) {
       setTemplates(data as Template[]);
     }

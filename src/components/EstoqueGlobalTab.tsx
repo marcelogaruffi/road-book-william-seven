@@ -37,7 +37,7 @@ export function EstoqueGlobalTab() {
   };
 
   const handleAddItem = (volId: string) => {
-    const desc = prompt("Descri\u00e7\u00e3o do item:");
+    const desc = prompt("Descrição do item:");
     if (!desc) return;
     setVolumes(volumes.map(v => {
       if (v.id === volId) {
@@ -81,11 +81,11 @@ export function EstoqueGlobalTab() {
           <h2 className="text-xl font-black text-slate-800 dark:text-white flex items-center gap-2">
             <Box className="size-6 text-primary" /> Estoque Global
           </h2>
-          <p className="text-sm text-slate-500 mt-1">Este \u00e9 o invent\u00e1rio mestre (cabos, ferramentas, etc) dispon\u00edvel para ser adicionado nos Guias de Viagem.</p>
+          <p className="text-sm text-slate-500 mt-1">Este é o inventário mestre (cabos, ferramentas, etc) disponível para ser adicionado nos Guias de Viagem.</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-primary text-white rounded-xl gap-2 font-bold px-6 shadow-md hover:shadow-lg transition-all">
           <Save className="size-4" />
-          {saving ? 'Salvando...' : 'Salvar Altera\u00e7\u00f5es'}
+          {saving ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
       </div>
 

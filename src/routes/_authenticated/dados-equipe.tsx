@@ -1,17 +1,19 @@
-// @ts-nocheck
+﻿// @ts-nocheck
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ReportExportButton } from "@/components/ReportExportButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Download, Calendar, Mail, Phone, User as UserIcon, AlertCircle, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 import { Badge } from "@/components/ui/badge";
 
 type ProfileData = {
@@ -144,7 +146,8 @@ function DadosEquipePage() {
         reader.readAsDataURL(blob);
         reader.onloadend = () => resolve(reader.result as string);
       });
-      doc.addImage(logoBase64, "PNG", 14, 10, 35, (35 * 38) / 100);
+      const logoProps = doc.getImageProperties(logoBase64);
+      doc.addImage(logoBase64, "PNG", 14, 10, 35, (35 * logoProps.height) / logoProps.width);
       
       doc.setTextColor(15, 23, 42);
       doc.setFont("helvetica", "bold");
@@ -154,7 +157,6 @@ function DadosEquipePage() {
       doc.setFontSize(11);
       doc.setTextColor(100, 116, 139);
       doc.setFont("helvetica", "normal");
-      doc.text("Seven Produções Artísticas", 55, 25);
     } catch (e) {
       doc.setTextColor(15, 23, 42);
       doc.setFont("helvetica", "bold");
@@ -162,7 +164,6 @@ function DadosEquipePage() {
       doc.setFontSize(11);
       doc.setTextColor(100, 116, 139);
       doc.setFont("helvetica", "normal");
-      doc.text("Seven Produções Artísticas", 14, 28);
       
       doc.setDrawColor(226, 232, 240);
       doc.line(14, 32, doc.internal.pageSize.getWidth() - 14, 32);
@@ -324,14 +325,7 @@ function DadosEquipePage() {
             <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Informações pessoais e de contato de toda a equipe.</p>
           </div>
           <div className="flex gap-3">
-            <Button onClick={exportExcel} variant="outline" className="h-12 px-6 rounded-xl border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 shadow-sm transition-all font-semibold">
-              <Download className="size-4 mr-2" />
-              Baixar Excel
-            </Button>
-            <Button onClick={exportPDF} variant="outline" className="h-12 px-6 rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md hover:bg-slate-50 transition-all font-semibold text-slate-700">
-              <Download className="size-4 mr-2 text-slate-500" />
-              Baixar PDF
-            </Button>
+            <ReportExportButton onExportPdf={exportPDF} onExportExcel={exportExcel} />
           </div>
         </div>
       </section>

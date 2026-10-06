@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef, useMemo } from "react";
+import { GridEventos } from "@/components/GridEventos";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,8 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 
 export const Route = createFileRoute("/_authenticated/figurinos/")({
   head: () => ({ meta: [{ title: "Figurinos - Seven Produções Artísticas" }] }),
@@ -117,7 +119,7 @@ function FigurinosPage() {
     try {
       const [evtRes, espRes] = await Promise.all([
         supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)").order("data", { ascending: false }),
-        supabase.from("templates_espetaculos").select("nome_espetaculo, personagens").order("nome_espetaculo", { ascending: true })
+        supabase.from('templates_espetaculos').select("nome_espetaculo, personagens").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order("nome_espetaculo", { ascending: true })
       ]);
       if (evtRes.data) setApresentacoes(evtRes.data as any);
       if (espRes.data) {
@@ -450,7 +452,8 @@ function FigurinosPage() {
         </div>
       </div>
 
-      <div className="bg-slate-100/50 dark:bg-slate-800/30 p-2 rounded-3xl overflow-x-auto flex gap-2 hide-scrollbar w-fit">
+      {((activeTab === 'evento' && selectedEventoId) || activeTab !== 'evento') && (
+<div className="bg-slate-100/50 dark:bg-slate-800/30 p-2 rounded-3xl overflow-x-auto flex gap-2 hide-scrollbar w-fit">
         <button onClick={() => setSelectedTipo("lista")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "lista" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
           <Shirt className="size-5" /> Lista de Roupas
         </button>
@@ -459,23 +462,26 @@ function FigurinosPage() {
         </button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+      
+)}<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {((activeTab === 'evento' && selectedEventoId) || activeTab !== 'evento') && (
+<TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="evento" className="flex items-center gap-2"><MapPin className="size-4" /> Evento Atual</TabsTrigger>
           <TabsTrigger value="configuracao" className="flex items-center gap-2"><File className="size-4" /> Configuração Padrão</TabsTrigger>
         </TabsList>
+)}
 
+        {activeTab === 'evento' && !selectedEventoId ? (
+          <div className="mt-6"><GridEventos onSelect={setSelectedEventoId} /></div>
+        ) : (
         <Card className="mt-6">
           <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b">
             <div className="flex flex-col sm:flex-row gap-4 items-end">
               <div className="flex-1 space-y-2 w-full">
                 <Label>{activeTab === 'evento' ? 'Selecione o Evento' : 'Selecione o Show Padrão'}</Label>
                 {activeTab === 'evento' ? (
-                  <select value={selectedEventoId} onChange={e => setSelectedEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="">Selecione um evento...</option>
-                    {apresentacoes.map(apr => <option key={apr.id} value={apr.id}>{apr.eventos?.cidade} - {apr.local || apr.eventos?.local} ({new Date(apr.data + "T12:00:00Z").toLocaleDateString("pt-BR")} às {apr.horario})</option>)}
-                  </select>
-                ) : (
+                    <div className="flex items-center"><Button variant="outline" onClick={() => setSelectedEventoId("")}>← Voltar para Grade</Button></div>
+                  ) : (
                   <select value={selectedEspetaculoPadrao} onChange={e => setSelectedEspetaculoPadrao(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                     <option value="">Selecione um show...</option>
                     {espetaculosList.map(esp => <option key={esp.nome} value={esp.nome}>{esp.nome}</option>)}
@@ -628,6 +634,7 @@ function FigurinosPage() {
             )}
           </CardContent>
         </Card>
+        )}
       </Tabs>
 
       {/* MODAL DE EDIÇÃO */}

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
+import { GridEventos } from "@/components/GridEventos";
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Search, Ticket, Mic2 } from 'lucide-react';
@@ -38,6 +39,18 @@ type MapaSom = {
 function SomComponent() {
   const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const navigate = useNavigate();
+
+  const handleGridSelect = async (id: string, rbId?: string | null, ev?: any) => {
+    // Check if map exists
+    const { data } = await supabase.from('mapas_som').select('id, apresentacao_id').eq('evento_id', id).limit(1).maybeSingle();
+    if (data) {
+      navigate({ to: '/som/' + id });
+    } else {
+      // Need to create
+      setInitDialogEvento(ev || { id, evento_id: id, cidade: '', espetaculo: '', data: '' });
+    }
+  };
+  
   const role = profile?.role || null;
   const isDevOrAdmin = ['admin', 'dev', 'produtor'].includes(role || '');
   
@@ -55,7 +68,7 @@ function SomComponent() {
   // Fetch templates when dialog opens
   useEffect(() => {
     if (initDialogEvento) {
-      supabase.from('templates_espetaculos').select('nome_espetaculo').order('nome_espetaculo').then(({ data }) => {
+      supabase.from('templates_espetaculos').select('nome_espetaculo').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order('nome_espetaculo').then(({ data }) => {
         if (data) setTemplatesDisponiveis(data);
       });
       setInitMode('zero');
@@ -119,8 +132,7 @@ function SomComponent() {
       const { data: templateData } = await supabase
         .from('templates_espetaculos')
         .select('rider_som, assets_midia')
-        .eq('nome_espetaculo', selectedPadrao)
-        .single();
+        .eq('nome_espetaculo', selectedPadrao).limit(1).maybeSingle();
       
       if (templateData && templateData.rider_som) {
         try {
@@ -139,16 +151,30 @@ function SomComponent() {
       }
     } else if (initMode === 'clonar' && selectedCloneId) {
       const { data: cloneData } = await supabase
-        .from('mapas_som').select('json_data').eq('apresentacao_id', selectedCloneId)
-        .single();
+        .from('mapas_som').select('json_data').eq('evento_id', selectedCloneId).limit(1).maybeSingle();
       if (cloneData && cloneData.json_data) {
         initialJsonData = cloneData.json_data;
       }
     }
 
+    let apId = evento.id;
+    const { data: apData } = await supabase.from('evento_apresentacoes').select('id').eq('evento_id', evento.id).limit(1).maybeSingle();
+    if (apData) {
+      apId = apData.id;
+    } else {
+      const { data: newAp } = await supabase.from('evento_apresentacoes').insert({
+        evento_id: evento.id,
+        data: evento.data || new Date().toISOString().split('T')[0],
+        horario: evento.horario || '12:00',
+        cidade: evento.cidade || 'Indefinida',
+        local: evento.local || 'Indefinido'
+      }).select('id').single();
+      if (newAp) apId = newAp.id;
+    }
+
     const { data, error } = await supabase.from('mapas_som').insert({
-      evento_id: (evento as any).evento_id || evento.id,
-      apresentacao_id: evento.id,
+      evento_id: evento.id,
+      apresentacao_id: apId,
       user_id: userData.user?.id,
       cidade: evento.cidade,
       data_apresentacao: evento.data,
@@ -230,67 +256,15 @@ function SomComponent() {
         </p>
       </div>
 
-      <Tabs defaultValue="eventos" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
-          <TabsTrigger value="eventos" className="rounded-lg h-full font-bold">Mapas de Som</TabsTrigger>
-          <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Rider Padrão</TabsTrigger>
-        </TabsList>
+      
+        
 
-        <TabsContent value="eventos" className="space-y-8 mt-8">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-slate-400" />
-            <Input 
-              placeholder="Buscar evento por cidade ou espetáculo..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-12 bg-white dark:bg-card border-slate-200 dark:border-white/10 rounded-xl"
-            />
-          </div>
+        
+            <GridEventos onSelect={handleGridSelect} />
+          
 
-          {loading ? (
-            <div className="flex justify-center p-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : proximos.length === 0 && realizados.length === 0 ? (
-            <div className="text-center py-20 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
-              <Mic2 className="size-16 mx-auto text-slate-200 dark:text-slate-700 mb-4" />
-              <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">Nenhum evento encontrado</h3>
-              <p className="text-slate-500 mt-2">Você não está escalado para nenhum evento no momento.</p>
-            </div>
-          ) : (
-            <div className="space-y-12">
-              {proximos.length > 0 ? (
-                <div>
-                  <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6">Próximos Eventos</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {proximos.map(renderEventoCard)}
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-10 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
-                  <p className="text-slate-500 font-medium">Nenhum evento futuro encontrado.</p>
-                </div>
-              )}
-              
-              {realizados.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-3 mb-6 opacity-70">
-                    <h3 className="text-xl font-bold tracking-tight text-slate-500 dark:text-slate-400">Eventos Realizados</h3>
-                    <div className="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-90">
-                    {realizados.map(renderEventoCard)}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="modelos" className="mt-0">
-          <TemplateRiderSomViewer role={role} />
-        </TabsContent>
-      </Tabs>
+        
+      
 
       <Dialog open={!!initDialogEvento} onOpenChange={(val) => { if (!val) setInitDialogEvento(null); }}>
         <DialogContent className="sm:max-w-md rounded-3xl">
@@ -335,8 +309,8 @@ function SomComponent() {
                       <SelectValue placeholder="Selecione um show já mapeado..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {eventos.filter(e => mapas.some(m => m.evento_id === e.id)).map(e => (
-                        <SelectItem key={e.id} value={e.id}>
+                      {eventos.filter(e => mapas.some(m => m.evento_id === (e.evento_id || e.id) || m.apresentacao_id === e.id)).map(e => (
+    <SelectItem key={e.evento_id || e.id} value={e.evento_id || e.id}>
                           {e.espetaculo} - {e.cidade} ({new Date(e.data + 'T12:00:00').toLocaleDateString('pt-BR')})
                         </SelectItem>
                       ))}

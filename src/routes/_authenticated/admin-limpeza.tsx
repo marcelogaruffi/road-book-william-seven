@@ -34,7 +34,7 @@ function AdminLimpeza() {
       const [ { data: t }, { data: e }, { data: tp }, { data: r } ] = await Promise.all([
         supabase.from('tours').select('logo_producao'),
         supabase.from('eventos').select('produtora_logo_url'),
-        supabase.from('templates_espetaculos').select('logo_espetaculo_url, logo_cia_url'),
+        supabase.from('templates_espetaculos').select('logo_espetaculo_url, logo_cia_url').neq('nome_espetaculo', 'ESTOQUE_GLOBAL'),
         supabase.from('roadbooks').select('logo_espetaculo_override, logo_cia_override, logo_producao_override')
       ]);
 

@@ -80,14 +80,14 @@ export function MalasTemplateTab() {
 
   async function loadTemplates() {
     setLoading(true);
-    const { data } = await supabase.from('templates_espetaculos').select('nome_espetaculo').order('nome_espetaculo');
+    const { data } = await supabase.from('templates_espetaculos').select('nome_espetaculo').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order('nome_espetaculo');
     if (data) setTemplates(data);
     setLoading(false);
   }
 
   async function handleEdit(t: {nome_espetaculo: string}) {
     setEditNome(t.nome_espetaculo);
-    const { data, error } = await supabase.from('templates_espetaculos').select('*').eq('nome_espetaculo', t.nome_espetaculo).single();
+    const { data, error } = await supabase.from('templates_espetaculos').select('*').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').eq('nome_espetaculo', t.nome_espetaculo).single();
     if (data) {
       setRawTemplate(data);
       const parsedVolumes = data.assets_midia?.malas_padrao || [];

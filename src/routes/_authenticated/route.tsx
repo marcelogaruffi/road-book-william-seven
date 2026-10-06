@@ -1,16 +1,13 @@
-import { createFileRoute, Outlet, redirect, Link, useNavigate } from "@tanstack/react-router";
+import { ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus } from "lucide-react";
+import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { 
-  ChevronLeft, ChevronRight, LayoutDashboard, Calendar, Lightbulb, Mic2, Route as RouteIcon, 
-  Ticket, Settings, Sun, Moon, LogOut, Wallet, UserPlus, ClipboardList, Banknote,
-  LayoutTemplate, Drama, DoorOpen, Video, Music, Bus, Newspaper, Smartphone, ShoppingCart, CheckSquare, PlusCircle, Play
-} from "lucide-react";
+import { LayoutDashboard, UserPlus, Calendar, Wallet, Route as RouteIcon, Bus, Contact, FileAudio, Music, Play, Lightbulb, Mic2, Newspaper, Settings, CheckSquare, Smartphone, Video, File } from "lucide-react";
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Contact2, Luggage, Image as ImageIcon, Megaphone } from "lucide-react";
+import { Users, Contact2, Luggage, Image as ImageIcon, Megaphone, Coffee } from "lucide-react";
 import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
 
 type Profile = {
@@ -72,6 +69,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthedLayout() {
+  const location = useLocation();
   const navigate = useNavigate();
   const { user, profile, realProfile, isSimulating } = Route.useRouteContext();
   const [sidebarOpen, setSidebarOpen] = useState(typeof window !== 'undefined' ? window.innerWidth >= 768 : true);
@@ -195,10 +193,16 @@ function AuthedLayout() {
           {(() => {
             const SLink = ({ to, icon: Icon, label, show=true }: any) => {
               if (!show) return null;
+              const isActive = location.pathname.startsWith(to);
               return (
-                <Link to={to} className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}>
-                  <Icon className={`size-4 ${sidebarOpen ? 'mr-3' : ''}`} />
-                  {sidebarOpen && <span>{label}</span>}
+                <Link 
+                  to={to} 
+                  ref={el => { if (isActive && el) { setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); } }}
+                  className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} 
+                  activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}
+                >
+                  <Icon className={`${sidebarOpen ? 'mr-3' : ''} size-4 shrink-0`} />
+                  {sidebarOpen && <span className="truncate">{label}</span>}
                 </Link>
               );
             };
@@ -251,13 +255,15 @@ function AuthedLayout() {
                 </SGroup>
 
                 <SGroup title="Artístico" icon={Drama}>
-                  <SLink to="/partituras" icon={Music} label="Partituras e Músicas" />
+                  <SLink to="/partituras" icon={Music} label="Partituras" />
+                  <SLink to="/musicas" icon={FileAudio} label="Músicas" />
                 </SGroup>
 
                 <SGroup title="Bastidores" icon={DoorOpen}>
                   <SLink to="/palco" icon={StageIcon} label="Montagem de Palco" />
                   <SLink to="/figurinos" icon={ClothesRackIcon} label="Figurinos" />
                   <SLink to="/camarins" icon={StarDoorIcon} label="Camarins" />
+                  <SLink to="/catering" icon={Coffee} label="Catering" />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" />
                 </SGroup>
 
@@ -276,6 +282,7 @@ function AuthedLayout() {
                 </SGroup>
 
                 <SGroup title="Controles e Gestão" icon={Banknote}>
+                  <SLink to="/emissao-relatorios" icon={File} label="Emissão de Relatórios" show={isProdutor} />
                   <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
                   <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
                   <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />

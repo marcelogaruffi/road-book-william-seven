@@ -13,11 +13,13 @@ import { toast } from "sonner";
 import { FileDown, FileSpreadsheet, Plus, Trash2, ChevronDown, Users, Pencil, Check, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from "recharts";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { ReportExportButton } from "@/components/ReportExportButton";
 
 export const Route = createFileRoute("/_authenticated/publico")({
   component: PublicoPage,
@@ -442,12 +444,7 @@ function PublicoPage() {
           </div>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
-          <Button onClick={exportExcel} variant="outline" className="flex-1 sm:flex-none h-11 rounded-xl font-bold bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400 transition-colors shadow-sm">
-            <FileSpreadsheet className="size-4 mr-2" /> Excel
-          </Button>
-          <Button onClick={exportPDF} variant="outline" className="flex-1 sm:flex-none h-11 rounded-xl font-bold bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 transition-colors shadow-sm">
-            <FileDown className="size-4 mr-2" /> PDF
-          </Button>
+          <ReportExportButton onExportPdf={exportPDF} onExportExcel={exportExcel} />
         </div>
       </div>
 

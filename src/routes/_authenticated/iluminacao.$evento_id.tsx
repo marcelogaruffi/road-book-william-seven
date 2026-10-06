@@ -1,4 +1,7 @@
+﻿import { getErrorMessage } from "@/lib/utils";
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import TemplateRidersTab from "@/components/TemplateRidersTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +21,8 @@ export const Route = createFileRoute('/_authenticated/iluminacao/$evento_id')({
 function MapaLuzForm() {
   const { evento_id } = Route.useParams();
   const navigate = useNavigate();
+  const { profile } = Route.useRouteContext();
+  const role = profile?.role || null;
   const [mapa, setMapa] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -64,7 +69,7 @@ function MapaLuzForm() {
   const loadData = async () => {
     setLoading(true);
     const [mapaRes, evRes] = await Promise.all([
-      supabase.from('mapas_luz').select('*').eq('apresentacao_id', evento_id).single(),
+      supabase.from('mapas_luz').select('*').eq('evento_id', evento_id).single(),
       supabase.from('evento_apresentacoes').select('id, data, horario, eventos(cidade, espetaculo)').eq('id', evento_id).single()
     ]);
     if (mapaRes.data) {
@@ -88,7 +93,8 @@ function MapaLuzForm() {
       toast.error('Erro ao salvar mapa');
     } else {
       toast.success('Mapa de luz salvo com sucesso!');
-    }
+      navigate({ to: '/iluminacao' });
+      }
   };
 
   if (loading) {
@@ -102,8 +108,9 @@ function MapaLuzForm() {
   const jd = mapa.json_data || {};
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-20">
-      <div className="flex items-center gap-4">
+    <>
+      <div className="w-full px-2 md:px-6 max-w-6xl mx-auto mb-6 mt-4">
+<div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/iluminacao' })} className="rounded-full">
           <ArrowLeft className="size-5" />
         </Button>
@@ -112,6 +119,15 @@ function MapaLuzForm() {
           <p className="text-slate-500 font-medium">Preencha as configurações técnicas do espetáculo</p>
         </div>
       </div>
+      </div>
+      <Tabs defaultValue="evento" className="w-full px-2 md:px-6 py-6 max-w-6xl mx-auto">
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1 mb-6 mx-auto">
+          <TabsTrigger value="evento" className="rounded-lg h-full font-bold">Mapa do Evento</TabsTrigger>
+          <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Modelos (Padrão)</TabsTrigger>
+        </TabsList>
+        <TabsContent value="evento" className="mt-0">
+          <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      
 
       <Card className="border-0 shadow-lg dark:bg-card/80 overflow-hidden rounded-3xl">
         <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white">
@@ -343,5 +359,12 @@ function MapaLuzForm() {
         </CardContent>
       </Card>
     </div>
+  
+        </TabsContent>
+        <TabsContent value="modelos" className="mt-0">
+          <TemplateRidersTab role={role} context="luz" />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }

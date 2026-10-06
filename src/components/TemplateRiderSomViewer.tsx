@@ -16,7 +16,7 @@ export default function TemplateRiderSomViewer({ role }: { role?: string }) {
 
   async function loadTemplates() {
     setLoading(true);
-    const { data, error } = await supabase.from('templates_espetaculos').select('*').order('nome_espetaculo');
+    const { data, error } = await supabase.from('templates_espetaculos').select('*').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order('nome_espetaculo');
     if (!error && data) {
       setTemplates(data);
     }

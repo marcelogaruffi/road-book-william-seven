@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ShieldAlert, Search, Phone, User as UserIcon, MapPin, Briefcase, Download, Mail, Plus, Trash2, Users, FileText } from "lucide-react";
 import { RoadbookData } from "@/lib/roadbook-types";
 import { Button } from "@/components/ui/button";
+import { ReportExportButton } from "@/components/ReportExportButton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,8 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 
 type ContactRow = {
   id: string; // just a unique key
@@ -354,7 +356,6 @@ function ContatosPage() {
       doc.setFontSize(11);
       doc.setTextColor(100, 116, 139); // slate-500
       doc.setFont("helvetica", "normal");
-      doc.text("Seven Produções Artísticas", 14, 28);
       
       doc.setDrawColor(226, 232, 240); // slate-200
       doc.line(14, 32, doc.internal.pageSize.getWidth() - 14, 32);
@@ -496,14 +497,7 @@ function ContatosPage() {
         
         {isManagement && (
           <div className="flex gap-2 w-full sm:w-auto">
-             <Button onClick={exportExcel} variant="outline" className="flex-1 sm:flex-none h-11 rounded-xl font-bold bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400 transition-colors shadow-sm">
-                <Download className="mr-2 size-4" />
-                Excel
-             </Button>
-             <Button onClick={exportPDF} variant="outline" className="flex-1 sm:flex-none h-11 rounded-xl font-bold bg-rose-50 text-rose-600 border-rose-200 hover:bg-rose-100 dark:bg-rose-900/20 dark:border-rose-800 dark:text-rose-400 transition-colors shadow-sm">
-                <FileText className="mr-2 size-4" />
-                PDF
-             </Button>
+             <ReportExportButton onExportPdf={exportPDF} onExportExcel={exportExcel} />
           </div>
         )}
       </div>

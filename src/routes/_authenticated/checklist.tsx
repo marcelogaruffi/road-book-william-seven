@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
+import { GridEventos } from "@/components/GridEventos";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,7 +117,7 @@ function ChecklistPage() {
       const [padraoRes, evtRes, espRes] = await Promise.all([
         supabase.from("checklist_padrao").select("*").order("ordem", { ascending: true }).order("created_at", { ascending: true }),
         supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo, equipe)").order("data", { ascending: false }),
-        supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo", { ascending: true })
+        supabase.from('templates_espetaculos').select("nome_espetaculo").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order("nome_espetaculo", { ascending: true })
       ]);
 
       if (padraoRes.data) setItensPadrao(padraoRes.data);
@@ -399,24 +400,13 @@ function ChecklistPage() {
         </TabsList>
 
         <TabsContent value="conferencia" className="mt-6 space-y-6">
-          <Card>
+        {!selectedEventoId ? (
+          <GridEventos onSelect={setSelectedEventoId} />
+        ) : (
+        <Card>
             <CardHeader className="bg-slate-50 dark:bg-slate-800/50">
               <div className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-2 w-full">
-                  <Label>Selecione o Evento para conferência</Label>
-                  <select 
-                    value={selectedEventoId} 
-                    onChange={e => setSelectedEventoId(e.target.value)} 
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors focus:ring-2 focus:ring-primary/50"
-                  >
-                    <option value="">Selecione um evento...</option>
-                    {eventos.map(evt => (
-                      <option key={evt.id} value={evt.id}>
-                        {evt.cidade} - {evt.local} ({new Date(evt.data).toLocaleDateString('pt-BR', {timeZone: 'UTC'})})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                
               </div>
             </CardHeader>
             <CardContent className="pt-6">
@@ -575,6 +565,7 @@ function ChecklistPage() {
               )}
             </CardContent>
           </Card>
+        )}
         </TabsContent>
 
         <TabsContent value="configuracao" className="mt-6 space-y-6">

@@ -1,4 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import TemplateCuesTab from "@/components/som-operacao/TemplateCuesTab";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -17,6 +19,8 @@ export const Route = createFileRoute('/_authenticated/som-operacao/$evento_id')(
 function SomOperacaoScreen() {
   const { evento_id } = Route.useParams();
   const navigate = useNavigate();
+  const { profile } = Route.useRouteContext();
+  const role = profile?.role || null;
   const [mapa, setMapa] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -181,6 +185,7 @@ function SomOperacaoScreen() {
       const jd = mapa?.json_data || {};
       await saveCues(jd.cues_lista || []);
       toast.success('Deixas salvas com sucesso!');
+        navigate({ to: '/som-operacao' });
     } catch (error) {
       toast.error('Erro ao salvar');
     }
@@ -550,8 +555,9 @@ function SomOperacaoScreen() {
   // MODO EDIÇÃO (TELA CLARA/PADRÃO)
   // ---------------------------------------------------------------------------
   return (
-    <div className="max-w-6xl mx-auto space-y-6 pb-20">
-      <div className="flex items-center justify-between">
+    <>
+      <div className="w-full px-2 md:px-6 max-w-6xl mx-auto mb-6 mt-4">
+<div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/som-operacao' })} className="rounded-full">
             <ArrowLeft className="size-5" />
@@ -565,6 +571,15 @@ function SomOperacaoScreen() {
           <Play className="size-5 mr-3 group-hover:scale-110 transition-transform" /> Iniciar Operação
         </Button>
       </div>
+      </div>
+      <Tabs defaultValue="evento" className="w-full px-2 md:px-6 py-6 max-w-6xl mx-auto">
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1 mb-6 mx-auto">
+          <TabsTrigger value="evento" className="rounded-lg h-full font-bold">Mapa do Evento</TabsTrigger>
+          <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Modelos (Padrão)</TabsTrigger>
+        </TabsList>
+        <TabsContent value="evento" className="mt-0">
+          <div className="max-w-6xl mx-auto space-y-6 pb-20">
+      
 
       <Card className="border-0 shadow-lg dark:bg-card/80 overflow-hidden rounded-3xl">
         <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 text-white flex items-center justify-between">
@@ -673,5 +688,12 @@ function SomOperacaoScreen() {
         </CardContent>
       </Card>
     </div>
+  
+        </TabsContent>
+        <TabsContent value="modelos" className="mt-0">
+          <TemplateCuesTab role={role} />
+        </TabsContent>
+      </Tabs>
+    </>
   );
 }

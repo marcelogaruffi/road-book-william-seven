@@ -1,3 +1,4 @@
+﻿import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -115,7 +116,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
         supabase.from("tours").select("id,nome").order("nome"),
         supabase.from("eventos").select("id,espetaculo,cidade,data,data_inicio,data_fim,local,horario,turne_id,produtora_logo_url").order("data", { ascending: false }),
         supabase.from("roadbooks").select("evento_id").not("evento_id", "is", null),
-        supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo")
+        supabase.from('templates_espetaculos').select("nome_espetaculo").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order("nome_espetaculo")
       ]);
       setTours((toursRes.data as TourOpt[]) ?? []);
       if (espRes.data) setEspetaculosList(espRes.data.map(d => d.nome_espetaculo));

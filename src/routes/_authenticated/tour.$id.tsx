@@ -37,7 +37,7 @@ function EditTour() {
     const [{ data: t }, { data: c }, { data: e }] = await Promise.all([
       supabase.from("tours").select("id,slug,nome,espetaculo,producao,exibir_logo_espetaculo,exibir_logo_cia,exibir_logo_producao").eq("id", id).maybeSingle(),
       supabase.from("roadbooks").select("id,slug,espetaculo,cidade,estado,data_inicial,data_final").eq("tour_id", id).order("data_inicial", { ascending: true, nullsFirst: false }),
-      supabase.from("templates_espetaculos").select("nome_espetaculo"),
+      supabase.from('templates_espetaculos').select("nome_espetaculo").neq('nome_espetaculo', 'ESTOQUE_GLOBAL'),
     ]);
     if (!t) { toast.error("Turnê não encontrada"); return; }
     setTour(t as Tour);

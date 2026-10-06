@@ -43,7 +43,7 @@ export default function FotosPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: espData } = await supabase.from('templates_espetaculos').select('nome_espetaculo');
+      const { data: espData } = await supabase.from('templates_espetaculos').select('nome_espetaculo').neq('nome_espetaculo', 'ESTOQUE_GLOBAL');
       const { data: eventData } = await supabase.from('eventos').select('id, espetaculo, cidade, local, data').order('data', { ascending: false });
       
       let names = new Set<string>();

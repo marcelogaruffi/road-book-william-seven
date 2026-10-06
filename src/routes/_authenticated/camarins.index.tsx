@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { GridEventos } from "@/components/GridEventos";
+import { ReportExportButton } from "@/components/ReportExportButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -15,7 +17,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
 export const Route = createFileRoute("/_authenticated/camarins/")({
-  head: () => ({ meta: [{ title: "Camarins & Catering - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Camarins - Seven Produções Artísticas" }] }),
   component: CamarinsPage,
 });
 
@@ -50,7 +52,7 @@ type ProfileData = {
 
 function CamarinsPage() {
   const [activeTab, setActiveTab] = useState("evento");
-  const [selectedTipo, setSelectedTipo] = useState<"lista" | "conferencia" | "catering">("lista");
+  const [selectedTipo, setSelectedTipo] = useState<"lista" | "conferencia" >("lista");
   
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [apresentacoes, setApresentacoes] = useState<any[]>([]);
@@ -114,7 +116,7 @@ function CamarinsPage() {
     if (selectedEventoId && activeTab === 'evento') {
       fetchItensEvento(selectedEventoId);
       fetchOcupantes(selectedEventoId, null);
-      const apr = apresentacoes.find(e => e.id === selectedEventoId);
+      const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
       if (evt) {
         setSelectedShowImport(evt.espetaculo);
@@ -140,7 +142,7 @@ function CamarinsPage() {
 
   async function fetchOcupantes(eventoId: string | null, espetaculoNome: string | null) {
     let query = supabase.from("camarins_ocupantes").select("*");
-    if (eventoId) query = query.eq("apresentacao_id", eventoId);
+    if (eventoId) query = query.eq("evento_id", eventoId);
     else if (espetaculoNome) query = query.eq("espetaculo_nome", espetaculoNome);
     const { data } = await query;
     setOcupantes(data as CamarimOcupante[] || []);
@@ -184,7 +186,7 @@ function CamarinsPage() {
   }
 
   async function fetchItensEvento(eventoId: string) {
-    const { data } = await supabase.from("camarins_eventos").select("*").eq("apresentacao_id", eventoId).order("ordem", { ascending: true });
+    const { data } = await supabase.from("camarins_eventos").select("*").eq("evento_id", eventoId).order("ordem", { ascending: true });
     setItensEvento(data as CamarimEvento[] || []);
   }
 
@@ -242,7 +244,7 @@ function CamarinsPage() {
         if (error) throw error;
         setItensPadrao([...itensPadrao, data as CamarimPadrao]);
       } else {
-        const { data, error } = await supabase.from("camarins_eventos").insert({ ...itemData, evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, ordem: itensEvento.length, concluido: false }).select().single();
+        const { data, error } = await supabase.from("camarins_eventos").insert({ ...itemData, evento_id: selectedEventoId, apresentacao_id: (apresentacoes.find(a => a.evento_id === selectedEventoId)?.id || null), ordem: itensEvento.length, concluido: false }).select().single();
         if (error) throw error;
         setItensEvento([...itensEvento, data as CamarimEvento]);
       }
@@ -345,7 +347,7 @@ function CamarinsPage() {
     try {
       const { data: padrao } = await supabase.from("camarins_padrao").select("*").eq("espetaculo_nome", selectedShowImport);
       const itemsParaInserir = (padrao || []).filter(p => !itensEvento.some(fe => fe.camarim === p.camarim && fe.item === p.item)).map(item => ({ 
-        evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, camarim: item.camarim, item: item.item, quantidade: item.quantidade, 
+        evento_id: selectedEventoId, apresentacao_id: (apresentacoes.find(a => a.evento_id === selectedEventoId)?.id || null), camarim: item.camarim, item: item.item, quantidade: item.quantidade, 
         observacao: item.observacao, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false 
       }));
       if (itemsParaInserir.length > 0) {
@@ -359,7 +361,7 @@ function CamarinsPage() {
         const ocupantesParaInserir = ocupantesPadrao
           .filter(p => !ocupantes.some(o => o.camarim_nome === p.camarim_nome))
           .map(p => ({
-            evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
+            evento_id: selectedEventoId, apresentacao_id: (apresentacoes.find(a => a.evento_id === selectedEventoId)?.id || null),
             camarim_nome: p.camarim_nome,
             ocupantes: p.ocupantes
           }));
@@ -421,7 +423,7 @@ function CamarinsPage() {
 
   const exportPlacasPDF = async () => {
     const doc = new jsPDF("portrait");
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     
     let starBase64 = "";
@@ -508,7 +510,7 @@ function CamarinsPage() {
   }, [currentList, emptyCamarins]);
 
   const exportCateringExcel = async () => {
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Catering');
@@ -561,7 +563,7 @@ function CamarinsPage() {
   };
 
   const exportCateringPDF = async () => {
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     const doc = new jsPDF("portrait");
     
@@ -619,7 +621,7 @@ function CamarinsPage() {
   };
 
   const exportToExcel = async () => {
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     const workbook = new ExcelJS.Workbook();
     
@@ -699,7 +701,7 @@ function CamarinsPage() {
   };
 
   const exportToPDF = async () => {
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     const doc = new jsPDF("portrait");
     
@@ -770,14 +772,14 @@ function CamarinsPage() {
   const progresso = itensEvento.length > 0 ? Math.round((concluidosCount / itensEvento.length) * 100) : 0;
 
   return (
-    <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500 max-w-7xl mx-auto p-4 md:p-8 pt-6 mb-16 md:mb-0">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
             <DoorOpen className="size-8 text-primary" />
-            Camarins & Catering
+            Camarins
           </h1>
-          <p className="text-slate-500 mt-1">Gerencie os espaços, pedidos de camarim e restrições alimentares.</p>
+          <p className="text-slate-500 text-lg max-w-3xl">Gerencie os espaços e pedidos de camarim.</p>
         </div>
       </div>
 
@@ -788,37 +790,41 @@ function CamarinsPage() {
         <button onClick={() => setSelectedTipo("conferencia")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "conferencia" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
           <CheckCircle2 className="size-5" /> Check-list de Montagem
         </button>
-        {activeTab === 'evento' && (
-          <button onClick={() => setSelectedTipo("catering")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "catering" ? "bg-amber-100 text-amber-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
-            <Utensils className="size-5" /> Catering / Restrições
-          </button>
-        )}
+        
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {((activeTab === "evento" && selectedEventoId) || activeTab !== "evento") && (
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="evento" className="flex items-center gap-2"><MapPin className="size-4" /> Evento Atual</TabsTrigger>
           <TabsTrigger value="configuracao" className="flex items-center gap-2"><File className="size-4" /> Configuração Padrão</TabsTrigger>
         </TabsList>
+        )}
 
+        {activeTab === "evento" && !selectedEventoId ? (
+          <div className="mt-6">
+            <GridEventos onSelect={(id) => setSelectedEventoId(id)} />
+          </div>
+        ) : (
         <Card className="mt-6">
           <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b">
             <div className="flex flex-col sm:flex-row gap-4 items-end">
               <div className="flex-1 space-y-2 w-full">
-                <Label>{activeTab === 'evento' ? 'Selecione o Evento' : 'Selecione o Show Padrão'}</Label>
-                {activeTab === 'evento' ? (
-                  <select value={selectedEventoId} onChange={e => setSelectedEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="">Selecione um evento...</option>
-                    {apresentacoes.map(apr => <option key={apr.id} value={apr.id}>{apr.eventos?.cidade} - {apr.local || apr.eventos?.local} ({new Date(apr.data + "T12:00:00Z").toLocaleDateString("pt-BR")} às {apr.horario})</option>)}
-                  </select>
+                {activeTab === "evento" ? (
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-slate-500">Evento Selecionado</Label>
+                    <Button variant="outline" onClick={() => setSelectedEventoId("")} className="w-fit">&larr; Voltar para Grade de Eventos</Button>
+                  </div>
                 ) : (
-                  <select value={selectedEspetaculoPadrao} onChange={e => setSelectedEspetaculoPadrao(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                    <option value="">Selecione um show...</option>
-                    {espetaculosList.map(esp => <option key={esp} value={esp}>{esp}</option>)}
-                  </select>
+                  <>
+                    <Label>Selecione o Show Padr�o</Label>
+                    <select value={selectedEspetaculoPadrao} onChange={e => setSelectedEspetaculoPadrao(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                      <option value="">Selecione um show...</option>
+                      {espetaculosList.map(esp => <option key={esp} value={esp}>{esp}</option>)}
+                    </select>
+                  </>
                 )}
               </div>
-              
               {/* Botões de Ação Dinâmicos por Tipo */}
               <div className="shrink-0 flex gap-2">
                 {((activeTab === 'evento' && selectedEventoId) || (activeTab === 'configuracao' && selectedEspetaculoPadrao)) && (
@@ -827,8 +833,8 @@ function CamarinsPage() {
                       <>
                         <Button onClick={() => setNovoCamarimModalOpen(true)} className="gap-2 bg-primary"><Plus className="size-4" /> Novo Camarim</Button>
                         <Button onClick={exportPlacasPDF} variant="secondary" className="gap-2 bg-amber-100 text-amber-800 hover:bg-amber-200"><Star className="size-4" /> Placas (PDF)</Button>
-                        <Button onClick={exportToPDF} variant="secondary" className="gap-2"><FileText className="size-4" /> PDF</Button>
-                        <Button onClick={exportToExcel} variant="secondary" className="gap-2 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"><FileSpreadsheet className="size-4" /> Excel</Button>
+                        <ReportExportButton onExportPdf={exportToPDF} onExportExcel={exportToExcel} />
+                        
                         {activeTab === 'evento' && selectedEventoId && (
                           <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
                             <DialogTrigger asChild><Button disabled={loading} variant="outline" className="gap-2"><Download className="size-4" /> Importar Padrão</Button></DialogTrigger>
@@ -849,12 +855,7 @@ function CamarinsPage() {
                         )}
                       </>
                     )}
-                    {selectedTipo === 'catering' && activeTab === 'evento' && selectedEventoId && (
-                      <>
-                        <Button onClick={exportCateringPDF} variant="secondary" className="gap-2"><FileText className="size-4" /> PDF Catering</Button>
-                        <Button onClick={exportCateringExcel} variant="secondary" className="gap-2 bg-emerald-100 text-emerald-800 hover:bg-emerald-200"><FileSpreadsheet className="size-4" /> Excel Catering</Button>
-                      </>
-                    )}
+                    
                   </>
                 )}
               </div>
@@ -862,9 +863,9 @@ function CamarinsPage() {
           </CardHeader>
 
           <CardContent className="pt-6">
-            {((activeTab === 'evento' && !selectedEventoId) || (activeTab === 'configuracao' && !selectedEspetaculoPadrao)) ? (
+            {((activeTab === 'configuracao' && !selectedEspetaculoPadrao)) ? (
               <div className="text-center py-12 text-slate-400 flex flex-col items-center">
-                <DoorOpen className="size-12 mb-4 opacity-50" />
+                  <p>Selecione um show acima para gerenciar.</p>
                 <p>Selecione um {activeTab === 'evento' ? 'evento' : 'show'} acima para gerenciar.</p>
               </div>
             ) : (
@@ -943,49 +944,7 @@ function CamarinsPage() {
                   </div>
                 )}
 
-                {/* TAB: CATERING (Apenas Evento) */}
-                {selectedTipo === 'catering' && activeTab === 'evento' && (
-                  <div className="space-y-6">
-                    <div className="bg-amber-50 dark:bg-amber-500/10 border-amber-200 p-6 rounded-2xl flex items-start gap-4">
-                      <div className="bg-amber-100 p-3 rounded-full text-amber-600 mt-1"><Utensils className="size-6" /></div>
-                      <div>
-                        <h3 className="text-xl font-bold text-amber-900 dark:text-amber-500">Relatório de Catering</h3>
-                        <p className="text-amber-700/80 mt-1 max-w-2xl text-sm">Lista de restrições alimentares da equipe escalada para este evento. As informações são puxadas diretamente do perfil de cada usuário.</p>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-white border rounded-2xl overflow-hidden shadow-sm">
-                      <table className="w-full text-sm text-left">
-                        <thead className="bg-slate-50 text-slate-500 font-semibold uppercase text-xs">
-                          <tr>
-                            <th className="px-6 py-4">Integrante</th>
-                            <th className="px-6 py-4">Função</th>
-                            <th className="px-6 py-4">Restrição Alimentar</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {equipePerfis.length === 0 ? (
-                            <tr><td colSpan={3} className="px-6 py-12 text-center text-slate-500">Nenhum membro escalado para este evento ou erro ao carregar.</td></tr>
-                          ) : (
-                            equipePerfis.map(p => (
-                              <tr key={p.id} className="hover:bg-slate-50/50">
-                                <td className="px-6 py-4 font-bold text-slate-800">{p.nome}</td>
-                                <td className="px-6 py-4"><span className="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs uppercase font-medium">{p.role}</span></td>
-                                <td className="px-6 py-4">
-                                  {p.restricao_alimentar ? (
-                                    <span className="text-amber-700 font-medium flex items-center gap-2"><AlertCircle className="size-4" /> {p.restricao_alimentar}</span>
-                                  ) : (
-                                    <span className="text-slate-400 italic">Nenhuma registrada</span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
+                
 
                 {/* TAB: CONFERÊNCIA */}
                 {selectedTipo === 'conferencia' && (
@@ -1031,6 +990,7 @@ function CamarinsPage() {
             )}
           </CardContent>
         </Card>
+        )}
       </Tabs>
 
       {/* MODAL: NOVO CAMARIM */}

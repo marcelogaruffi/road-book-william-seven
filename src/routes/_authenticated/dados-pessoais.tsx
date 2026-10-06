@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Search, Users } from "lucide-react";
 import { format } from "date-fns";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 
 export const Route = createFileRoute("/_authenticated/dados-pessoais")({
   head: () => ({ meta: [{ title: "Dados Pessoais - Seven Produções Artísticas" }] }),

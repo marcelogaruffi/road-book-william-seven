@@ -58,7 +58,7 @@ function NovoProjetoWizard() {
 
   async function loadInitials() {
     const [tRes, pRes] = await Promise.all([
-      supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo"),
+      supabase.from('templates_espetaculos').select("nome_espetaculo").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order("nome_espetaculo"),
       supabase.from("profiles").select("id, nome, role").order("nome")
     ]);
     if (tRes.data) setTemplates(tRes.data.map(t => t.nome_espetaculo));

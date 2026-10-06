@@ -1,5 +1,7 @@
+﻿import { getErrorMessage } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { GridEventos } from "@/components/GridEventos";
 import { supabase } from "@/integrations/supabase/client";
 import { FinanceiroTab } from "@/components/FinanceiroTab";
 import { CachesEquipeTab } from "@/components/CachesEquipeTab";
@@ -67,22 +69,11 @@ function FinanceiroPage() {
         </TabsList>
 
         <TabsContent value="eventos" className="mt-0">
+            {!selectedRoadbook ? (
+              <div className="mt-4"><GridEventos onSelect={(eId, rId) => { if (rId) setSelectedRoadbook(rId); else toast.info("Este evento ainda nÃ£o possui um Guia de Viagem (Roadbook). Crie-o primeiro para acessar o financeiro."); }} /></div>
+            ) : (
           <div className="bg-white dark:bg-card/50 p-6 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm space-y-4">
-            <div className="max-w-md space-y-2">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Escolha o Evento</Label>
-              <Select value={selectedRoadbook} onValueChange={setSelectedRoadbook}>
-                <SelectTrigger className="h-12 bg-slate-50 dark:bg-slate-900">
-                  <SelectValue placeholder="Selecione um evento..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {roadbooks.map(r => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.cidade} - {r.espetaculo} {r.data_inicial ? `(${r.data_inicial})` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <div className="flex items-center justify-start mb-4"><Button variant="outline" onClick={() => setSelectedRoadbook("")}>← Voltar para Grade</Button></div>
 
             {selectedRoadbook ? (
               <div className="pt-6 border-t border-slate-100 dark:border-white/5 mt-6">
@@ -109,6 +100,7 @@ function FinanceiroPage() {
               </div>
             )}
           </div>
+            )}
         </TabsContent>
 
         <TabsContent value="caches_padrao" className="mt-0">

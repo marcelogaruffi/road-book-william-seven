@@ -1,6 +1,12 @@
-import { createFileRoute } from "@tanstack/react-router";
+﻿import { createFileRoute } from "@tanstack/react-router";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import ExcelJS from "exceljs";
+import pkg from "file-saver";
+const { saveAs } = pkg;
+import { ReportExportButton } from "@/components/ReportExportButton";
 import { Route as AuthedRoute } from "./route";
-import { Newspaper, Mail, Plus, Trash2, Search, Link as LinkIcon, ExternalLink, Filter, Star, Info, CheckCircle2, BarChart } from "lucide-react";
+import { Newspaper, Mail, Plus, Trash2, Search, Link as LinkIcon, ExternalLink, Filter, Star, Info, CheckCircle2, BarChart, Printer } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useEffect } from "react";
@@ -52,7 +58,7 @@ export default function ImprensaPage() {
     const [mailingRes, clippingRes, espRes] = await Promise.all([
       supabase.from('imprensa_mailing').select('*').order('nome'),
       supabase.from('imprensa_clipping').select('*').order('data_publicacao', { ascending: false }),
-      supabase.from('templates_espetaculos').select('nome_espetaculo')
+      supabase.from('templates_espetaculos').select('nome_espetaculo').neq('nome_espetaculo', 'ESTOQUE_GLOBAL')
     ]);
 
     if (mailingRes.data) setMailing(mailingRes.data);
@@ -212,6 +218,310 @@ export default function ImprensaPage() {
 
   if (!isAllowed) return <div className="p-8 text-center text-red-500 font-medium">Acesso negado.</div>;
 
+  
+  const fetchLogo = async () => {
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      return await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => resolve(reader.result as string);
+      });
+    } catch(e) { return null; }
+  };
+
+  const printMailing = async () => {
+    if (filteredMailing.length === 0) return toast.error('Nenhum contato para imprimir');
+    
+    toast.info("Gerando relatório, aguarde...");
+    const doc = new jsPDF();
+    let startY = 20;
+    
+    const logoBase64 = await fetchLogo();
+    if (logoBase64) {
+      const imgWidth = 40;
+      const imgHeight = 40; // Approx or we can just use 40x20
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const x = (pageWidth - imgWidth) / 2;
+      const logoProps = doc.getImageProperties(logoBase64);
+      const logoH = (imgWidth * logoProps.height) / logoProps.width;
+      doc.addImage(logoBase64, 'PNG', x, 10, imgWidth, logoH);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Relatório de Mailing", pageWidth / 2, 10 + logoH + 8, { align: 'center' });
+      startY = 10 + logoH + 15;
+    } else {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Relatório de Mailing", pageWidth / 2, 15, { align: 'center' });
+    }
+    
+    autoTable(doc, {
+      startY: startY,
+      head: [['Veículo', 'Nome do Contato', 'Tipo de Mídia', 'Email', 'Telefone']],
+      body: filteredMailing.map(m => [
+        m.veiculo || '-',
+        m.nome || '-',
+        m.tipo_midia || '-',
+        m.email || '-',
+        m.telefone || '-'
+      ]),
+      theme: 'grid',
+      styles: { fontSize: 8, cellPadding: 3, textColor: [51, 65, 85], lineColor: [226, 232, 240] },
+      headStyles: { fillColor: [241, 245, 249], textColor: [15, 23, 42] }
+    });
+    
+    doc.save('mailing_imprensa.pdf');
+    toast.dismiss();
+  };
+
+  const printClipping = async () => {
+    const listToPrint = clippingTags.length > 0 ? clipping.filter(c => clippingTags.includes(c.espetaculo)) : clipping;
+    if (listToPrint.length === 0) return toast.error('Nenhum clipping para imprimir');
+    
+    toast.info("Gerando relatório, aguarde...");
+    const doc = new jsPDF();
+    
+    let y = 20;
+    const logoBase64 = await fetchLogo();
+    if (logoBase64) {
+      const imgWidth = 40;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const x = (pageWidth - imgWidth) / 2;
+      const logoProps = doc.getImageProperties(logoBase64);
+      const logoH = (imgWidth * logoProps.height) / logoProps.width;
+      doc.addImage(logoBase64, 'PNG', x, 10, imgWidth, logoH);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Relatório de Clipping", pageWidth / 2, 10 + logoH + 8, { align: 'center' });
+      y = 10 + logoH + 15;
+    } else {
+      const pageWidth = doc.internal.pageSize.getWidth();
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Relatório de Clipping", pageWidth / 2, 15, { align: 'center' });
+      y = 30;
+    }
+    
+    listToPrint.forEach((clip, index) => {
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.text(clip.espetaculo, 14, y);
+      y += 6;
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Veículo: ${clip.veiculo}`, 14, y);
+      y += 5;
+      doc.text(`Matéria: ${clip.titulo_materia || '-'}`, 14, y);
+      y += 5;
+      doc.text(`Data: ${new Date(clip.data_publicacao + 'T12:00:00').toLocaleDateString('pt-BR')} | Sentimento: ${clip.sentimento.toUpperCase()}`, 14, y);
+      y += 5;
+      
+      if (clip.link_materia) {
+        doc.text('Link da Matéria: ', 14, y);
+        doc.setTextColor(37, 99, 235); // blue-600
+        const textWidth = doc.getTextWidth('Link da Matéria: ');
+        doc.textWithLink(clip.link_materia.substring(0, 70) + (clip.link_materia.length > 70 ? '...' : ''), 14 + textWidth, y, { url: clip.link_materia });
+        doc.setTextColor(0, 0, 0);
+        y += 5;
+      }
+      
+      
+      if (clip.relevancia_tier) {
+        doc.text(`Relevância: Geo ${clip.relevancia_geo}/5 | Público ${clip.relevancia_publico}/5 | Autoridade ${clip.relevancia_autoridade}/5 | CTA ${clip.relevancia_cta}/5`, 14, y);
+        y += 5;
+        doc.setFont("helvetica", "bold");
+        doc.text(`Score: ${clip.relevancia_score} - ${clip.relevancia_tier}`, 14, y);
+        doc.setFont("helvetica", "normal");
+        y += 5;
+      } else {
+        doc.setTextColor(148, 163, 184);
+        doc.text('Relevância: não avaliada', 14, y);
+        doc.setTextColor(0, 0, 0);
+        y += 5;
+      }
+      if (clip.tags && clip.tags.length > 0) {
+        doc.text(`Tags: ${clip.tags.join(', ')}`, 14, y);
+        y += 5;
+      }
+
+      
+      y += 6;
+      doc.setDrawColor(226, 232, 240); // slate-200
+      doc.line(14, y - 4, 196, y - 4);
+    });
+    
+    doc.save('clipping_resultados.pdf');
+    toast.dismiss();
+  };
+
+
+  
+  
+  const exportMailingExcel = async () => {
+    if (filteredMailing.length === 0) return toast.error('Nenhum contato para exportar');
+    
+    toast.info("Gerando Excel, aguarde...");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Mailing");
+    
+    let logoBase64: string | undefined;
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      logoBase64 = await new Promise<string>((resolve) => { const reader = new FileReader(); reader.readAsDataURL(blob); reader.onloadend = () => resolve(reader.result as string);
+      });
+    } catch (e) { }
+
+    let imgHeightExcel = 70;
+    const imgWidthExcel = 140;
+    if (logoBase64) {
+      const img = new Image();
+      img.src = logoBase64;
+      await new Promise((res) => { img.onload = res; });
+      imgHeightExcel = (img.naturalHeight / img.naturalWidth) * imgWidthExcel;
+    }
+
+    worksheet.getColumn(1).width = 25;
+    worksheet.getColumn(2).width = 30;
+    worksheet.getColumn(3).width = 20;
+    worksheet.getColumn(4).width = 30;
+    worksheet.getColumn(5).width = 20;
+
+    const headerRowNumber = logoBase64 ? 6 : 1;
+    
+    if (logoBase64) {
+      const imageId = workbook.addImage({ base64: logoBase64, extension: 'png' });
+      worksheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: imgWidthExcel, height: imgHeightExcel } });
+      worksheet.mergeCells('D1:E4');
+      const titleCell = worksheet.getCell('D1');
+      titleCell.value = 'Relatório de Mailing';
+      titleCell.font = { size: 16, bold: true, color: { argb: "FF0f172a" } };
+      titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+    }
+
+    const headerRow = worksheet.getRow(headerRowNumber);
+    headerRow.values = ['Veículo', 'Nome do Contato', 'Tipo de Mídia', 'Email', 'Telefone'];
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FF0F172A' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = { top: {style:'thin', color: {argb:'FFE2E8F0'}}, bottom: {style:'thin', color: {argb:'FFE2E8F0'}}, left: {style:'thin', color: {argb:'FFE2E8F0'}}, right: {style:'thin', color: {argb:'FFE2E8F0'}} };
+    });
+
+    let currentRow = headerRowNumber + 1;
+    filteredMailing.forEach(m => {
+      const row = worksheet.getRow(currentRow);
+      row.values = [m.veiculo || '-', m.nome || '-', m.tipo_midia || '-', m.email || '-', m.telefone || '-'];
+      row.eachCell((cell) => {
+        cell.font = { color: { argb: 'FF334155' } };
+        cell.border = { top: {style:'thin', color: {argb:'FFE2E8F0'}}, bottom: {style:'thin', color: {argb:'FFE2E8F0'}}, left: {style:'thin', color: {argb:'FFE2E8F0'}}, right: {style:'thin', color: {argb:'FFE2E8F0'}} };
+        cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true };
+      });
+      currentRow++;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), "mailing_imprensa.xlsx");
+    toast.dismiss();
+  };
+
+  const exportClippingExcel = async () => {
+    const listToPrint = clippingTags.length > 0 ? clipping.filter(c => clippingTags.includes(c.espetaculo)) : clipping;
+    if (listToPrint.length === 0) return toast.error('Nenhum clipping para exportar');
+    
+    toast.info("Gerando Excel, aguarde...");
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Clipping");
+    
+    let logoBase64: string | undefined;
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      logoBase64 = await new Promise<string>((resolve) => { const reader = new FileReader(); reader.readAsDataURL(blob); reader.onloadend = () => resolve(reader.result as string);
+      });
+    } catch (e) { }
+
+    let imgHeightExcel = 70;
+    const imgWidthExcel = 140;
+    if (logoBase64) {
+      const img = new Image();
+      img.src = logoBase64;
+      await new Promise((res) => { img.onload = res; });
+      imgHeightExcel = (img.naturalHeight / img.naturalWidth) * imgWidthExcel;
+    }
+
+    worksheet.getColumn(1).width = 25;
+    worksheet.getColumn(2).width = 25;
+    worksheet.getColumn(3).width = 40;
+    worksheet.getColumn(4).width = 15;
+    worksheet.getColumn(5).width = 15;
+    worksheet.getColumn(6).width = 40;
+    worksheet.getColumn(7).width = 10;
+    worksheet.getColumn(8).width = 10;
+    worksheet.getColumn(9).width = 12;
+    worksheet.getColumn(10).width = 10;
+    worksheet.getColumn(11).width = 12;
+    worksheet.getColumn(12).width = 10;
+
+    const headerRowNumber = logoBase64 ? 6 : 1;
+    
+    if (logoBase64) {
+      const imageId = workbook.addImage({ base64: logoBase64, extension: 'png' });
+      worksheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: imgWidthExcel, height: imgHeightExcel } });
+      worksheet.mergeCells('D1:L4');
+      const titleCell = worksheet.getCell('D1');
+      titleCell.value = 'Relatório de Clipping';
+      titleCell.font = { size: 16, bold: true, color: { argb: "FF0f172a" } };
+      titleCell.alignment = { vertical: 'middle', horizontal: 'left' };
+    }
+
+    const headerRow = worksheet.getRow(headerRowNumber);
+    headerRow.values = ['Espetáculo', 'Veículo', 'Matéria', 'Data', 'Sentimento', 'Link', 'Geo', 'Público', 'Autoridade', 'CTA', 'Score Total', 'Tier'];
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FF0F172A' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF1F5F9' } };
+      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      cell.border = { top: {style:'thin', color: {argb:'FFE2E8F0'}}, bottom: {style:'thin', color: {argb:'FFE2E8F0'}}, left: {style:'thin', color: {argb:'FFE2E8F0'}}, right: {style:'thin', color: {argb:'FFE2E8F0'}} };
+    });
+
+    let currentRow = headerRowNumber + 1;
+    listToPrint.forEach(c => {
+      const num = (v: any) => (v === null || v === undefined || v === '' ? '-' : Number(v));
+      const avaliada = !!c.relevancia_tier;
+      const row = worksheet.getRow(currentRow);
+      row.values = [
+        c.espetaculo || '-', c.veiculo, c.titulo_materia || '-', 
+        new Date(c.data_publicacao + 'T12:00:00').toLocaleDateString('pt-BR'), (c.sentimento || '').toUpperCase(), c.link_materia || '-',
+        num(c.relevancia_geo), num(c.relevancia_publico), num(c.relevancia_autoridade), num(c.relevancia_cta),
+        num(c.relevancia_score), avaliada ? c.relevancia_tier : 'Não avaliada'
+      ];
+      
+      row.eachCell((cell, colNumber) => {
+        cell.font = { color: { argb: 'FF334155' } };
+        cell.border = { top: {style:'thin', color: {argb:'FFE2E8F0'}}, bottom: {style:'thin', color: {argb:'FFE2E8F0'}}, left: {style:'thin', color: {argb:'FFE2E8F0'}}, right: {style:'thin', color: {argb:'FFE2E8F0'}} };
+        cell.alignment = { vertical: 'middle', horizontal: colNumber >= 7 ? 'center' : 'left', wrapText: true };
+      });
+      
+      currentRow++;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    saveAs(new Blob([buffer]), "clipping_resultados.xlsx");
+    toast.dismiss();
+  };
+
+
   const filteredMailing = mailing.filter(m => m.nome.toLowerCase().includes(searchTerm.toLowerCase()) || m.veiculo.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
@@ -234,10 +544,12 @@ export default function ImprensaPage() {
               <Input placeholder="Buscar no mailing..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
             </div>
             {isAllowed && (
-              <Dialog open={isMailingOpen} onOpenChange={setIsMailingOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm"><Plus className="w-4 h-4 mr-2" /> Novo Contato</Button>
-                </DialogTrigger>
+<div className="flex items-center">
+<ReportExportButton onExportPdf={printMailing} onExportExcel={exportMailingExcel} />
+<Dialog open={isMailingOpen} onOpenChange={setIsMailingOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700 shadow-sm"><Plus className="w-4 h-4 mr-2" /> Novo Contato</Button>
+                  </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Adicionar Contato</DialogTitle></DialogHeader>
                   <div className="space-y-4 mt-4">
@@ -263,10 +575,10 @@ export default function ImprensaPage() {
                   </div>
                 </DialogContent>
               </Dialog>
-            )}
-          </div>
-          
-          {loading ? (
+</div>
+)}
+</div>
+{loading ? (
             <div className="flex justify-center p-12 text-slate-400">Carregando mailing...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -301,10 +613,11 @@ export default function ImprensaPage() {
               <span className="text-sm font-medium">Histórico de Publicações</span>
             </div>
             {isAllowed && (
-              <>
-                <Dialog open={isClippingOpen} onOpenChange={setIsClippingOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-slate-800 text-white hover:bg-slate-700 shadow-sm" onClick={() => {
+<div className="flex items-center">
+<ReportExportButton onExportPdf={printClipping} onExportExcel={exportClippingExcel} />
+                  <Dialog open={isClippingOpen} onOpenChange={setIsClippingOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-slate-800 text-white hover:bg-slate-700 shadow-sm" onClick={() => {
                       setRegisteredClipping(null);
                       setNewClipping({ espetaculo: '', veiculo: '', titulo_materia: '', link_materia: '', data_publicacao: '', sentimento: 'neutro' });
                     }}>
@@ -403,11 +716,10 @@ export default function ImprensaPage() {
                     </div>
                   </DialogContent>
                 </Dialog>
-              </>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+</div>
+)}
+</div>
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {clipping.map(clip => {
                 const sentimentEmoji = clip.sentimento === 'positivo' ? '🟢' : clip.sentimento === 'negativo' ? '🔴' : '🟡';
                 const tierColor = (clip.relevancia_tier || '').includes('1') ? 'bg-emerald-100 text-emerald-700' : (clip.relevancia_tier || '').includes('2') ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700';
@@ -430,7 +742,7 @@ export default function ImprensaPage() {
                           <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
                             <span className="font-medium text-blue-600">{clip.veiculo}</span>
                             <span>&bull;</span>
-                            <span>{new Date(clip.data_publicacao).toLocaleDateString('pt-BR')}</span>
+                            <span>{new Date(clip.data_publicacao + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                           </div>
                         </div>
                         {isAllowed && (
@@ -481,3 +793,4 @@ export default function ImprensaPage() {
     </div>
   );
 }
+

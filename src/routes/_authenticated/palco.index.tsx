@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
+import { GridEventos } from "@/components/GridEventos";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +16,8 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver";
+import pkg from "file-saver";
+const { saveAs } = pkg;
 
 export const Route = createFileRoute("/_authenticated/palco/")({
   head: () => ({ meta: [{ title: "Montagem de Palco - Seven Produções Artísticas" }] }),
@@ -143,7 +145,7 @@ function PalcoPage() {
     try {
       const [evtRes, espRes] = await Promise.all([
         supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo)").order("data", { ascending: false }),
-        supabase.from("templates_espetaculos").select("nome_espetaculo").order("nome_espetaculo", { ascending: true })
+        supabase.from('templates_espetaculos').select("nome_espetaculo").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order("nome_espetaculo", { ascending: true })
       ]);
       if (evtRes.data) setApresentacoes(evtRes.data as any);
       if (espRes.data) {
@@ -579,7 +581,8 @@ function PalcoPage() {
         </div>
       </div>
 
-      <div className="bg-slate-100/50 dark:bg-slate-800/30 p-2 rounded-3xl overflow-x-auto flex gap-2 hide-scrollbar w-fit">
+      {((activeTab === 'evento' && selectedEventoId) || activeTab !== 'evento') && (
+<div className="bg-slate-100/50 dark:bg-slate-800/30 p-2 rounded-3xl overflow-x-auto flex gap-2 hide-scrollbar w-fit">
         <button onClick={() => setSelectedTipo("mapa_palco")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "mapa_palco" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
           <Map className="size-5" /> Mapas de Palco
         </button>
@@ -594,24 +597,26 @@ function PalcoPage() {
         </button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+      
+)}<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {((activeTab === 'evento' && selectedEventoId) || activeTab !== 'evento') && (
+<TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="evento" className="flex items-center gap-2"><MapPin className="size-4" /> Evento Atual</TabsTrigger>
           <TabsTrigger value="configuracao" className="flex items-center gap-2"><File className="size-4" /> Configuração Padrão</TabsTrigger>
         </TabsList>
+)}
 
         {/* ================= EVENTO ================= */}
         <TabsContent value="evento" className="mt-6 space-y-6">
+          {!selectedEventoId ? (
+            <GridEventos onSelect={setSelectedEventoId} />
+          ) : (
           <Card>
             <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b">
               <div className="flex flex-col sm:flex-row gap-4 items-end">
-                <div className="flex-1 space-y-2 w-full">
-                  <Label>Selecione o Evento</Label>
-                  <select value={selectedEventoId} onChange={e => setSelectedEventoId(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background transition-colors focus:ring-2 focus:ring-primary/50">
-                    <option value="">Selecione um evento...</option>
-                    {apresentacoes.map(apr => <option key={apr.id} value={apr.id}>{apr.eventos?.cidade} - {apr.local || apr.eventos?.local} ({new Date(apr.data + "T12:00:00Z").toLocaleDateString("pt-BR")} às {apr.horario})</option>)}
-                  </select>
-                </div>
+                <div className="flex-1 space-y-2 w-full flex items-center justify-start">
+                    <Button variant="outline" onClick={() => setSelectedEventoId("")}>← Voltar para Grade</Button>
+                  </div>
                 {(selectedTipo === 'mapa_palco' || selectedTipo === 'props') && (
                   <div className="shrink-0 flex gap-2">
                     {selectedTipo === 'props' && selectedEventoId && (
@@ -848,6 +853,7 @@ function PalcoPage() {
               )}
             </CardContent>
           </Card>
+          )}
         </TabsContent>
 
         {/* ================= PADRÃO ================= */}
