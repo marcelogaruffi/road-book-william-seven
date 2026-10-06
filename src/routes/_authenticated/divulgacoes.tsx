@@ -12,6 +12,13 @@ import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Textarea } from "@/components/ui/textarea";
+import { ReportExportButton } from "@/components/ReportExportButton";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import ExcelJS from "exceljs";
+import * as fileSaverPkg from "file-saver";
+
+const saveAs = fileSaverPkg.saveAs || fileSaverPkg.default?.saveAs || fileSaverPkg.default;
 
 export const Route = createFileRoute("/_authenticated/divulgacoes")({
   head: () => ({ meta: [{ title: "Divulgações Redes Sociais - Seven Produções Artísticas" }] }),
@@ -37,15 +44,15 @@ export default function DivulgacoesPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const { data: espData } = await supabase.from('templates_espetaculos').select('nome_espetaculo');
+      const { data: espData } = await supabase.from('templates_espetaculos').select('nome_espetaculo').neq('nome_espetaculo', 'ESTOQUE_GLOBAL');
       let names = new Set<string>();
       if (espData) espData.forEach(e => e.nome_espetaculo && names.add(e.nome_espetaculo));
       setEspetaculos(Array.from(names).sort());
 
-      const res = await supabase.from('midias_divulgacoes').select('*').order('data_publicacao', { ascending: false }).catch(() => ({data: [], error: null}));
+      const res = await supabase.from('midias_divulgacoes').select('*').order('data_publicacao', { ascending: false });
       
-      if (res.error && (res.error as any).code === '42P01') {
-        toast.error('A tabela midias_divulgacoes não existe. Rode o SQL no Supabase.');
+      if (res.error) {
+        toast.error(`Erro ao carregar: ${res.error.message || res.error}`);
       } else if (res.data) {
         setDivulgacoes(res.data);
       }
@@ -108,6 +115,155 @@ export default function DivulgacoesPage() {
     }
   };
 
+  const getLogoBase64AndImg = async () => {
+    try {
+      const response = await fetch('/logo-seven.png');
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      const img = new Image();
+      img.src = base64;
+      await new Promise((res) => { img.onload = res; });
+      return { base64, width: img.naturalWidth, height: img.naturalHeight };
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const drawHeaderPDF = (doc: jsPDF, title: string, logoData: any) => {
+    let y = 14;
+    let textX = 14;
+    let finalY = y + 25;
+    if (logoData && logoData.width && logoData.height) {
+      const imgWidth = 35;
+      const imgHeight = (logoData.height / logoData.width) * imgWidth;
+      doc.addImage(logoData.base64, 'PNG', 14, y, imgWidth, imgHeight);
+      textX = 14 + imgWidth + 8;
+      if (y + imgHeight + 8 > finalY) finalY = y + imgHeight + 8;
+    }
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.text(title, textX, y + 8);
+    return finalY;
+  };
+
+  const exportPdf = async () => {
+    if (divulgacoes.length === 0) return toast.warning("Nenhuma divulgação para exportar.");
+    toast.info("Gerando PDF, aguarde...");
+    try {
+      const doc = new jsPDF();
+      const logoData = await getLogoBase64AndImg();
+      let y = drawHeaderPDF(doc, "Mídias - Divulgações Publicadas", logoData);
+      
+      divulgacoes.forEach((div: any) => {
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+        
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14);
+        doc.setTextColor(15, 23, 42); 
+        doc.text(`${div.espetaculo || 'Sem Evento Associado'}`, 14, y);
+        y += 6;
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(249, 115, 22);
+        doc.text(`${div.rede_social || 'Link Publicado'}`, 14, y);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+        const dateTxt = `  •  Data: ${div.data_publicacao ? new Date(div.data_publicacao + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}`;
+        doc.text(dateTxt, 14 + doc.getTextWidth(`${div.rede_social || 'Link Publicado'}`), y);
+        y += 5;
+        
+        if (div.link) {
+          doc.text('Visualizar Post: ', 14, y);
+          doc.setTextColor(37, 99, 235);
+          const textWidth = doc.getTextWidth('Visualizar Post: ');
+          doc.textWithLink(div.link.substring(0, 70) + (div.link.length > 70 ? '...' : ''), 14 + textWidth, y, { url: div.link });
+          doc.setTextColor(0, 0, 0);
+          y += 5;
+        }
+        
+        if (div.observacoes) {
+          doc.setTextColor(71, 85, 105);
+          const lines = doc.splitTextToSize(`Notas / Engajamento: ${div.observacoes}`, 180);
+          doc.text(lines, 14, y);
+          y += (lines.length * 5);
+          doc.setTextColor(0, 0, 0);
+        }
+        
+        y += 8; 
+      });
+
+      doc.save(`Divulgacoes_Redes_Sociais.pdf`);
+      toast.success("PDF gerado!");
+    } catch (e) {
+      toast.error("Erro ao gerar PDF.");
+    }
+  };
+
+  const exportExcel = async () => {
+    if (divulgacoes.length === 0) return toast.warning("Nenhuma divulgação para exportar.");
+    toast.info("Gerando Excel, aguarde...");
+    try {
+      const workbook = new ExcelJS.Workbook();
+      const ws = workbook.addWorksheet('Divulgações');
+      ws.columns = [{ width: 22 }, { width: 35 }, { width: 20 }, { width: 40 }, { width: 50 }];
+      
+      const logoData = await getLogoBase64AndImg();
+      if (logoData && logoData.width && logoData.height) {
+        const imageId = workbook.addImage({ base64: logoData.base64, extension: 'png' });
+        const imgWidthExcel = 120;
+        const imgHeightExcel = (logoData.height / logoData.width) * imgWidthExcel;
+        ws.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: imgWidthExcel, height: imgHeightExcel } });
+      }
+      ws.getRow(1).height = 60;
+      ws.mergeCells('B1:D1');
+      ws.getCell('B1').value = `Mídias - Divulgações Publicadas`;
+      ws.getCell('B1').font = { size: 16, bold: true };
+      ws.getCell('B1').alignment = { vertical: 'middle' };
+      
+      const headerRowNumber = 3;
+      const header = ws.getRow(headerRowNumber);
+      header.values = ['Data', 'Espetáculo', 'Rede Social', 'Link', 'Observações'];
+      header.eachCell((cell: any) => {
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F172A' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+      });
+
+      divulgacoes.forEach((m: any, idx: number) => {
+        const row = ws.addRow([
+          m.data_publicacao ? new Date(m.data_publicacao + 'T12:00:00').toLocaleDateString('pt-BR') : '-',
+          m.espetaculo || '-',
+          m.rede_social || '-',
+          m.link || '-',
+          m.observacoes || '-'
+        ]);
+        row.eachCell((cell: any) => {
+          cell.border = {
+            top: {style:'thin', color: {argb:'FFDDDDDD'}},
+            left: {style:'thin', color: {argb:'FFDDDDDD'}},
+            bottom: {style:'thin', color: {argb:'FFDDDDDD'}},
+            right: {style:'thin', color: {argb:'FFDDDDDD'}}
+          };
+        });
+      });
+
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(new Blob([buffer]), `Divulgacoes_Redes_Sociais.xlsx`);
+      toast.success("Excel gerado!");
+    } catch (e) {
+      toast.error("Erro ao gerar Excel.");
+    }
+  };
+
   const deleteDiv = async (id: string) => {
     if (!confirm('Excluir esta divulgação?')) return;
     await supabase.from('midias_divulgacoes').delete().eq('id', id);
@@ -166,8 +322,10 @@ export default function DivulgacoesPage() {
           <p className="text-slate-500 mt-1">Posts publicados no Instagram, Facebook e outras redes</p>
         </div>
         
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
+        <div className="flex items-center gap-3">
+          <ReportExportButton onExportPdf={exportPdf} onExportExcel={exportExcel} />
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
             <Button className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm"><Plus className="w-4 h-4 mr-2" /> Cadastrar Divulgação</Button>
           </DialogTrigger>
           <DialogContent className="max-h-[90vh] overflow-y-auto">
@@ -222,6 +380,7 @@ export default function DivulgacoesPage() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="flex-1 p-8 overflow-y-auto">

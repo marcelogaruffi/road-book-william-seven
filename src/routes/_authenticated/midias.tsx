@@ -46,20 +46,24 @@ export default function MidiasPage() {
 
   const fetchData = async () => {
     setLoading(true);
-    const [cronoRes, espRes, hdRes] = await Promise.all([
-      supabase.from('midias_cronograma').select('*').order('data_postagem', { ascending: true }),
-      supabase.from('templates_espetaculos').select('nome_espetaculo'),
-      supabase.from('midias_hd').select('*').order('created_at', { ascending: false }).catch(() => ({data: []})) // Catch case it doesn't exist yet
-    ]);
-
-    if (cronoRes.data) setCronograma(cronoRes.data);
-    if (espRes.data) {
-      const names = Array.from(new Set(espRes.data.map(e => e.nome_espetaculo))).filter(Boolean) as string[];
-      setEspetaculos(names);
+    try {
+      const [cronoRes, espRes, hdRes] = await Promise.all([
+        supabase.from('midias_cronograma').select('*').order('data_postagem', { ascending: true }),
+        supabase.from('templates_espetaculos').select('nome_espetaculo').neq('nome_espetaculo', 'ESTOQUE_GLOBAL'),
+        supabase.from('midias_hd').select('*').order('created_at', { ascending: false })
+      ]);
+  
+      if (cronoRes.data) setCronograma(cronoRes.data);
+      if (espRes.data) {
+        const names = Array.from(new Set(espRes.data.map(e => e.nome_espetaculo))).filter(Boolean) as string[];
+        setEspetaculos(names);
+      }
+      if (hdRes && hdRes.data) setMidiasHd(hdRes.data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
     }
-    if (hdRes && hdRes.data) setMidiasHd(hdRes.data);
-    
-    setLoading(false);
   };
 
   const getStatusColor = (status: string) => {
