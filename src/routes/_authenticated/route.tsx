@@ -282,12 +282,12 @@ function AuthedLayout() {
                 </SGroup>
 
                 <SGroup title="Controles e Gestão" icon={Banknote}>
-                  <SLink to="/emissao-relatorios" icon={File} label="Emissão de Relatórios" show={isProdutor} />
-                  <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
+                                    <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
                   <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
                   <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
                   <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
                   <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
+                  <SLink to="/emissao-relatorios" icon={File} label="Emissão de Relatórios" show={isProdutor} />
                 </SGroup>
 
                 <SGroup title="Administração" icon={Settings} show={userRole === 'admin' || userRole === 'dev'}>

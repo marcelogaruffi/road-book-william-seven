@@ -9,6 +9,7 @@ import { CachesPadraoTab } from "@/components/CachesPadraoTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Wallet } from "lucide-react";
 import { Route as AuthedRoute } from "./route";
@@ -70,7 +71,7 @@ function FinanceiroPage() {
 
         <TabsContent value="eventos" className="mt-0">
             {!selectedRoadbook ? (
-              <div className="mt-4"><GridEventos onSelect={(eId, rId) => { if (rId) setSelectedRoadbook(rId); else toast.info("Este evento ainda nÃ£o possui um Guia de Viagem (Roadbook). Crie-o primeiro para acessar o financeiro."); }} /></div>
+              <div className="mt-4"><GridEventos onSelect={(eId, rId) => { if (rId) setSelectedRoadbook(rId); else toast.info("Este evento ainda não possui um Guia de Viagem (Roadbook). Crie-o primeiro para acessar o financeiro."); }} /></div>
             ) : (
           <div className="bg-white dark:bg-card/50 p-6 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm space-y-4">
             <div className="flex items-center justify-start mb-4"><Button variant="outline" onClick={() => setSelectedRoadbook("")}>← Voltar para Grade</Button></div>

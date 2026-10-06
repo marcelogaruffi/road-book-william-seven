@@ -1,0 +1,31 @@
+const fs = require('fs');
+let lines = fs.readFileSync('src/routes/_authenticated/catering.index.tsx', 'utf8');
+
+const newPdfFunc = `  const drawHeaderPDF = (doc: jsPDF, title: string, logoData: {base64: string, width: number, height: number} | null) => {
+    let y = 14;
+    let textX = 14;
+    let finalY = y + 30;
+    if (logoData) {
+      const imgWidth = 35;
+      const imgHeight = (logoData.height / logoData.width) * imgWidth;
+      doc.addImage(logoData.base64, 'PNG', 14, y, imgWidth, imgHeight);
+      textX = 14 + imgWidth + 8;
+      if (y + imgHeight + 8 > finalY) finalY = y + imgHeight + 8;
+    }
+    doc.setFontSize(16);
+    doc.setTextColor(15, 23, 42);
+    doc.setFont("helvetica", "bold");
+    doc.text(title, textX, y + 5);
+    
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text(\`Espetáculo: \${eventoFull?.espetaculo || '-'}\`, textX, y + 11);
+    doc.text(\`Data: \${eventoFull?.data ? new Date(eventoFull.data + 'T12:00:00').toLocaleDateString('pt-BR') : '-'}\`, textX, y + 16);
+    doc.text(\`Local: \${eventoFull?.local || '-'} - \${eventoFull?.cidade || '-'}\`, textX, y + 21);
+    
+    return finalY;
+  };`;
+
+lines = lines.replace(/  const drawHeaderPDF = [\s\S]*?    return y;\n  };\n/g, newPdfFunc + '\n');
+fs.writeFileSync('src/routes/_authenticated/catering.index.tsx', lines);
+console.log("Done");

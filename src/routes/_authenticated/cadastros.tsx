@@ -310,11 +310,11 @@ function UsersPage() {
 
           <div className="space-y-4">
             <h3 className="font-bold text-lg text-slate-800 dark:text-white px-2">Convites Pendentes</h3>
-            {invites.filter(i => !i.used_at).length === 0 ? (
+            {invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).length === 0 ? (
               <p className="text-slate-500 text-sm px-2">Nenhum convite pendente no momento.</p>
             ) : (
               <div className="space-y-3">
-                {invites.filter(i => !i.used_at).map(i => (
+                {invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).map(i => (
                   <Card key={i.id} className="border-0 shadow-sm bg-white dark:bg-card/40 rounded-xl overflow-hidden group">
                     <div className="flex items-center justify-between p-4">
                       <div>

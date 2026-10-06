@@ -89,7 +89,7 @@ function FigurinosPage() {
   useEffect(() => {
     if (selectedEventoId && activeTab === 'evento') {
       fetchFigurinosEvento(selectedEventoId);
-      const apr = apresentacoes.find(e => e.id === selectedEventoId);
+      const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
       if (evt) {
         setSelectedShowImport(evt.espetaculo);
@@ -182,7 +182,7 @@ function FigurinosPage() {
         if (error) throw error;
         setFigurinosPadrao([...figurinosPadrao, data as FigurinoPadrao]);
       } else {
-        const { data, error } = await supabase.from("figurinos_eventos").insert({ ...figData, evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, ordem: figurinosEvento.length, concluido: false }).select().single();
+        const { data, error } = await supabase.from("figurinos_eventos").insert({ ...figData, evento_id: selectedEventoId, apresentacao_id: null, ordem: figurinosEvento.length, concluido: false }).select().single();
         if (error) throw error;
         setFigurinosEvento([...figurinosEvento, data as FigurinoEvento]);
       }
@@ -264,7 +264,7 @@ function FigurinosPage() {
     try {
       const { data: padrao } = await supabase.from("figurinos_padrao").select("*").eq("espetaculo_nome", selectedShowImport);
       const itemsParaInserir = (padrao || []).filter(p => !figurinosEvento.some(fe => fe.personagem === p.personagem && fe.tipo_item === p.tipo_item)).map(item => ({ 
-        evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, personagem: item.personagem, tipo_item: item.tipo_item, tamanho: item.tamanho, 
+        evento_id: selectedEventoId, apresentacao_id: null, personagem: item.personagem, tipo_item: item.tipo_item, tamanho: item.tamanho, 
         tipo_tecido: item.tipo_tecido, descricao: item.descricao, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false 
       }));
       if (itemsParaInserir.length > 0) {
@@ -297,7 +297,7 @@ function FigurinosPage() {
   }, [currentList]);
 
   const exportToExcel = async () => {
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Figurinos');
@@ -369,7 +369,7 @@ function FigurinosPage() {
   };
 
   const exportToPDF = async () => {
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     const doc = new jsPDF("landscape");
     let startY = 38;
@@ -457,15 +457,15 @@ function FigurinosPage() {
         <button onClick={() => setSelectedTipo("lista")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "lista" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
           <Shirt className="size-5" /> Lista de Roupas
         </button>
-        <button onClick={() => setSelectedTipo("conferencia")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "conferencia" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
+        {activeTab === 'evento' && <button onClick={() => setSelectedTipo("conferencia")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "conferencia" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
           <CheckCircle2 className="size-5" /> Conferência
-        </button>
+        </button>}
       </div>
 
       
 )}<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {((activeTab === 'evento' && selectedEventoId) || activeTab !== 'evento') && (
-<TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="evento" className="flex items-center gap-2"><MapPin className="size-4" /> Evento Atual</TabsTrigger>
           <TabsTrigger value="configuracao" className="flex items-center gap-2"><File className="size-4" /> Configuração Padrão</TabsTrigger>
         </TabsList>

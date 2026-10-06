@@ -114,7 +114,7 @@ function PalcoPage() {
     if (selectedEventoId) {
       fetchArquivosEvento(selectedEventoId);
       fetchPropsEvento(selectedEventoId);
-      const apr = apresentacoes.find(e => e.id === selectedEventoId);
+      const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
       if (evt) setSelectedShowImport(evt.espetaculo);
     } else {
@@ -134,11 +134,11 @@ function PalcoPage() {
     }
   }, [selectedEspetaculoPadrao]);
 
-  // useEffect(() => {
-  //   if (activeTab === 'configuracao' && selectedTipo === 'conferencia') {
-  //     setSelectedTipo('props'); 
-  //   }
-  // }, [activeTab]);
+    useEffect(() => {
+      if ((selectedTipo === 'conferencia' || selectedTipo === 'infra') && activeTab === 'configuracao') {
+        setSelectedTipo('props');
+      }
+    }, [activeTab]);
 
   async function fetchDadosIniciais() {
     setLoading(true);
@@ -212,7 +212,7 @@ function PalcoPage() {
       } else {
         const novaOrdem = arquivosEvento.length;
         const { data, error } = await supabase.from("arquivos_eventos").insert({
-          evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, nome: novoNomeMapa, arquivo_url: publicUrl, tipo: "mapa_palco", ordem: novaOrdem
+          evento_id: selectedEventoId, apresentacao_id: null, nome: novoNomeMapa, arquivo_url: publicUrl, tipo: "mapa_palco", ordem: novaOrdem
         }).select().single();
         if (error) throw error;
         setArquivosEvento([...arquivosEvento, data as ArquivoEvento]);
@@ -249,7 +249,7 @@ function PalcoPage() {
         if (error) throw error;
         setPropsPadrao([...propsPadrao, data as PropPadrao]);
       } else {
-        const { data, error } = await supabase.from("props_eventos").insert({ ...propData, evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, ordem: propsEvento.length, concluido: false }).select().single();
+        const { data, error } = await supabase.from("props_eventos").insert({ ...propData, evento_id: selectedEventoId, apresentacao_id: null, ordem: propsEvento.length, concluido: false }).select().single();
         if (error) throw error;
         setPropsEvento([...propsEvento, data as PropEvento]);
       }
@@ -333,14 +333,14 @@ function PalcoPage() {
     setLoading(true);
     try {
       const { data: mPadrao } = await supabase.from("arquivos_padrao").select("*").eq("espetaculo_nome", selectedShowImport).eq("tipo", "mapa_palco");
-      const mapasParaInserir = (mPadrao || []).filter(mp => !arquivosEvento.some(me => me.arquivo_url === mp.arquivo_url)).map(item => ({ evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, nome: item.nome, arquivo_url: item.arquivo_url, tipo: item.tipo, ordem: item.ordem }));
+      const mapasParaInserir = (mPadrao || []).filter(mp => !arquivosEvento.some(me => me.arquivo_url === mp.arquivo_url)).map(item => ({ evento_id: selectedEventoId, apresentacao_id: null, nome: item.nome, arquivo_url: item.arquivo_url, tipo: item.tipo, ordem: item.ordem }));
       if (mapasParaInserir.length > 0) {
         const { data } = await supabase.from("arquivos_eventos").insert(mapasParaInserir).select();
         setArquivosEvento([...arquivosEvento, ...(data as ArquivoEvento[])]);
       }
 
       const { data: pPadrao } = await supabase.from("props_padrao").select("*").eq("espetaculo_nome", selectedShowImport);
-      const propsParaInserir = (pPadrao || []).filter(pp => !propsEvento.some(pe => pe.item === pp.item)).map(item => ({ evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId, item: item.item, ato: item.ato, cena: item.cena, preset_location: item.preset_location, descricao: item.descricao, personagem: item.personagem, termino_uso: item.termino_uso, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false }));
+      const propsParaInserir = (pPadrao || []).filter(pp => !propsEvento.some(pe => pe.item === pp.item)).map(item => ({ evento_id: selectedEventoId, apresentacao_id: null, item: item.item, ato: item.ato, cena: item.cena, preset_location: item.preset_location, descricao: item.descricao, personagem: item.personagem, termino_uso: item.termino_uso, arquivo_url: item.arquivo_url, ordem: item.ordem, concluido: false }));
       if (propsParaInserir.length > 0) {
         const { data } = await supabase.from("props_eventos").insert(propsParaInserir).select();
         setPropsEvento([...propsEvento, ...(data as PropEvento[])]);
@@ -417,7 +417,7 @@ function PalcoPage() {
 
   const exportToExcel = async () => {
     const list = activeTab === 'evento' ? propsEvento : propsPadrao;
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     
     const workbook = new ExcelJS.Workbook();
@@ -497,7 +497,7 @@ function PalcoPage() {
 
   const exportToPDF = async () => {
     const list = activeTab === 'evento' ? propsEvento : propsPadrao;
-    const apr = apresentacoes.find(e => e.id === selectedEventoId);
+    const apr = apresentacoes.find(e => e.evento_id === selectedEventoId);
     const evt = apr?.eventos;
     
     const doc = new jsPDF("landscape");
@@ -589,18 +589,18 @@ function PalcoPage() {
         <button onClick={() => setSelectedTipo("props")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "props" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
           <Layers className="size-5" /> Lista de Props
         </button>
-        <button onClick={() => setSelectedTipo("conferencia")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "conferencia" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
-          <CheckCircle2 className="size-5" /> Conferência (Props)
-        </button>
-        <button onClick={() => setSelectedTipo("infra")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "infra" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
-          <MapPin className="size-5" /> Infraestrutura do Local
-        </button>
+        {activeTab === 'evento' && <button onClick={() => setSelectedTipo("conferencia")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "conferencia" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
+            <CheckCircle2 className="size-5" /> Conferência (Props)
+          </button>}
+        {activeTab === 'evento' && <button onClick={() => setSelectedTipo("infra")} className={`flex items-center gap-2 whitespace-nowrap rounded-2xl px-6 py-3 transition-all font-semibold text-sm ${selectedTipo === "infra" ? "bg-white dark:bg-slate-200 text-primary dark:text-slate-900 shadow-md" : "text-slate-600 hover:text-slate-900"}`}>
+            <Wrench className="size-5" /> Infraestrutura do Local
+          </button>}
       </div>
 
       
 )}<Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         {((activeTab === 'evento' && selectedEventoId) || activeTab !== 'evento') && (
-<TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="evento" className="flex items-center gap-2"><MapPin className="size-4" /> Evento Atual</TabsTrigger>
           <TabsTrigger value="configuracao" className="flex items-center gap-2"><File className="size-4" /> Configuração Padrão</TabsTrigger>
         </TabsList>

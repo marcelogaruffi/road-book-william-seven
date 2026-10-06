@@ -1,11 +1,10 @@
-﻿import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { GridEventos } from "@/components/GridEventos";
 import { Luggage } from 'lucide-react';
 import { Route as AuthedRoute } from "./route";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MalasTemplateTab } from '@/components/MalasTemplateTab';
-import { EstoqueGlobalTab } from '@/components/EstoqueGlobalTab';
 
 export const Route = createFileRoute('/_authenticated/malas/')({
   head: () => ({ meta: [{ title: 'Malas e Cases' }] }),
@@ -29,22 +28,17 @@ function MalasComponent() {
       </div>
 
       <Tabs defaultValue="eventos" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-2xl bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
           <TabsTrigger value="eventos" className="rounded-lg h-full font-bold">Eventos (Checklist)</TabsTrigger>
           <TabsTrigger value="modelos" className="rounded-lg h-full font-bold">Modelos (Padrão)</TabsTrigger>
-          <TabsTrigger value="estoque" className="rounded-lg h-full font-bold">Estoque Global</TabsTrigger>
         </TabsList>
 
         <TabsContent value="eventos" className="mt-8">
-          <GridEventos onSelect={(id) => window.location.href = /malas/ + id} />
+          <GridEventos onSelect={(id) => window.location.href = `/malas/` + id} />
         </TabsContent>
 
         <TabsContent value="modelos" className="mt-8">
           <MalasTemplateTab />
-        </TabsContent>
-
-        <TabsContent value="estoque" className="mt-8">
-          <EstoqueGlobalTab />
         </TabsContent>
       </Tabs>
     </div>

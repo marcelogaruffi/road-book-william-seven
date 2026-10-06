@@ -9,67 +9,71 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as VerifyPhoneRouteImport } from './routes/verify-phone'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TurneSlugRouteImport } from './routes/turne.$slug'
-import { Route as TurneCompletaSlugRouteImport } from './routes/turne-completa.$slug'
-import { Route as RbSlugRouteImport } from './routes/rb.$slug'
-import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
-import { Route as AuthenticatedViagensRouteImport } from './routes/_authenticated/viagens'
-import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
-import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
-import { Route as AuthenticatedPermissoesRouteImport } from './routes/_authenticated/permissoes'
-import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
-import { Route as AuthenticatedNovoProjetoRouteImport } from './routes/_authenticated/novo-projeto'
-import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authenticated/minhas-escalas'
-import { Route as AuthenticatedMidiasRouteImport } from './routes/_authenticated/midias'
-import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
-import { Route as AuthenticatedImprensaRouteImport } from './routes/_authenticated/imprensa'
-import { Route as AuthenticatedFotosRouteImport } from './routes/_authenticated/fotos'
-import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
-import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
-import { Route as AuthenticatedEspetaculosRouteImport } from './routes/_authenticated/espetaculos'
-import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated/escalas'
-import { Route as AuthenticatedEmissaoRelatoriosRouteImport } from './routes/_authenticated/emissao-relatorios'
-import { Route as AuthenticatedDivulgacoesRouteImport } from './routes/_authenticated/divulgacoes'
-import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
-import { Route as AuthenticatedDadosPessoaisRouteImport } from './routes/_authenticated/dados-pessoais'
-import { Route as AuthenticatedDadosEquipeRouteImport } from './routes/_authenticated/dados-equipe'
-import { Route as AuthenticatedContatosRouteImport } from './routes/_authenticated/contatos'
-import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
-import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
-import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as VerifyPhoneRouteImport } from './routes/verify-phone'
 import { Route as AuthenticatedAdminLimpezaRouteImport } from './routes/_authenticated/admin-limpeza'
-import { Route as AuthenticatedVideoIndexRouteImport } from './routes/_authenticated/video.index'
-import { Route as AuthenticatedTourIndexRouteImport } from './routes/_authenticated/tour.index'
-import { Route as AuthenticatedSomIndexRouteImport } from './routes/_authenticated/som.index'
-import { Route as AuthenticatedSomOperacaoIndexRouteImport } from './routes/_authenticated/som-operacao.index'
-import { Route as AuthenticatedPartiturasIndexRouteImport } from './routes/_authenticated/partituras.index'
-import { Route as AuthenticatedPalcoIndexRouteImport } from './routes/_authenticated/palco.index'
-import { Route as AuthenticatedMusicasIndexRouteImport } from './routes/_authenticated/musicas.index'
-import { Route as AuthenticatedMeusFigurinosIndexRouteImport } from './routes/_authenticated/meus-figurinos.index'
-import { Route as AuthenticatedMalasIndexRouteImport } from './routes/_authenticated/malas.index'
-import { Route as AuthenticatedIluminacaoIndexRouteImport } from './routes/_authenticated/iluminacao.index'
-import { Route as AuthenticatedFigurinosIndexRouteImport } from './routes/_authenticated/figurinos.index'
-import { Route as AuthenticatedCateringIndexRouteImport } from './routes/_authenticated/catering.index'
+import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
+import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
+import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
+import { Route as AuthenticatedContatosRouteImport } from './routes/_authenticated/contatos'
+import { Route as AuthenticatedDadosEquipeRouteImport } from './routes/_authenticated/dados-equipe'
+import { Route as AuthenticatedDadosPessoaisRouteImport } from './routes/_authenticated/dados-pessoais'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedDivulgacoesRouteImport } from './routes/_authenticated/divulgacoes'
+import { Route as AuthenticatedEmissaoRelatoriosRouteImport } from './routes/_authenticated/emissao-relatorios'
+import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated/escalas'
+import { Route as AuthenticatedEspetaculosRouteImport } from './routes/_authenticated/espetaculos'
+import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
+import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedFotosRouteImport } from './routes/_authenticated/fotos'
+import { Route as AuthenticatedImprensaRouteImport } from './routes/_authenticated/imprensa'
+import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
+import { Route as AuthenticatedMidiasRouteImport } from './routes/_authenticated/midias'
+import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authenticated/minhas-escalas'
+import { Route as AuthenticatedNovoProjetoRouteImport } from './routes/_authenticated/novo-projeto'
+import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
+import { Route as AuthenticatedPermissoesRouteImport } from './routes/_authenticated/permissoes'
+import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
+import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
+import { Route as AuthenticatedViagensRouteImport } from './routes/_authenticated/viagens'
+import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
+import { Route as RbSlugRouteImport } from './routes/rb.$slug'
+import { Route as TurneCompletaSlugRouteImport } from './routes/turne-completa.$slug'
+import { Route as TurneSlugRouteImport } from './routes/turne.$slug'
 import { Route as AuthenticatedCamarinsIndexRouteImport } from './routes/_authenticated/camarins.index'
-import { Route as AuthenticatedVideoEvento_idRouteImport } from './routes/_authenticated/video.$evento_id'
-import { Route as AuthenticatedVersaoMotoristaSlugRouteImport } from './routes/_authenticated/versao-motorista.$slug'
-import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticated/tour.new'
-import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated/tour.$id'
-import { Route as AuthenticatedSomEvento_idRouteImport } from './routes/_authenticated/som.$evento_id'
-import { Route as AuthenticatedSomOperacaoEvento_idRouteImport } from './routes/_authenticated/som-operacao.$evento_id'
-import { Route as AuthenticatedRoadbookNewRouteImport } from './routes/_authenticated/roadbook.new'
-import { Route as AuthenticatedRoadbookIdRouteImport } from './routes/_authenticated/roadbook.$id'
-import { Route as AuthenticatedPrintSlugRouteImport } from './routes/_authenticated/print.$slug'
-import { Route as AuthenticatedMalasEvento_idRouteImport } from './routes/_authenticated/malas.$evento_id'
+import { Route as AuthenticatedCateringIndexRouteImport } from './routes/_authenticated/catering.index'
+import { Route as AuthenticatedFigurinosIndexRouteImport } from './routes/_authenticated/figurinos.index'
+import { Route as AuthenticatedIluminacaoIndexRouteImport } from './routes/_authenticated/iluminacao.index'
 import { Route as AuthenticatedIluminacaoEvento_idRouteImport } from './routes/_authenticated/iluminacao.$evento_id'
+import { Route as AuthenticatedMalasIndexRouteImport } from './routes/_authenticated/malas.index'
+import { Route as AuthenticatedMalasEvento_idRouteImport } from './routes/_authenticated/malas.$evento_id'
+import { Route as AuthenticatedMeusFigurinosIndexRouteImport } from './routes/_authenticated/meus-figurinos.index'
+import { Route as AuthenticatedMusicasIndexRouteImport } from './routes/_authenticated/musicas.index'
+import { Route as AuthenticatedPalcoIndexRouteImport } from './routes/_authenticated/palco.index'
+import { Route as AuthenticatedPartiturasIndexRouteImport } from './routes/_authenticated/partituras.index'
+import { Route as AuthenticatedPrintSlugRouteImport } from './routes/_authenticated/print.$slug'
+import { Route as AuthenticatedRoadbookIdRouteImport } from './routes/_authenticated/roadbook.$id'
+import { Route as AuthenticatedRoadbookNewRouteImport } from './routes/_authenticated/roadbook.new'
+import { Route as AuthenticatedSomOperacaoIndexRouteImport } from './routes/_authenticated/som-operacao.index'
+import { Route as AuthenticatedSomOperacaoEvento_idRouteImport } from './routes/_authenticated/som-operacao.$evento_id'
+import { Route as AuthenticatedSomIndexRouteImport } from './routes/_authenticated/som.index'
+import { Route as AuthenticatedSomEvento_idRouteImport } from './routes/_authenticated/som.$evento_id'
+import { Route as AuthenticatedTourIndexRouteImport } from './routes/_authenticated/tour.index'
+import { Route as AuthenticatedTourIdRouteImport } from './routes/_authenticated/tour.$id'
+import { Route as AuthenticatedTourNewRouteImport } from './routes/_authenticated/tour.new'
+import { Route as AuthenticatedVersaoMotoristaSlugRouteImport } from './routes/_authenticated/versao-motorista.$slug'
+import { Route as AuthenticatedVideoIndexRouteImport } from './routes/_authenticated/video.index'
+import { Route as AuthenticatedVideoEvento_idRouteImport } from './routes/_authenticated/video.$evento_id'
 
-const VerifyPhoneRoute = VerifyPhoneRouteImport.update({
-  id: '/verify-phone',
-  path: '/verify-phone',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -77,146 +81,25 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const VerifyPhoneRoute = VerifyPhoneRouteImport.update({
+  id: '/verify-phone',
+  path: '/verify-phone',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TurneSlugRoute = TurneSlugRouteImport.update({
-  id: '/turne/$slug',
-  path: '/turne/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TurneCompletaSlugRoute = TurneCompletaSlugRouteImport.update({
-  id: '/turne-completa/$slug',
-  path: '/turne-completa/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RbSlugRoute = RbSlugRouteImport.update({
-  id: '/rb/$slug',
-  path: '/rb/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MotoristaPrintSlugRoute = MotoristaPrintSlugRouteImport.update({
-  id: '/motorista-print/$slug',
-  path: '/motorista-print/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedViagensRoute = AuthenticatedViagensRouteImport.update({
-  id: '/viagens',
-  path: '/viagens',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
-  id: '/vendas',
-  path: '/vendas',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
-  id: '/publico',
-  path: '/publico',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPermissoesRoute = AuthenticatedPermissoesRouteImport.update({
-  id: '/permissoes',
-  path: '/permissoes',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
-  id: '/perfil',
-  path: '/perfil',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNovoProjetoRoute =
-  AuthenticatedNovoProjetoRouteImport.update({
-    id: '/novo-projeto',
-    path: '/novo-projeto',
+const AuthenticatedAdminLimpezaRoute =
+  AuthenticatedAdminLimpezaRouteImport.update({
+    id: '/admin-limpeza',
+    path: '/admin-limpeza',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMinhasEscalasRoute =
-  AuthenticatedMinhasEscalasRouteImport.update({
-    id: '/minhas-escalas',
-    path: '/minhas-escalas',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedMidiasRoute = AuthenticatedMidiasRouteImport.update({
-  id: '/midias',
-  path: '/midias',
+const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
+  id: '/cadastros',
+  path: '/cadastros',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMeusPagamentosRoute =
-  AuthenticatedMeusPagamentosRouteImport.update({
-    id: '/meus-pagamentos',
-    path: '/meus-pagamentos',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedImprensaRoute = AuthenticatedImprensaRouteImport.update({
-  id: '/imprensa',
-  path: '/imprensa',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFotosRoute = AuthenticatedFotosRouteImport.update({
-  id: '/fotos',
-  path: '/fotos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
-  id: '/financeiro',
-  path: '/financeiro',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEventosRoute = AuthenticatedEventosRouteImport.update({
-  id: '/eventos',
-  path: '/eventos',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEspetaculosRoute =
-  AuthenticatedEspetaculosRouteImport.update({
-    id: '/espetaculos',
-    path: '/espetaculos',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedEscalasRoute = AuthenticatedEscalasRouteImport.update({
-  id: '/escalas',
-  path: '/escalas',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedEmissaoRelatoriosRoute =
-  AuthenticatedEmissaoRelatoriosRouteImport.update({
-    id: '/emissao-relatorios',
-    path: '/emissao-relatorios',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDivulgacoesRoute =
-  AuthenticatedDivulgacoesRouteImport.update({
-    id: '/divulgacoes',
-    path: '/divulgacoes',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDadosPessoaisRoute =
-  AuthenticatedDadosPessoaisRouteImport.update({
-    id: '/dados-pessoais',
-    path: '/dados-pessoais',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedDadosEquipeRoute =
-  AuthenticatedDadosEquipeRouteImport.update({
-    id: '/dados-equipe',
-    path: '/dados-equipe',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedContatosRoute = AuthenticatedContatosRouteImport.update({
-  id: '/contatos',
-  path: '/contatos',
+const AuthenticatedChecklistRoute = AuthenticatedChecklistRouteImport.update({
+  id: '/checklist',
+  path: '/checklist',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedConfiguracoesRoute =
@@ -225,81 +108,143 @@ const AuthenticatedConfiguracoesRoute =
     path: '/configuracoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedChecklistRoute = AuthenticatedChecklistRouteImport.update({
-  id: '/checklist',
-  path: '/checklist',
+const AuthenticatedContatosRoute = AuthenticatedContatosRouteImport.update({
+  id: '/contatos',
+  path: '/contatos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
-  id: '/cadastros',
-  path: '/cadastros',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminLimpezaRoute =
-  AuthenticatedAdminLimpezaRouteImport.update({
-    id: '/admin-limpeza',
-    path: '/admin-limpeza',
+const AuthenticatedDadosEquipeRoute =
+  AuthenticatedDadosEquipeRouteImport.update({
+    id: '/dados-equipe',
+    path: '/dados-equipe',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedVideoIndexRoute = AuthenticatedVideoIndexRouteImport.update({
-  id: '/video/',
-  path: '/video/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTourIndexRoute = AuthenticatedTourIndexRouteImport.update({
-  id: '/tour/',
-  path: '/tour/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSomIndexRoute = AuthenticatedSomIndexRouteImport.update({
-  id: '/som/',
-  path: '/som/',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSomOperacaoIndexRoute =
-  AuthenticatedSomOperacaoIndexRouteImport.update({
-    id: '/som-operacao/',
-    path: '/som-operacao/',
+const AuthenticatedDadosPessoaisRoute =
+  AuthenticatedDadosPessoaisRouteImport.update({
+    id: '/dados-pessoais',
+    path: '/dados-pessoais',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedPartiturasIndexRoute =
-  AuthenticatedPartiturasIndexRouteImport.update({
-    id: '/partituras/',
-    path: '/partituras/',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedPalcoIndexRoute = AuthenticatedPalcoIndexRouteImport.update({
-  id: '/palco/',
-  path: '/palco/',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedMusicasIndexRoute =
-  AuthenticatedMusicasIndexRouteImport.update({
-    id: '/musicas/',
-    path: '/musicas/',
+const AuthenticatedDivulgacoesRoute =
+  AuthenticatedDivulgacoesRouteImport.update({
+    id: '/divulgacoes',
+    path: '/divulgacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMeusFigurinosIndexRoute =
-  AuthenticatedMeusFigurinosIndexRouteImport.update({
-    id: '/meus-figurinos/',
-    path: '/meus-figurinos/',
+const AuthenticatedEmissaoRelatoriosRoute =
+  AuthenticatedEmissaoRelatoriosRouteImport.update({
+    id: '/emissao-relatorios',
+    path: '/emissao-relatorios',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedMalasIndexRoute = AuthenticatedMalasIndexRouteImport.update({
-  id: '/malas/',
-  path: '/malas/',
+const AuthenticatedEscalasRoute = AuthenticatedEscalasRouteImport.update({
+  id: '/escalas',
+  path: '/escalas',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedIluminacaoIndexRoute =
-  AuthenticatedIluminacaoIndexRouteImport.update({
-    id: '/iluminacao/',
-    path: '/iluminacao/',
+const AuthenticatedEspetaculosRoute =
+  AuthenticatedEspetaculosRouteImport.update({
+    id: '/espetaculos',
+    path: '/espetaculos',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedFigurinosIndexRoute =
-  AuthenticatedFigurinosIndexRouteImport.update({
-    id: '/figurinos/',
-    path: '/figurinos/',
+const AuthenticatedEventosRoute = AuthenticatedEventosRouteImport.update({
+  id: '/eventos',
+  path: '/eventos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedFotosRoute = AuthenticatedFotosRouteImport.update({
+  id: '/fotos',
+  path: '/fotos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedImprensaRoute = AuthenticatedImprensaRouteImport.update({
+  id: '/imprensa',
+  path: '/imprensa',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMeusPagamentosRoute =
+  AuthenticatedMeusPagamentosRouteImport.update({
+    id: '/meus-pagamentos',
+    path: '/meus-pagamentos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMidiasRoute = AuthenticatedMidiasRouteImport.update({
+  id: '/midias',
+  path: '/midias',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMinhasEscalasRoute =
+  AuthenticatedMinhasEscalasRouteImport.update({
+    id: '/minhas-escalas',
+    path: '/minhas-escalas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNovoProjetoRoute =
+  AuthenticatedNovoProjetoRouteImport.update({
+    id: '/novo-projeto',
+    path: '/novo-projeto',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPermissoesRoute = AuthenticatedPermissoesRouteImport.update({
+  id: '/permissoes',
+  path: '/permissoes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
+  id: '/publico',
+  path: '/publico',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
+  id: '/vendas',
+  path: '/vendas',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedViagensRoute = AuthenticatedViagensRouteImport.update({
+  id: '/viagens',
+  path: '/viagens',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const MotoristaPrintSlugRoute = MotoristaPrintSlugRouteImport.update({
+  id: '/motorista-print/$slug',
+  path: '/motorista-print/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RbSlugRoute = RbSlugRouteImport.update({
+  id: '/rb/$slug',
+  path: '/rb/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TurneCompletaSlugRoute = TurneCompletaSlugRouteImport.update({
+  id: '/turne-completa/$slug',
+  path: '/turne-completa/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TurneSlugRoute = TurneSlugRouteImport.update({
+  id: '/turne/$slug',
+  path: '/turne/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedCamarinsIndexRoute =
+  AuthenticatedCamarinsIndexRouteImport.update({
+    id: '/camarins/',
+    path: '/camarins/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedCateringIndexRoute =
@@ -308,60 +253,27 @@ const AuthenticatedCateringIndexRoute =
     path: '/catering/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedCamarinsIndexRoute =
-  AuthenticatedCamarinsIndexRouteImport.update({
-    id: '/camarins/',
-    path: '/camarins/',
+const AuthenticatedFigurinosIndexRoute =
+  AuthenticatedFigurinosIndexRouteImport.update({
+    id: '/figurinos/',
+    path: '/figurinos/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedVideoEvento_idRoute =
-  AuthenticatedVideoEvento_idRouteImport.update({
-    id: '/video/$evento_id',
-    path: '/video/$evento_id',
+const AuthenticatedIluminacaoIndexRoute =
+  AuthenticatedIluminacaoIndexRouteImport.update({
+    id: '/iluminacao/',
+    path: '/iluminacao/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedVersaoMotoristaSlugRoute =
-  AuthenticatedVersaoMotoristaSlugRouteImport.update({
-    id: '/versao-motorista/$slug',
-    path: '/versao-motorista/$slug',
+const AuthenticatedIluminacaoEvento_idRoute =
+  AuthenticatedIluminacaoEvento_idRouteImport.update({
+    id: '/iluminacao/$evento_id',
+    path: '/iluminacao/$evento_id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedTourNewRoute = AuthenticatedTourNewRouteImport.update({
-  id: '/tour/new',
-  path: '/tour/new',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedTourIdRoute = AuthenticatedTourIdRouteImport.update({
-  id: '/tour/$id',
-  path: '/tour/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSomEvento_idRoute =
-  AuthenticatedSomEvento_idRouteImport.update({
-    id: '/som/$evento_id',
-    path: '/som/$evento_id',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedSomOperacaoEvento_idRoute =
-  AuthenticatedSomOperacaoEvento_idRouteImport.update({
-    id: '/som-operacao/$evento_id',
-    path: '/som-operacao/$evento_id',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRoadbookNewRoute =
-  AuthenticatedRoadbookNewRouteImport.update({
-    id: '/roadbook/new',
-    path: '/roadbook/new',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedRoadbookIdRoute = AuthenticatedRoadbookIdRouteImport.update({
-  id: '/roadbook/$id',
-  path: '/roadbook/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPrintSlugRoute = AuthenticatedPrintSlugRouteImport.update({
-  id: '/print/$slug',
-  path: '/print/$slug',
+const AuthenticatedMalasIndexRoute = AuthenticatedMalasIndexRouteImport.update({
+  id: '/malas/',
+  path: '/malas/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMalasEvento_idRoute =
@@ -370,10 +282,98 @@ const AuthenticatedMalasEvento_idRoute =
     path: '/malas/$evento_id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
-const AuthenticatedIluminacaoEvento_idRoute =
-  AuthenticatedIluminacaoEvento_idRouteImport.update({
-    id: '/iluminacao/$evento_id',
-    path: '/iluminacao/$evento_id',
+const AuthenticatedMeusFigurinosIndexRoute =
+  AuthenticatedMeusFigurinosIndexRouteImport.update({
+    id: '/meus-figurinos/',
+    path: '/meus-figurinos/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMusicasIndexRoute =
+  AuthenticatedMusicasIndexRouteImport.update({
+    id: '/musicas/',
+    path: '/musicas/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPalcoIndexRoute = AuthenticatedPalcoIndexRouteImport.update({
+  id: '/palco/',
+  path: '/palco/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPartiturasIndexRoute =
+  AuthenticatedPartiturasIndexRouteImport.update({
+    id: '/partituras/',
+    path: '/partituras/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPrintSlugRoute = AuthenticatedPrintSlugRouteImport.update({
+  id: '/print/$slug',
+  path: '/print/$slug',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRoadbookIdRoute = AuthenticatedRoadbookIdRouteImport.update({
+  id: '/roadbook/$id',
+  path: '/roadbook/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRoadbookNewRoute =
+  AuthenticatedRoadbookNewRouteImport.update({
+    id: '/roadbook/new',
+    path: '/roadbook/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSomOperacaoIndexRoute =
+  AuthenticatedSomOperacaoIndexRouteImport.update({
+    id: '/som-operacao/',
+    path: '/som-operacao/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSomOperacaoEvento_idRoute =
+  AuthenticatedSomOperacaoEvento_idRouteImport.update({
+    id: '/som-operacao/$evento_id',
+    path: '/som-operacao/$evento_id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSomIndexRoute = AuthenticatedSomIndexRouteImport.update({
+  id: '/som/',
+  path: '/som/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSomEvento_idRoute =
+  AuthenticatedSomEvento_idRouteImport.update({
+    id: '/som/$evento_id',
+    path: '/som/$evento_id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedTourIndexRoute = AuthenticatedTourIndexRouteImport.update({
+  id: '/tour/',
+  path: '/tour/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTourIdRoute = AuthenticatedTourIdRouteImport.update({
+  id: '/tour/$id',
+  path: '/tour/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedTourNewRoute = AuthenticatedTourNewRouteImport.update({
+  id: '/tour/new',
+  path: '/tour/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVersaoMotoristaSlugRoute =
+  AuthenticatedVersaoMotoristaSlugRouteImport.update({
+    id: '/versao-motorista/$slug',
+    path: '/versao-motorista/$slug',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedVideoIndexRoute = AuthenticatedVideoIndexRouteImport.update({
+  id: '/video/',
+  path: '/video/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedVideoEvento_idRoute =
+  AuthenticatedVideoEvento_idRouteImport.update({
+    id: '/video/$evento_id',
+    path: '/video/$evento_id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -744,18 +744,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/verify-phone': {
-      id: '/verify-phone'
-      path: '/verify-phone'
-      fullPath: '/verify-phone'
-      preLoaderRoute: typeof VerifyPhoneRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -765,200 +758,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/turne/$slug': {
-      id: '/turne/$slug'
-      path: '/turne/$slug'
-      fullPath: '/turne/$slug'
-      preLoaderRoute: typeof TurneSlugRouteImport
+    '/verify-phone': {
+      id: '/verify-phone'
+      path: '/verify-phone'
+      fullPath: '/verify-phone'
+      preLoaderRoute: typeof VerifyPhoneRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/turne-completa/$slug': {
-      id: '/turne-completa/$slug'
-      path: '/turne-completa/$slug'
-      fullPath: '/turne-completa/$slug'
-      preLoaderRoute: typeof TurneCompletaSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/rb/$slug': {
-      id: '/rb/$slug'
-      path: '/rb/$slug'
-      fullPath: '/rb/$slug'
-      preLoaderRoute: typeof RbSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/motorista-print/$slug': {
-      id: '/motorista-print/$slug'
-      path: '/motorista-print/$slug'
-      fullPath: '/motorista-print/$slug'
-      preLoaderRoute: typeof MotoristaPrintSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/viagens': {
-      id: '/_authenticated/viagens'
-      path: '/viagens'
-      fullPath: '/viagens'
-      preLoaderRoute: typeof AuthenticatedViagensRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/vendas': {
-      id: '/_authenticated/vendas'
-      path: '/vendas'
-      fullPath: '/vendas'
-      preLoaderRoute: typeof AuthenticatedVendasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/publico': {
-      id: '/_authenticated/publico'
-      path: '/publico'
-      fullPath: '/publico'
-      preLoaderRoute: typeof AuthenticatedPublicoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/permissoes': {
-      id: '/_authenticated/permissoes'
-      path: '/permissoes'
-      fullPath: '/permissoes'
-      preLoaderRoute: typeof AuthenticatedPermissoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/perfil': {
-      id: '/_authenticated/perfil'
-      path: '/perfil'
-      fullPath: '/perfil'
-      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/novo-projeto': {
-      id: '/_authenticated/novo-projeto'
-      path: '/novo-projeto'
-      fullPath: '/novo-projeto'
-      preLoaderRoute: typeof AuthenticatedNovoProjetoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/minhas-escalas': {
-      id: '/_authenticated/minhas-escalas'
-      path: '/minhas-escalas'
-      fullPath: '/minhas-escalas'
-      preLoaderRoute: typeof AuthenticatedMinhasEscalasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/midias': {
-      id: '/_authenticated/midias'
-      path: '/midias'
-      fullPath: '/midias'
-      preLoaderRoute: typeof AuthenticatedMidiasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/meus-pagamentos': {
-      id: '/_authenticated/meus-pagamentos'
-      path: '/meus-pagamentos'
-      fullPath: '/meus-pagamentos'
-      preLoaderRoute: typeof AuthenticatedMeusPagamentosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/imprensa': {
-      id: '/_authenticated/imprensa'
-      path: '/imprensa'
-      fullPath: '/imprensa'
-      preLoaderRoute: typeof AuthenticatedImprensaRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/fotos': {
-      id: '/_authenticated/fotos'
-      path: '/fotos'
-      fullPath: '/fotos'
-      preLoaderRoute: typeof AuthenticatedFotosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/financeiro': {
-      id: '/_authenticated/financeiro'
-      path: '/financeiro'
-      fullPath: '/financeiro'
-      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/eventos': {
-      id: '/_authenticated/eventos'
-      path: '/eventos'
-      fullPath: '/eventos'
-      preLoaderRoute: typeof AuthenticatedEventosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/espetaculos': {
-      id: '/_authenticated/espetaculos'
-      path: '/espetaculos'
-      fullPath: '/espetaculos'
-      preLoaderRoute: typeof AuthenticatedEspetaculosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/escalas': {
-      id: '/_authenticated/escalas'
-      path: '/escalas'
-      fullPath: '/escalas'
-      preLoaderRoute: typeof AuthenticatedEscalasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/emissao-relatorios': {
-      id: '/_authenticated/emissao-relatorios'
-      path: '/emissao-relatorios'
-      fullPath: '/emissao-relatorios'
-      preLoaderRoute: typeof AuthenticatedEmissaoRelatoriosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/divulgacoes': {
-      id: '/_authenticated/divulgacoes'
-      path: '/divulgacoes'
-      fullPath: '/divulgacoes'
-      preLoaderRoute: typeof AuthenticatedDivulgacoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dados-pessoais': {
-      id: '/_authenticated/dados-pessoais'
-      path: '/dados-pessoais'
-      fullPath: '/dados-pessoais'
-      preLoaderRoute: typeof AuthenticatedDadosPessoaisRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dados-equipe': {
-      id: '/_authenticated/dados-equipe'
-      path: '/dados-equipe'
-      fullPath: '/dados-equipe'
-      preLoaderRoute: typeof AuthenticatedDadosEquipeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/contatos': {
-      id: '/_authenticated/contatos'
-      path: '/contatos'
-      fullPath: '/contatos'
-      preLoaderRoute: typeof AuthenticatedContatosRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/configuracoes': {
-      id: '/_authenticated/configuracoes'
-      path: '/configuracoes'
-      fullPath: '/configuracoes'
-      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/checklist': {
-      id: '/_authenticated/checklist'
-      path: '/checklist'
-      fullPath: '/checklist'
-      preLoaderRoute: typeof AuthenticatedChecklistRouteImport
+    '/_authenticated/admin-limpeza': {
+      id: '/_authenticated/admin-limpeza'
+      path: '/admin-limpeza'
+      fullPath: '/admin-limpeza'
+      preLoaderRoute: typeof AuthenticatedAdminLimpezaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadastros': {
@@ -968,88 +786,200 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCadastrosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin-limpeza': {
-      id: '/_authenticated/admin-limpeza'
-      path: '/admin-limpeza'
-      fullPath: '/admin-limpeza'
-      preLoaderRoute: typeof AuthenticatedAdminLimpezaRouteImport
+    '/_authenticated/checklist': {
+      id: '/_authenticated/checklist'
+      path: '/checklist'
+      fullPath: '/checklist'
+      preLoaderRoute: typeof AuthenticatedChecklistRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/video/': {
-      id: '/_authenticated/video/'
-      path: '/video'
-      fullPath: '/video/'
-      preLoaderRoute: typeof AuthenticatedVideoIndexRouteImport
+    '/_authenticated/configuracoes': {
+      id: '/_authenticated/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof AuthenticatedConfiguracoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/tour/': {
-      id: '/_authenticated/tour/'
-      path: '/tour'
-      fullPath: '/tour/'
-      preLoaderRoute: typeof AuthenticatedTourIndexRouteImport
+    '/_authenticated/contatos': {
+      id: '/_authenticated/contatos'
+      path: '/contatos'
+      fullPath: '/contatos'
+      preLoaderRoute: typeof AuthenticatedContatosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/som/': {
-      id: '/_authenticated/som/'
-      path: '/som'
-      fullPath: '/som/'
-      preLoaderRoute: typeof AuthenticatedSomIndexRouteImport
+    '/_authenticated/dados-equipe': {
+      id: '/_authenticated/dados-equipe'
+      path: '/dados-equipe'
+      fullPath: '/dados-equipe'
+      preLoaderRoute: typeof AuthenticatedDadosEquipeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/som-operacao/': {
-      id: '/_authenticated/som-operacao/'
-      path: '/som-operacao'
-      fullPath: '/som-operacao/'
-      preLoaderRoute: typeof AuthenticatedSomOperacaoIndexRouteImport
+    '/_authenticated/dados-pessoais': {
+      id: '/_authenticated/dados-pessoais'
+      path: '/dados-pessoais'
+      fullPath: '/dados-pessoais'
+      preLoaderRoute: typeof AuthenticatedDadosPessoaisRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/partituras/': {
-      id: '/_authenticated/partituras/'
-      path: '/partituras'
-      fullPath: '/partituras/'
-      preLoaderRoute: typeof AuthenticatedPartiturasIndexRouteImport
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/palco/': {
-      id: '/_authenticated/palco/'
-      path: '/palco'
-      fullPath: '/palco/'
-      preLoaderRoute: typeof AuthenticatedPalcoIndexRouteImport
+    '/_authenticated/divulgacoes': {
+      id: '/_authenticated/divulgacoes'
+      path: '/divulgacoes'
+      fullPath: '/divulgacoes'
+      preLoaderRoute: typeof AuthenticatedDivulgacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/musicas/': {
-      id: '/_authenticated/musicas/'
-      path: '/musicas'
-      fullPath: '/musicas/'
-      preLoaderRoute: typeof AuthenticatedMusicasIndexRouteImport
+    '/_authenticated/emissao-relatorios': {
+      id: '/_authenticated/emissao-relatorios'
+      path: '/emissao-relatorios'
+      fullPath: '/emissao-relatorios'
+      preLoaderRoute: typeof AuthenticatedEmissaoRelatoriosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/meus-figurinos/': {
-      id: '/_authenticated/meus-figurinos/'
-      path: '/meus-figurinos'
-      fullPath: '/meus-figurinos/'
-      preLoaderRoute: typeof AuthenticatedMeusFigurinosIndexRouteImport
+    '/_authenticated/escalas': {
+      id: '/_authenticated/escalas'
+      path: '/escalas'
+      fullPath: '/escalas'
+      preLoaderRoute: typeof AuthenticatedEscalasRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/malas/': {
-      id: '/_authenticated/malas/'
-      path: '/malas'
-      fullPath: '/malas/'
-      preLoaderRoute: typeof AuthenticatedMalasIndexRouteImport
+    '/_authenticated/espetaculos': {
+      id: '/_authenticated/espetaculos'
+      path: '/espetaculos'
+      fullPath: '/espetaculos'
+      preLoaderRoute: typeof AuthenticatedEspetaculosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/iluminacao/': {
-      id: '/_authenticated/iluminacao/'
-      path: '/iluminacao'
-      fullPath: '/iluminacao/'
-      preLoaderRoute: typeof AuthenticatedIluminacaoIndexRouteImport
+    '/_authenticated/eventos': {
+      id: '/_authenticated/eventos'
+      path: '/eventos'
+      fullPath: '/eventos'
+      preLoaderRoute: typeof AuthenticatedEventosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/figurinos/': {
-      id: '/_authenticated/figurinos/'
-      path: '/figurinos'
-      fullPath: '/figurinos/'
-      preLoaderRoute: typeof AuthenticatedFigurinosIndexRouteImport
+    '/_authenticated/financeiro': {
+      id: '/_authenticated/financeiro'
+      path: '/financeiro'
+      fullPath: '/financeiro'
+      preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/fotos': {
+      id: '/_authenticated/fotos'
+      path: '/fotos'
+      fullPath: '/fotos'
+      preLoaderRoute: typeof AuthenticatedFotosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/imprensa': {
+      id: '/_authenticated/imprensa'
+      path: '/imprensa'
+      fullPath: '/imprensa'
+      preLoaderRoute: typeof AuthenticatedImprensaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/meus-pagamentos': {
+      id: '/_authenticated/meus-pagamentos'
+      path: '/meus-pagamentos'
+      fullPath: '/meus-pagamentos'
+      preLoaderRoute: typeof AuthenticatedMeusPagamentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/midias': {
+      id: '/_authenticated/midias'
+      path: '/midias'
+      fullPath: '/midias'
+      preLoaderRoute: typeof AuthenticatedMidiasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/minhas-escalas': {
+      id: '/_authenticated/minhas-escalas'
+      path: '/minhas-escalas'
+      fullPath: '/minhas-escalas'
+      preLoaderRoute: typeof AuthenticatedMinhasEscalasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/novo-projeto': {
+      id: '/_authenticated/novo-projeto'
+      path: '/novo-projeto'
+      fullPath: '/novo-projeto'
+      preLoaderRoute: typeof AuthenticatedNovoProjetoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/perfil': {
+      id: '/_authenticated/perfil'
+      path: '/perfil'
+      fullPath: '/perfil'
+      preLoaderRoute: typeof AuthenticatedPerfilRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/permissoes': {
+      id: '/_authenticated/permissoes'
+      path: '/permissoes'
+      fullPath: '/permissoes'
+      preLoaderRoute: typeof AuthenticatedPermissoesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/publico': {
+      id: '/_authenticated/publico'
+      path: '/publico'
+      fullPath: '/publico'
+      preLoaderRoute: typeof AuthenticatedPublicoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/vendas': {
+      id: '/_authenticated/vendas'
+      path: '/vendas'
+      fullPath: '/vendas'
+      preLoaderRoute: typeof AuthenticatedVendasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/viagens': {
+      id: '/_authenticated/viagens'
+      path: '/viagens'
+      fullPath: '/viagens'
+      preLoaderRoute: typeof AuthenticatedViagensRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/motorista-print/$slug': {
+      id: '/motorista-print/$slug'
+      path: '/motorista-print/$slug'
+      fullPath: '/motorista-print/$slug'
+      preLoaderRoute: typeof MotoristaPrintSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rb/$slug': {
+      id: '/rb/$slug'
+      path: '/rb/$slug'
+      fullPath: '/rb/$slug'
+      preLoaderRoute: typeof RbSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/turne-completa/$slug': {
+      id: '/turne-completa/$slug'
+      path: '/turne-completa/$slug'
+      fullPath: '/turne-completa/$slug'
+      preLoaderRoute: typeof TurneCompletaSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/turne/$slug': {
+      id: '/turne/$slug'
+      path: '/turne/$slug'
+      fullPath: '/turne/$slug'
+      preLoaderRoute: typeof TurneSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/camarins/': {
+      id: '/_authenticated/camarins/'
+      path: '/camarins'
+      fullPath: '/camarins/'
+      preLoaderRoute: typeof AuthenticatedCamarinsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/catering/': {
@@ -1059,74 +989,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCateringIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/camarins/': {
-      id: '/_authenticated/camarins/'
-      path: '/camarins'
-      fullPath: '/camarins/'
-      preLoaderRoute: typeof AuthenticatedCamarinsIndexRouteImport
+    '/_authenticated/figurinos/': {
+      id: '/_authenticated/figurinos/'
+      path: '/figurinos'
+      fullPath: '/figurinos/'
+      preLoaderRoute: typeof AuthenticatedFigurinosIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/video/$evento_id': {
-      id: '/_authenticated/video/$evento_id'
-      path: '/video/$evento_id'
-      fullPath: '/video/$evento_id'
-      preLoaderRoute: typeof AuthenticatedVideoEvento_idRouteImport
+    '/_authenticated/iluminacao/': {
+      id: '/_authenticated/iluminacao/'
+      path: '/iluminacao'
+      fullPath: '/iluminacao/'
+      preLoaderRoute: typeof AuthenticatedIluminacaoIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/versao-motorista/$slug': {
-      id: '/_authenticated/versao-motorista/$slug'
-      path: '/versao-motorista/$slug'
-      fullPath: '/versao-motorista/$slug'
-      preLoaderRoute: typeof AuthenticatedVersaoMotoristaSlugRouteImport
+    '/_authenticated/iluminacao/$evento_id': {
+      id: '/_authenticated/iluminacao/$evento_id'
+      path: '/iluminacao/$evento_id'
+      fullPath: '/iluminacao/$evento_id'
+      preLoaderRoute: typeof AuthenticatedIluminacaoEvento_idRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/tour/new': {
-      id: '/_authenticated/tour/new'
-      path: '/tour/new'
-      fullPath: '/tour/new'
-      preLoaderRoute: typeof AuthenticatedTourNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/tour/$id': {
-      id: '/_authenticated/tour/$id'
-      path: '/tour/$id'
-      fullPath: '/tour/$id'
-      preLoaderRoute: typeof AuthenticatedTourIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/som/$evento_id': {
-      id: '/_authenticated/som/$evento_id'
-      path: '/som/$evento_id'
-      fullPath: '/som/$evento_id'
-      preLoaderRoute: typeof AuthenticatedSomEvento_idRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/som-operacao/$evento_id': {
-      id: '/_authenticated/som-operacao/$evento_id'
-      path: '/som-operacao/$evento_id'
-      fullPath: '/som-operacao/$evento_id'
-      preLoaderRoute: typeof AuthenticatedSomOperacaoEvento_idRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/roadbook/new': {
-      id: '/_authenticated/roadbook/new'
-      path: '/roadbook/new'
-      fullPath: '/roadbook/new'
-      preLoaderRoute: typeof AuthenticatedRoadbookNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/roadbook/$id': {
-      id: '/_authenticated/roadbook/$id'
-      path: '/roadbook/$id'
-      fullPath: '/roadbook/$id'
-      preLoaderRoute: typeof AuthenticatedRoadbookIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/print/$slug': {
-      id: '/_authenticated/print/$slug'
-      path: '/print/$slug'
-      fullPath: '/print/$slug'
-      preLoaderRoute: typeof AuthenticatedPrintSlugRouteImport
+    '/_authenticated/malas/': {
+      id: '/_authenticated/malas/'
+      path: '/malas'
+      fullPath: '/malas/'
+      preLoaderRoute: typeof AuthenticatedMalasIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/malas/$evento_id': {
@@ -1136,11 +1024,123 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMalasEvento_idRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/iluminacao/$evento_id': {
-      id: '/_authenticated/iluminacao/$evento_id'
-      path: '/iluminacao/$evento_id'
-      fullPath: '/iluminacao/$evento_id'
-      preLoaderRoute: typeof AuthenticatedIluminacaoEvento_idRouteImport
+    '/_authenticated/meus-figurinos/': {
+      id: '/_authenticated/meus-figurinos/'
+      path: '/meus-figurinos'
+      fullPath: '/meus-figurinos/'
+      preLoaderRoute: typeof AuthenticatedMeusFigurinosIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/musicas/': {
+      id: '/_authenticated/musicas/'
+      path: '/musicas'
+      fullPath: '/musicas/'
+      preLoaderRoute: typeof AuthenticatedMusicasIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/palco/': {
+      id: '/_authenticated/palco/'
+      path: '/palco'
+      fullPath: '/palco/'
+      preLoaderRoute: typeof AuthenticatedPalcoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/partituras/': {
+      id: '/_authenticated/partituras/'
+      path: '/partituras'
+      fullPath: '/partituras/'
+      preLoaderRoute: typeof AuthenticatedPartiturasIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/print/$slug': {
+      id: '/_authenticated/print/$slug'
+      path: '/print/$slug'
+      fullPath: '/print/$slug'
+      preLoaderRoute: typeof AuthenticatedPrintSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roadbook/$id': {
+      id: '/_authenticated/roadbook/$id'
+      path: '/roadbook/$id'
+      fullPath: '/roadbook/$id'
+      preLoaderRoute: typeof AuthenticatedRoadbookIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/roadbook/new': {
+      id: '/_authenticated/roadbook/new'
+      path: '/roadbook/new'
+      fullPath: '/roadbook/new'
+      preLoaderRoute: typeof AuthenticatedRoadbookNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/som-operacao/': {
+      id: '/_authenticated/som-operacao/'
+      path: '/som-operacao'
+      fullPath: '/som-operacao/'
+      preLoaderRoute: typeof AuthenticatedSomOperacaoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/som-operacao/$evento_id': {
+      id: '/_authenticated/som-operacao/$evento_id'
+      path: '/som-operacao/$evento_id'
+      fullPath: '/som-operacao/$evento_id'
+      preLoaderRoute: typeof AuthenticatedSomOperacaoEvento_idRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/som/': {
+      id: '/_authenticated/som/'
+      path: '/som'
+      fullPath: '/som/'
+      preLoaderRoute: typeof AuthenticatedSomIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/som/$evento_id': {
+      id: '/_authenticated/som/$evento_id'
+      path: '/som/$evento_id'
+      fullPath: '/som/$evento_id'
+      preLoaderRoute: typeof AuthenticatedSomEvento_idRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tour/': {
+      id: '/_authenticated/tour/'
+      path: '/tour'
+      fullPath: '/tour/'
+      preLoaderRoute: typeof AuthenticatedTourIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tour/$id': {
+      id: '/_authenticated/tour/$id'
+      path: '/tour/$id'
+      fullPath: '/tour/$id'
+      preLoaderRoute: typeof AuthenticatedTourIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/tour/new': {
+      id: '/_authenticated/tour/new'
+      path: '/tour/new'
+      fullPath: '/tour/new'
+      preLoaderRoute: typeof AuthenticatedTourNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/versao-motorista/$slug': {
+      id: '/_authenticated/versao-motorista/$slug'
+      path: '/versao-motorista/$slug'
+      fullPath: '/versao-motorista/$slug'
+      preLoaderRoute: typeof AuthenticatedVersaoMotoristaSlugRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/video/': {
+      id: '/_authenticated/video/'
+      path: '/video'
+      fullPath: '/video/'
+      preLoaderRoute: typeof AuthenticatedVideoIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/video/$evento_id': {
+      id: '/_authenticated/video/$evento_id'
+      path: '/video/$evento_id'
+      fullPath: '/video/$evento_id'
+      preLoaderRoute: typeof AuthenticatedVideoEvento_idRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }

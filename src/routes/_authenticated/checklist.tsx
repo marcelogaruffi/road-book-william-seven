@@ -236,50 +236,62 @@ function ChecklistPage() {
   }
 
   // Ações - Conferência (Evento)
-  async function handleGerarChecklist() {
-    if (!selectedEventoId) return;
-    const eventoSelecionado = eventos.find(e => e.id === selectedEventoId);
-    if (!eventoSelecionado) return;
-    
-    const itensDesteShow = itensPadrao.filter(i => i.espetaculo_nome === eventoSelecionado.espetaculo);
-    
-    if (itensDesteShow.length === 0) return toast.warning(`Não há itens no Checklist Padrão para o show "${eventoSelecionado.espetaculo}".`);
-
-    setLoading(true);
-    
-    // Preparar itens para inserção baseados no padrão e evitar duplicados
-    const displayedItensEvento = itensEvento.filter(i => (i.setor || 'Produção') === selectedSetor);
-    const existingNames = new Set(displayedItensEvento.map(i => i.item_nome.toLowerCase().trim()));
-    
-    const itensParaInserir = itensDesteShow
-      .filter(item => !existingNames.has(item.item_nome.toLowerCase().trim()))
-      .map(item => ({
-        evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
-        item_nome: item.item_nome,
-        obrigatorio: item.obrigatorio,
-        ordem: item.ordem,
-        concluido: false,
-        setor: item.setor || 'Produção'
-      }));
-
-    if (itensParaInserir.length === 0) {
+      // Ações - Conferência (Evento)
+    async function handleGerarChecklist() {
+      if (!selectedEventoId) return;
+      
+      setLoading(true);
+      const { data: evData } = await supabase.from('eventos').select('espetaculo').eq('id', selectedEventoId).single();
+      if (!evData || !evData.espetaculo) {
+        setLoading(false);
+        return toast.error("Não foi possível encontrar o espetáculo do evento selecionado.");
+      }
+      
+      const nomeEspetaculo = evData.espetaculo;
+      
+      // IMPORTANT: MUST ALSO MATCH THE CURRENT SELECTED SETOR!
+      // Otherwise, importing in "Luz" will import everything and then only show "Luz"
+      const itensDesteShow = itensPadrao.filter(i => i.espetaculo_nome === nomeEspetaculo && (i.setor || 'Produção') === selectedSetor);
+      
+      if (itensDesteShow.length === 0) {
+        setLoading(false);
+        return toast.warning(`Não há itens no Checklist Padrão de ${selectedSetor} para o show "${nomeEspetaculo}".`);
+      }
+      
+      // Preparar itens para inserção baseados no padrão e evitar duplicados
+      const displayedItensEvento = itensEvento.filter(i => (i.setor || 'Produção') === selectedSetor);
+      const existingNames = new Set(displayedItensEvento.map(i => i.item_nome.toLowerCase().trim()));
+      
+      const itensParaInserir = itensDesteShow
+        .filter(item => !existingNames.has(item.item_nome.toLowerCase().trim()))
+        .map(item => ({
+          evento_id: selectedEventoId,
+          apresentacao_id: null,
+          item_nome: item.item_nome,
+          obrigatorio: item.obrigatorio,
+          ordem: item.ordem,
+          concluido: false,
+          setor: item.setor || 'Produção'
+        }));
+  
+      if (itensParaInserir.length === 0) {
+        setLoading(false);
+        return toast.info(`Todos os itens padrão de ${selectedSetor} já estão presentes neste checklist!`);
+      }
+  
+      const { data, error } = await supabase.from("checklist_eventos").insert(itensParaInserir).select();
+      
       setLoading(false);
-      return toast.info("Todos os itens padrão já estão presentes neste checklist!");
+  
+      if (error) {
+        toast.error("Erro ao importar itens do padrão");
+      } else {
+        toast.success(`Itens padrão de ${selectedSetor} importados com sucesso!`);
+        setItensEvento([...itensEvento, ...(data || [])]);
+      }
     }
-
-    const { data, error } = await supabase.from("checklist_eventos").insert(itensParaInserir).select();
     
-    setLoading(false);
-
-    if (error) {
-      toast.error("Erro ao importar itens do padrão");
-    } else {
-      toast.success("Itens padrão importados com sucesso!");
-      setItensEvento([...itensEvento, ...(data || [])]);
-    }
-  }
-
-  async function toggleItemConcluido(id: string, atual: boolean) {
+async function toggleItemConcluido(id: string, atual: boolean) {
     // Optimistic update
     setItensEvento(itensEvento.map(i => i.id === id ? { ...i, concluido: !atual } : i));
     
@@ -303,7 +315,7 @@ function ChecklistPage() {
     const novaOrdem = itensEvento.length > 0 ? Math.max(...itensEvento.map(i => i.ordem)) + 1 : 0;
     
     const { data, error } = await supabase.from("checklist_eventos").insert({
-      evento_id: (apresentacoes.find(a => a.id === selectedEventoId)?.evento_id || selectedEventoId), apresentacao_id: selectedEventoId,
+      evento_id: selectedEventoId, apresentacao_id: null,
       item_nome: novoItemExtraNome,
       obrigatorio: novoItemExtraObrigatorio,
       concluido: false,

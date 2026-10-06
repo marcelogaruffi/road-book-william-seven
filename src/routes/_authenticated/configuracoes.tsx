@@ -125,10 +125,10 @@ function ConfiguracoesComponent() {
           <div>
             <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white flex items-center gap-3 pb-1">
               <Settings className="size-8 text-slate-500" />
-              ConfiguraÃ§Ãµes do Sistema
+              Configurações do Sistema
             </h1>
             <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-              Ajustes globais e regras de seguranÃ§a da plataforma. (Acesso exclusivo para Administradores)
+              Ajustes globais e regras de segurança da plataforma. (Acesso exclusivo para Administradores)
             </p>
           </div>
           <Button onClick={() => navigate({ to: "/admin-limpeza" })} className="bg-red-500 hover:bg-red-600 text-white rounded-xl h-12 px-6 shadow-md font-bold shrink-0">
