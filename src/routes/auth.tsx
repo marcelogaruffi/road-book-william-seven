@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { maskPhone } from '@/lib/utils';
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
@@ -18,7 +18,7 @@ import { Camera, Mail, Lock, User, Phone, KeyRound, UploadCloud, Sun, Moon, Arro
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Autenticação - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Autenticação - Áxis - Gestão de Teatros e Shows" }] }),
   component: AuthPage,
 });
 
@@ -360,8 +360,8 @@ function AuthPage() {
           <div className="h-2 bg-gradient-to-r from-primary via-purple-500 to-primary"></div>
           <CardContent className="p-8 sm:p-10">
             <div className="text-center mb-8">
-              <img src="/logo-seven.png" alt="William Seven" className="h-20 mx-auto object-contain mb-4" />
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-800 dark:text-white">Gestão de Viagens e Turnês</h1>
+              <img src="/logo-axis.png" alt="Áxis"  className="h-28 mx-auto object-contain mb-4" />
+              
               <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
                 {mode === "login" && "Bem-vindo de volta! Faça seu login."}
                 {mode === "signup" && signupStep === 1 && "Insira o token para iniciar seu cadastro."}

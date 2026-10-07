@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
@@ -620,7 +620,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
       return;
     }
     setSaving(true);
-    console.log("=== INICIO DO FLUXO DE GRAVAÇÃO ===");
+    console.log("=== INICIO DO FLUXO DE GRAVAÇÁO ===");
     try {
       const { data: userRes, error: authError } = await supabase.auth.getUser();
       console.log("1. Autenticação:", { user: userRes?.user?.id, error: authError });
@@ -1814,3 +1814,4 @@ function VooCard({
     </Card>
   );
 }
+

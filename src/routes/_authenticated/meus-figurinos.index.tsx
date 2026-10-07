@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Construction } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated/meus-figurinos/')({
-  head: () => ({ meta: [{ title: "Meus Figurinos - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Meus Figurinos - Áxis - Gestão de Teatros e Shows" }] }),
   component: MeusFigurinosPage,
 })
 

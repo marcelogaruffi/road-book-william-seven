@@ -233,7 +233,7 @@ export function MalasTemplateTab() {
                             <Input 
                               value={vol.nome}
                               onChange={(e) => updateVolume(vol.id, e.target.value)}
-                              placeholder="Nome do Volume (Ex: Mala Figurino 1, Case de Áudio)"
+                              placeholder="Nome do Volume (Ex: Mala Figurino 1, Case de Áudio)"
                               className="font-bold text-lg border-none bg-transparent shadow-none focus-visible:ring-0 max-w-sm"
                             />
                             <div className="flex items-center gap-2">
@@ -310,3 +310,4 @@ export function MalasTemplateTab() {
     </div>
   );
 }
+

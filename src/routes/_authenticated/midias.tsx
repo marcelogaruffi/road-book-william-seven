@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/midias")({
-  head: () => ({ meta: [{ title: "Mídias Sociais - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Mídias Sociais - Áxis - Gestão de Teatros e Shows" }] }),
   component: MidiasPage,
 });
 

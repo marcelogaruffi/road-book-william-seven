@@ -20,7 +20,7 @@ import pkg from "file-saver";
 const { saveAs } = pkg;
 
 export const Route = createFileRoute("/_authenticated/palco/")({
-  head: () => ({ meta: [{ title: "Montagem de Palco - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Montagem de Palco - Áxis - Gestão de Teatros e Shows" }] }),
   component: PalcoPage,
 });
 
@@ -856,7 +856,7 @@ function PalcoPage() {
           )}
         </TabsContent>
 
-        {/* ================= PADRÃO ================= */}
+        {/* ================= PADRÁO ================= */}
         <TabsContent value="configuracao" className="mt-6 space-y-6">
           <Card>
             <CardHeader className="bg-slate-50 border-b">
@@ -968,7 +968,7 @@ function PalcoPage() {
         </TabsContent>
       </Tabs>
 
-      {/* MODAL DE EDIÇÃO DE PROP */}
+      {/* MODAL DE EDIÇÁO DE PROP */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader><DialogTitle>Editar Prop</DialogTitle></DialogHeader>

@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/fotos")({
-  head: () => ({ meta: [{ title: "Fotos - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Fotos - Áxis - Gestão de Teatros e Shows" }] }),
   component: FotosPage,
 });
 

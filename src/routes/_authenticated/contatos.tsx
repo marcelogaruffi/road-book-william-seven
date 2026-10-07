@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +53,7 @@ const DEPARTAMENTOS = [
 ];
 
 export const Route = createFileRoute("/_authenticated/contatos")({
-  head: () => ({ meta: [{ title: "Contatos da Equipe - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Contatos da Equipe - Áxis - Gestão de Teatros e Shows" }] }),
   component: ContatosPage,
 });
 
@@ -503,7 +503,7 @@ function ContatosPage() {
       </div>
 
       {!isManagement ? (
-        // VISÃO DA EQUIPE (APENAS DIRETÓRIO)
+        // VISÁO DA EQUIPE (APENAS DIRETÓRIO)
         <DiretorioView 
           diretorio={filteredDiretorio} 
           searchTerm={searchTermDiretorio} 
@@ -515,7 +515,7 @@ function ContatosPage() {
           canDeleteAny={canDeleteAny}
         />
       ) : (
-        // VISÃO DA GESTÃO (TABS)
+        // VISÁO DA GESTÁO (TABS)
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full sm:w-auto h-12 bg-white dark:bg-card/40 border shadow-sm rounded-2xl p-1 mb-6 inline-flex">
             <TabsTrigger value="diretorio" className="px-6 h-full rounded-xl data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-bold">
@@ -776,3 +776,4 @@ function TurneView({ contatos, searchTerm, setSearchTerm }: any) {
     </div>
   );
 }
+

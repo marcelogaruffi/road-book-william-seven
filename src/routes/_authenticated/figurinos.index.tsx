@@ -17,7 +17,7 @@ import pkg from "file-saver";
 const { saveAs } = pkg;
 
 export const Route = createFileRoute("/_authenticated/figurinos/")({
-  head: () => ({ meta: [{ title: "Figurinos - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Figurinos - Áxis - Gestão de Teatros e Shows" }] }),
   component: FigurinosPage,
 });
 
@@ -637,7 +637,7 @@ function FigurinosPage() {
         )}
       </Tabs>
 
-      {/* MODAL DE EDIÇÃO */}
+      {/* MODAL DE EDIÇÁO */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>Editar Peça</DialogTitle></DialogHeader>

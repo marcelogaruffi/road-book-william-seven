@@ -1,4 +1,4 @@
-
+﻿
 -- TOURS
 CREATE TABLE IF NOT EXISTS public.tours (
   id uuid NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -54,3 +54,4 @@ CREATE POLICY "rbdocs_delete_own" ON storage.objects FOR DELETE TO authenticated
 -- Public read for documents (so signed URLs aren't strictly required on the public page)
 CREATE POLICY "rbdocs_public_read" ON storage.objects FOR SELECT TO anon
   USING (bucket_id = 'roadbook-docs');
+

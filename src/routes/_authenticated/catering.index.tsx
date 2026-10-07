@@ -495,7 +495,7 @@ function CateringPage() {
                     <TabsTrigger value="padrao" className="flex gap-2"><Utensils className="size-4" /> Padrão</TabsTrigger>
                 </TabsList>
 
-                {/* BOTÕES DE EXPORTAÇÃO SEPARADOS POR ABA */}
+                {/* BOTÕES DE EXPORTAÇÁO SEPARADOS POR ABA */}
                 <div>
                   {activeTab === 'cardapio' && (
                     <div className="flex items-center gap-2">

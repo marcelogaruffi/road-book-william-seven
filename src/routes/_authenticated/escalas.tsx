@@ -15,7 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/_authenticated/escalas")({
-  head: () => ({ meta: [{ title: "Gestão de Escalas - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Gestão de Escalas - Áxis - Gestão de Teatros e Shows" }] }),
   component: EscalasPage,
 });
 

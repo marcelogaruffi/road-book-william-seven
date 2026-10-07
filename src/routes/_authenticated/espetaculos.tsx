@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/espetaculos")({
-  head: () => ({ meta: [{ title: "Cadastro de Shows - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Cadastro de Shows - Áxis - Gestão de Teatros e Shows" }] }),
   component: EspetaculosPage,
 });
 

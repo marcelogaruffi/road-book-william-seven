@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -359,3 +359,4 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
     </div>
   );
 }
+

@@ -13,10 +13,30 @@ export const Route = createFileRoute("/_authenticated/versao-motorista/$slug")({
     const { data, error } = await supabase.from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!data) throw notFound();
-    return rowToRoadbook(data);
+    const rb = rowToRoadbook(data);
+    let logoEspetaculo = rb.logo_espetaculo_override || null;
+    let logoProducao = rb.logo_producao_override || null;
+
+    if (!logoEspetaculo) {
+      const { data: espData } = await supabase.from('templates_espetaculos').select("logo_espetaculo_url").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').ilike("nome_espetaculo", rb.espetaculo).maybeSingle();
+      if (espData) logoEspetaculo = espData.logo_espetaculo_url;
+    }
+
+    if (!logoProducao && rb.evento_id) {
+      const { data: evData } = await supabase.from("eventos").select("produtora_logo_url").eq("id", rb.evento_id).maybeSingle();
+      if (evData?.produtora_logo_url) logoProducao = evData.produtora_logo_url;
+    }
+
+    if (!logoProducao && rb.tour_id) {
+      const { data: tourData } = await supabase.from("tours").select("logo_producao").eq("id", rb.tour_id).maybeSingle();
+      if (tourData) logoProducao = tourData.logo_producao;
+    }
+
+    rb._resolved_logos = { logoEspetaculo, logoProducao };
+    return rb;
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `Roteiro Motorista: ${loaderData.espetaculo} — ${loaderData.cidade}` : "Roteiro Motorista";
+    const title = loaderData ? `Programação - ${loaderData.espetaculo} - ${loaderData.cidade} - Áxis - Gestão de Teatros e Shows` : "Programação - Áxis - Gestão de Teatros e Shows";
     return { meta: [
       { title }, { name: "description", content: title },
       { property: "og:title", content: title },
@@ -84,18 +104,19 @@ function DriverPrintPage() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-10 mb-8 shadow-xl relative overflow-hidden text-center">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-purple-500 to-primary"></div>
           
-          <div className="flex justify-between items-center gap-6 mb-8 pb-8 border-b border-slate-200/60 dark:border-slate-800/60">
-            <img src="/logo-seven.png" alt="Seven Produções" className="h-14 w-auto object-contain dark:brightness-200" />
-            {rb.espetaculo_logo_url ? (
-                <img src={rb.espetaculo_logo_url} alt={`${rb.espetaculo} Logo`} className="h-14 w-auto object-contain dark:brightness-200" />
-            ) : (
-                <div className="w-[100px]"></div>
-            )}
-          </div>
+          <div className="flex justify-center items-center gap-6 mb-8 pb-8 border-b border-slate-200/60 dark:border-slate-800/60">
+              {(rb as any)._resolved_logos?.logoProducao && (
+                <img src={(rb as any)._resolved_logos.logoProducao} alt="Produtora" className="h-14 w-auto object-contain dark:brightness-200" />
+              )}
+              {(rb as any)._resolved_logos?.logoProducao && (rb as any)._resolved_logos?.logoEspetaculo && (
+                <div className="w-px h-10 bg-slate-200 dark:bg-white/10"></div>
+              )}
+              {(rb as any)._resolved_logos?.logoEspetaculo && (
+                <img src={(rb as any)._resolved_logos.logoEspetaculo} alt={`${rb.espetaculo} Logo`} className="h-14 w-auto object-contain dark:brightness-200" />
+              )}
+            </div>
           
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold uppercase tracking-widest mb-4">
-             <Users className="size-3.5" /> Versão para Motorista
-          </div>
+          
           
           <h1 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight uppercase mb-6 drop-shadow-sm">
             {rb.espetaculo}
@@ -144,7 +165,7 @@ function DriverPrintPage() {
                 disabled={selectedDates.length === 0}
                 className="inline-flex items-center gap-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 dark:hover:bg-white transition transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
-                Imprimir Roteiro ({selectedDates.length})
+                Exportar Roteiro em PDF ({selectedDates.length})
               </button>
             </div>
           </div>

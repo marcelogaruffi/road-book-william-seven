@@ -10,7 +10,7 @@ import { Route as AuthedRoute } from "./route";
 import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/permissoes")({
-  head: () => ({ meta: [{ title: "Permissões Extras - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Permissões Extras - Áxis - Gestão de Teatros e Shows" }] }),
   component: PermissoesPage,
 });
 

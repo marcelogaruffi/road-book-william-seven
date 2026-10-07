@@ -161,7 +161,7 @@
     display: none !important;
   }
   
-  /* Esconder o Lovable Badge na impressÃ£o */
+  /* Esconder o Lovable Badge na impressão */
   a[href*="lovable.dev"], #lovable-badge, .lovable-badge, [class*="lovable"] {
     display: none !important;
   }

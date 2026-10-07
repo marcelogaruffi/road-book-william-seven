@@ -37,7 +37,7 @@ export const Route = createFileRoute("/turne-completa/$slug")({
     return { tour, roadbooks: formattedRbs };
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.tour.nome} — Turnê Completa - Seven Produções Artísticas` : "Turnê Completa - Seven Produções Artísticas";
+    const title = loaderData ? `${loaderData.tour.nome} - Turnê Completa - Áxis - Gestão de Teatros e Shows` : "Turnê Completa - Áxis - Gestão de Teatros e Shows";
     return { meta: [
       { title }, { name: "description", content: title },
       { property: "og:title", content: title },
@@ -51,7 +51,7 @@ function FixedPrintFooter() {
   return (
     <div className="hidden print:flex fixed bottom-0 left-0 w-full flex-col items-center justify-center text-[9px] text-slate-400 pt-4 pb-6 bg-white z-50">
       <div className="w-full max-w-[21cm] mx-auto border-t border-slate-200/60 pt-4 flex flex-col items-center justify-center gap-1 text-center">
-        <span className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Viagens e Turnês</span>
+        <span className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Teatros e Shows</span>
         <span className="font-sans font-medium text-slate-400">Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
       </div>
     </div>
@@ -136,7 +136,7 @@ function TurneCompleta() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-500/20 dark:bg-purple-500/10 blur-[100px]"></div>
       </div>
 
-      {/* FOOTER FIXO PARA IMPRESSÃO EM TODAS AS PÁGINAS */}
+      {/* FOOTER FIXO PARA IMPRESSÁO EM TODAS AS PÁGINAS */}
       <FixedPrintFooter />
 
       <div className="no-print max-w-3xl mx-auto px-5 pt-8 pb-4 relative z-10">

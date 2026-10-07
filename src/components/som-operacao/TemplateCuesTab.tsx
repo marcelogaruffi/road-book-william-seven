@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -260,7 +260,7 @@ export default function TemplateCuesTab() {
                         <Input value={cue.cena} onChange={e => updateRow(cue.id, 'cena', e.target.value)} className="bg-white dark:bg-black/50" placeholder="Ato 1" />
                       </div>
                       <div className="w-full md:w-28">
-                        <Label className="text-xs font-bold text-slate-500 mb-1 block">DURAÇÃO</Label>
+                        <Label className="text-xs font-bold text-slate-500 mb-1 block">DURAÇÁO</Label>
                         <Input value={cue.duracao} onChange={e => updateRow(cue.id, 'duracao', formatDurationMask(e.target.value))} className="text-center bg-white dark:bg-black/50" placeholder="00:00" />
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => removeRow(cue.id)} className="text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 md:mt-6">
@@ -270,7 +270,7 @@ export default function TemplateCuesTab() {
 
                     <div className="flex flex-col md:flex-row gap-4 mt-4 pt-4 border-t border-slate-200 dark:border-white/10">
                       <div className="flex-1">
-                        <Label className="text-xs font-bold text-amber-600 dark:text-amber-500 mb-1 block">DEIXA DE PREPARAÇÃO (STANDBY)</Label>
+                        <Label className="text-xs font-bold text-amber-600 dark:text-amber-500 mb-1 block">DEIXA DE PREPARAÇÁO (STANDBY)</Label>
                         <Textarea 
                           value={cue.deixa_prep} 
                           onChange={e => updateRow(cue.id, 'deixa_prep', e.target.value)} 
@@ -279,7 +279,7 @@ export default function TemplateCuesTab() {
                         />
                       </div>
                       <div className="flex-1">
-                        <Label className="text-xs font-bold text-emerald-600 dark:text-emerald-500 mb-1 block">DEIXA DE AÇÃO (GO)</Label>
+                        <Label className="text-xs font-bold text-emerald-600 dark:text-emerald-500 mb-1 block">DEIXA DE AÇÁO (GO)</Label>
                         <Textarea 
                           value={cue.deixa_go} 
                           onChange={e => updateRow(cue.id, 'deixa_go', e.target.value)} 

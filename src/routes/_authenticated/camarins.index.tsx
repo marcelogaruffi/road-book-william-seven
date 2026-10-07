@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 
 export const Route = createFileRoute("/_authenticated/camarins/")({
-  head: () => ({ meta: [{ title: "Camarins - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Camarins - Áxis - Gestão de Teatros e Shows" }] }),
   component: CamarinsPage,
 });
 

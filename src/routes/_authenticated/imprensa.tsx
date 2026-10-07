@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
@@ -21,7 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/imprensa")({
-  head: () => ({ meta: [{ title: "Imprensa - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Imprensa - Áxis - Gestão de Teatros e Shows" }] }),
   component: ImprensaPage,
 });
 

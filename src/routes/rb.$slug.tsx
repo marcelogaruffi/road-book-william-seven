@@ -60,7 +60,7 @@ export const Route = createFileRoute("/rb/$slug")({
     return rb;
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade}` : "Guia de Viagem";
+    const title = loaderData ? `${loaderData.espetaculo} - ${loaderData.cidade} - Áxis - Gestão de Teatros e Shows` : "Guia de Viagem - Áxis - Gestão de Teatros e Shows";
     return { meta: [
       { title }, { name: "description", content: `Guia de Viagem ${title}` },
       { property: "og:title", content: title },
@@ -706,7 +706,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
           </Section>
         )}
 
-        {/* PROGRAMAÇÃO DIÁRIA com clima por dia */}
+        {/* PROGRAMAÇÁO DIÁRIA com clima por dia */}
         {prog.length > 0 && (
           <Section title="Programação diária" icon={<Calendar className="size-4" />}>
             <div className="space-y-6">
@@ -1039,9 +1039,16 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
           );
         })()}
 
-        <footer className="pt-8 pb-12 text-center text-xs text-muted-foreground">
-          Guia de Viagem · William Seven<br />
-          Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
+        <footer className="pt-8 pb-12 flex flex-col items-center justify-center gap-4 text-xs text-muted-foreground print:hidden">
+          <div className="flex items-center gap-6">
+            <img src="/logo-contemporanea.png" alt="Contemporânea Produções" className="h-14 sm:h-16 object-contain opacity-90" />
+            <span className="hidden sm:block w-px h-14 bg-slate-200"></span>
+            <img src="/logo-axis-simples.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90" />
+          </div>
+          <div className="text-center">
+            <strong className="block font-bold text-slate-500 uppercase tracking-widest mb-1">Gestão de Teatros e Shows</strong>
+            <span>Desenvolvido por Marcelo Garuffi - Contemporânea Produções</span>
+          </div>
         </footer>
       </main>
 
@@ -1943,7 +1950,7 @@ function PrintFooter() {
   return (
     <div className="flex justify-between items-center text-[9px] text-slate-400 border-t border-slate-200/60 pt-3 mt-6">
       <div className="flex flex-col gap-0.5">
-        <strong className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Viagens e Turnês</strong>
+        <strong className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Teatros e Shows</strong>
         <span className="font-sans font-medium text-slate-400">Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
       </div>
       <div className="flex items-center justify-center relative size-7 shrink-0 bg-slate-200 rounded-full">

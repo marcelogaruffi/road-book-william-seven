@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import TemplateRidersTab from "@/components/TemplateRidersTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

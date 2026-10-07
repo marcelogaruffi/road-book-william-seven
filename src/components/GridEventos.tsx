@@ -136,3 +136,4 @@ export function GridEventos({ onSelect }: { onSelect: (eventoId: string, roadboo
     </div>
   );
 }
+

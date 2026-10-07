@@ -9,7 +9,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import ExcelJS from "exceljs";
 import * as fileSaverPkg from "file-saver";
-import { File, Download } from "lucide-react";
+import { File, Download, Printer } from "lucide-react";
 
 const saveAs = fileSaverPkg.saveAs || fileSaverPkg.default?.saveAs || fileSaverPkg.default;
 
@@ -17,21 +17,49 @@ export const Route = createFileRoute("/_authenticated/emissao-relatorios")({
   component: EmissaoRelatoriosPage,
 });
 
-const REPORT_OPTIONS = [
-  { id: "catering_cardapio", label: "Catering - Cardápio" },
-  { id: "catering_restricoes", label: "Catering - Restrições Alimentares" },
-  { id: "palco_props", label: "Palco - Props e Cenários" },
-  { id: "camarins", label: "Camarins - Distribuição" },
-  { id: "figurinos", label: "Figurinos - Listagem" },
-  { id: "contatos_turne", label: "Equipe - Contatos Turnê (Global)" },
-  { id: "dados_pessoais", label: "Equipe - Dados Pessoais (Global)" },
-  { id: "imprensa_mailing", label: "Imprensa - Mailing (Global)" },
-  { id: "imprensa_clipping", label: "Imprensa - Clipping (Global)" },
-  { id: "publico", label: "Público - Geral (Global)" },
-  { id: "vendas", label: "Vendas - Geral (Global)" },
-  { id: "midias_cronograma", label: "Mídias - Cronograma (Global)" },
-  { id: "midias_divulgacoes", label: "Divulgações Redes Sociais" },
+const REPORT_GROUPS = [
+  {
+    name: "Gestão e Logística",
+    options: [
+      { id: "rooming_list", label: "Rooming List (Hotéis)" }
+    ]
+  },
+  {
+    name: "Backstage",
+    options: [
+      { id: "camarins", label: "Camarins - Distribuição" },
+      { id: "catering_cardapio", label: "Catering - Cardápio" },
+      { id: "catering_restricoes", label: "Catering - Restrições Alimentares" },
+      { id: "palco_props", label: "Montagem de Palco - Props e Cenários" },
+      { id: "figurinos", label: "Figurinos - Listagem" }
+    ]
+  },
+  {
+    name: "Produção Executiva",
+    options: [
+      { id: "publico", label: "Público - Geral" },
+      { id: "vendas", label: "Vendas - Geral" }
+    ]
+  },
+  {
+    name: "Equipe e RH",
+    options: [
+      { id: "dados_pessoais", label: "Equipe - Dados Pessoais" },
+      { id: "contatos_turne", label: "Equipe - Contatos Turnê" }
+    ]
+  },
+  {
+    name: "Comunicação e Mídia",
+    options: [
+      { id: "imprensa_mailing", label: "Imprensa - Mailing" },
+      { id: "imprensa_clipping", label: "Imprensa - Clipping" },
+      { id: "midias_cronograma", label: "Mídias - Cronograma" },
+      { id: "midias_divulgacoes", label: "Divulgações Redes Sociais" }
+    ]
+  }
 ];
+
+const REPORT_OPTIONS = REPORT_GROUPS.flatMap(g => g.options);
 
 function applyExcelStyles(worksheet: any, headerRowNumber: number) {
   const headerRow = worksheet.getRow(headerRowNumber);
@@ -236,7 +264,20 @@ function EmissaoRelatoriosPage() {
             y += 8; 
           });
         }
-        else if (repId === "publico") {
+        else if (repId === "rooming_list") {
+            let y = drawHeaderPDF(doc, "Gestão - Rooming List", logoData);
+            const { data } = await supabase.from('rooming_list').select('*, evento:eventos(cidade, local, espetaculo)');
+            const rows = (data || []).map((r: any) => [
+              r.evento ? `${r.evento.cidade} (${r.evento.espetaculo})` : "-",
+              r.numero_quarto || "S/N",
+              r.tipo_quarto || "-",
+              r.hospede_1 || "-",
+              r.hospede_2 || "-",
+              r.hospede_3 || "-"
+            ]);
+            autoTable(doc, { startY: y, head: [['Evento', 'Quarto', 'Tipo', 'Hóspede 1', 'Hóspede 2', 'Hóspede 3']], body: rows, theme: 'striped', headStyles: { fillColor: [15, 23, 42] } });
+          }
+          else if (repId === "publico") {
           let y = drawHeaderPDF(doc, "Público Geral", logoData);
           const { data } = await supabase.from('relatorio_publico').select('*, roadbooks(cidade, estado, espetaculo)');
           const rows = (data || []).map((r: any, index: number) => [
@@ -438,7 +479,7 @@ function EmissaoRelatoriosPage() {
           const ws = workbook.addWorksheet('Contatos Turnê');
           ws.columns = [{ width: 35 }, { width: 25 }, { width: 25 }, { width: 35 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Contatos Turnê (Global)`;
+          ws.getCell('B1').value = `Contatos Turnê `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -452,7 +493,7 @@ function EmissaoRelatoriosPage() {
           const ws = workbook.addWorksheet('Dados Pessoais');
           ws.columns = [{ width: 35 }, { width: 20 }, { width: 20 }, { width: 30 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Dados Pessoais (Global)`;
+          ws.getCell('B1').value = `Dados Pessoais `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -466,7 +507,7 @@ function EmissaoRelatoriosPage() {
           const ws = workbook.addWorksheet('Mailing');
           ws.columns = [{ width: 30 }, { width: 30 }, { width: 35 }, { width: 20 }, { width: 20 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Imprensa - Mailing (Global)`;
+          ws.getCell('B1').value = `Imprensa - Mailing `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -480,7 +521,7 @@ function EmissaoRelatoriosPage() {
           const ws = workbook.addWorksheet('Clipping');
           ws.columns = [{ width: 25 }, { width: 25 }, { width: 40 }, { width: 15 }, { width: 15 }, { width: 40 }, { width: 10 }, { width: 10 }, { width: 12 }, { width: 10 }, { width: 12 }, { width: 10 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Imprensa - Clipping (Global)`;
+          ws.getCell('B1').value = `Imprensa - Clipping `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -500,11 +541,33 @@ function EmissaoRelatoriosPage() {
           });
           applyExcelStyles(ws, 3);
         }
-        else if (repId === "publico") {
+        else if (repId === "rooming_list") {
+            const ws = workbook.addWorksheet('Rooming List');
+            ws.columns = [{ width: 35 }, { width: 15 }, { width: 20 }, { width: 25 }, { width: 25 }, { width: 25 }, { width: 35 }];
+            drawLogoExcel(ws);
+            ws.getCell('B1').value = `Rooming List `;
+            ws.getCell('B1').font = { size: 16, bold: true };
+            ws.getCell('B1').alignment = { vertical: 'middle' };
+            
+            const header = ws.getRow(3);
+            header.values = ['Evento', 'Quarto', 'Tipo', 'Hóspede 1', 'Hóspede 2', 'Hóspede 3', 'Obs'];
+            const { data } = await supabase.from('rooming_list').select('*, evento:eventos(cidade, local, espetaculo)');
+            (data || []).forEach((r: any) => ws.addRow([
+              r.evento ? `${r.evento.cidade} (${r.evento.espetaculo})` : "-",
+              r.numero_quarto || "S/N",
+              r.tipo_quarto || "-",
+              r.hospede_1 || "-",
+              r.hospede_2 || "-",
+              r.hospede_3 || "-",
+              r.observacoes || "-"
+            ]));
+            applyExcelStyles(ws, 3);
+          }
+          else if (repId === "publico") {
           const ws = workbook.addWorksheet('Público');
           ws.columns = [{ width: 22 }, { width: 25 }, { width: 35 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 15 }, { width: 15 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Público (Global)`;
+          ws.getCell('B1').value = `Público `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -527,7 +590,7 @@ function EmissaoRelatoriosPage() {
           const ws = workbook.addWorksheet('Vendas');
           ws.columns = [{ width: 22 }, { width: 35 }, { width: 35 }, { width: 15 }, { width: 20 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Vendas (Global)`;
+          ws.getCell('B1').value = `Vendas `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -547,7 +610,7 @@ function EmissaoRelatoriosPage() {
           const ws = workbook.addWorksheet('Mídias - Cronograma');
           ws.columns = [{ width: 22 }, { width: 35 }, { width: 20 }, { width: 20 }, { width: 20 }, { width: 50 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Mídias - Cronograma de Postagens (Global)`;
+          ws.getCell('B1').value = `Mídias - Cronograma de Postagens `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -568,7 +631,7 @@ function EmissaoRelatoriosPage() {
           const ws = workbook.addWorksheet('Mídias - Divulgações');
           ws.columns = [{ width: 22 }, { width: 35 }, { width: 20 }, { width: 40 }, { width: 50 }];
           drawLogoExcel(ws);
-          ws.getCell('B1').value = `Mídias - Divulgações Publicadas (Global)`;
+          ws.getCell('B1').value = `Mídias - Divulgações Publicadas `;
           ws.getCell('B1').font = { size: 16, bold: true };
           ws.getCell('B1').alignment = { vertical: 'middle' };
           
@@ -600,7 +663,7 @@ function EmissaoRelatoriosPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex items-center gap-3 mb-8">
-        <File className="size-8 text-blue-600" />
+        <Printer className="size-8 text-blue-600" />
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Emissão de Relatórios</h1>
           <p className="text-slate-500">Selecione os relatórios desejados. Para relatórios por evento, selecione um evento primeiro.</p>
@@ -626,12 +689,19 @@ function EmissaoRelatoriosPage() {
                 <Button variant="secondary" onClick={selectAll}>Marcar Todos</Button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-                {REPORT_OPTIONS.map(opt => (
-                  <label key={opt.id} className="flex items-center gap-3 p-4 border rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-                    <Checkbox checked={!!selectedReports[opt.id]} onCheckedChange={() => toggleReport(opt.id)} />
-                    <span className="font-medium text-slate-700 text-sm">{opt.label}</span>
-                  </label>
+              <div className="space-y-6 mb-8">
+                {REPORT_GROUPS.map(group => (
+                  <div key={group.name} className="bg-transparent">
+                    <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">{group.name}</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-2 gap-x-4">
+                      {group.options.map(opt => (
+                        <label key={opt.id} className="flex items-center gap-3 py-1 cursor-pointer text-slate-700 hover:text-primary transition-colors">
+                          <Checkbox checked={!!selectedReports[opt.id]} onCheckedChange={() => toggleReport(opt.id)} />
+                          <span className="font-medium text-slate-700 text-sm">{opt.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
 
@@ -650,3 +720,4 @@ function EmissaoRelatoriosPage() {
     </div>
   );
 }
+

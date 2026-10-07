@@ -12,7 +12,7 @@ import { ptBR } from "date-fns/locale";
 import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/minhas-escalas")({
-  head: () => ({ meta: [{ title: "Minhas Escalas - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Minhas Escalas - Áxis - Gestão de Teatros e Shows" }] }),
   component: MinhasEscalasPage,
 });
 

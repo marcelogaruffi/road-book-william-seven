@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,7 +29,7 @@ type ProfileData = {
 };
 
 export const Route = createFileRoute("/_authenticated/dados-equipe")({
-  head: () => ({ meta: [{ title: "Dados da Equipe - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Dados da Equipe - Áxis - Gestão de Teatros e Shows" }] }),
   component: DadosEquipePage,
 });
 

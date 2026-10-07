@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { GridEventos } from "@/components/GridEventos";
@@ -16,7 +16,7 @@ import { Route as AuthedRoute } from "./route";
 import { usePermissions } from "@/hooks/usePermissions";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Financeiro - Áxis - Gestão de Teatros e Shows" }] }),
   component: FinanceiroPage,
 });
 
@@ -111,3 +111,4 @@ function FinanceiroPage() {
     </div>
   );
 }
+

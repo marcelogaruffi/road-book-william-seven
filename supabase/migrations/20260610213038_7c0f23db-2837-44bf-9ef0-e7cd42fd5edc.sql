@@ -1,4 +1,4 @@
-
+﻿
 CREATE TABLE public.roadbooks (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -42,3 +42,4 @@ $$ LANGUAGE plpgsql SET search_path = public;
 
 CREATE TRIGGER trg_roadbooks_updated BEFORE UPDATE ON public.roadbooks
 FOR EACH ROW EXECUTE FUNCTION public.tg_set_updated_at();
+

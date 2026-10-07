@@ -34,7 +34,7 @@ export const Route = createFileRoute("/turne/$slug")({
     return { tour: tour as Tour, cities: (cities as City[]) ?? [] };
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.tour.nome} — Turnê - Seven Produções Artísticas` : "Turnê - Seven Produções Artísticas";
+    const title = loaderData ? `${loaderData.tour.nome} - Turnê - Áxis - Gestão de Teatros e Shows` : "Turnê - Áxis - Gestão de Teatros e Shows";
     return { meta: [
       { title }, { name: "description", content: `Guia de Viagem Geral da Turnê ${loaderData?.tour.nome ?? ""}` },
       { property: "og:title", content: title },
@@ -272,9 +272,16 @@ function Page() {
           </div>
         )}
 
-        <footer className="pt-12 pb-8 text-center text-[10px] font-medium text-slate-400 dark:text-slate-500 flex flex-col gap-1">
-          <span className="font-bold tracking-widest uppercase text-slate-500 text-[10px]">Gestão de Viagens e Turnês</span>
-          <span className="text-[10px]">Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
+                <footer className="pt-12 pb-8 flex flex-col items-center justify-center gap-4 text-[10px] text-slate-400 dark:text-slate-500">
+          <div className="flex items-center justify-center gap-6">
+            <img src="/logo-contemporanea.png" alt="Contemporânea" className="h-14 sm:h-16 object-contain opacity-90" />
+            <span className="hidden sm:block w-px h-14 bg-slate-200"></span>
+            <img src="/logo-axis-simples.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90" />
+          </div>
+          <div className="text-center flex flex-col gap-1">
+            <span className="font-bold tracking-widest uppercase text-slate-500 text-[10px]">Gestão de Teatros e Shows</span>
+            <span className="text-[10px]">Desenvolvido por Marcelo Garuffi - Contemporânea Produções</span>
+          </div>
         </footer>
       </main>
     </div>

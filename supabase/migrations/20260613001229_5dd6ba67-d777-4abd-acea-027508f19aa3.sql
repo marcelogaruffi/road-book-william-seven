@@ -1,1 +1,1 @@
-ALTER TABLE public.roadbooks ADD COLUMN IF NOT EXISTS teatro_fotos jsonb NOT NULL DEFAULT '[]'::jsonb;
+﻿ALTER TABLE public.roadbooks ADD COLUMN IF NOT EXISTS teatro_fotos jsonb NOT NULL DEFAULT '[]'::jsonb;

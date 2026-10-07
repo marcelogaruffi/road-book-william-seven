@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/meus-pagamentos")({
-  head: () => ({ meta: [{ title: "Meus Pagamentos - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Meus Pagamentos - Áxis - Gestão de Teatros e Shows" }] }),
   component: MeusPagamentosPage,
 });
 

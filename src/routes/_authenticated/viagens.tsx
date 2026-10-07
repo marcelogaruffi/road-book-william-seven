@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -38,7 +38,7 @@ type Roadbook = {
 type Tour = { id: string; slug: string; nome: string; espetaculo: string | null };
 
 export const Route = createFileRoute("/_authenticated/viagens")({
-  head: () => ({ meta: [{ title: "Viagens - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Viagens - Áxis - Gestão de Teatros e Shows" }] }),
   component: Viagens,
 });
 
@@ -460,3 +460,4 @@ function Viagens() {
     </div>
   );
 }
+

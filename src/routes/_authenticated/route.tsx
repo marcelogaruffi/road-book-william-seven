@@ -1,4 +1,4 @@
-import { ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus } from "lucide-react";
+import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus } from "lucide-react";
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { LayoutDashboard, UserPlus, Calendar, Wallet, Route as RouteIcon, Bus, C
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Users, Contact2, Luggage, Image as ImageIcon, Megaphone, Coffee } from "lucide-react";
+import { Users, Printer, Contact2, Luggage, Image as ImageIcon, Megaphone, Coffee } from "lucide-react";
 import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
 
 type Profile = {
@@ -236,42 +236,47 @@ function AuthedLayout() {
 
             return (
               <>
-                <SGroup title="Meu Espaço" icon={Contact2}>
+                                                <SGroup title="Meu Espaço" icon={Contact2}>
                   <SLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                   <SLink to="/perfil" icon={UserPlus} label="Dados Cadastrais" />
                   <SLink to="/minhas-escalas" icon={Calendar} label="Minhas Escalas" />
                   <SLink to="/meus-pagamentos" icon={Wallet} label="Meus Pagamentos" />
                 </SGroup>
 
-                <SGroup title="Produção" icon={ClipboardList}>
+                <SGroup title="Gestão e Logística" icon={Bus}>
                   <SLink to="/eventos" icon={Calendar} label="Eventos e Espetáculos" />
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
-                </SGroup>
-
-                <SGroup title="Equipe" icon={Users}>
-                  <SLink to="/contatos" icon={Contact2} label="Contatos da Equipe" />
-                  <SLink to="/dados-equipe" icon={Users} label="Dados da Equipe" />
-                </SGroup>
-
-                <SGroup title="Artístico" icon={Drama}>
-                  <SLink to="/partituras" icon={Music} label="Partituras" />
-                  <SLink to="/musicas" icon={FileAudio} label="Músicas" />
-                </SGroup>
-
-                <SGroup title="Bastidores" icon={DoorOpen}>
-                  <SLink to="/palco" icon={StageIcon} label="Montagem de Palco" />
-                  <SLink to="/figurinos" icon={ClothesRackIcon} label="Figurinos" />
-                  <SLink to="/camarins" icon={StarDoorIcon} label="Camarins" />
-                  <SLink to="/catering" icon={Coffee} label="Catering" />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" />
+                  <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
+                  <SLink to="/rooming-list" icon={DoorOpen} label="Rooming List (Hotéis)" show={isProdutor} />
                 </SGroup>
 
-                <SGroup title="Técnica" icon={Settings}>
+                <SGroup title="Backstage" icon={DoorOpen}>
+                  <SLink to="/camarins" icon={StarDoorIcon} label="Camarins" />
+                  <SLink to="/palco" icon={StageIcon} label="Montagem de Palco" />
+                  <SLink to="/catering" icon={Coffee} label="Catering" />
+                  <SLink to="/figurinos" icon={ClothesRackIcon} label="Figurinos" />
+                </SGroup>
+
+                <SGroup title="Técnica e Artístico" icon={Drama}>
+                  <SLink to="/musicas" icon={FileAudio} label="Músicas" />
+                  <SLink to="/partituras" icon={Music} label="Partituras" />
                   <SLink to="/iluminacao" icon={Lightbulb} label="Iluminação" />
                   <SLink to="/som" icon={Mic2} label="Áudio / Som" />
                   <SLink to="/som-operacao" icon={Play} label="Operação de Som" />
                   <SLink to="/video" icon={Video} label="Vídeo" />
+                </SGroup>
+
+                <SGroup title="Produção Executiva" icon={ClipboardList}>
+                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
+                  <SLink to="/espetaculos" icon={Music} label="Cadastro de Espetáculo" />
+                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
+                  <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
+                  <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
+                  <SLink to="/emissao-relatorios" icon={Printer} label="Emissão de Relatórios" show={isProdutor} />
+                  <SLink to="/fornecedores" icon={Contact2} label="Diretório de Fornecedores" show={isProdutor} />
+                  <SLink to="/contratos" icon={FileSignature} label="Contratos e Documentos" />
                 </SGroup>
 
                 <SGroup title="Comunicação e Mídia" icon={Smartphone}>
@@ -281,19 +286,15 @@ function AuthedLayout() {
                   <SLink to="/divulgacoes" icon={Megaphone} label="Divulgações Redes Sociais" show={isProdutor || userRole === 'midias_sociais'} />
                 </SGroup>
 
-                <SGroup title="Controles e Gestão" icon={Banknote}>
-                                    <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
-                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
-                  <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
-                  <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
-                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
-                  <SLink to="/emissao-relatorios" icon={File} label="Emissão de Relatórios" show={isProdutor} />
+                <SGroup title="Equipe e RH" icon={Users}>
+                  <SLink to="/contatos" icon={Contact2} label="Contatos da Equipe" />
+                  <SLink to="/dados-equipe" icon={Users} label="Dados da Equipe" />
+                  <SLink to="/cadastros" icon={UserPlus} label="Cadastros de Equipe" />
                 </SGroup>
 
                 <SGroup title="Administração" icon={Settings} show={userRole === 'admin' || userRole === 'dev'}>
-                  <SLink to="/espetaculos" icon={Music} label="Cadastro de Espetáculo" />
-                  <SLink to="/cadastros" icon={UserPlus} label="Cadastros de Equipe" />
                   <SLink to="/configuracoes" icon={Settings} label="Configurações" />
+                  <SLink to="/sobre" icon={Info} label="Sobre o Sistema" />
                 </SGroup>
               </>
             );

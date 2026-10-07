@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/partituras/")({
-  head: () => ({ meta: [{ title: "Partituras e Músicas - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Partituras e Músicas - Áxis - Gestão de Teatros e Shows" }] }),
   component: PartiturasPage,
 });
 
@@ -489,7 +489,7 @@ function PartiturasPage() {
           )}
         </TabsContent>
 
-        {/* ================= ABA PADRÃO ================= */}
+        {/* ================= ABA PADRÁO ================= */}
         <TabsContent value="configuracao" className="mt-6 space-y-6">
           <Card>
             <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b">

@@ -55,7 +55,7 @@ export const Route = createFileRoute("/_authenticated/print/$slug")({
     return rb;
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `${loaderData.espetaculo} — ${loaderData.cidade} - Seven Produções Artísticas` : "Guia de Viagem - Seven Produções Artísticas";
+    const title = loaderData ? `${loaderData.espetaculo} - ${loaderData.cidade} - Áxis - Gestão de Teatros e Shows` : "Guia de Viagem - Áxis - Gestão de Teatros e Shows";
     return { meta: [
       { title }, { name: "description", content: `Guia de Viagem ${title}` },
       { property: "og:title", content: title },
@@ -506,7 +506,7 @@ export function PrintRoadbookView({ r, isFirst = true, isLast = true, fetchDelay
           </Section>
         )}
 
-        {/* PROGRAMAÇÃO DIÁRIA com clima por dia */}
+        {/* PROGRAMAÇÁO DIÁRIA com clima por dia */}
         {prog.length > 0 && (
           <Section title="Programação diária" icon={<Calendar className="size-4" />}>
             <div className="space-y-6">
@@ -798,9 +798,16 @@ export function PrintRoadbookView({ r, isFirst = true, isLast = true, fetchDelay
         )}
 
         {isLast && (
-          <footer className="mt-16 pb-8 text-center text-[10px] font-medium text-slate-400 no-print flex flex-col gap-1">
-            <span className="font-bold tracking-widest uppercase text-slate-500">Gestão de Viagens e Turnês - Seven produções artística</span>
-            <span>Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
+                    <footer className="mt-16 pb-8 flex flex-col items-center justify-center gap-4 text-[10px] font-medium text-slate-400 no-print">
+            <div className="flex items-center justify-center gap-6">
+              <img src="/logo-contemporanea.png" alt="Contemporânea" className="h-14 sm:h-16 object-contain opacity-90" />
+              <span className="hidden sm:block w-px h-14 bg-slate-200"></span>
+              <img src="/logo-axis-simples.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90" />
+            </div>
+            <div className="text-center flex flex-col gap-1">
+              <span className="font-bold tracking-widest uppercase text-slate-500">Gestão de Teatros e Shows</span>
+              <span>Desenvolvido por Marcelo Garuffi - Contemporânea Produções</span>
+            </div>
           </footer>
         )}
       </main>
@@ -1679,7 +1686,7 @@ function PrintHeader({ title, isFirstPage = false, logoUrl }: { title: string; i
 function PrintFooter() {
   return (
     <div className="flex flex-col items-center justify-center text-[9px] text-slate-400 border-t border-slate-200/60 pt-4 mt-6 gap-1 text-center">
-      <span className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Viagens e Turnês - Seven produções artística</span>
+      <span className="font-sans font-bold tracking-widest uppercase text-slate-500">Gestão de Teatros e Shows - Seven produções artística</span>
       <span className="font-sans font-medium text-slate-400">Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos</span>
     </div>
   );
@@ -2466,7 +2473,7 @@ function PublicPage() {
   const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
   
   useEffect(() => {
-    document.title = "Guia de Viagem - Seven Produções Artísticas";
+    document.title = "Guia de Viagem - Áxis - Gestão de Teatros e Shows";
     
     let wasDark = false;
     const beforePrint = () => {

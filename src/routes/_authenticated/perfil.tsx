@@ -1,4 +1,4 @@
-﻿import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -13,7 +13,7 @@ import { Save, User, MapPin, Landmark } from "lucide-react";
 import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/perfil")({
-  head: () => ({ meta: [{ title: "Meus Dados - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Meus Dados - Áxis - Gestão de Teatros e Shows" }] }),
   component: PerfilPage,
 });
 

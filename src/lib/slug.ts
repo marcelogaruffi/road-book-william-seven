@@ -17,3 +17,4 @@ export function makeRoadbookSlug(espetaculo: string, cidade: string): string {
 export function makeTourSlug(nome: string): string {
   return slugify(nome) || "turne";
 }
+

@@ -12,7 +12,7 @@ import pkg from "file-saver";
 const { saveAs } = pkg;
 
 export const Route = createFileRoute("/_authenticated/dados-pessoais")({
-  head: () => ({ meta: [{ title: "Dados Pessoais - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Dados Pessoais - Áxis - Gestão de Teatros e Shows" }] }),
   component: DadosPessoaisPage,
 });
 

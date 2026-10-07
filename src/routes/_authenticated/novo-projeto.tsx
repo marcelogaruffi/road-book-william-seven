@@ -11,7 +11,7 @@ import { ChevronRight, ChevronLeft, Calendar, Users, Briefcase, Camera, Save, Ma
 import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/novo-projeto")({
-  head: () => ({ meta: [{ title: "Novo Projeto - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Novo Projeto - Áxis - Gestão de Teatros e Shows" }] }),
   component: NovoProjetoWizard,
 });
 

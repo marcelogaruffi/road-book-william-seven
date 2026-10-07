@@ -21,7 +21,7 @@ import * as fileSaverPkg from "file-saver";
 const saveAs = fileSaverPkg.saveAs || fileSaverPkg.default?.saveAs || fileSaverPkg.default;
 
 export const Route = createFileRoute("/_authenticated/divulgacoes")({
-  head: () => ({ meta: [{ title: "Divulgações Redes Sociais - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Divulgações Redes Sociais - Áxis - Gestão de Teatros e Shows" }] }),
   component: DivulgacoesPage,
 });
 

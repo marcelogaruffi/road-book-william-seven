@@ -9,7 +9,7 @@ import { Plus, Route as RouteIcon, MapPin, Calendar, Users, Edit, Trash2, ArrowR
 import { customConfirm } from "@/lib/custom-confirm";
 
 export const Route = createFileRoute("/_authenticated/tour/")({
-  head: () => ({ meta: [{ title: "Turnês - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Turnês - Áxis - Gestão de Teatros e Shows" }] }),
   component: ToursPage,
 });
 
@@ -213,7 +213,7 @@ function TourCard({ tour, isFinished = false, isHappening = false, onDelete }: {
           dayStr = `${dayStr} a ${d2}`;
         } else {
           dayStr = `${dayStr}/${monthStr} - ${d2}/${m2}`;
-          monthStr = 'PERÍODO';
+          monthStr = 'PERÁODO';
         }
       }
     }
@@ -314,4 +314,5 @@ function TourCard({ tour, isFinished = false, isHappening = false, onDelete }: {
     </Card>
   );
 }
+
 

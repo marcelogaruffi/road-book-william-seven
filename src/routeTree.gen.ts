@@ -18,6 +18,7 @@ import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authentica
 import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
 import { Route as AuthenticatedContatosRouteImport } from './routes/_authenticated/contatos'
+import { Route as AuthenticatedContratosRouteImport } from './routes/_authenticated/contratos'
 import { Route as AuthenticatedDadosEquipeRouteImport } from './routes/_authenticated/dados-equipe'
 import { Route as AuthenticatedDadosPessoaisRouteImport } from './routes/_authenticated/dados-pessoais'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -27,6 +28,7 @@ import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedEspetaculosRouteImport } from './routes/_authenticated/espetaculos'
 import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticated/eventos'
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
+import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated/fornecedores'
 import { Route as AuthenticatedFotosRouteImport } from './routes/_authenticated/fotos'
 import { Route as AuthenticatedImprensaRouteImport } from './routes/_authenticated/imprensa'
 import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
@@ -36,6 +38,8 @@ import { Route as AuthenticatedNovoProjetoRouteImport } from './routes/_authenti
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPermissoesRouteImport } from './routes/_authenticated/permissoes'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
+import { Route as AuthenticatedRoomingListRouteImport } from './routes/_authenticated/rooming-list'
+import { Route as AuthenticatedSobreRouteImport } from './routes/_authenticated/sobre'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
 import { Route as AuthenticatedViagensRouteImport } from './routes/_authenticated/viagens'
 import { Route as MotoristaPrintSlugRouteImport } from './routes/motorista-print.$slug'
@@ -113,6 +117,11 @@ const AuthenticatedContatosRoute = AuthenticatedContatosRouteImport.update({
   path: '/contatos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedContratosRoute = AuthenticatedContratosRouteImport.update({
+  id: '/contratos',
+  path: '/contratos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDadosEquipeRoute =
   AuthenticatedDadosEquipeRouteImport.update({
     id: '/dados-equipe',
@@ -163,6 +172,12 @@ const AuthenticatedFinanceiroRoute = AuthenticatedFinanceiroRouteImport.update({
   path: '/financeiro',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedFornecedoresRoute =
+  AuthenticatedFornecedoresRouteImport.update({
+    id: '/fornecedores',
+    path: '/fornecedores',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFotosRoute = AuthenticatedFotosRouteImport.update({
   id: '/fotos',
   path: '/fotos',
@@ -209,6 +224,17 @@ const AuthenticatedPermissoesRoute = AuthenticatedPermissoesRouteImport.update({
 const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
   id: '/publico',
   path: '/publico',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedRoomingListRoute =
+  AuthenticatedRoomingListRouteImport.update({
+    id: '/rooming-list',
+    path: '/rooming-list',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedSobreRoute = AuthenticatedSobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedVendasRoute = AuthenticatedVendasRouteImport.update({
@@ -386,6 +412,7 @@ export interface FileRoutesByFullPath {
   '/checklist': typeof AuthenticatedChecklistRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contatos': typeof AuthenticatedContatosRoute
+  '/contratos': typeof AuthenticatedContratosRoute
   '/dados-equipe': typeof AuthenticatedDadosEquipeRoute
   '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -395,6 +422,7 @@ export interface FileRoutesByFullPath {
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/fotos': typeof AuthenticatedFotosRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
@@ -404,6 +432,8 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
+  '/rooming-list': typeof AuthenticatedRoomingListRoute
+  '/sobre': typeof AuthenticatedSobreRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/viagens': typeof AuthenticatedViagensRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
@@ -444,6 +474,7 @@ export interface FileRoutesByTo {
   '/checklist': typeof AuthenticatedChecklistRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/contatos': typeof AuthenticatedContatosRoute
+  '/contratos': typeof AuthenticatedContratosRoute
   '/dados-equipe': typeof AuthenticatedDadosEquipeRoute
   '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -453,6 +484,7 @@ export interface FileRoutesByTo {
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/eventos': typeof AuthenticatedEventosRoute
   '/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/fotos': typeof AuthenticatedFotosRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
@@ -462,6 +494,8 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
+  '/rooming-list': typeof AuthenticatedRoomingListRoute
+  '/sobre': typeof AuthenticatedSobreRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/viagens': typeof AuthenticatedViagensRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
@@ -504,6 +538,7 @@ export interface FileRoutesById {
   '/_authenticated/checklist': typeof AuthenticatedChecklistRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
   '/_authenticated/contatos': typeof AuthenticatedContatosRoute
+  '/_authenticated/contratos': typeof AuthenticatedContratosRoute
   '/_authenticated/dados-equipe': typeof AuthenticatedDadosEquipeRoute
   '/_authenticated/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -513,6 +548,7 @@ export interface FileRoutesById {
   '/_authenticated/espetaculos': typeof AuthenticatedEspetaculosRoute
   '/_authenticated/eventos': typeof AuthenticatedEventosRoute
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
+  '/_authenticated/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/_authenticated/fotos': typeof AuthenticatedFotosRoute
   '/_authenticated/imprensa': typeof AuthenticatedImprensaRoute
   '/_authenticated/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
@@ -522,6 +558,8 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/permissoes': typeof AuthenticatedPermissoesRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
+  '/_authenticated/rooming-list': typeof AuthenticatedRoomingListRoute
+  '/_authenticated/sobre': typeof AuthenticatedSobreRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/_authenticated/viagens': typeof AuthenticatedViagensRoute
   '/motorista-print/$slug': typeof MotoristaPrintSlugRoute
@@ -564,6 +602,7 @@ export interface FileRouteTypes {
     | '/checklist'
     | '/configuracoes'
     | '/contatos'
+    | '/contratos'
     | '/dados-equipe'
     | '/dados-pessoais'
     | '/dashboard'
@@ -573,6 +612,7 @@ export interface FileRouteTypes {
     | '/espetaculos'
     | '/eventos'
     | '/financeiro'
+    | '/fornecedores'
     | '/fotos'
     | '/imprensa'
     | '/meus-pagamentos'
@@ -582,6 +622,8 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/permissoes'
     | '/publico'
+    | '/rooming-list'
+    | '/sobre'
     | '/vendas'
     | '/viagens'
     | '/motorista-print/$slug'
@@ -622,6 +664,7 @@ export interface FileRouteTypes {
     | '/checklist'
     | '/configuracoes'
     | '/contatos'
+    | '/contratos'
     | '/dados-equipe'
     | '/dados-pessoais'
     | '/dashboard'
@@ -631,6 +674,7 @@ export interface FileRouteTypes {
     | '/espetaculos'
     | '/eventos'
     | '/financeiro'
+    | '/fornecedores'
     | '/fotos'
     | '/imprensa'
     | '/meus-pagamentos'
@@ -640,6 +684,8 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/permissoes'
     | '/publico'
+    | '/rooming-list'
+    | '/sobre'
     | '/vendas'
     | '/viagens'
     | '/motorista-print/$slug'
@@ -681,6 +727,7 @@ export interface FileRouteTypes {
     | '/_authenticated/checklist'
     | '/_authenticated/configuracoes'
     | '/_authenticated/contatos'
+    | '/_authenticated/contratos'
     | '/_authenticated/dados-equipe'
     | '/_authenticated/dados-pessoais'
     | '/_authenticated/dashboard'
@@ -690,6 +737,7 @@ export interface FileRouteTypes {
     | '/_authenticated/espetaculos'
     | '/_authenticated/eventos'
     | '/_authenticated/financeiro'
+    | '/_authenticated/fornecedores'
     | '/_authenticated/fotos'
     | '/_authenticated/imprensa'
     | '/_authenticated/meus-pagamentos'
@@ -699,6 +747,8 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/permissoes'
     | '/_authenticated/publico'
+    | '/_authenticated/rooming-list'
+    | '/_authenticated/sobre'
     | '/_authenticated/vendas'
     | '/_authenticated/viagens'
     | '/motorista-print/$slug'
@@ -807,6 +857,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedContatosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/contratos': {
+      id: '/_authenticated/contratos'
+      path: '/contratos'
+      fullPath: '/contratos'
+      preLoaderRoute: typeof AuthenticatedContratosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dados-equipe': {
       id: '/_authenticated/dados-equipe'
       path: '/dados-equipe'
@@ -870,6 +927,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFinanceiroRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/fornecedores': {
+      id: '/_authenticated/fornecedores'
+      path: '/fornecedores'
+      fullPath: '/fornecedores'
+      preLoaderRoute: typeof AuthenticatedFornecedoresRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/fotos': {
       id: '/_authenticated/fotos'
       path: '/fotos'
@@ -931,6 +995,20 @@ declare module '@tanstack/react-router' {
       path: '/publico'
       fullPath: '/publico'
       preLoaderRoute: typeof AuthenticatedPublicoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/rooming-list': {
+      id: '/_authenticated/rooming-list'
+      path: '/rooming-list'
+      fullPath: '/rooming-list'
+      preLoaderRoute: typeof AuthenticatedRoomingListRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/sobre': {
+      id: '/_authenticated/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof AuthenticatedSobreRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vendas': {
@@ -1152,6 +1230,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChecklistRoute: typeof AuthenticatedChecklistRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
   AuthenticatedContatosRoute: typeof AuthenticatedContatosRoute
+  AuthenticatedContratosRoute: typeof AuthenticatedContratosRoute
   AuthenticatedDadosEquipeRoute: typeof AuthenticatedDadosEquipeRoute
   AuthenticatedDadosPessoaisRoute: typeof AuthenticatedDadosPessoaisRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -1161,6 +1240,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedEspetaculosRoute: typeof AuthenticatedEspetaculosRoute
   AuthenticatedEventosRoute: typeof AuthenticatedEventosRoute
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
+  AuthenticatedFornecedoresRoute: typeof AuthenticatedFornecedoresRoute
   AuthenticatedFotosRoute: typeof AuthenticatedFotosRoute
   AuthenticatedImprensaRoute: typeof AuthenticatedImprensaRoute
   AuthenticatedMeusPagamentosRoute: typeof AuthenticatedMeusPagamentosRoute
@@ -1170,6 +1250,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedPermissoesRoute: typeof AuthenticatedPermissoesRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
+  AuthenticatedRoomingListRoute: typeof AuthenticatedRoomingListRoute
+  AuthenticatedSobreRoute: typeof AuthenticatedSobreRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedViagensRoute: typeof AuthenticatedViagensRoute
   AuthenticatedIluminacaoEvento_idRoute: typeof AuthenticatedIluminacaoEvento_idRoute
@@ -1204,6 +1286,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChecklistRoute: AuthenticatedChecklistRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
   AuthenticatedContatosRoute: AuthenticatedContatosRoute,
+  AuthenticatedContratosRoute: AuthenticatedContratosRoute,
   AuthenticatedDadosEquipeRoute: AuthenticatedDadosEquipeRoute,
   AuthenticatedDadosPessoaisRoute: AuthenticatedDadosPessoaisRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
@@ -1213,6 +1296,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedEspetaculosRoute: AuthenticatedEspetaculosRoute,
   AuthenticatedEventosRoute: AuthenticatedEventosRoute,
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
+  AuthenticatedFornecedoresRoute: AuthenticatedFornecedoresRoute,
   AuthenticatedFotosRoute: AuthenticatedFotosRoute,
   AuthenticatedImprensaRoute: AuthenticatedImprensaRoute,
   AuthenticatedMeusPagamentosRoute: AuthenticatedMeusPagamentosRoute,
@@ -1222,6 +1306,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedPermissoesRoute: AuthenticatedPermissoesRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,
+  AuthenticatedRoomingListRoute: AuthenticatedRoomingListRoute,
+  AuthenticatedSobreRoute: AuthenticatedSobreRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedViagensRoute: AuthenticatedViagensRoute,
   AuthenticatedIluminacaoEvento_idRoute: AuthenticatedIluminacaoEvento_idRoute,

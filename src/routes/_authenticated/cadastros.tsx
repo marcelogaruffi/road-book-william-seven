@@ -69,7 +69,7 @@ export const ROLE_BADGE_MAP: Record<string, { label: string, classes: string }> 
 };
 
 export const Route = createFileRoute("/_authenticated/cadastros")({
-  head: () => ({ meta: [{ title: "Equipe e Convites - Seven Produções Artísticas" }] }),
+  head: () => ({ meta: [{ title: "Equipe e Convites - Áxis - Gestão de Teatros e Shows" }] }),
   component: UsersPage,
 });
 
@@ -345,7 +345,7 @@ function UsersPage() {
           </div>
         </div>
 
-        {/* COLUNA DIREITA: USUÁRIOS */}
+        {/* COLUNA DIREITA: USUÁRIOS */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between px-2">
             <h3 className="font-bold text-xl text-slate-800 dark:text-white">Usuários Cadastrados ({users.length})</h3>
@@ -433,7 +433,7 @@ function UsersPage() {
       </TabsContent>
       </Tabs>
 
-      {/* MODAL DE EDIÇÃO */}
+      {/* MODAL DE EDIÁ‡ÁƒO */}
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="rounded-[2rem] p-8 border-0 shadow-2xl dark:bg-card max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -531,7 +531,7 @@ function UsersPage() {
               <Label>Nível de Acesso Principal (Permissões)</Label>
               {editUser?.role === 'dev' || editUser?.nome?.toLowerCase().includes('garuffi') ? (
                 <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
-                  🔒 O nível do Desenvolvedor não pode ser modificado.
+                  ðŸ”’ O nível do Desenvolvedor não pode ser modificado.
                 </div>
               ) : (
                 <select 
@@ -612,3 +612,4 @@ function UsersPage() {
     </div>
   );
 }
+

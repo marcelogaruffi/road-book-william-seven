@@ -12,10 +12,30 @@ export const Route = createFileRoute("/motorista-print/$slug")({
     const { data, error } = await supabase.from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!data) throw notFound();
-    return rowToRoadbook(data);
+    const rb = rowToRoadbook(data);
+    let logoEspetaculo = rb.logo_espetaculo_override || null;
+    let logoProducao = rb.logo_producao_override || null;
+
+    if (!logoEspetaculo) {
+      const { data: espData } = await supabase.from('templates_espetaculos').select("logo_espetaculo_url").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').ilike("nome_espetaculo", rb.espetaculo).maybeSingle();
+      if (espData) logoEspetaculo = espData.logo_espetaculo_url;
+    }
+
+    if (!logoProducao && rb.evento_id) {
+      const { data: evData } = await supabase.from("eventos").select("produtora_logo_url").eq("id", rb.evento_id).maybeSingle();
+      if (evData?.produtora_logo_url) logoProducao = evData.produtora_logo_url;
+    }
+
+    if (!logoProducao && rb.tour_id) {
+      const { data: tourData } = await supabase.from("tours").select("logo_producao").eq("id", rb.tour_id).maybeSingle();
+      if (tourData) logoProducao = tourData.logo_producao;
+    }
+
+    rb._resolved_logos = { logoEspetaculo, logoProducao };
+    return rb;
   },
   head: ({ loaderData }) => {
-    const title = loaderData ? `Programação ${loaderData.cidade || ''} ${loaderData.espetaculo || ''} - Seven Produções Artísticas` : "Programação - Seven Produções Artísticas";
+    const title = loaderData ? `Programação - ${loaderData.espetaculo || ""} - ${loaderData.cidade || ""} - Áxis - Gestão de Teatros e Shows` : "Programação - Áxis - Gestão de Teatros e Shows";
     return { meta: [{ title }] };
   },
   component: IsolatedPrintPage,
@@ -119,10 +139,13 @@ function IsolatedPrintPage() {
       
       {/* HEADER LIMPO E SECO */}
       <div style={{ borderBottom: '2px solid black', paddingBottom: '15px', marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <img src="/logo-seven.png" alt="Seven" style={{ height: '50px', objectFit: 'contain' }} />
+        {(rb as any)._resolved_logos?.logoProducao ? (
+            <img src={(rb as any)._resolved_logos.logoProducao} alt="Produtora" style={{ height: '50px', objectFit: 'contain' }} />
+          ) : (
+            <div style={{ width: '50px' }}></div>
+          )}
         
         <div style={{ textAlign: 'center', flex: 1, padding: '0 20px' }}>
-          <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#555', textTransform: 'uppercase', letterSpacing: '2px' }}>Roteiro Motorista</p>
           <h1 style={{ margin: '0 0 5px 0', fontSize: '24px', fontWeight: '900', textTransform: 'uppercase' }}>{rb.espetaculo}</h1>
           <p style={{ margin: 0, fontSize: '14px', color: '#333' }}>
             {rb.cidade && <span>{rb.cidade}{rb.estado ? `/${rb.estado}` : ""}</span>}
@@ -133,11 +156,11 @@ function IsolatedPrintPage() {
           </p>
         </div>
         
-        {rb.espetaculo_logo_url ? (
-          <img src={rb.espetaculo_logo_url} alt={rb.espetaculo} style={{ height: '60px', objectFit: 'contain' }} />
-        ) : (
-          <div style={{ width: '60px' }}></div>
-        )}
+        {(rb as any)._resolved_logos?.logoEspetaculo ? (
+            <img src={(rb as any)._resolved_logos.logoEspetaculo} alt="Espetáculo" style={{ height: '50px', objectFit: 'contain' }} />
+          ) : (
+            <div style={{ width: '50px' }}></div>
+          )}
       </div>
 
       {/* CONTEÚDO TABULAR SECO */}
@@ -187,9 +210,14 @@ function IsolatedPrintPage() {
       </div>
 
       {/* FOOTER NO FINAL DO ARQUIVO */}
-      <div style={{ textAlign: 'center', fontSize: '10px', color: '#666', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
-        <strong style={{ display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Gestão de Viagens e Turnês</strong>
-        Desenvolvido por Marcelo Garuffi - Contemporânea produção de eventos
+            <div style={{ textAlign: 'center', fontSize: '10px', color: '#666', borderTop: '1px solid #ccc', paddingTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+          <img src="/logo-contemporanea.png" style={{ height: '44px', opacity: 0.9 }} />
+          <div style={{ width: '1px', height: '40px', backgroundColor: '#ccc' }}></div>
+          <img src="/logo-axis-simples.png" style={{ height: '44px', opacity: 0.9 }} />
+        </div>
+        <strong style={{ display: 'block', textTransform: 'uppercase', marginBottom: '4px' }}>Gestão de Teatros e Shows</strong>
+        Desenvolvido por Marcelo Garuffi - Contemporânea Produções
       </div>
     </div>
   );
