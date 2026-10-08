@@ -52,3 +52,4 @@ content = content.replace(
 
 fs.writeFileSync('src/routes/_authenticated/vendas.tsx', content, 'utf8');
 console.log("Patched!");
+

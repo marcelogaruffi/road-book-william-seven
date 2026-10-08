@@ -345,7 +345,7 @@ function UsersPage() {
           </div>
         </div>
 
-        {/* COLUNA DIREITA: USUÁRIOS */}
+        {/* COLUNA DIREITA: USUÁRIOS */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between px-2">
             <h3 className="font-bold text-xl text-slate-800 dark:text-white">Usuários Cadastrados ({users.length})</h3>
@@ -433,7 +433,7 @@ function UsersPage() {
       </TabsContent>
       </Tabs>
 
-      {/* MODAL DE EDIÁ‡ÁƒO */}
+      {/* MODAL DE EDIÇÃO */}
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="rounded-[2rem] p-8 border-0 shadow-2xl dark:bg-card max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -531,7 +531,7 @@ function UsersPage() {
               <Label>Nível de Acesso Principal (Permissões)</Label>
               {editUser?.role === 'dev' || editUser?.nome?.toLowerCase().includes('garuffi') ? (
                 <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
-                  ðŸ”’ O nível do Desenvolvedor não pode ser modificado.
+                  🔒 O nível do Desenvolvedor não pode ser modificado.
                 </div>
               ) : (
                 <select 

@@ -40,9 +40,9 @@ if (code.includes('label="Partituras e Músicas"')) {
     /<SLink to="\/partituras" icon=\{Music\} label="Partituras e Músicas" \/>/,
     `<SLink to="/partituras" icon={Music} label="Partituras" />\n                  <SLink to="/musicas" icon={FileAudio} label="Músicas" />`
   );
-} else if (code.includes('label="Partituras e MÃºsicas"')) {
+} else if (code.includes('label="Partituras e Músicas"')) {
   code = code.replace(
-    /<SLink to="\/partituras" icon=\{Music\} label="Partituras e MÃºsicas" \/>/,
+    /<SLink to="\/partituras" icon=\{Music\} label="Partituras e Músicas" \/>/,
     `<SLink to="/partituras" icon={Music} label="Partituras" />\n                  <SLink to="/musicas" icon={FileAudio} label="Músicas" />`
   );
 }

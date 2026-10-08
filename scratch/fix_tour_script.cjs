@@ -49,3 +49,4 @@ const replacementConfirm = `const ok = await customConfirm(
 content = content.replace(regexConfirm, replacementConfirm);
 
 fs.writeFileSync('src/routes/_authenticated/tour.index.tsx', content, 'utf8');
+

@@ -213,7 +213,7 @@ function TourCard({ tour, isFinished = false, isHappening = false, onDelete }: {
           dayStr = `${dayStr} a ${d2}`;
         } else {
           dayStr = `${dayStr}/${monthStr} - ${d2}/${m2}`;
-          monthStr = 'PERÁODO';
+          monthStr = 'PERÍODO';
         }
       }
     }

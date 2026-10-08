@@ -10,14 +10,14 @@ const selectRegex = /<div className="bg-white dark:bg-card\/50 p-6 rounded-2xl b
 
 // Replace with a Voltar button logic
 code = code.replace(selectRegex, `<div className="flex items-center justify-start mb-4">
-                <Button variant="outline" onClick={() => setSelectedRoadbook("")}>← Voltar para Grade</Button>
+                <Button variant="outline" onClick={() => setSelectedRoadbook("")}>â† Voltar para Grade</Button>
               </div>`);
 
 // Now wrap it inside the condition
 code = code.replace(/<TabsContent value="eventos" className="mt-0">/, 
 `<TabsContent value="eventos" className="mt-0">
             {!selectedRoadbook ? (
-              <div className="mt-4"><GridEventos onSelect={(eId, rId) => { if (rId) setSelectedRoadbook(rId); else toast.info("Este evento ainda nÃ£o possui um Guia de Viagem (Roadbook). Crie-o primeiro para acessar o financeiro."); }} /></div>
+              <div className="mt-4"><GridEventos onSelect={(eId, rId) => { if (rId) setSelectedRoadbook(rId); else toast.info("Este evento ainda nÁƒÂ£o possui um Guia de Viagem (Roadbook). Crie-o primeiro para acessar o financeiro."); }} /></div>
             ) : (`
 );
 
@@ -26,3 +26,4 @@ code = code.replace(/<\/Tabs>\s*<\/div>\s*<\/TabsContent>/, `</Tabs>\n          
 
 fs.writeFileSync('src/routes/_authenticated/financeiro.tsx', code, 'utf8');
 console.log('Fixed financeiro');
+

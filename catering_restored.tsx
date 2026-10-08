@@ -375,7 +375,7 @@ function CateringPage() {
                   <TabsTrigger value="restricoes" className="flex gap-2"><AlertCircle className="size-4" /> Restrições</TabsTrigger>
                 </TabsList>
 
-                {/* BOTÕES DE EXPORTAÇÃO SEPARADOS POR ABA */}
+                {/* BOTÕES DE EXPORTAÇÁO SEPARADOS POR ABA */}
                 <div>
                   {activeTab === 'cardapio' ? (
                     <ReportExportButton onExportPdf={exportCardapioPDF} onExportExcel={exportCardapioExcel} />

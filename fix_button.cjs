@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/malas.$evento_id.tsx', 'utf8');
 
 const target = `              })}

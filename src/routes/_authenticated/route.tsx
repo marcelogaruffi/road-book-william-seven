@@ -1,4 +1,4 @@
-import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus } from "lucide-react";
+import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus , Layers } from "lucide-react";
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -271,6 +271,7 @@ function AuthedLayout() {
                 <SGroup title="Produção Executiva" icon={ClipboardList}>
                   <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
                   <SLink to="/espetaculos" icon={Music} label="Cadastro de Espetáculo" />
+                    <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" />
                   <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
                   <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
                   <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />

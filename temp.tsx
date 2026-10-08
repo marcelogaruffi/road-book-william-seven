@@ -29,7 +29,7 @@
           <div onClick={() => { setViewMode(true); handleOpenEdit(ev); }} className="flex-1">
             <h4 className="text-xl font-black text-[var(--foreground)] truncate pr-16" title={ev.espetaculo}>{ev.espetaculo}</h4>
             <p className="text-sm text-[var(--muted-foreground)] font-medium mt-1 truncate" title={ev.cidade + (ev.local ? ' - ' + ev.local : '')}>
-              📍 {ev.cidade} {ev.local ? ` - ${ev.local}` : ''}
+              ðŸ“ {ev.cidade} {ev.local ? ` - ${ev.local}` : ''}
             </p>
             <p className="text-xs text-[var(--muted-foreground)] font-medium mt-1 flex items-center gap-1.5">
               <Clock className="size-3.5" /> {ev.apresentacoes && ev.apresentacoes.length > 1 ? ev.apresentacoes.length + ' apresentações' : (ev.horario ? ev.horario.substring(0,5) : 'A definir')}
@@ -179,7 +179,7 @@
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Vincular à Turnê (Opcional)</Label>
+              <Label className="font-bold text-slate-700 dark:text-slate-300">Vincular Á  Turnê (Opcional)</Label>
               <select disabled={viewMode} 
                 value={turneId} 
                 onChange={e => setTurneId(e.target.value)}
@@ -392,8 +392,8 @@
           </div>
 
           <DialogFooter className="mt-4 gap-2">
-              <Button variant="outline" onClick={() => setShowCachǦǦesDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
-                💰 Cachês da Equipe
+              <Button variant="outline" onClick={() => setShowCachÇ¦Ç¦esDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
+                ðŸ’° Cachês da Equipe
               </Button>
               {viewMode ? (
                 <Button onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-8 font-bold shadow-md bg-indigo-600 hover:bg-indigo-700 text-white">
@@ -413,7 +413,7 @@
         </DialogContent>
       </Dialog>
       
-      {/* MODAL DE CACHÊS */}
+      {/* MODAL DE CACHÁŠS */}
       <Dialog open={showCachesDialog} onOpenChange={setShowCachêêesDialog}>
         <DialogContent className="rounded-[2rem] p-6 max-h-[80vh] overflow-y-auto">
           <DialogHeader>
@@ -502,3 +502,4 @@
     </div>
   );
 }
+

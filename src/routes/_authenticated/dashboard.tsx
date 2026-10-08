@@ -199,7 +199,7 @@ function Dashboard() {
 
     if (bdaysToday.length > 0) {
       return { 
-        title: `Dia de Festa, ${firstName}! ðŸŽ‰`, 
+        title: `Dia de Festa, ${firstName}! 🎉`, 
         sub: `Hoje é o aniversário de: ${bdaysToday.map(b => b.nome).join(', ')}. Não deixe de parabenizar nossa equipe!`, 
         icon: Calendar, 
         color: 'from-fuchsia-500 to-pink-600', 
@@ -225,7 +225,7 @@ function Dashboard() {
       
       if (daysUntil < 0) {
         return { 
-          title: `Ação! ${firstName} ðŸ”¥`, 
+          title: `Ação! ${firstName} 🔥`, 
           sub: `Temos um evento rolando neste momento em ${nextEvent.cidade}. Acesse o roteiro para acompanhar os detalhes!`, 
           icon: StageIcon, 
           color: 'from-red-500 to-rose-600', 
@@ -236,7 +236,7 @@ function Dashboard() {
 
       if (daysUntil === 0) {
         return { 
-          title: `Á‰ Hoje, ${firstName}! ðŸŒŸ`, 
+          title: `É Hoje, ${firstName}! 🌟`, 
           sub: `O espetáculo em ${nextEvent.cidade} acontece hoje. Acesse o roteiro para todos os detalhes do dia!`, 
           icon: StageIcon, 
           color: 'from-emerald-500 to-teal-600', 
@@ -346,7 +346,7 @@ function Dashboard() {
         </div>
 
         {/* ALERTA DE ESCALAS PENDENTES */}
-        {/* ALERTA DE ANIVERSÁRIOS */}
+        {/* ALERTA DE ANIVERSÁRIOS */}
 
         {/* SMART PANEL */}
         <div className={`relative overflow-hidden rounded-[2rem] p-6 sm:p-8 text-white shadow-xl bg-gradient-to-br ${smartMsg.color} animate-in fade-in slide-in-from-bottom-4 duration-700 group`}>
@@ -364,7 +364,7 @@ function Dashboard() {
                 </Badge>
                 {bdaysToday.length > 0 && escalasPendentes === 0 && (
                    <Badge className="bg-white/20 hover:bg-white/30 text-white border-none backdrop-blur-md px-3 py-1 font-bold">
-                     ðŸŽ‚ Aniversário Hoje!
+                     🎂 Aniversário Hoje!
                    </Badge>
                 )}
               </div>
@@ -377,7 +377,7 @@ function Dashboard() {
                 </Button>
                 {escalasPendentes > 0 && bdaysToday.length > 0 && (
                   <Button asChild variant="outline" className="bg-white/10 hover:bg-white/20 text-white border-white/20 rounded-xl font-bold px-6 backdrop-blur-sm">
-                    <Link to="/dados-equipe">Tem aniversário na equipe! ðŸŽ‰</Link>
+                    <Link to="/dados-equipe">Tem aniversário na equipe! 🎉</Link>
                   </Button>
                 )}
               </div>
@@ -436,7 +436,7 @@ function Dashboard() {
           </Card>
         </div>
 
-        {/* GRADES DE ACESSO RÁPIDO (MENUS) */}
+        {/* GRADES DE ACESSO RÁPIDO (MENUS) */}
         <section className="space-y-6 pt-4">
           <div className="flex items-center gap-3 px-2">
             <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Acesso Rápido</h2>
@@ -493,7 +493,7 @@ function Dashboard() {
               </Link>
             )}
 
-            {/* MAPAS TÁ‰CNICOS */}
+            {/* MAPAS TÉCNICOS */}
             {['admin', 'dev', 'tecnico_som'].includes(profile?.role || "") && (
               <Link to="/som" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
                 <div className="p-4 bg-blue-500/10 text-blue-600 rounded-2xl group-hover:bg-blue-500 group-hover:text-white transition-colors">

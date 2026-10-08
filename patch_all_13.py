@@ -130,3 +130,4 @@ new_logo_section = '''                <div className="flex flex-col gap-2">
                 </div>'''
 
 modify_file('src/components/RoadbookForm.tsx', r'<div className="flex flex-col gap-2">\s*<div className="flex items-center justify-between">\s*<Label className="text-lg font-bold">Logos do Cabeçalho</Label>.*?</div>\s*</div>\s*</div>\s*</div>', new_logo_section)
+

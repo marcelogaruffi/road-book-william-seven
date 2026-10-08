@@ -20,7 +20,7 @@ content = content.replace(
 // 3. Update saveClipping function to fetch thumb and advance to step 2
 const oldSaveClipping = `  const saveClipping = async () => {
     if (!newClipping.titulo_materia || !newClipping.veiculo || !newClipping.data_publicacao) {
-      toast.error('Preencha os campos obrigatÃ³rios');
+      toast.error('Preencha os campos obrigatórios');
       return;
     }
     const { data, error } = await supabase.from('imprensa_clipping').insert([newClipping]).select().single();
@@ -278,7 +278,7 @@ const newCardPattern = `{clipping.map(clip => {
 
                       {clip.link_materia && (
                         <a href={clip.link_materia} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 mt-3 font-medium">
-                          Ler matÃ©ria completa <ExternalLink className="w-3 h-3" />
+                          Ler matéria completa <ExternalLink className="w-3 h-3" />
                         </a>
                       )}
                     </div>

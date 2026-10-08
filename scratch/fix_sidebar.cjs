@@ -41,7 +41,7 @@ code = code.replace(oldSLinkDef, newSLinkDef);
 
 // Change Partituras e Músicas to Partituras and add Músicas
 code = code.replace(
-  /<SLink to="\/partituras" icon=\{Music\} label="Partituras e MÃºsicas" \/>/,
+  /<SLink to="\/partituras" icon=\{Music\} label="Partituras e Músicas" \/>/,
   `<SLink to="/partituras" icon={Music} label="Partituras" />
                   <SLink to="/musicas" icon={FileAudio} label="Músicas" />`
 );

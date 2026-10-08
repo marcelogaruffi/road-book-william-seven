@@ -66,3 +66,4 @@ modify_file('src/routes/turne.$slug.tsx', r'\{tour\.espetaculo && <p className="
 # 4. RoadbookForm UI (visibilidade logos)
 # Since RoadbookForm was reverted, I need to add `handleImageUpload` and the logos section.
 # I'll just run my previous python scripts for RoadbookForm, but wait, `patch_rb_form2.py` might be easier to just execute!
+

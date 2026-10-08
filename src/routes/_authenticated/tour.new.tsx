@@ -137,7 +137,7 @@ function NewTour() {
                   <ImageIcon className="size-5 text-indigo-500" /> Identidade Visual
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Configure quais logos aparecerão no cabeçalho do Roadbook (PDF).
+                  Configure quais logos aparecerão no cabeçalho do Guia de Viagem (PDF).
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6 pt-6">

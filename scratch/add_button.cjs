@@ -28,9 +28,9 @@ const newTarget = `<div className="space-y-8 max-w-4xl mx-auto">
           </Button>
         </div>`;
 
-// Account for potential encoding differences (e.g., Ã§Ãµes instead of ções)
+// Account for potential encoding differences (e.g., ções instead of ções)
 const regexTarget = /<div className="space-y-8 max-w-4xl mx-auto">[\s\S]*?<\/div>/;
 
-content = content.replace(regexTarget, newTarget.replace(/Configurações/, 'ConfiguraÃ§Ãµes').replace(/segurança/, 'seguranÃ§a'));
+content = content.replace(regexTarget, newTarget.replace(/Configurações/, 'Configurações').replace(/segurança/, 'segurança'));
 
 fs.writeFileSync('src/routes/_authenticated/configuracoes.tsx', content, 'utf8');

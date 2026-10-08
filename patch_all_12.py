@@ -181,3 +181,4 @@ modify_file('src/components/RoadbookForm.tsx', r'<Card>\s*<CardHeader>\s*<CardTi
 
 # Strip out "Cor Principal" field
 modify_file('src/components/RoadbookForm.tsx', r'<Field label="Cor Principal">\s*<div className="flex gap-2">\s*<Input type="color".*?\/>\s*<Input className="flex-1".*?\/>\s*<\/div>\s*<\/Field>', '')
+

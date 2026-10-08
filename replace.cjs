@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/checklist.tsx', 'utf8');
 
 const target = `    // Ações - Conferência (Evento)

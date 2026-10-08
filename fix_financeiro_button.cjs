@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/financeiro.tsx', 'utf8');
 
 // Insert Button import if not present

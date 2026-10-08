@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/catering.index.tsx', 'utf8');
 
 const types = "type Restricao = {\n" +

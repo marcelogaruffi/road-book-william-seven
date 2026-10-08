@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FinanceiroTab } from "@/components/FinanceiroTab";
 import { CachesEquipeTab } from "@/components/CachesEquipeTab";
 import { CachesPadraoTab } from "@/components/CachesPadraoTab";
+import { NotasBoletosTab } from "@/components/NotasBoletosTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -79,9 +80,10 @@ function FinanceiroPage() {
             {selectedRoadbook ? (
               <div className="pt-6 border-t border-slate-100 dark:border-white/5 mt-6">
                 <Tabs defaultValue="geral" className="w-full">
-                  <TabsList className="grid w-full max-w-md grid-cols-2 bg-slate-100 dark:bg-white/10 rounded-xl mb-6 p-1">
+                  <TabsList className="grid w-full max-w-xl grid-cols-3 bg-slate-100 dark:bg-white/10 rounded-xl mb-6 p-1">
                     <TabsTrigger value="geral" className="rounded-lg font-bold text-xs sm:text-sm">Receitas e Despesas</TabsTrigger>
                     <TabsTrigger value="caches" className="rounded-lg font-bold text-xs sm:text-sm">Cachês da Equipe</TabsTrigger>
+                    <TabsTrigger value="notas" className="rounded-lg font-bold text-xs sm:text-sm">Notas e Boletos</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="geral" className="mt-0">
@@ -91,6 +93,10 @@ function FinanceiroPage() {
                   <TabsContent value="caches" className="mt-0">
                     <CachesEquipeTab roadbookId={selectedRoadbook} />
                   </TabsContent>
+
+                    <TabsContent value="notas" className="mt-0">
+                      <NotasBoletosTab roadbookId={selectedRoadbook} />
+                    </TabsContent>
                 </Tabs>
               </div>
             ) : (

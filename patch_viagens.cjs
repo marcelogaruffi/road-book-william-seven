@@ -88,7 +88,7 @@ if (startIdx !== -1 && endIdx > startIdx) {
             </a>
             
             <p className="text-sm text-[var(--muted-foreground)] font-medium mt-1 truncate" title={r.festival || ''}>
-              📍 {r.festival ? r.festival : (r.cidade + (r.estado ? \` - \${r.estado}\` : ''))}
+              ðŸ“ {r.festival ? r.festival : (r.cidade + (r.estado ? \` - \${r.estado}\` : ''))}
             </p>
             
             <div className="flex flex-col gap-1 mt-3 mb-4">
@@ -125,3 +125,4 @@ if (startIdx !== -1 && endIdx > startIdx) {
 } else {
   console.log("Could not find start/end markers");
 }
+

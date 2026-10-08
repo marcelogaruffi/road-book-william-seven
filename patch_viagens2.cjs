@@ -78,7 +78,7 @@ if (startIdx !== -1 && endIdx > startIdx) {
             </a>
             
             <p className="text-xs text-[var(--muted-foreground)] font-medium mt-1 truncate" title={r.festival || ''}>
-              📍 {r.festival ? r.festival : (r.cidade + (r.estado ? \` - \${r.estado}\` : ''))}
+              ðŸ“ {r.festival ? r.festival : (r.cidade + (r.estado ? \` - \${r.estado}\` : ''))}
             </p>
             
             <div className="flex flex-col gap-1 mt-3 mb-2">
@@ -123,3 +123,4 @@ if (startIdx !== -1 && endIdx > startIdx) {
   content = content.substring(0, startIdx) + newCard + content.substring(endIdx);
   fs.writeFileSync('src/routes/_authenticated/viagens.tsx', content);
 }
+

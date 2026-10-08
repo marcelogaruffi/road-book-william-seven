@@ -22,9 +22,9 @@ type CateringPadrao = {
   ordem: number;
 };
 
-export function CateringPadraoTab() {
+export function CateringPadraoTab({ espetaculoNome }: { espetaculoNome?: string }) {
   const [espetaculos, setEspetaculos] = useState<string[]>([]);
-  const [selectedEspetaculo, setSelectedEspetaculo] = useState("");
+  const [selectedEspetaculo, setSelectedEspetaculo] = useState(espetaculoNome || "");
   const [itens, setItens] = useState<CateringPadrao[]>([]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -37,6 +37,8 @@ export function CateringPadraoTab() {
 
   const dragItem = useRef<number>(0);
   const dragOverItem = useRef<number>(0);
+
+  useEffect(() => { if (espetaculoNome) setSelectedEspetaculo(espetaculoNome); }, [espetaculoNome]);
 
   useEffect(() => {
     fetchEspetaculos();
@@ -288,6 +290,7 @@ export function CateringPadraoTab() {
 
   return (
     <div className="space-y-6">
+      {!espetaculoNome && (
       <div className="flex gap-4 items-center">
         <Select value={selectedEspetaculo} onValueChange={setSelectedEspetaculo}>
           <SelectTrigger className="w-64">
@@ -299,7 +302,10 @@ export function CateringPadraoTab() {
             ))}
           </SelectContent>
         </Select>
+      </div>
+      )}
 
+      <div className="flex gap-4 items-center justify-end">
         {selectedEspetaculo && itens.length > 0 && (
           <div className="ml-auto">
             <ReportExportButton onExportPdf={exportPadraoPDF} onExportExcel={exportPadraoExcel} />

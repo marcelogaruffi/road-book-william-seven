@@ -32,7 +32,7 @@ const newCalendarLogic = `    let monthStr = '';
           dayStr = \`\${dayStr} a \${d2}\`;
         } else {
           dayStr = \`\${dayStr}/\${monthStr} - \${d2}/\${m2}\`;
-          monthStr = 'PERÍODO';
+          monthStr = 'PERÁODO';
         }
       }
     }`;
@@ -54,3 +54,4 @@ const newCalendarSquare = `{/* Quadrado da Data Flutuante */}
 content = content.replace(oldCalendarSquare, newCalendarSquare);
 
 fs.writeFileSync('src/routes/_authenticated/viagens.tsx', content);
+

@@ -79,3 +79,4 @@ logos_section = '''
                 </CardContent>'''
 
 modify_file('src/components/RoadbookForm.tsx', r'</CardContent>\s*</Card>\s*</div>\s*</TabsContent>\s*<TabsContent value="hotel"', logos_section + '\n              </Card>\n            </div>\n          </TabsContent>\n\n          <TabsContent value="hotel"')
+

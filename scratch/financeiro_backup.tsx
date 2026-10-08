@@ -1,4 +1,4 @@
-﻿// @ts-nocheck
+// @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FinanceiroTab } from "@/components/FinanceiroTab";
 
 export const Route = createFileRoute("/_authenticated/financeiro")({
-  head: () => ({ meta: [{ title: "Financeiro - Seven ProduÃ§Ãµes ArtÃ­sticas" }] }),
+  head: () => ({ meta: [{ title: "Financeiro - Seven Produções Artísticas" }] }),
   component: FinanceiroPage,
 });
 
@@ -61,7 +61,7 @@ function FinanceiroPage() {
 
   const exportDirectory = async () => {
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("DiretÃ³rio de Contatos");
+    const worksheet = workbook.addWorksheet("Diretório de Contatos");
 
     let logoBase64;
     try {
@@ -73,7 +73,7 @@ function FinanceiroPage() {
         reader.onloadend = () => resolve(reader.result);
       });
     } catch (e) {
-      console.warn("Logo nÃ£o carregado", e);
+      console.warn("Logo não carregado", e);
     }
 
     let imgHeightExcel = 70;
@@ -86,10 +86,10 @@ function FinanceiroPage() {
     }
 
     worksheet.getColumn(1).width = 30; // Nome
-    worksheet.getColumn(2).width = 15; // FunÃ§Ã£o
+    worksheet.getColumn(2).width = 15; // Função
     worksheet.getColumn(3).width = 18; // CPF
     worksheet.getColumn(4).width = 15; // Telefone
-    worksheet.getColumn(5).width = 50; // Dados BancÃ¡rios
+    worksheet.getColumn(5).width = 50; // Dados Bancários
 
     const headerRowNumber = logoBase64 ? 6 : 1;
 
@@ -97,13 +97,13 @@ function FinanceiroPage() {
       const imageId = workbook.addImage({ base64: logoBase64 as string, extension: 'png' });
       worksheet.addImage(imageId, { tl: { col: 0, row: 0 }, ext: { width: imgWidthExcel, height: imgHeightExcel } });
       worksheet.mergeCells('D1:F4');
-      worksheet.getCell('D1').value = 'Dados BancÃ¡rios da Equipe';
+      worksheet.getCell('D1').value = 'Dados Bancários da Equipe';
       worksheet.getCell('D1').font = { size: 16, bold: true, color: { argb: "FF0f172a" } };
       worksheet.getCell('D1').alignment = { vertical: 'middle', horizontal: 'left' };
     }
 
     const headerRow = worksheet.getRow(headerRowNumber);
-    headerRow.values = ["Nome", "FunÃ§Ã£o", "CPF", "Telefone", "Dados BancÃ¡rios (Pix / Conta)"];
+    headerRow.values = ["Nome", "Função", "CPF", "Telefone", "Dados Bancários (Pix / Conta)"];
     headerRow.eachCell((cell) => {
       cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFf1f5f9' } };
       cell.font = { bold: true, color: { argb: 'FF334155' } };
@@ -157,7 +157,7 @@ function FinanceiroPage() {
           Financeiro
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
-          GestÃ£o de pagamentos da equipe e diretÃ³rio de dados bancÃ¡rios.
+          Gestão de pagamentos da equipe e diretório de dados bancários.
         </p>
       </div>
 
@@ -165,8 +165,8 @@ function FinanceiroPage() {
         <TabsList className="bg-slate-100 dark:bg-slate-900 mb-4">
           <TabsTrigger value="fluxo">Fluxo de Caixa (Manual)</TabsTrigger>
           <TabsTrigger value="pagamentos">Pagamentos por Evento</TabsTrigger>
-          <TabsTrigger value="caches_padrao">CachêêÃªs PadrÃ£o</TabsTrigger>
-          <TabsTrigger value="diretorio">Dados BancÃ¡rios</TabsTrigger>
+          <TabsTrigger value="caches_padrao">Cachêêês Padrão</TabsTrigger>
+          <TabsTrigger value="diretorio">Dados Bancários</TabsTrigger>
         </TabsList>
 
         <TabsContent value="fluxo" className="space-y-4">
@@ -278,7 +278,7 @@ function FinanceiroPage() {
   );
 }
 
-// Subcomponente para a visÃ£o de Pagamentos
+// Subcomponente para a visão de Pagamentos
 function PagamentosView({ eventos, escalas, caches, pagamentos, profiles, reload }: any) {
   const [selectedEscala, setSelectedEscala] = useState<any>(null);
 
@@ -286,7 +286,7 @@ function PagamentosView({ eventos, escalas, caches, pagamentos, profiles, reload
     <div className="space-y-6">
       {eventos.map(ev => {
         const evEscalas = escalas.filter(e => e.evento_id === ev.id);
-        if (evEscalas.length === 0) return null; // SÃ³ mostra eventos com escalas aceitas
+        if (evEscalas.length === 0) return null; // Só mostra eventos com escalas aceitas
         
         let totalEvento = 0;
         let pagoEvento = 0;
@@ -313,7 +313,7 @@ function PagamentosView({ eventos, escalas, caches, pagamentos, profiles, reload
                   <CardDescription>{ev.cidade} - {format(new Date(ev.data + 'T12:00:00Z'), "dd/MM/yyyy")}</CardDescription>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-bold text-slate-500">Total Pago / CachêêÃªs</div>
+                  <div className="text-sm font-bold text-slate-500">Total Pago / Cachêêês</div>
                   <div className="text-lg font-extrabold text-slate-800 dark:text-white">
                     <span className={pagoEvento >= totalEvento && totalEvento > 0 ? "text-green-600" : ""}>
                       R$ {pagoEvento.toLocaleString('pt-BR', {minimumFractionDigits:2})}
@@ -327,9 +327,9 @@ function PagamentosView({ eventos, escalas, caches, pagamentos, profiles, reload
                 <thead className="bg-slate-50 dark:bg-slate-900/50 border-b dark:border-white/10">
                   <tr>
                     <th className="px-4 py-3 font-bold">Membro</th>
-                    <th className="px-4 py-3 font-bold">CachêêÃª Combinado</th>
+                    <th className="px-4 py-3 font-bold">Cachêêê Combinado</th>
                     <th className="px-4 py-3 font-bold">Status Pgto</th>
-                    <th className="px-4 py-3 font-bold text-right">AÃ§Ãµes</th>
+                    <th className="px-4 py-3 font-bold text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -447,10 +447,10 @@ function PagamentoModal({ dados, onClose, reload }: any) {
         </DialogHeader>
         
         <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-4 my-2 text-sm border border-slate-200 dark:border-white/10 space-y-2">
-          <div className="font-bold text-slate-700 dark:text-slate-300">Dados BancÃ¡rios Atuais do UsuÃ¡rio:</div>
+          <div className="font-bold text-slate-700 dark:text-slate-300">Dados Bancários Atuais do Usuário:</div>
           <div className="grid grid-cols-2 gap-2">
             <div><span className="text-slate-500">Banco:</span> {prof.banco_codigo || '-'}</div>
-            <div><span className="text-slate-500">AgÃªncia:</span> {prof.banco_agencia || '-'}</div>
+            <div><span className="text-slate-500">Agência:</span> {prof.banco_agencia || '-'}</div>
             <div><span className="text-slate-500">Conta:</span> {prof.banco_conta || '-'}</div>
             <div><span className="text-slate-500">Chave PIX:</span> {prof.pix_chave || '-'}</div>
           </div>
@@ -517,7 +517,7 @@ function CachêêesPadraoView({ profiles, reload }: any) {
     if (error) {
       toast.error("Erro ao salvar: " + error.message);
     } else {
-      toast.success("CachêêÃª padrÃ£o atualizado com sucesso!");
+      toast.success("Cachêêê padrão atualizado com sucesso!");
       reload();
     }
     setSaving(null);
@@ -526,17 +526,17 @@ function CachêêesPadraoView({ profiles, reload }: any) {
   return (
     <Card className="shadow-sm border-slate-200/60 dark:border-white/10 rounded-2xl overflow-hidden">
       <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-white/5 pb-4">
-        <CardTitle className="text-lg">Tabela de CachêêÃªs PadrÃ£o</CardTitle>
-        <CardDescription>Defina o valor base de cachÃª para cada membro da equipe. Ao escalÃ¡-los, este valor serÃ¡ preenchido automaticamente.</CardDescription>
+        <CardTitle className="text-lg">Tabela de Cachêêês Padrão</CardTitle>
+        <CardDescription>Defina o valor base de cachê para cada membro da equipe. Ao escalá-los, este valor será preenchido automaticamente.</CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <table className="w-full text-sm text-left">
           <thead className="bg-slate-50 dark:bg-slate-900/50 border-b dark:border-white/10">
             <tr>
               <th className="px-4 py-3 font-bold">Membro</th>
-              <th className="px-4 py-3 font-bold">Cargo/FunÃ§Ãµes</th>
-              <th className="px-4 py-3 font-bold w-48">CachêêÃª PadrÃ£o (R$)</th>
-              <th className="px-4 py-3 font-bold text-right">AÃ§Ãµes</th>
+              <th className="px-4 py-3 font-bold">Cargo/Funções</th>
+              <th className="px-4 py-3 font-bold w-48">Cachêêê Padrão (R$)</th>
+              <th className="px-4 py-3 font-bold text-right">Ações</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-white/5">
@@ -586,3 +586,4 @@ function CachêêesPadraoView({ profiles, reload }: any) {
     </Card>
   );
 }
+

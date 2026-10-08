@@ -1,7 +1,7 @@
 const fs = require('fs');
 let content = fs.readFileSync('src/components/RoadbookForm.tsx', 'utf8');
 
-const oldLogic = `                  const hasApresentacao = newProgramacao.some(p => p.titulo === "ApresentaÃ§Ã£o" && p.data === evData && p.hora_inicio === (ev.horario || ""));
+const oldLogic = `                  const hasApresentacao = newProgramacao.some(p => p.titulo === "Apresentação" && p.data === evData && p.hora_inicio === (ev.horario || ""));
                   
                   if (!hasApresentacao && evData && ev.horario) {
                     let hora_fim = "";
@@ -14,8 +14,8 @@ const oldLogic = `                  const hasApresentacao = newProgramacao.some(
                       data: evData,
                       hora_inicio: ev.horario,
                       hora_fim: hora_fim,
-                      titulo: "ApresentaÃ§Ã£o",
-                      tipo: "EspetÃ¡culo",
+                      titulo: "Apresentação",
+                      tipo: "Espetáculo",
                       local: ev.local || "",
                       observacao: ""
                     }];
@@ -64,8 +64,9 @@ const newLogic = `                  if (ev.apresentacoes && ev.apresentacoes.len
                     }
                   }`;
 
-// Notice: In the oldLogic I copied the encoding Ã§Ã£o
+// Notice: In the oldLogic I copied the encoding ção
 // I will just use regex to replace it to be safe
 content = content.replace(/const hasApresentacao = newProgramacao\.some\([\s\S]*?observacao: ""\n\s*\}\]\;\n\s*\}/g, newLogic);
 
 fs.writeFileSync('src/components/RoadbookForm.tsx', content, 'utf8');
+

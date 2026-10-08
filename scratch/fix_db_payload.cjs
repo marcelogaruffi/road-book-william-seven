@@ -4,7 +4,7 @@ let code = fs.readFileSync('src/routes/_authenticated/partituras.index.tsx', 'ut
 code = code.replace(/apresentacao_id: selectedEventoId,/g, '');
 
 code = code.replace(
-  /toast\.error\("Erro ao importar arquivos padrÃ£o"\);/g,
+  /toast\.error\("Erro ao importar arquivos padrão"\);/g,
   'toast.error("Erro BD: " + (error.message || error.code || "desconhecido"));'
 );
 

@@ -7,3 +7,4 @@ async function check() {
   console.log(error ? error : Object.keys(data[0] || {}));
 }
 check();
+

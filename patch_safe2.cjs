@@ -27,3 +27,4 @@ filesToPatch.forEach(({ file, replace }) => {
         }
     }
 });
+

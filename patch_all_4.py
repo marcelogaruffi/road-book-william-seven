@@ -69,3 +69,4 @@ modify_file('src/routes/_authenticated/print.$slug.tsx', r'<div className="w-ful
 # Title change
 modify_file('src/routes/rb.$slug.tsx', r'Road Book', 'Guia de Viagem')
 modify_file('src/routes/_authenticated/print.$slug.tsx', r'Road Book', 'Guia de Viagem')
+

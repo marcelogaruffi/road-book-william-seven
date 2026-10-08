@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const env = fs.readFileSync('.env', 'utf8');
 const urlMatch = env.match(/VITE_SUPABASE_URL="([^"]+)"/);
 const keyMatch = env.match(/VITE_SUPABASE_ANON_KEY="([^"]+)"/);

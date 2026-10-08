@@ -17,3 +17,4 @@ content = content.replace(visualCardRegexRobust, '');
 
 fs.writeFileSync('src/components/RoadbookForm.tsx', content);
 console.log("Done");
+

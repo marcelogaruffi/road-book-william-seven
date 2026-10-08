@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 
 const content = import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";

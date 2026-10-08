@@ -59,7 +59,7 @@ new_card = """const renderRoadbookCard = (r: Roadbook, index: number) => {
             </a>
             
             <p className="text-sm text-[var(--muted-foreground)] font-medium mt-1 truncate" title={r.festival || ''}>
-              📍 {r.festival ? r.festival : (r.cidade + (r.estado ? ` - ${r.estado}` : ''))}
+              ðŸ“ {r.festival ? r.festival : (r.cidade + (r.estado ? ` - ${r.estado}` : ''))}
             </p>
             
             <div className="flex flex-col gap-1 mt-2">
@@ -102,3 +102,4 @@ content = re.sub(r'const renderRoadbookCard =.*?</Card>\s*\n\s*};\s*', new_card 
 
 with open('src/routes/_authenticated/viagens.tsx', 'w', encoding='utf-8') as f:
     f.write(content)
+

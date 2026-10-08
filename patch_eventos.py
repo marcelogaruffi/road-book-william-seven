@@ -43,3 +43,4 @@ c = c.replace('<div className="space-y-2 md:col-span-2">\n              <Label c
 
 with open('src/routes/_authenticated/eventos.tsx', 'w', encoding='utf-8') as f:
     f.write(c)
+

@@ -38,3 +38,4 @@ def modify_file(filepath):
 
 modify_file('src/routes/rb.$slug.tsx')
 modify_file('src/routes/_authenticated/print.$slug.tsx')
+

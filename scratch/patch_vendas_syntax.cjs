@@ -3,7 +3,7 @@ let content = fs.readFileSync('src/routes/_authenticated/vendas.tsx', 'utf8');
 
 const badCode = `              let dObj = new Date((dt || '').substring(0, 10) + 'T12:00:00Z');
                 let display = isNaN(dObj.getTime()) ? 'Data Indefinida' : dObj.toLocaleDateString('pt-BR');
-                if (ap.horario) display += ' Ã s ' + ap.horario.substring(0,5);
+                if (ap.horario) display += ' Á s ' + ap.horario.substring(0,5);
                 displayDate: display,
                 dataIso: dt
               });`;

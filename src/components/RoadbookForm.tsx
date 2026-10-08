@@ -900,7 +900,7 @@ export function RoadbookForm({ initial }: { initial: RoadbookData }) {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-slate-500">
-                  Ao selecionar um evento, apenas os profissionais escalados naquele evento poderão ver este Roadbook.
+                  Ao selecionar um evento, apenas os profissionais escalados naquele evento poderão ver este Guia de Viagem.
                 </p>
               </div>
 

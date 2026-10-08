@@ -25,3 +25,4 @@ if 'const handleImageUpload' not in c:
     c = c.replace('const up = (field: string, val: any) => {', upload_func + '\n  const up = (field: string, val: any) => {')
     with open('src/components/RoadbookForm.tsx', 'w', encoding='utf-8') as f:
         f.write(c)
+

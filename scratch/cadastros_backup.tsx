@@ -287,10 +287,10 @@ function UsersPage() {
                           {i.role === "admin" && <Badge className="ml-2 text-xs bg-amber-100 text-amber-700 hover:bg-amber-100 border-none px-2 rounded-md">ADMINISTRADOR</Badge>}
                           {i.role === "produtor" && <Badge className="ml-2 text-xs bg-blue-100 text-blue-700 hover:bg-blue-100 border-none px-2 rounded-md">PRODUTOR</Badge>}
                           {i.role === "iluminador" && <Badge className="ml-2 text-xs bg-yellow-100 text-yellow-700 hover:bg-yellow-100 border-none px-2 rounded-md">ILUMINADOR</Badge>}
-                            {i.role === "tecnico_som" && <Badge className="ml-2 text-xs bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">TÉCNICO DE SOM</Badge>}
+                            {i.role === "tecnico_som" && <Badge className="ml-2 text-xs bg-orange-100 text-orange-700 hover:bg-orange-100 border-none px-2 rounded-md">TÁ‰CNICO DE SOM</Badge>}
                           {i.role === "motorista" && <Badge className="ml-2 text-xs bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-none px-2 rounded-md">MOTORISTA</Badge>}
                             {i.role === "artista" && <Badge className="ml-2 text-xs bg-pink-100 text-pink-700 hover:bg-pink-100 border-none px-2 rounded-md">ARTISTA</Badge>}
-                          {i.role === "user" && <Badge className="ml-2 text-xs bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">USUÁRIO PADRÃO</Badge>}
+                          {i.role === "user" && <Badge className="ml-2 text-xs bg-slate-100 text-slate-700 hover:bg-slate-100 border-none px-2 rounded-md">USUÁRIO PADRÁƒO</Badge>}
                         </div>
                         <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString('pt-BR')}</p>
                       </div>
@@ -310,7 +310,7 @@ function UsersPage() {
           </div>
         </div>
 
-        {/* COLUNA DIREITA: USUÁRIOS */}
+        {/* COLUNA DIREITA: USUÁRIOS */}
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between px-2">
             <h3 className="font-bold text-xl text-slate-800 dark:text-white">Usuários Cadastrados ({users.length})</h3>
@@ -392,7 +392,7 @@ function UsersPage() {
       </TabsContent>
       </Tabs>
 
-      {/* MODAL DE EDIÇÃO */}
+      {/* MODAL DE EDIÁ‡ÁƒO */}
       <Dialog open={!!editUser} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent className="rounded-[2rem] p-8 border-0 shadow-2xl dark:bg-card max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -450,7 +450,7 @@ function UsersPage() {
               <Label>Nível de Acesso</Label>
               {editUser?.role === 'dev' || editUser?.nome?.toLowerCase().includes('garuffi') ? (
                 <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
-                  🔒 O nível do Desenvolvedor não pode ser modificado.
+                  ðŸ”’ O nível do Desenvolvedor não pode ser modificado.
                 </div>
               ) : (
                 <select 
@@ -538,3 +538,4 @@ function UsersPage() {
     </div>
   );
 }
+

@@ -86,3 +86,4 @@ def process_file(filename, is_print=False):
 
 process_file('src/routes/rb.$slug.tsx')
 process_file('src/routes/_authenticated/print.$slug.tsx', True)
+

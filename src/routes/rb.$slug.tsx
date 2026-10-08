@@ -1043,7 +1043,8 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
           <div className="flex items-center gap-6">
             <img src="/logo-contemporanea.png" alt="Contemporânea Produções" className="h-14 sm:h-16 object-contain opacity-90" />
             <span className="hidden sm:block w-px h-14 bg-slate-200"></span>
-            <img src="/logo-axis-simples.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90" />
+            <img src="/logo-axis-simples.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90 dark:hidden" />
+              <img src="/logo-axis-simples-dark.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90 hidden dark:block" />
           </div>
           <div className="text-center">
             <strong className="block font-bold text-slate-500 uppercase tracking-widest mb-1">Gestão de Teatros e Shows</strong>

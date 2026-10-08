@@ -52,7 +52,7 @@ function refactorPage(filePath, title, iconName, typeVal) {
 const partiturasPath = 'src/routes/_authenticated/partituras.index.tsx';
 let pCode = refactorPage(partiturasPath, 'Partituras', 'FileText', 'partitura');
 // Rename title
-pCode = pCode.replace(/title: "Partituras e MÃºsicas/, 'title: "Partituras');
+pCode = pCode.replace(/title: "Partituras e Músicas/, 'title: "Partituras');
 pCode = pCode.replace(/import { Music, FileText/g, 'import { Music, FileText, ArrowLeft');
 fs.writeFileSync(partiturasPath, pCode, 'utf8');
 console.log('Fixed Partituras');

@@ -66,3 +66,4 @@ c = re.sub(r'</TabsContent>\s*<TabsContent value="hotel"', injection + '\n      
 
 with open('src/components/RoadbookForm.tsx', 'w', encoding='utf-8') as f:
     f.write(c)
+

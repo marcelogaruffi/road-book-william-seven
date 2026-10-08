@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/checklist.tsx', 'utf8');
 
 const targetRegex = /const eventoSelecionado = eventos\.find[\s\S]*?eventoSelecionado\.espetaculo\}\"\.\);/m;

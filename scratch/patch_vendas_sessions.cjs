@@ -143,3 +143,4 @@ const editDialogUI = `
 content = content.replace(/<\/div>\n\s*\);\n\}$/g, editDialogUI);
 
 fs.writeFileSync('src/routes/_authenticated/vendas.tsx', content, 'utf8');
+

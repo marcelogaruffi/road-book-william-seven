@@ -24,7 +24,7 @@ export type MalaVolume = {
   itens: MalaItem[];
 };
 
-export function MalasTemplateTab() {
+export function MalasTemplateTab({ espetaculoNome }: { espetaculoNome?: string }) {
   const [templates, setTemplates] = useState<{nome_espetaculo: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [editNome, setEditNome] = useState("");
@@ -35,8 +35,12 @@ export function MalasTemplateTab() {
   const [uploading, setUploading] = useState<string | null>(null);
 
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    if (espetaculoNome) {
+      handleEdit({ nome_espetaculo: espetaculoNome } as any);
+    } else {
+      loadTemplates();
+    }
+  }, [espetaculoNome]);
 
   async function handleUploadItemFoto(volumeId: string, itemId: string, e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -87,13 +91,15 @@ export function MalasTemplateTab() {
 
   async function handleEdit(t: {nome_espetaculo: string}) {
     setEditNome(t.nome_espetaculo);
-    const { data, error } = await supabase.from('templates_espetaculos').select('*').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').eq('nome_espetaculo', t.nome_espetaculo).single();
+    try {
+      const { data, error } = await supabase.from('templates_espetaculos').select('*').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').eq('nome_espetaculo', t.nome_espetaculo).single();
     if (data) {
       setRawTemplate(data);
       const parsedVolumes = data.assets_midia?.malas_padrao || [];
       setVolumes(parsedVolumes);
+      }
+      } catch (e) { console.error(e); } finally { setLoading(false); }
     }
-  }
 
   function clearForm() {
     setEditNome("");
@@ -174,7 +180,8 @@ export function MalasTemplateTab() {
   if (loading) return <div className="p-8 text-center">Carregando modelos...</div>;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
+    <div className={espetaculoNome ? "mt-6" : "grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6"}>
+      {!espetaculoNome && (
       <div className="lg:col-span-1 space-y-6">
         <Card className="border-0 shadow-lg dark:bg-card rounded-2xl">
           <CardContent className="p-6 space-y-4">
@@ -194,8 +201,9 @@ export function MalasTemplateTab() {
           </CardContent>
         </Card>
       </div>
+      )}
 
-      <div className="lg:col-span-2">
+      <div className={espetaculoNome ? "" : "lg:col-span-2"}>
         <Card className="border-0 shadow-lg dark:bg-card rounded-2xl">
           <CardContent className="p-6">
             <form onSubmit={saveTemplate} className="space-y-6">
@@ -233,7 +241,7 @@ export function MalasTemplateTab() {
                             <Input 
                               value={vol.nome}
                               onChange={(e) => updateVolume(vol.id, e.target.value)}
-                              placeholder="Nome do Volume (Ex: Mala Figurino 1, Case de Áudio)"
+                              placeholder="Nome do Volume (Ex: Mala Figurino 1, Case de Áudio)"
                               className="font-bold text-lg border-none bg-transparent shadow-none focus-visible:ring-0 max-w-sm"
                             />
                             <div className="flex items-center gap-2">

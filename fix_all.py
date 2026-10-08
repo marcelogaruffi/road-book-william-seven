@@ -1,26 +1,26 @@
-﻿import os
+import os
 import glob
 
 replacements = {
-    'Ã§Ã£o': 'ção', 'Ã§Ãµes': 'ções', 'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú',
-    'Ã¢': 'â', 'Ãª': 'ê', 'Ãµ': 'õ', 'Ã£': 'ã', 'Ã§': 'ç', 
-    'PadrÃ£o': 'Padrão', 'padrÃ£o': 'padrão', 'NÃ£o': 'Não', 'nÃ£o': 'não',
-    'AÃ§Ãµes': 'Ações', 'ConfiguraÃ§Ã£o': 'Configuração', 'ProduÃ§Ã£o': 'Produção', 'produÃ§Ã£o': 'produção',
-    'funÃ§Ãµes': 'funções', 'visÃvel': 'visível', 'VocÃª': 'Você', 'jÃ¡': 'já', 'estÃ£o': 'estão', 'hÃ¡': 'há',
-    'EdiÃ§Ã£o': 'Edição', 'ediÃ§Ã£o': 'edição', 'EspetÃ¡culo': 'Espetáculo', 'espetÃ¡culo': 'espetáculo',
-    'Ã udio': 'Áudio', 'Ã¡udio': 'áudio', 'DuraÃ§Ã£o': 'Duração', 'duraÃ§Ã£o': 'duração',
-    'PosiÃ§Ã£o': 'Posição', 'posiÃ§Ã£o': 'posição', 'AÃ§Ã£o': 'Ação', 'aÃ§Ã£o': 'ação',
-    'VÃ­deo': 'Vídeo', 'vÃ­deo': 'vídeo', 'TurnÃª': 'Turnê', 'turnÃª': 'turnê',
-    'Ãºnico': 'único', 'veÃ­culo': 'veículo', 'NÃºmero': 'Número', 'nÃºmero': 'número',
-    'TÃ©cnico': 'Técnico', 'tÃ©cnico': 'técnico', 'PreparaÃ§Ã£o': 'Preparação', 'preparaÃ§Ã£o': 'preparação',
-    'MonitoraÃ§Ã£o': 'Monitoração', 'monitoraÃ§Ã£o': 'monitoração', 'NecessÃ¡rios': 'Necessários',
-    'locaÃ§Ã£o': 'locação', 'indispensÃ¡vel': 'indispensável', 'AnotaÃ§Ãµes': 'Anotações',
-    'RadiofrequÃªncia': 'Radiofrequência', 'regiÃ£o': 'região', 'DescriÃ§Ã£o': 'Descrição',
-    'concluÃ­do': 'concluído', 'botÃ£o': 'botão', 'excluirÃ¡': 'excluirá', 'InformaÃ§Ãµes': 'Informações',
-    'EstÃ¡': 'Está', 'estÃ¡': 'está', 'veÃ­culos': 'veículos', 'Ã³timo': 'ótimo', 'apresentaÃ§Ã£o': 'apresentação',
-    'ApresentaÃ§Ã£o': 'Apresentação', 'avaliaÃ§Ã£o': 'avaliação', 'cÃ³digo': 'código', 'CÃ³digo': 'Código',
-    'Ãºltimo': 'último', 'Ãºltima': 'última', 'recomeÃ§ar': 'recomeçar', 'vocÃª': 'você',
-    'Ã‰': 'É', 'Ã©': 'é', 'sÃ³': 'só', 'jÃ¡': 'já', 'atrÃ¡s': 'atrás', 'atÃ©': 'até'
+    'ção': 'ção', 'ções': 'ções', 'á': 'á', 'é': 'é', 'í': 'í', 'ó': 'ó', 'ú': 'ú',
+    'â': 'â', 'ê': 'ê', 'õ': 'õ', 'ã': 'ã', 'ç': 'ç', 
+    'Padrão': 'Padrão', 'padrão': 'padrão', 'Não': 'Não', 'não': 'não',
+    'Ações': 'Ações', 'Configuração': 'Configuração', 'Produção': 'Produção', 'produção': 'produção',
+    'funções': 'funções', 'visÁvel': 'visível', 'Você': 'Você', 'já': 'já', 'estão': 'estão', 'há': 'há',
+    'Edição': 'Edição', 'edição': 'edição', 'Espetáculo': 'Espetáculo', 'espetáculo': 'espetáculo',
+    'Á udio': 'Áudio', 'áudio': 'áudio', 'Duração': 'Duração', 'duração': 'duração',
+    'Posição': 'Posição', 'posição': 'posição', 'Ação': 'Ação', 'ação': 'ação',
+    'Vídeo': 'Vídeo', 'vídeo': 'vídeo', 'Turnê': 'Turnê', 'turnê': 'turnê',
+    'único': 'único', 'veículo': 'veículo', 'Número': 'Número', 'número': 'número',
+    'Técnico': 'Técnico', 'técnico': 'técnico', 'Preparação': 'Preparação', 'preparação': 'preparação',
+    'Monitoração': 'Monitoração', 'monitoração': 'monitoração', 'Necessários': 'Necessários',
+    'locação': 'locação', 'indispensável': 'indispensável', 'Anotações': 'Anotações',
+    'Radiofrequência': 'Radiofrequência', 'região': 'região', 'Descrição': 'Descrição',
+    'concluído': 'concluído', 'botão': 'botão', 'excluirá': 'excluirá', 'Informações': 'Informações',
+    'Está': 'Está', 'está': 'está', 'veículos': 'veículos', 'ótimo': 'ótimo', 'apresentação': 'apresentação',
+    'Apresentação': 'Apresentação', 'avaliação': 'avaliação', 'código': 'código', 'Código': 'Código',
+    'último': 'último', 'última': 'última', 'recomeçar': 'recomeçar', 'você': 'você',
+    'Á‰': 'É', 'é': 'é', 'só': 'só', 'já': 'já', 'atrás': 'atrás', 'até': 'até'
 }
 
 files = glob.glob('src/**/*.tsx', recursive=True) + glob.glob('src/**/*.ts', recursive=True)

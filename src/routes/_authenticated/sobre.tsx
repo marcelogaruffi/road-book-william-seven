@@ -32,7 +32,8 @@ function SobrePage() {
                 className="shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300"
                 onClick={() => setZoomedLogo("/logo-axis.png")}
               >
-                <img src="/logo-axis.png" alt="Logo Áxis" className="h-20 object-contain drop-shadow-sm" />
+                <img src="/logo-axis.png" alt="Logo Áxis" className="h-20 object-contain drop-shadow-sm dark:hidden" />
+                  <img src="/logo-axis-dark.png" alt="Logo Áxis" className="h-20 object-contain drop-shadow-sm hidden dark:block" />
               </div>
               <div>
                 <CardTitle className="text-2xl font-bold text-slate-800">Áxis</CardTitle>

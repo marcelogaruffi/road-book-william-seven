@@ -34,3 +34,4 @@ code = code.replace(
 
 fs.writeFileSync('src/components/GridEventos.tsx', code, 'utf8');
 console.log('Updated GridEventos');
+

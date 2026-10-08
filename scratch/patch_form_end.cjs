@@ -16,3 +16,4 @@ const replacement = `      <LogoPicker
 content = content.replace("    </form>", replacement);
 fs.writeFileSync('src/components/RoadbookForm.tsx', content, 'utf8');
 console.log('Patched form end');
+

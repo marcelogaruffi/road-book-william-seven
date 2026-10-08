@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let c = fs.readFileSync('src/routes/_authenticated/emissao-relatorios.tsx', 'utf8');
 
 c = c.replace(/const \{ data \} = await supabase.from\('imprensa_clipping'\).select\('\*, eventos\\(espetaculo_nome\\)'\);/g, "const { data } = await supabase.from('imprensa_clipping').select('*');");

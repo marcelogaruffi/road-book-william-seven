@@ -1,4 +1,4 @@
-﻿import os
+import os
 
 with open('src/routes/_authenticated/checklist.tsx', 'r', encoding='utf-8') as f:
     content = f.read()

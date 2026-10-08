@@ -25,7 +25,7 @@ type Template = {
   rider_som: any;
 };
 
-export default function TemplateCuesTab() {
+export default function TemplateCuesTab({ espetaculoNome }: { espetaculoNome?: string }) {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -36,9 +36,25 @@ export default function TemplateCuesTab() {
   const [saving, setSaving] = useState(false);
   const [operationMode, setOperationMode] = useState(false);
 
-  useEffect(() => {
-    loadTemplates();
-  }, []);
+  
+    useEffect(() => {
+      if (espetaculoNome) {
+        async function fetchTemplate() {
+          setLoading(true);
+          const { data } = await supabase.from('templates_espetaculos').select('*').neq('nome_espetaculo', 'ESTOQUE_GLOBAL').eq('nome_espetaculo', espetaculoNome).single();
+          if (data) {
+            handleEdit(data as any);
+          } else {
+            handleEdit({ nome_espetaculo: espetaculoNome } as any);
+          }
+          setLoading(false);
+        }
+        fetchTemplate();
+      } else {
+        loadTemplates();
+      }
+    }, [espetaculoNome]);
+    
 
   const getErrorMessage = (error: any) => {
     return error?.message || "Erro desconhecido";
@@ -153,7 +169,8 @@ export default function TemplateCuesTab() {
   if (loading) return <div className="p-8 text-center">Carregando espetáculos...</div>;
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-4 gap-8 mt-6">
+    <div className={espetaculoNome ? "mt-6" : "grid grid-cols-1 xl:grid-cols-4 gap-8 mt-6"}>
+      {!espetaculoNome && (
       <div className="xl:col-span-1 space-y-6">
         <Card className="border-0 shadow-lg dark:bg-card rounded-2xl">
           <CardContent className="p-6 space-y-4">
@@ -176,8 +193,9 @@ export default function TemplateCuesTab() {
           </CardContent>
         </Card>
       </div>
+      )}
 
-      <div className="xl:col-span-3">
+      <div className={espetaculoNome ? "" : "xl:col-span-3"}>
         <Card className="border-0 shadow-lg dark:bg-card/80 overflow-hidden rounded-3xl">
           <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-6 text-white flex items-center justify-between">
             <div className="flex items-center gap-3 opacity-90">

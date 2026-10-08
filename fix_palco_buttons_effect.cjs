@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/palco.index.tsx', 'utf8');
 
 // Change the useEffect to switch selectedTipo instead of activeTab

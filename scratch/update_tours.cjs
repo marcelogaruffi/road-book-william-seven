@@ -89,3 +89,4 @@ const cardHappeningRegex = /const isHappening = tour\.roadbooks\?\.some\([\s\S]*
 content = content.replace(cardHappeningRegex, '');
 
 fs.writeFileSync('src/routes/_authenticated/tour.index.tsx', content, 'utf8');
+

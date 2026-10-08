@@ -16,7 +16,8 @@ code = code.replace(/<\/div>\s*<\/TabsContent>\s*<TabsContent value="caches_padr
 
 // We also didn't remove the inner `<Select>`. Let's just remove the inner `<Select>` and `<Label>` and `max-w-md` div.
 const innerSelectRegex = /<div className="max-w-md space-y-2">[\s\S]*?<\/Select>\s*<\/div>/;
-code = code.replace(innerSelectRegex, `<div className="flex items-center justify-start mb-4"><Button variant="outline" onClick={() => setSelectedRoadbook("")}>← Voltar para Grade</Button></div>`);
+code = code.replace(innerSelectRegex, `<div className="flex items-center justify-start mb-4"><Button variant="outline" onClick={() => setSelectedRoadbook("")}>â† Voltar para Grade</Button></div>`);
 
 fs.writeFileSync('src/routes/_authenticated/financeiro.tsx', code, 'utf8');
 console.log('Fixed financeiro syntax');
+

@@ -25,3 +25,4 @@ if 'const handleImageUpload' not in c:
     c = c.replace('function up<K extends keyof RoadbookData>(k: K, v: RoadbookData[K]) {', upload_func + '\n  function up<K extends keyof RoadbookData>(k: K, v: RoadbookData[K]) {')
     with open('src/components/RoadbookForm.tsx', 'w', encoding='utf-8') as f:
         f.write(c)
+

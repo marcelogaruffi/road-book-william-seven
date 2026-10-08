@@ -67,3 +67,4 @@ filesToPatch.forEach(({ file, replace }) => {
     fs.writeFileSync(file, content);
     console.log('Patched', file);
 });
+

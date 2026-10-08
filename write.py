@@ -1,4 +1,4 @@
-﻿import os
+import os
 with open('src/routes/_authenticated/malas.$evento_id.tsx', 'w', encoding='utf-8') as f:
     f.write("""import { createFileRoute, Link } from '@tanstack/react-router';
 import { MalasTemplateTab } from "@/components/MalasTemplateTab";
@@ -327,3 +327,4 @@ function MalasEventoOperacao() {
 }
 """
     )
+

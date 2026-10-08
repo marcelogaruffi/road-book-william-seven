@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let c = fs.readFileSync('src/routes/_authenticated/route.tsx', 'utf8');
 c = c.replace(/FileText/g, 'File');
 fs.writeFileSync('src/routes/_authenticated/route.tsx', c);

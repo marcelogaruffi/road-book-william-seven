@@ -20,3 +20,4 @@ const newCode = `const daysUntil = Math.ceil((getRoadbookStartDateTime(nextEvent
 content = content.replace(originalDaysUntil, newCode);
 
 fs.writeFileSync('src/routes/_authenticated/dashboard.tsx', content, 'utf8');
+

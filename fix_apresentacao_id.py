@@ -1,4 +1,4 @@
-﻿import os
+import os
 import glob
 
 files = glob.glob('src/routes/**/*.tsx', recursive=True) + glob.glob('src/components/**/*.tsx', recursive=True)

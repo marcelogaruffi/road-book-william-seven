@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let c = fs.readFileSync('src/routes/_authenticated/emissao-relatorios.tsx', 'utf8');
 c = c.replace(/\\\/g, '\');
 c = c.replace(/\\\$/g, '$');

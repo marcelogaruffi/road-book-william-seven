@@ -15,3 +15,4 @@ if(secondIdx !== -1) {
 }
 
 console.log('Cleaned files');
+

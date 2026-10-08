@@ -276,7 +276,8 @@ function Page() {
           <div className="flex items-center justify-center gap-6">
             <img src="/logo-contemporanea.png" alt="Contemporânea" className="h-14 sm:h-16 object-contain opacity-90" />
             <span className="hidden sm:block w-px h-14 bg-slate-200"></span>
-            <img src="/logo-axis-simples.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90" />
+            <img src="/logo-axis-simples.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90 dark:hidden" />
+              <img src="/logo-axis-simples-dark.png" alt="Áxis" className="h-14 sm:h-16 object-contain opacity-90 hidden dark:block" />
           </div>
           <div className="text-center flex flex-col gap-1">
             <span className="font-bold tracking-widest uppercase text-slate-500 text-[10px]">Gestão de Teatros e Shows</span>

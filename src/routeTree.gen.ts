@@ -35,6 +35,7 @@ import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authe
 import { Route as AuthenticatedMidiasRouteImport } from './routes/_authenticated/midias'
 import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authenticated/minhas-escalas'
 import { Route as AuthenticatedNovoProjetoRouteImport } from './routes/_authenticated/novo-projeto'
+import { Route as AuthenticatedPadroesRouteImport } from './routes/_authenticated/padroes'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPermissoesRouteImport } from './routes/_authenticated/permissoes'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
@@ -211,6 +212,11 @@ const AuthenticatedNovoProjetoRoute =
     path: '/novo-projeto',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedPadroesRoute = AuthenticatedPadroesRouteImport.update({
+  id: '/padroes',
+  path: '/padroes',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPerfilRoute = AuthenticatedPerfilRouteImport.update({
   id: '/perfil',
   path: '/perfil',
@@ -429,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/midias': typeof AuthenticatedMidiasRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
   '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
+  '/padroes': typeof AuthenticatedPadroesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
@@ -491,6 +498,7 @@ export interface FileRoutesByTo {
   '/midias': typeof AuthenticatedMidiasRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
   '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
+  '/padroes': typeof AuthenticatedPadroesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
   '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
@@ -555,6 +563,7 @@ export interface FileRoutesById {
   '/_authenticated/midias': typeof AuthenticatedMidiasRoute
   '/_authenticated/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
   '/_authenticated/novo-projeto': typeof AuthenticatedNovoProjetoRoute
+  '/_authenticated/padroes': typeof AuthenticatedPadroesRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/permissoes': typeof AuthenticatedPermissoesRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
@@ -619,6 +628,7 @@ export interface FileRouteTypes {
     | '/midias'
     | '/minhas-escalas'
     | '/novo-projeto'
+    | '/padroes'
     | '/perfil'
     | '/permissoes'
     | '/publico'
@@ -681,6 +691,7 @@ export interface FileRouteTypes {
     | '/midias'
     | '/minhas-escalas'
     | '/novo-projeto'
+    | '/padroes'
     | '/perfil'
     | '/permissoes'
     | '/publico'
@@ -744,6 +755,7 @@ export interface FileRouteTypes {
     | '/_authenticated/midias'
     | '/_authenticated/minhas-escalas'
     | '/_authenticated/novo-projeto'
+    | '/_authenticated/padroes'
     | '/_authenticated/perfil'
     | '/_authenticated/permissoes'
     | '/_authenticated/publico'
@@ -974,6 +986,13 @@ declare module '@tanstack/react-router' {
       path: '/novo-projeto'
       fullPath: '/novo-projeto'
       preLoaderRoute: typeof AuthenticatedNovoProjetoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/padroes': {
+      id: '/_authenticated/padroes'
+      path: '/padroes'
+      fullPath: '/padroes'
+      preLoaderRoute: typeof AuthenticatedPadroesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/perfil': {
@@ -1247,6 +1266,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMidiasRoute: typeof AuthenticatedMidiasRoute
   AuthenticatedMinhasEscalasRoute: typeof AuthenticatedMinhasEscalasRoute
   AuthenticatedNovoProjetoRoute: typeof AuthenticatedNovoProjetoRoute
+  AuthenticatedPadroesRoute: typeof AuthenticatedPadroesRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedPermissoesRoute: typeof AuthenticatedPermissoesRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
@@ -1303,6 +1323,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMidiasRoute: AuthenticatedMidiasRoute,
   AuthenticatedMinhasEscalasRoute: AuthenticatedMinhasEscalasRoute,
   AuthenticatedNovoProjetoRoute: AuthenticatedNovoProjetoRoute,
+  AuthenticatedPadroesRoute: AuthenticatedPadroesRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedPermissoesRoute: AuthenticatedPermissoesRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,

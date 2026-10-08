@@ -4,19 +4,19 @@ let content = fs.readFileSync('src/routes/_authenticated/imprensa.tsx', 'utf8');
 
 // Fix text mangling
 const replacements = {
-  'Ã§': 'ç', 'Ã¡': 'á', 'Ã¢': 'â', 'Ã£': 'ã', 'Ã©': 'é', 'Ãª': 'ê', 
-  'Ã­': 'í', 'Ã³': 'ó', 'Ãµ': 'õ', 'Ãº': 'ú', 'Ã€': 'À', 'Ã ': 'À', 
-  'Ã‡': 'Ç', 'Ã‰': 'É', 'Ã“': 'Ó', 'Ãš': 'Ú', 'Ã‚': 'Â', 'Ã”': 'Ô',
+  'ç': 'ç', 'á': 'á', 'â': 'â', 'ã': 'ã', 'é': 'é', 'ê': 'ê', 
+  'í': 'í', 'ó': 'ó', 'õ': 'õ', 'ú': 'ú', 'Á€': 'À', 'Á ': 'À', 
+  'Á‡': 'Ç', 'Á‰': 'É', 'Á“': 'Ó', 'Áš': 'Ú', 'Á‚': 'Â', 'Á”': 'Ô',
   'ðŸŸ¢': '🟢', 'ðŸ”´': '🔴', 'ðŸŸ¡': '🟡', 'ðŸ“ ': '📍', 'ðŸŽ­': '🎭', 
-  'ðŸ †': '🏆', 'ðŸ”—': '🔗', 'matÃƒÂ©ria': 'matéria', 'obrigatÃ³rios': 'obrigatórios',
-  'PÃºblico': 'Público', 'TÃ­tulo': 'Título', 'VeÃ­culo': 'Veículo', 'RelevÃ¢ncia': 'Relevância',
-  'atraÃ§Ã£o': 'atração', 'CirculaÃ§Ã£o': 'Circulação', 'apresentaÃ§Ã£o': 'apresentação',
-  'pÃºblico': 'público', 'AvaliaÃ§Ã£o': 'Avaliação', 'ComprovaÃ§Ã£o': 'Comprovação',
-  'DivulgaÃ§Ã£o': 'Divulgação', 'EspetÃ¡culo': 'Espetáculo', 'RÃ¡dio': 'Rádio',
-  'portfÃ³lio': 'portfólio', 'inscriÃ§Ã£o': 'inscrição', 'MatÃ©ria': 'Matéria', 'PublicaÃ§Ã£o': 'Publicação',
-  'produÃ§Ãµes': 'produções', 'artÃ­sticas': 'artísticas', 'Ã§Ã£o': 'ção', 'Ã§Ãµes': 'ções',
-  'Ã¡': 'á', 'Ã©': 'é', 'Ã­': 'í', 'Ã³': 'ó', 'Ãº': 'ú', 'Ã¢': 'â', 'Ãª': 'ê', 'Ã®': 'î', 'Ã´': 'ô', 'Ã»': 'û',
-  'Ã£': 'ã', 'Ãµ': 'õ', 'Ã§': 'ç', 'Ã': 'À', 'Ã': 'Á', 'Ã‰': 'É', 'Ã': 'Í', 'Ã“': 'Ó', 'Ãš': 'Ú',
+  'ðŸ †': '🏆', 'ðŸ”—': '🔗', 'matÁƒÂ©ria': 'matéria', 'obrigatórios': 'obrigatórios',
+  'Público': 'Público', 'Título': 'Título', 'Veículo': 'Veículo', 'Relevância': 'Relevância',
+  'atração': 'atração', 'Circulação': 'Circulação', 'apresentação': 'apresentação',
+  'público': 'público', 'Avaliação': 'Avaliação', 'Comprovação': 'Comprovação',
+  'Divulgação': 'Divulgação', 'Espetáculo': 'Espetáculo', 'Rádio': 'Rádio',
+  'portfólio': 'portfólio', 'inscrição': 'inscrição', 'Matéria': 'Matéria', 'Publicação': 'Publicação',
+  'produções': 'produções', 'artísticas': 'artísticas', 'ção': 'ção', 'ções': 'ções',
+  'á': 'á', 'é': 'é', 'í': 'í', 'ó': 'ó', 'ú': 'ú', 'â': 'â', 'ê': 'ê', 'Á®': 'î', 'Á´': 'ô', 'Á»': 'û',
+  'ã': 'ã', 'õ': 'õ', 'ç': 'ç', 'Á': 'À', 'Á': 'Á', 'Á‰': 'É', 'Á': 'Í', 'Á“': 'Ó', 'Áš': 'Ú',
 };
 
 for (const [bad, good] of Object.entries(replacements)) {

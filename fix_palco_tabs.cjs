@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/palco.index.tsx', 'utf8');
 
 // When selectedTipo changes to 'conferencia' or 'infra', switch activeTab to 'evento'

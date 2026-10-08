@@ -360,7 +360,8 @@ function AuthPage() {
           <div className="h-2 bg-gradient-to-r from-primary via-purple-500 to-primary"></div>
           <CardContent className="p-8 sm:p-10">
             <div className="text-center mb-8">
-              <img src="/logo-axis.png" alt="Áxis"  className="h-28 mx-auto object-contain mb-4" />
+              <img src="/logo-axis.png" alt="Áxis" className="h-28 mx-auto object-contain mb-4 dark:hidden" />
+              <img src="/logo-axis-dark.png" alt="Áxis" className="h-28 mx-auto object-contain mb-4 hidden dark:block" />
               
               <p className="text-slate-500 dark:text-slate-400 font-medium mt-1">
                 {mode === "login" && "Bem-vindo de volta! Faça seu login."}

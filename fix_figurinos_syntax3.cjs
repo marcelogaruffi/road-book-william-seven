@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 let content = fs.readFileSync('src/routes/_authenticated/figurinos.index.tsx', 'utf8');
 
 // Just look for the exact button tag and append } if it's missing

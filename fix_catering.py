@@ -124,7 +124,7 @@ content = re.sub(
 )
 # Note: "Restrições" encoding might be weird so fallback
 content = re.sub(
-    r'let y = drawHeaderPDF\(doc, "RestriÃ§Ãµes Alimentares da Equipe"\);',
+    r'let y = drawHeaderPDF\(doc, "Restrições Alimentares da Equipe"\);',
     r'const logoData = await getLogoBase64AndImg();\n      let y = drawHeaderPDF(doc, "Restrições Alimentares da Equipe", logoData);',
     content
 )
@@ -142,7 +142,7 @@ content = re.sub(
     content
 )
 content = re.sub(
-    r'let y = drawHeaderPDF\(doc, "CardÃ¡pio de Catering"\);',
+    r'let y = drawHeaderPDF\(doc, "Cardápio de Catering"\);',
     r'const logoData = await getLogoBase64AndImg();\n      let y = drawHeaderPDF(doc, "Cardápio de Catering", logoData);',
     content
 )

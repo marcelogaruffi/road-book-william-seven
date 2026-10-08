@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const lines = fs.readFileSync('src/routes/_authenticated/emissao-relatorios.tsx', 'utf8').split('\n');
 const saveAsIdx = lines.findIndex(l => l.includes('const { saveAs } = pkg;'));
 const importIdx = lines.findIndex(l => l.includes('import { FileText'));

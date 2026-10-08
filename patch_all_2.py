@@ -79,3 +79,4 @@ logos_section = '''
             <div className="space-y-2 md:col-span-2">'''
 
 modify_file('src/components/RoadbookForm.tsx', r'<div className="space-y-2 md:col-span-2">\s*<Label className="font-bold text-slate-700 dark:text-slate-300">Resumo da Viagem</Label>', logos_section + '\n              <Label className="font-bold text-slate-700 dark:text-slate-300">Resumo da Viagem</Label>')
+

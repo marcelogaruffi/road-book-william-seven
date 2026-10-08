@@ -32,3 +32,4 @@ c = c.replace('export function rowToRoadbook(row: any): RoadbookData {\n  return
 
 with open('src/lib/roadbook-types.ts', 'w', encoding='utf-8') as f:
     f.write(c)
+
