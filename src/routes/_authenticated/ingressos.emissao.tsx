@@ -500,10 +500,13 @@ function EmissaoIngressosPage() {
       }));
       supabase.from("ingressos_evento").insert(payloadSupabase).then(({ error: errInsert }) => {
         if (errInsert) {
-          console.warn("Aviso ao salvar ingressos no Supabase:", errInsert.message);
+          console.error("Erro ao sincronizar com Supabase:", errInsert);
+          toast.error(`Atenção: O ingresso foi salvo no navegador, mas o banco Supabase recusou (${errInsert.message}). Verifique o script RLS no painel do Supabase.`, { duration: 10000 });
+        } else {
+          console.log("Ingressos sincronizados com o Supabase com sucesso!");
         }
       });
-    } catch (e) {
+    } catch (e: any) {
       console.warn("Erro ao sincronizar com Supabase:", e);
     }
   };
