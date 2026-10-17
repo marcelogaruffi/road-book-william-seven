@@ -452,7 +452,29 @@ function EmissaoIngressosPage() {
     setIngressos(atualizados);
     localStorage.setItem(`ingressos_evento_${selectedShow.id}`, JSON.stringify(atualizados));
 
-    // Salvar em nuvem no Supabase de forma imediata (com await) para portaria no celular encontrar na hora
+    // Fechar imediatamente a tela de emissão e dar feedback ao usuário sem travamentos
+    setModalNovoOpen(false);
+
+    if (novosIngressos.length === 1) {
+      toast.success(`Ingresso gerado com sucesso! (${novosIngressos[0].codigoIngresso})`, { duration: 5000 });
+    } else {
+      toast.success(`${novosIngressos.length} ingressos gerados com sucesso para ${titularNome}!`, { duration: 5000 });
+    }
+    
+    // Resetar form e estados de validação
+    setTitularNome("");
+    setTitularCpf("");
+    setTelefone("");
+    setEmail("");
+    setTouchedNome(false);
+    setTouchedCpf(false);
+    setTouchedTelefone(false);
+    setTouchedEmail(false);
+    setListaAssentosLote([
+      { id: "1", setor: setoresDisponiveis[0] || "Plateia Central (Térreo)", fileira: "A", assento: "1" }
+    ]);
+
+    // Salvar em nuvem no Supabase em segundo plano
     try {
       const payloadSupabase = novosIngressos.map(item => ({
         evento_id: selectedShow.id,
@@ -476,34 +498,14 @@ function EmissaoIngressosPage() {
         produtora_nome: item.produtoraNome,
         banner_show_url: item.bannerShowUrl
       }));
-      const { error: errInsert } = await supabase.from("ingressos_evento").insert(payloadSupabase);
-      if (errInsert) {
-        console.warn("Aviso ao salvar ingressos no Supabase:", errInsert.message);
-      }
+      supabase.from("ingressos_evento").insert(payloadSupabase).then(({ error: errInsert }) => {
+        if (errInsert) {
+          console.warn("Aviso ao salvar ingressos no Supabase:", errInsert.message);
+        }
+      });
     } catch (e) {
       console.warn("Erro ao sincronizar com Supabase:", e);
     }
-
-    setModalNovoOpen(false);
-
-    if (novosIngressos.length === 1) {
-      toast.success(`Ingresso gerado com sucesso! (${novosIngressos[0].codigoIngresso})`, { duration: 5000 });
-    } else {
-      toast.success(`${novosIngressos.length} ingressos gerados com sucesso para ${titularNome}!`, { duration: 5000 });
-    }
-    
-    // Resetar form e estados de validação
-    setTitularNome("");
-    setTitularCpf("");
-    setTelefone("");
-    setEmail("");
-    setTouchedNome(false);
-    setTouchedCpf(false);
-    setTouchedTelefone(false);
-    setTouchedEmail(false);
-    setListaAssentosLote([
-      { id: "1", setor: setoresDisponiveis[0] || "Plateia Central (Térreo)", fileira: "A", assento: "1" }
-    ]);
   };
 
   // Excluir ingresso
