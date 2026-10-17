@@ -371,20 +371,34 @@ function EmissaoIngressosPage() {
     const dataFmt = selectedShow.data ? new Date(selectedShow.data + "T00:00:00").toLocaleDateString("pt-BR") : "Data a definir";
     const teatroFinal = teatroPersonalizado || selectedShow.local || "Teatro Municipal";
 
-    // Função para gerar código criptográfico pseudo-aleatório de alta entropia (16 caracteres alfanuméricos)
-    // Formato: 4 blocos de 4 chars alfanuméricos maiúsculos (ex: 8F2K-9Q7X-M4W1-J3P9), sem expor cidade ou evento
+    // Gerar ID numérico/identificador do show de até 4 dígitos (ex: últimos 4 dígitos do ID ou hash do espetáculo)
+    const obterIdShowCurto = (): string => {
+      if (selectedShow.id) {
+        // Se for UUID ou string, pegar os primeiros 4 caracteres alfanuméricos ou números
+        const nums = selectedShow.id.replace(/\D/g, "");
+        if (nums.length >= 4) return nums.slice(-4);
+        const limpo = selectedShow.id.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+        if (limpo.length >= 4) return limpo.slice(0, 4);
+      }
+      return "7777";
+    };
+
+    const showIdCurto = obterIdShowCurto();
+
+    // Função para gerar código criptográfico pseudo-aleatório de alta entropia (16 caracteres alfanuméricos em 4 blocos de 4)
+    // Padrão solicitado: TKT-[ID_SHOW]-[4CHARS]-[4CHARS]-[4CHARS]-[4CHARS] (ex: TKT-8921-9Q7X-M4W1-J3P9-8F2K)
     const gerarCodigoSeguro = (): string => {
       const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // sem caracteres ambíguos (0, O, 1, I)
-      let resultado = "";
+      let blocosAleatorios = "";
       for (let b = 0; b < 4; b++) {
         let bloco = "";
         for (let c = 0; c < 4; c++) {
           const randIdx = Math.floor(Math.random() * chars.length);
           bloco += chars[randIdx];
         }
-        resultado += (b === 0 ? "" : "-") + bloco;
+        blocosAleatorios += (b === 0 ? "" : "-") + bloco;
       }
-      return resultado;
+      return `TKT-${showIdCurto}-${blocosAleatorios}`;
     };
 
     const novosIngressos: IngressoItem[] = [];
@@ -432,7 +446,7 @@ function EmissaoIngressosPage() {
     setIngressos(atualizados);
     localStorage.setItem(`ingressos_evento_${selectedShow.id}`, JSON.stringify(atualizados));
 
-    // Salvar em nuvem no Supabase
+    // Salvar em nuvem no Supabase de forma imediata (com await) para portaria no celular encontrar na hora
     try {
       const payloadSupabase = novosIngressos.map(item => ({
         evento_id: selectedShow.id,
@@ -456,9 +470,10 @@ function EmissaoIngressosPage() {
         produtora_nome: item.produtoraNome,
         banner_show_url: item.bannerShowUrl
       }));
-      supabase.from("ingressos_evento").insert(payloadSupabase).then(({ error }) => {
-        if (error) console.warn("Supabase insert aviso:", error.message);
-      });
+      const { error: errInsert } = await supabase.from("ingressos_evento").insert(payloadSupabase);
+      if (errInsert) {
+        console.warn("Aviso ao salvar ingressos no Supabase:", errInsert.message);
+      }
     } catch (e) {
       console.warn("Erro ao sincronizar com Supabase:", e);
     }

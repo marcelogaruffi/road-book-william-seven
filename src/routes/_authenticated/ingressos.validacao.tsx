@@ -242,7 +242,9 @@ function ValidacaoIngressosPage() {
 
   // Validação por Código (Leitor Óptico USB/Bluetooth, Câmera ou Digitação Manual)
   const handleValidarCodigo = async (codigoParaValidar?: string) => {
-    const cod = (codigoParaValidar || codigoInput).trim();
+    // Normalizar código lido pela câmera ou digitado:
+    // Remove espaços em branco, quebras de linha e padroniza maiúsculas
+    let cod = (codigoParaValidar || codigoInput).trim().replace(/\r?\n|\r/g, "").toUpperCase();
     if (!cod) {
       toast.warning("Digite ou aponte o leitor para o código do ingresso.");
       return;
@@ -252,24 +254,39 @@ function ValidacaoIngressosPage() {
     const agoraHora = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
     try {
-      // 1. Buscar no Supabase
-      const { data: ingDb } = await supabase
+      // 1. Buscar no Supabase por código exato ou ilike
+      let { data: ingDb } = await supabase
         .from("ingressos_evento")
         .select("*")
         .eq("codigo_ingresso", cod)
         .maybeSingle();
+
+      // Se não achar direto e tiver caracteres sem hífen, tenta buscar com hífen ou vice-versa
+      if (!ingDb) {
+        const { data: ingIlike } = await supabase
+          .from("ingressos_evento")
+          .select("*")
+          .ilike("codigo_ingresso", cod)
+          .maybeSingle();
+        ingDb = ingIlike;
+      }
 
       let ingressoEncontrado: any = ingDb;
       let storageEncontradoChave: string | null = null;
 
       // 2. Fallback caso esteja gravado no localStorage
       if (typeof window !== "undefined") {
+        const codNormalizado = cod.replace(/[^A-Z0-9]/g, "");
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
           if (key && key.startsWith("ingressos_evento_")) {
             try {
               const lista = JSON.parse(localStorage.getItem(key) || "[]");
-              const idxMatch = lista.findIndex((item: any) => item.codigoIngresso === cod);
+              const idxMatch = lista.findIndex((item: any) => {
+                if (!item.codigoIngresso) return false;
+                const itemCod = item.codigoIngresso.trim().toUpperCase();
+                return itemCod === cod || itemCod.replace(/[^A-Z0-9]/g, "") === codNormalizado;
+              });
               if (idxMatch >= 0) {
                 storageEncontradoChave = key;
                 const match = lista[idxMatch];
