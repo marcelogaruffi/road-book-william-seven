@@ -85,6 +85,12 @@ function EmissaoIngressosPage() {
   const [horarioShow, setHorarioShow] = useState<string>("20:00");
   const [teatroPersonalizado, setTeatroPersonalizado] = useState<string>("");
 
+  // Controle de campo visitado (onBlur) para exibir erro em tempo real
+  const [touchedCpf, setTouchedCpf] = useState<boolean>(false);
+  const [touchedTelefone, setTouchedTelefone] = useState<boolean>(false);
+  const [touchedEmail, setTouchedEmail] = useState<boolean>(false);
+  const [touchedNome, setTouchedNome] = useState<boolean>(false);
+
   // Lista de assentos selecionados para o titular (cada assento com seu tipo individual)
   const [listaAssentosLote, setListaAssentosLote] = useState<ItemAssentoLote[]>([
     { id: "1", setor: "Plateia Central (Térreo)", fileira: "A", assento: "1", tipoIngresso: "INTEIRA" }
@@ -478,21 +484,23 @@ function EmissaoIngressosPage() {
       console.warn("Erro ao sincronizar com Supabase:", e);
     }
 
-    if (novosIngressos.length === 1) {
-      toast.success(`Ingresso ${novosIngressos[0].codigoIngresso} emitido com sucesso!`);
-      handleAbrirVisualizador(novosIngressos[0]);
-    } else {
-      toast.success(`${novosIngressos.length} ingressos emitidos para ${titularNome}! Gerando folha única A4...`);
-      exportarLoteIngressosFolhaA4(novosIngressos, titularNome);
-    }
-
     setModalNovoOpen(false);
+
+    if (novosIngressos.length === 1) {
+      toast.success(`Ingresso gerado com sucesso! (${novosIngressos[0].codigoIngresso})`, { duration: 5000 });
+    } else {
+      toast.success(`${novosIngressos.length} ingressos gerados com sucesso para ${titularNome}!`, { duration: 5000 });
+    }
     
-    // Resetar form
+    // Resetar form e estados de validação
     setTitularNome("");
     setTitularCpf("");
     setTelefone("");
     setEmail("");
+    setTouchedNome(false);
+    setTouchedCpf(false);
+    setTouchedTelefone(false);
+    setTouchedEmail(false);
     setListaAssentosLote([
       { id: "1", setor: setoresDisponiveis[0] || "Plateia Central (Térreo)", fileira: "A", assento: "1" }
     ]);
@@ -1016,10 +1024,16 @@ function EmissaoIngressosPage() {
                   <Input 
                     value={titularNome} 
                     onChange={(e) => setTitularNome(e.target.value)}
+                    onBlur={() => setTouchedNome(true)}
                     placeholder="Nome completo do convidado ou comprador" 
-                    className="h-9 text-xs font-semibold"
+                    className={`h-9 text-xs font-semibold ${touchedNome && !titularNome.trim() ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
                     required
                   />
+                  {touchedNome && !titularNome.trim() && (
+                    <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                      ⚠️ O nome completo é obrigatório.
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -1027,11 +1041,26 @@ function EmissaoIngressosPage() {
                   <Input 
                     value={titularCpf} 
                     onChange={handleCpfChange}
+                    onBlur={() => setTouchedCpf(true)}
                     placeholder="000.000.000-00" 
-                    className="h-9 text-xs font-mono font-bold"
+                    className={`h-9 text-xs font-mono font-bold ${
+                      touchedCpf && (!titularCpf.trim() || !isValidCPF(titularCpf)) 
+                        ? "border-rose-500 focus-visible:ring-rose-500 text-rose-600" 
+                        : ""
+                    }`}
                     maxLength={14}
                     required
                   />
+                  {touchedCpf && !titularCpf.trim() && (
+                    <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                      ⚠️ O CPF é obrigatório.
+                    </span>
+                  )}
+                  {touchedCpf && titularCpf.trim() && !isValidCPF(titularCpf) && (
+                    <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                      ❌ CPF inválido! Verifique os números informados.
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1041,11 +1070,21 @@ function EmissaoIngressosPage() {
                   <Input 
                     value={telefone} 
                     onChange={handleTelefoneChange}
+                    onBlur={() => setTouchedTelefone(true)}
                     placeholder="(00) 00000-0000" 
-                    className="h-9 text-xs font-mono"
+                    className={`h-9 text-xs font-mono ${
+                      touchedTelefone && (!telefone.trim() || telefone.replace(/\D/g, "").length < 10)
+                        ? "border-rose-500 focus-visible:ring-rose-500 text-rose-600"
+                        : ""
+                    }`}
                     maxLength={15}
                     required
                   />
+                  {touchedTelefone && (!telefone.trim() || telefone.replace(/\D/g, "").length < 10) && (
+                    <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                      ⚠️ Informe um WhatsApp com DDD válido (ex: (11) 98888-8888).
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-1.5">
@@ -1054,10 +1093,20 @@ function EmissaoIngressosPage() {
                     type="email"
                     value={email} 
                     onChange={(e) => setEmail(e.target.value)}
+                    onBlur={() => setTouchedEmail(true)}
                     placeholder="exemplo@email.com" 
-                    className="h-9 text-xs"
+                    className={`h-9 text-xs ${
+                      touchedEmail && (!email.trim() || !isValidEmail(email))
+                        ? "border-rose-500 focus-visible:ring-rose-500 text-rose-600"
+                        : ""
+                    }`}
                     required
                   />
+                  {touchedEmail && (!email.trim() || !isValidEmail(email)) && (
+                    <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
+                      ⚠️ Informe um e-mail válido (ex: nome@dominio.com).
+                    </span>
+                  )}
                 </div>
               </div>
 
