@@ -303,7 +303,7 @@ function EmissaoIngressosPage() {
   };
 
   // Criar novos ingressos com validação de duplicidade
-  const handleEmitirIngresso = (e: React.FormEvent) => {
+  const handleEmitirIngresso = async (e: React.FormEvent) => {
     e.preventDefault();
     // 1. Validação obrigatória de Titular, CPF, Telefone e E-mail
     if (!titularNome.trim()) {
