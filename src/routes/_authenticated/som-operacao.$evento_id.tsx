@@ -562,9 +562,20 @@ function SomOperacaoScreen() {
           <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/som-operacao' })} className="rounded-full">
             <ArrowLeft className="size-5" />
           </Button>
-          <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Lista de Deixas (Cues)</h1>
-            <p className="text-slate-500 font-medium">{mapa.espetaculo}</p>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+                {mapa.espetaculo || "Espetáculo"}
+              </h1>
+              {mapa.cidade && (
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-primary/10 text-primary uppercase">
+                  {mapa.cidade}
+                </span>
+              )}
+            </div>
+            <p className="text-slate-500 font-medium text-xs sm:text-sm">
+              Lista de Deixas (Cues) • {mapa.data_apresentacao ? new Date(mapa.data_apresentacao + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data a definir'}
+            </p>
           </div>
         </div>
         <Button onClick={startOperation} className="bg-red-600 hover:bg-red-700 text-white font-bold h-12 px-8 rounded-xl shadow-lg shadow-red-600/20 text-lg group">

@@ -371,10 +371,32 @@ function PartiturasPage() {
           ) : (
           <Card>
             <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b">
-              <div className="flex items-center justify-between mb-4">
-                  <Button variant="outline" onClick={() => setSelectedEventoId("")}>← Voltar para Grade</Button>
-                  {/* Keep the import button logic */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Button variant="outline" size="sm" onClick={() => setSelectedEventoId("")} className="shrink-0 font-bold">
+                    &larr; Voltar para Grade
+                  </Button>
+                  {(() => {
+                    const ev = eventos.find((e) => e.id === selectedEventoId);
+                    if (!ev) return null;
+                    return (
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-base text-slate-800 dark:text-white">
+                            {ev.espetaculo || "Espetáculo"}
+                          </span>
+                          <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-primary/10 text-primary uppercase">
+                            {ev.cidade}
+                          </span>
+                        </div>
+                        <span className="text-xs text-slate-400">
+                          {ev.local ? `${ev.local} • ` : ""}{ev.data ? new Date(ev.data + "T00:00:00").toLocaleDateString("pt-BR") : "Data a definir"}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 </div>
+              </div>
             </CardHeader>
             <CardContent className="pt-6">
               {!selectedEventoId ? (

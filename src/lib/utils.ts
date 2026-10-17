@@ -33,12 +33,66 @@ export function formatPhone(value: string | null | undefined | number): string {
 }
 
 
-export function maskPhone(value: string, oldValue: string): string {
+export function formatCPF(value: string | null | undefined): string {
+  if (!value) return "";
+  const digits = String(value).replace(/\D/g, "").slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+}
+
+export function maskCPF(value: string): string {
+  if (!value) return "";
+  return formatCPF(value);
+}
+
+/**
+ * Validação oficial de algoritmo de dígitos verificadores de CPF
+ */
+export function isValidCPF(cpf: string | null | undefined): boolean {
+  if (!cpf) return false;
+  const digits = String(cpf).replace(/\D/g, "");
+  if (digits.length !== 11) return false;
+
+  // Bloquear sequências de dígitos idênticos conhecidas (000.000.000-00, 111.111.111-11, etc.)
+  if (/^(\d)\1{10}$/.test(digits)) return false;
+
+  // Primeiro dígito verificador
+  let soma = 0;
+  for (let i = 0; i < 9; i++) {
+    soma += parseInt(digits.charAt(i), 10) * (10 - i);
+  }
+  let resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(digits.charAt(9), 10)) return false;
+
+  // Segundo dígito verificador
+  soma = 0;
+  for (let i = 0; i < 10; i++) {
+    soma += parseInt(digits.charAt(i), 10) * (11 - i);
+  }
+  resto = (soma * 10) % 11;
+  if (resto === 10 || resto === 11) resto = 0;
+  if (resto !== parseInt(digits.charAt(10), 10)) return false;
+
+  return true;
+}
+
+/**
+ * Validação básica de formato de e-mail
+ */
+export function isValidEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
+}
+
+export function maskPhone(value: string, oldValue?: string): string {
   if (!value) return "";
   let digits = value.replace(/\D/g, "");
   
-  // Detect backspacing over a formatting character
-  if (value.length < oldValue.length && digits.length === oldValue.replace(/\D/g, "").length) {
+  if (oldValue && value.length < oldValue.length && digits.length === oldValue.replace(/\D/g, "").length) {
     digits = digits.slice(0, -1);
   }
 

@@ -19,10 +19,12 @@ export const Route = createFileRoute('/_authenticated/configuracoes')({
   component: ConfiguracoesComponent,
 });
 
+import { AccessDenied } from "@/components/AccessDenied";
+
 function ConfiguracoesComponent() {
   const { profile } = AuthedRoute.useRouteContext();
   const navigate = useNavigate();
-  const { isAdmin } = usePermissions(profile);
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -36,12 +38,16 @@ function ConfiguracoesComponent() {
   const [savingTwilio, setSavingTwilio] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin && profile !== null) {
-      navigate({ to: '/dashboard', replace: true });
-      return;
+    if (isProdutor) {
+      loadConfig();
+    } else {
+      setLoading(false);
     }
-    loadConfig();
-  }, [profile, isAdmin]);
+  }, [profile, isProdutor]);
+
+  if (profile && !isProdutor) {
+    return <AccessDenied message="A página de Configurações é exclusiva para a equipe de Produção e Administradores." />;
+  }
 
   const loadConfig = async () => {
     setLoading(true);

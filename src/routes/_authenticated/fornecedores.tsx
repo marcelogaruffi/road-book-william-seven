@@ -26,7 +26,13 @@ type Fornecedor = {
 
 const categorias = ["Áudio / Som", "Iluminação", "Vans e Transporte", "Hospedagem", "Catering", "Estúdio", "Outros"];
 
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
+
 function FornecedoresPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
+
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
@@ -37,8 +43,16 @@ function FornecedoresPage() {
   const [formData, setFormData] = useState<Partial<Fornecedor>>({});
 
   useEffect(() => {
-    fetchFornecedores();
-  }, []);
+    if (isProdutor) {
+      fetchFornecedores();
+    } else {
+      setLoading(false);
+    }
+  }, [isProdutor]);
+
+  if (profile && !isProdutor) {
+    return <AccessDenied message="O Diretório de Fornecedores é exclusivo para Administradores e Produtores." />;
+  }
 
   async function fetchFornecedores() {
     setLoading(true);

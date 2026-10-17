@@ -73,9 +73,13 @@ export const Route = createFileRoute("/_authenticated/cadastros")({
   component: UsersPage,
 });
 
+import { AccessDenied } from "@/components/AccessDenied";
+
 function UsersPage() {
   const router = useRouter();
   const { user, profile } = Route.useRouteContext();
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
+
   const [users, setUsers] = useState<Profile[]>([]);
   const [invites, setInvites] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,8 +104,16 @@ function UsersPage() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
 
   useEffect(() => {
-    loadData();
-  }, [user]);
+    if (isProdutor) {
+      loadData();
+    } else {
+      setLoading(false);
+    }
+  }, [user, isProdutor]);
+
+  if (profile && !isProdutor) {
+    return <AccessDenied message="A página de Gestão de Equipe e Convites é exclusiva para Administradores e Produtores." />;
+  }
 
   async function loadData() {
     setLoading(true);

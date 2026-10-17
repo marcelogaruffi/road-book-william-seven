@@ -23,6 +23,7 @@ import { Route as AuthenticatedDadosEquipeRouteImport } from './routes/_authenti
 import { Route as AuthenticatedDadosPessoaisRouteImport } from './routes/_authenticated/dados-pessoais'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDivulgacoesRouteImport } from './routes/_authenticated/divulgacoes'
+import { Route as AuthenticatedDocumentosRouteImport } from './routes/_authenticated/documentos'
 import { Route as AuthenticatedEmissaoRelatoriosRouteImport } from './routes/_authenticated/emissao-relatorios'
 import { Route as AuthenticatedEscalasRouteImport } from './routes/_authenticated/escalas'
 import { Route as AuthenticatedEspetaculosRouteImport } from './routes/_authenticated/espetaculos'
@@ -31,9 +32,11 @@ import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authentic
 import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated/fornecedores'
 import { Route as AuthenticatedFotosRouteImport } from './routes/_authenticated/fotos'
 import { Route as AuthenticatedImprensaRouteImport } from './routes/_authenticated/imprensa'
+import { Route as AuthenticatedMeusContratosRouteImport } from './routes/_authenticated/meus-contratos'
 import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
 import { Route as AuthenticatedMidiasRouteImport } from './routes/_authenticated/midias'
 import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authenticated/minhas-escalas'
+import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedNovoProjetoRouteImport } from './routes/_authenticated/novo-projeto'
 import { Route as AuthenticatedPadroesRouteImport } from './routes/_authenticated/padroes'
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
@@ -52,6 +55,9 @@ import { Route as AuthenticatedCateringIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedFigurinosIndexRouteImport } from './routes/_authenticated/figurinos.index'
 import { Route as AuthenticatedIluminacaoIndexRouteImport } from './routes/_authenticated/iluminacao.index'
 import { Route as AuthenticatedIluminacaoEvento_idRouteImport } from './routes/_authenticated/iluminacao.$evento_id'
+import { Route as AuthenticatedIngressosEmissaoRouteImport } from './routes/_authenticated/ingressos.emissao'
+import { Route as AuthenticatedIngressosMapaRouteImport } from './routes/_authenticated/ingressos.mapa'
+import { Route as AuthenticatedIngressosValidacaoRouteImport } from './routes/_authenticated/ingressos.validacao'
 import { Route as AuthenticatedMalasIndexRouteImport } from './routes/_authenticated/malas.index'
 import { Route as AuthenticatedMalasEvento_idRouteImport } from './routes/_authenticated/malas.$evento_id'
 import { Route as AuthenticatedMeusFigurinosIndexRouteImport } from './routes/_authenticated/meus-figurinos.index'
@@ -146,6 +152,11 @@ const AuthenticatedDivulgacoesRoute =
     path: '/divulgacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedDocumentosRoute = AuthenticatedDocumentosRouteImport.update({
+  id: '/documentos',
+  path: '/documentos',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEmissaoRelatoriosRoute =
   AuthenticatedEmissaoRelatoriosRouteImport.update({
     id: '/emissao-relatorios',
@@ -189,6 +200,12 @@ const AuthenticatedImprensaRoute = AuthenticatedImprensaRouteImport.update({
   path: '/imprensa',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMeusContratosRoute =
+  AuthenticatedMeusContratosRouteImport.update({
+    id: '/meus-contratos',
+    path: '/meus-contratos',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeusPagamentosRoute =
   AuthenticatedMeusPagamentosRouteImport.update({
     id: '/meus-pagamentos',
@@ -204,6 +221,12 @@ const AuthenticatedMinhasEscalasRoute =
   AuthenticatedMinhasEscalasRouteImport.update({
     id: '/minhas-escalas',
     path: '/minhas-escalas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedNotificacoesRoute =
+  AuthenticatedNotificacoesRouteImport.update({
+    id: '/notificacoes',
+    path: '/notificacoes',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedNovoProjetoRoute =
@@ -301,6 +324,24 @@ const AuthenticatedIluminacaoEvento_idRoute =
   AuthenticatedIluminacaoEvento_idRouteImport.update({
     id: '/iluminacao/$evento_id',
     path: '/iluminacao/$evento_id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIngressosEmissaoRoute =
+  AuthenticatedIngressosEmissaoRouteImport.update({
+    id: '/ingressos/emissao',
+    path: '/ingressos/emissao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIngressosMapaRoute =
+  AuthenticatedIngressosMapaRouteImport.update({
+    id: '/ingressos/mapa',
+    path: '/ingressos/mapa',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedIngressosValidacaoRoute =
+  AuthenticatedIngressosValidacaoRouteImport.update({
+    id: '/ingressos/validacao',
+    path: '/ingressos/validacao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMalasIndexRoute = AuthenticatedMalasIndexRouteImport.update({
@@ -423,6 +464,7 @@ export interface FileRoutesByFullPath {
   '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/divulgacoes': typeof AuthenticatedDivulgacoesRoute
+  '/documentos': typeof AuthenticatedDocumentosRoute
   '/emissao-relatorios': typeof AuthenticatedEmissaoRelatoriosRoute
   '/escalas': typeof AuthenticatedEscalasRoute
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
@@ -431,9 +473,11 @@ export interface FileRoutesByFullPath {
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/fotos': typeof AuthenticatedFotosRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
+  '/meus-contratos': typeof AuthenticatedMeusContratosRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
   '/padroes': typeof AuthenticatedPadroesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -448,6 +492,9 @@ export interface FileRoutesByFullPath {
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
   '/iluminacao/$evento_id': typeof AuthenticatedIluminacaoEvento_idRoute
+  '/ingressos/emissao': typeof AuthenticatedIngressosEmissaoRoute
+  '/ingressos/mapa': typeof AuthenticatedIngressosMapaRoute
+  '/ingressos/validacao': typeof AuthenticatedIngressosValidacaoRoute
   '/malas/$evento_id': typeof AuthenticatedMalasEvento_idRoute
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
@@ -486,6 +533,7 @@ export interface FileRoutesByTo {
   '/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/divulgacoes': typeof AuthenticatedDivulgacoesRoute
+  '/documentos': typeof AuthenticatedDocumentosRoute
   '/emissao-relatorios': typeof AuthenticatedEmissaoRelatoriosRoute
   '/escalas': typeof AuthenticatedEscalasRoute
   '/espetaculos': typeof AuthenticatedEspetaculosRoute
@@ -494,9 +542,11 @@ export interface FileRoutesByTo {
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/fotos': typeof AuthenticatedFotosRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
+  '/meus-contratos': typeof AuthenticatedMeusContratosRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
   '/padroes': typeof AuthenticatedPadroesRoute
   '/perfil': typeof AuthenticatedPerfilRoute
@@ -511,6 +561,9 @@ export interface FileRoutesByTo {
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
   '/iluminacao/$evento_id': typeof AuthenticatedIluminacaoEvento_idRoute
+  '/ingressos/emissao': typeof AuthenticatedIngressosEmissaoRoute
+  '/ingressos/mapa': typeof AuthenticatedIngressosMapaRoute
+  '/ingressos/validacao': typeof AuthenticatedIngressosValidacaoRoute
   '/malas/$evento_id': typeof AuthenticatedMalasEvento_idRoute
   '/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
@@ -551,6 +604,7 @@ export interface FileRoutesById {
   '/_authenticated/dados-pessoais': typeof AuthenticatedDadosPessoaisRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/divulgacoes': typeof AuthenticatedDivulgacoesRoute
+  '/_authenticated/documentos': typeof AuthenticatedDocumentosRoute
   '/_authenticated/emissao-relatorios': typeof AuthenticatedEmissaoRelatoriosRoute
   '/_authenticated/escalas': typeof AuthenticatedEscalasRoute
   '/_authenticated/espetaculos': typeof AuthenticatedEspetaculosRoute
@@ -559,9 +613,11 @@ export interface FileRoutesById {
   '/_authenticated/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/_authenticated/fotos': typeof AuthenticatedFotosRoute
   '/_authenticated/imprensa': typeof AuthenticatedImprensaRoute
+  '/_authenticated/meus-contratos': typeof AuthenticatedMeusContratosRoute
   '/_authenticated/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/_authenticated/midias': typeof AuthenticatedMidiasRoute
   '/_authenticated/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
+  '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/novo-projeto': typeof AuthenticatedNovoProjetoRoute
   '/_authenticated/padroes': typeof AuthenticatedPadroesRoute
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
@@ -576,6 +632,9 @@ export interface FileRoutesById {
   '/turne-completa/$slug': typeof TurneCompletaSlugRoute
   '/turne/$slug': typeof TurneSlugRoute
   '/_authenticated/iluminacao/$evento_id': typeof AuthenticatedIluminacaoEvento_idRoute
+  '/_authenticated/ingressos/emissao': typeof AuthenticatedIngressosEmissaoRoute
+  '/_authenticated/ingressos/mapa': typeof AuthenticatedIngressosMapaRoute
+  '/_authenticated/ingressos/validacao': typeof AuthenticatedIngressosValidacaoRoute
   '/_authenticated/malas/$evento_id': typeof AuthenticatedMalasEvento_idRoute
   '/_authenticated/print/$slug': typeof AuthenticatedPrintSlugRoute
   '/_authenticated/roadbook/$id': typeof AuthenticatedRoadbookIdRoute
@@ -616,6 +675,7 @@ export interface FileRouteTypes {
     | '/dados-pessoais'
     | '/dashboard'
     | '/divulgacoes'
+    | '/documentos'
     | '/emissao-relatorios'
     | '/escalas'
     | '/espetaculos'
@@ -624,9 +684,11 @@ export interface FileRouteTypes {
     | '/fornecedores'
     | '/fotos'
     | '/imprensa'
+    | '/meus-contratos'
     | '/meus-pagamentos'
     | '/midias'
     | '/minhas-escalas'
+    | '/notificacoes'
     | '/novo-projeto'
     | '/padroes'
     | '/perfil'
@@ -641,6 +703,9 @@ export interface FileRouteTypes {
     | '/turne-completa/$slug'
     | '/turne/$slug'
     | '/iluminacao/$evento_id'
+    | '/ingressos/emissao'
+    | '/ingressos/mapa'
+    | '/ingressos/validacao'
     | '/malas/$evento_id'
     | '/print/$slug'
     | '/roadbook/$id'
@@ -679,6 +744,7 @@ export interface FileRouteTypes {
     | '/dados-pessoais'
     | '/dashboard'
     | '/divulgacoes'
+    | '/documentos'
     | '/emissao-relatorios'
     | '/escalas'
     | '/espetaculos'
@@ -687,9 +753,11 @@ export interface FileRouteTypes {
     | '/fornecedores'
     | '/fotos'
     | '/imprensa'
+    | '/meus-contratos'
     | '/meus-pagamentos'
     | '/midias'
     | '/minhas-escalas'
+    | '/notificacoes'
     | '/novo-projeto'
     | '/padroes'
     | '/perfil'
@@ -704,6 +772,9 @@ export interface FileRouteTypes {
     | '/turne-completa/$slug'
     | '/turne/$slug'
     | '/iluminacao/$evento_id'
+    | '/ingressos/emissao'
+    | '/ingressos/mapa'
+    | '/ingressos/validacao'
     | '/malas/$evento_id'
     | '/print/$slug'
     | '/roadbook/$id'
@@ -743,6 +814,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dados-pessoais'
     | '/_authenticated/dashboard'
     | '/_authenticated/divulgacoes'
+    | '/_authenticated/documentos'
     | '/_authenticated/emissao-relatorios'
     | '/_authenticated/escalas'
     | '/_authenticated/espetaculos'
@@ -751,9 +823,11 @@ export interface FileRouteTypes {
     | '/_authenticated/fornecedores'
     | '/_authenticated/fotos'
     | '/_authenticated/imprensa'
+    | '/_authenticated/meus-contratos'
     | '/_authenticated/meus-pagamentos'
     | '/_authenticated/midias'
     | '/_authenticated/minhas-escalas'
+    | '/_authenticated/notificacoes'
     | '/_authenticated/novo-projeto'
     | '/_authenticated/padroes'
     | '/_authenticated/perfil'
@@ -768,6 +842,9 @@ export interface FileRouteTypes {
     | '/turne-completa/$slug'
     | '/turne/$slug'
     | '/_authenticated/iluminacao/$evento_id'
+    | '/_authenticated/ingressos/emissao'
+    | '/_authenticated/ingressos/mapa'
+    | '/_authenticated/ingressos/validacao'
     | '/_authenticated/malas/$evento_id'
     | '/_authenticated/print/$slug'
     | '/_authenticated/roadbook/$id'
@@ -904,6 +981,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDivulgacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/documentos': {
+      id: '/_authenticated/documentos'
+      path: '/documentos'
+      fullPath: '/documentos'
+      preLoaderRoute: typeof AuthenticatedDocumentosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/emissao-relatorios': {
       id: '/_authenticated/emissao-relatorios'
       path: '/emissao-relatorios'
@@ -960,6 +1044,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedImprensaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/meus-contratos': {
+      id: '/_authenticated/meus-contratos'
+      path: '/meus-contratos'
+      fullPath: '/meus-contratos'
+      preLoaderRoute: typeof AuthenticatedMeusContratosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/meus-pagamentos': {
       id: '/_authenticated/meus-pagamentos'
       path: '/meus-pagamentos'
@@ -979,6 +1070,13 @@ declare module '@tanstack/react-router' {
       path: '/minhas-escalas'
       fullPath: '/minhas-escalas'
       preLoaderRoute: typeof AuthenticatedMinhasEscalasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notificacoes': {
+      id: '/_authenticated/notificacoes'
+      path: '/notificacoes'
+      fullPath: '/notificacoes'
+      preLoaderRoute: typeof AuthenticatedNotificacoesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/novo-projeto': {
@@ -1105,6 +1203,27 @@ declare module '@tanstack/react-router' {
       path: '/iluminacao/$evento_id'
       fullPath: '/iluminacao/$evento_id'
       preLoaderRoute: typeof AuthenticatedIluminacaoEvento_idRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ingressos/emissao': {
+      id: '/_authenticated/ingressos/emissao'
+      path: '/ingressos/emissao'
+      fullPath: '/ingressos/emissao'
+      preLoaderRoute: typeof AuthenticatedIngressosEmissaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ingressos/mapa': {
+      id: '/_authenticated/ingressos/mapa'
+      path: '/ingressos/mapa'
+      fullPath: '/ingressos/mapa'
+      preLoaderRoute: typeof AuthenticatedIngressosMapaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ingressos/validacao': {
+      id: '/_authenticated/ingressos/validacao'
+      path: '/ingressos/validacao'
+      fullPath: '/ingressos/validacao'
+      preLoaderRoute: typeof AuthenticatedIngressosValidacaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/malas/': {
@@ -1254,6 +1373,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDadosPessoaisRoute: typeof AuthenticatedDadosPessoaisRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDivulgacoesRoute: typeof AuthenticatedDivulgacoesRoute
+  AuthenticatedDocumentosRoute: typeof AuthenticatedDocumentosRoute
   AuthenticatedEmissaoRelatoriosRoute: typeof AuthenticatedEmissaoRelatoriosRoute
   AuthenticatedEscalasRoute: typeof AuthenticatedEscalasRoute
   AuthenticatedEspetaculosRoute: typeof AuthenticatedEspetaculosRoute
@@ -1262,9 +1382,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFornecedoresRoute: typeof AuthenticatedFornecedoresRoute
   AuthenticatedFotosRoute: typeof AuthenticatedFotosRoute
   AuthenticatedImprensaRoute: typeof AuthenticatedImprensaRoute
+  AuthenticatedMeusContratosRoute: typeof AuthenticatedMeusContratosRoute
   AuthenticatedMeusPagamentosRoute: typeof AuthenticatedMeusPagamentosRoute
   AuthenticatedMidiasRoute: typeof AuthenticatedMidiasRoute
   AuthenticatedMinhasEscalasRoute: typeof AuthenticatedMinhasEscalasRoute
+  AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedNovoProjetoRoute: typeof AuthenticatedNovoProjetoRoute
   AuthenticatedPadroesRoute: typeof AuthenticatedPadroesRoute
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
@@ -1275,6 +1397,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedViagensRoute: typeof AuthenticatedViagensRoute
   AuthenticatedIluminacaoEvento_idRoute: typeof AuthenticatedIluminacaoEvento_idRoute
+  AuthenticatedIngressosEmissaoRoute: typeof AuthenticatedIngressosEmissaoRoute
+  AuthenticatedIngressosMapaRoute: typeof AuthenticatedIngressosMapaRoute
+  AuthenticatedIngressosValidacaoRoute: typeof AuthenticatedIngressosValidacaoRoute
   AuthenticatedMalasEvento_idRoute: typeof AuthenticatedMalasEvento_idRoute
   AuthenticatedPrintSlugRoute: typeof AuthenticatedPrintSlugRoute
   AuthenticatedRoadbookIdRoute: typeof AuthenticatedRoadbookIdRoute
@@ -1311,6 +1436,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDadosPessoaisRoute: AuthenticatedDadosPessoaisRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDivulgacoesRoute: AuthenticatedDivulgacoesRoute,
+  AuthenticatedDocumentosRoute: AuthenticatedDocumentosRoute,
   AuthenticatedEmissaoRelatoriosRoute: AuthenticatedEmissaoRelatoriosRoute,
   AuthenticatedEscalasRoute: AuthenticatedEscalasRoute,
   AuthenticatedEspetaculosRoute: AuthenticatedEspetaculosRoute,
@@ -1319,9 +1445,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFornecedoresRoute: AuthenticatedFornecedoresRoute,
   AuthenticatedFotosRoute: AuthenticatedFotosRoute,
   AuthenticatedImprensaRoute: AuthenticatedImprensaRoute,
+  AuthenticatedMeusContratosRoute: AuthenticatedMeusContratosRoute,
   AuthenticatedMeusPagamentosRoute: AuthenticatedMeusPagamentosRoute,
   AuthenticatedMidiasRoute: AuthenticatedMidiasRoute,
   AuthenticatedMinhasEscalasRoute: AuthenticatedMinhasEscalasRoute,
+  AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedNovoProjetoRoute: AuthenticatedNovoProjetoRoute,
   AuthenticatedPadroesRoute: AuthenticatedPadroesRoute,
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
@@ -1332,6 +1460,9 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedViagensRoute: AuthenticatedViagensRoute,
   AuthenticatedIluminacaoEvento_idRoute: AuthenticatedIluminacaoEvento_idRoute,
+  AuthenticatedIngressosEmissaoRoute: AuthenticatedIngressosEmissaoRoute,
+  AuthenticatedIngressosMapaRoute: AuthenticatedIngressosMapaRoute,
+  AuthenticatedIngressosValidacaoRoute: AuthenticatedIngressosValidacaoRoute,
   AuthenticatedMalasEvento_idRoute: AuthenticatedMalasEvento_idRoute,
   AuthenticatedPrintSlugRoute: AuthenticatedPrintSlugRoute,
   AuthenticatedRoadbookIdRoute: AuthenticatedRoadbookIdRoute,

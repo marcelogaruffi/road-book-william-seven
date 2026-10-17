@@ -79,7 +79,7 @@ function EventosComponent() {
   // Compute derived state for easy lookup
   const equipe = Array.from(new Set(escalasAtuais.map(e => e.usuario_id)));
   const [caches, setCaches] = useState<Record<string, string>>({});
-  const [showCachesDialog, setShowCachêêesDialog] = useState(false);
+  const [showCachesDialog, setShowCachêesDialog] = useState(false);
   const [searchEquipe, setSearchEquipe] = useState('');
   const [permitirSms, setPermitirSms] = useState(false);
 
@@ -195,7 +195,7 @@ function EventosComponent() {
     
     let novasEscalas: {usuario_id: string, funcao: string}[] = [];
     if (['admin', 'dev', 'produtor'].includes(role || '')) {
-       const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', ev.id);
+       const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', ev.id).neq('status', 'recusada');
        if (escData && escData.length > 0) {
          const { data: cacheData } = await supabase.from('evento_escalas_financeiro').select('escala_id, cache_valor').in('escala_id', escData.map(e => e.id));
          const cMap: any = {};
@@ -356,13 +356,20 @@ function EventosComponent() {
                       evento_id: savedEventId,
                       usuario_id: ea.usuario_id,
                       funcao: ea.funcao,
-                      cache: caches[`${ea.usuario_id}_${ea.funcao}`] || null,
+                      
                       status: 'pendente'
                    });
                    await supabase.from('evento_escalas').insert(insertData);
                    
-                   // Notificacao
-                   if (toAdd > 0 && numAps === existingScales?.length) { // Wait, the existing code didn't check
+                   // Notificacao para o profissional recem-escalado
+                   if (currentCount === 0) {
+                      await supabase.from('notificacoes').insert({
+                         usuario_id: ea.usuario_id,
+                         titulo: 'Nova Escala! 🎬',
+                         mensagem: `Você foi escalado(a) como ${(ea.funcao || 'membro da equipe').replace(/_/g, ' ')} no evento: ${espetaculo}${cidade ? ' em ' + cidade : ''}.`,
+                         tipo: 'escala',
+                         link: '/minhas-escalas'
+                      });
                    }
                 } else if (currentCount > numAps) {
                    const toRemove = currentCount - numAps;
@@ -381,7 +388,7 @@ function EventosComponent() {
         
         // Update Financials for ALL current scales (since cache might have changed)
       if (['admin', 'dev', 'produtor'].includes(role || '') && savedEventId) {
-        const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', savedEventId);
+        const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', savedEventId).neq('status', 'recusada');
         if (escData) {
           const financeiroUpserts = escData.map(esc => {
             const valStr = caches[`${esc.usuario_id}_${esc.funcao}`] || '0';
@@ -894,7 +901,7 @@ function EventosComponent() {
           </div>
 
           <DialogFooter className="mt-4 gap-2">
-              <Button variant="outline" onClick={() => setShowCachǦǦesDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
+              <Button variant="outline" onClick={() => setShowCachêesDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
                 💰 Cachês da Equipe
               </Button>
               {viewMode ? (
@@ -916,7 +923,7 @@ function EventosComponent() {
       </Dialog>
       
       {/* MODAL DE CACHÊS */}
-      <Dialog open={showCachesDialog} onOpenChange={setShowCachêêesDialog}>
+      <Dialog open={showCachesDialog} onOpenChange={setShowCachêesDialog}>
         <DialogContent className="rounded-[2rem] p-6 max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-black">Cachês da Equipe ({equipe.length})</DialogTitle>
@@ -954,7 +961,7 @@ function EventosComponent() {
               {escalasAtuais.length === 0 && <p className="text-slate-500 text-center text-sm py-4">Nenhum profissional selecionado.</p>}
           </div>
           <DialogFooter className="mt-4">
-            <Button onClick={() => setShowCachêêesDialog(false)} className="w-full h-12 rounded-xl font-bold">Concluído</Button>
+            <Button onClick={() => setShowCachêesDialog(false)} className="w-full h-12 rounded-xl font-bold">Concluído</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

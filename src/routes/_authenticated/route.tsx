@@ -1,4 +1,4 @@
-import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus , Layers } from "lucide-react";
+import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus, Layers, Ticket, QrCode, ShieldCheck } from "lucide-react";
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -243,13 +243,19 @@ function AuthedLayout() {
                   <SLink to="/meus-pagamentos" icon={Wallet} label="Meus Pagamentos" />
                 </SGroup>
 
-                <SGroup title="Gestão e Logística" icon={Bus}>
+                <SGroup title="Viagens e Logística" icon={Bus}>
                   <SLink to="/eventos" icon={Calendar} label="Eventos e Espetáculos" />
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" />
                   <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
                   <SLink to="/rooming-list" icon={DoorOpen} label="Rooming List (Hotéis)" show={isProdutor} />
+                </SGroup>
+
+                <SGroup title="Gestão de Ingressos" icon={Ticket}>
+                  <SLink to="/ingressos/mapa" icon={Ticket} label="Mapa de Assentos" show={isProdutor} />
+                  <SLink to="/ingressos/emissao" icon={QrCode} label="Emissão de Ingressos" show={isProdutor} />
+                  <SLink to="/ingressos/validacao" icon={ShieldCheck} label="Validação / Portaria" show={isProdutor} />
                 </SGroup>
 
                 <SGroup title="Backstage" icon={DoorOpen}>
@@ -277,7 +283,7 @@ function AuthedLayout() {
                   <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
                   <SLink to="/emissao-relatorios" icon={Printer} label="Emissão de Relatórios" show={isProdutor} />
                   <SLink to="/fornecedores" icon={Contact2} label="Diretório de Fornecedores" show={isProdutor} />
-                  <SLink to="/contratos" icon={FileSignature} label="Contratos e Documentos" />
+                  <SLink to="/contratos" icon={FileSignature} label="Gestão de Contratos" show={isProdutor} />
                 </SGroup>
 
                 <SGroup title="Comunicação e Mídia" icon={Smartphone}>

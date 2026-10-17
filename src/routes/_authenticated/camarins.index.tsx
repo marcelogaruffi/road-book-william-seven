@@ -811,13 +811,35 @@ function CamarinsPage() {
             <div className="flex flex-col sm:flex-row gap-4 items-end">
               <div className="flex-1 space-y-2 w-full">
                 {activeTab === "evento" ? (
-                  <div className="flex flex-col gap-2">
-                    <Label className="text-slate-500">Evento Selecionado</Label>
-                    <Button variant="outline" onClick={() => setSelectedEventoId("")} className="w-fit">&larr; Voltar para Grade de Eventos</Button>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+                    <div className="flex items-center gap-3">
+                      <Button variant="outline" size="sm" onClick={() => setSelectedEventoId("")} className="shrink-0 font-bold">
+                        &larr; Voltar para Grade
+                      </Button>
+                      {(() => {
+                        const ev = eventos.find((e) => e.id === selectedEventoId);
+                        if (!ev) return null;
+                        return (
+                          <div className="flex flex-col">
+                            <div className="flex items-center gap-2">
+                              <span className="font-black text-base text-slate-800 dark:text-white">
+                                {ev.espetaculo || "Espetáculo"}
+                              </span>
+                              <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-primary/10 text-primary uppercase">
+                                {ev.cidade}
+                              </span>
+                            </div>
+                            <span className="text-xs text-slate-400">
+                              {ev.local ? `${ev.local} • ` : ""}{ev.data ? new Date(ev.data + "T00:00:00").toLocaleDateString("pt-BR") : "Data a definir"}
+                            </span>
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
                 ) : (
                   <>
-                    <Label>Selecione o Show Padr�o</Label>
+                    <Label>Selecione o Show Padrão</Label>
                     <select value={selectedEspetaculoPadrao} onChange={e => setSelectedEspetaculoPadrao(e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
                       <option value="">Selecione um show...</option>
                       {espetaculosList.map(esp => <option key={esp} value={esp}>{esp}</option>)}

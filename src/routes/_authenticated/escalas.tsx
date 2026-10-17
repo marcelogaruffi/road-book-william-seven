@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, MapPin, CalendarDays, User, Trash2, Lock, Check } from "lucide-react";
+import { Search, MapPin, CalendarDays, User, Trash2, Lock, Check, Bell } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -56,13 +56,20 @@ function EscalasPage() {
         funcao,
         usuario:usuario_id(id, nome, role)
       `)
-      .order('created_at', { ascending: false });
+      ;
 
+    
     if (error) {
       toast.error("Erro ao buscar escalas: " + error.message);
     } else {
-      setEscalas(data || []);
+      const sorted = (data || []).sort((a: any, b: any) => {
+        const da = a.evento?.data ? new Date(a.evento.data).getTime() : 0;
+        const db = b.evento?.data ? new Date(b.evento.data).getTime() : 0;
+        return db - da; // Mais recente primeiro
+      });
+      setEscalas(sorted);
     }
+
     setLoading(false);
   };
   
@@ -80,12 +87,26 @@ function EscalasPage() {
     loadLoteData();
   }, []);
 
+  
+  const handleCobrar = async (id: string, profNome: string, userId: string, espetaculo: string) => {
+    const { error } = await supabase.from('notificacoes').insert({
+      usuario_id: userId,
+      titulo: 'Escala Pendente! 🎬',
+      mensagem: `Você tem uma nova escala pendente para confirmar no evento: ${espetaculo}`,
+      tipo: 'escala',
+      link: '/minhas-escalas'
+    });
+    if (!error) toast.success(`Cobrança enviada para ${profNome}`);
+    else toast.error("Erro ao notificar");
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja remover esta escala?")) return;
     
     const esc = escalas.find(e => e.id === id);
     if (!esc) return;
     
+    await supabase.from('evento_escalas_financeiro').delete().eq('escala_id', id);
     const { error } = await supabase.from('evento_escalas').delete().eq('id', id);
     if (error) {
       toast.error("Erro ao deletar: " + error.message);
@@ -175,6 +196,14 @@ function EscalasPage() {
             usuario_id: selectedProf,
             funcao: selectedFuncao,
             status: 'pendente'
+         });
+         
+         await supabase.from('notificacoes').insert({
+            usuario_id: selectedProf,
+            titulo: 'Nova Escala! 🎬',
+            mensagem: `Você foi escalado(a) como ${selectedFuncao.replace(/_/g, ' ')} no evento: ${ev.espetaculo}${ev.cidade ? ' em ' + ev.cidade : ''}.`,
+            tipo: 'escala',
+            link: '/minhas-escalas'
          });
          
          const equipe = ev.equipe || [];
@@ -298,7 +327,7 @@ function EscalasPage() {
                             <td className="px-6 py-4">
                               <div className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
                                 <CalendarDays className="size-4 opacity-70" />
-                                {esc.evento?.data ? format(new Date(esc.evento.data + 'T12:00:00Z'), "dd MMM, yyyy", { locale: ptBR }) : '-'}
+                                {esc.evento?.data && !isNaN(new Date(esc.evento.data + 'T12:00:00Z').getTime()) ? format(new Date(esc.evento.data + 'T12:00:00Z'), "dd MMM, yyyy", { locale: ptBR }) : '-'}
                               </div>
                             </td>
                             <td className="px-6 py-4">
@@ -306,7 +335,7 @@ function EscalasPage() {
                                 <Badge variant="outline" className={`border font-semibold ${statusColor}`}>
                                   {statusLabel}
                                 </Badge>
-                                {esc.status === 'pendente' && (
+                                {esc.status === 'pendente' && (<div className="flex gap-1">
                                   <Button 
                                     size="sm" 
                                     onClick={() => handleAccept(esc.id)}
@@ -314,8 +343,10 @@ function EscalasPage() {
                                     title="Dar Aceite Manualmente"
                                   >
                                     <Check className="size-3 mr-1" /> Aceitar
-                                  </Button>
-                                )}
+                                    </Button>
+                                    <Button variant="outline" size="sm" className="h-6 text-[10px] uppercase font-bold text-orange-600 border-orange-200 hover:bg-orange-50 px-2 py-0" onClick={() => handleCobrar(esc.id, esc.usuario?.nome || 'Profissional', esc.usuario?.id || '', esc.evento?.espetaculo || 'Evento')}>
+                                      <Bell className="size-3 mr-1" /> Cobrar
+                                    </Button></div>)}
                               </div>
                             </td>
                             <td className="px-6 py-4 text-right flex justify-end gap-1">
@@ -407,7 +438,7 @@ function EscalasPage() {
                             </div>
                             <div className="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1 mt-1">
                               <CalendarDays className="size-3 shrink-0" />
-                              {format(new Date(ev.data + 'T12:00:00Z'), "dd/MM/yyyy")}
+                              {ev.data && !isNaN(new Date(ev.data + 'T12:00:00Z').getTime()) ? format(new Date(ev.data + 'T12:00:00Z'), "dd/MM/yyyy") : '-'}
                             </div>
                           </div>
                         </div>

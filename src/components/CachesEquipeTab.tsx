@@ -7,7 +7,7 @@ import { CurrencyInput } from "@/components/CurrencyInput";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Save, Loader2, Search, FileText, Upload, CheckCircle2, Clock, Trash2 } from "lucide-react";
+import { DollarSign, Save, Loader2, Search, FileText, Upload, CheckCircle2, Clock, Trash2, Bell } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -19,6 +19,9 @@ import {
 export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
   const [equipe, setEquipe] = useState<any[]>([]);
   const [caches, setCaches] = useState<Record<string, string>>({});
+  const [diarias, setDiarias] = useState<Record<string, string>>({});
+  const [qtdDiarias, setQtdDiarias] = useState<Record<string, number>>({});
+  const [transportes, setTransportes] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<Record<string, string>>({});
   const [notas, setNotas] = useState<Record<string, string>>({});
   const [recibos, setRecibos] = useState<Record<string, string>>({});
@@ -77,6 +80,8 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
     }
 
     const newCaches: Record<string, string> = {};
+    const newDiarias: Record<string, string> = {};
+    const newTransportes: Record<string, string> = {};
     const newStatus: Record<string, string> = {};
     const newNotas: Record<string, string> = {};
     const newRecibos: Record<string, string> = {};
@@ -84,7 +89,9 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
     const formattedEquipe = (escalas || []).map((e: any) => {
       const c = cacheData.find((x: any) => x.escala_id === e.id);
       if (c) {
-        if (c.cache_valor !== null) newCaches[e.id] = Number(c.cache_valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (c.cache_valor !== null && c.cache_valor !== undefined) newCaches[e.id] = Number(c.cache_valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (c.diaria_valor !== null && c.diaria_valor !== undefined) newDiarias[e.id] = Number(c.diaria_valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        if (c.transporte_valor !== null && c.transporte_valor !== undefined) newTransportes[e.id] = Number(c.transporte_valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         if (c.status_pagamento) newStatus[e.id] = c.status_pagamento;
         if (c.nota_fiscal_url) newNotas[e.id] = c.nota_fiscal_url;
         if (c.recibo_url) newRecibos[e.id] = c.recibo_url;
@@ -101,10 +108,35 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
 
     setEquipe(formattedEquipe);
     setCaches(newCaches);
+    setDiarias(newDiarias);
+    setTransportes(newTransportes);
     setStatus(newStatus);
     setNotas(newNotas);
     setRecibos(newRecibos);
     setLoading(false);
+  }
+
+  
+  async function cobrarNota(escalaId: string) {
+    const membro = equipe.find(e => e.escala_id === escalaId);
+    if (!membro) return;
+    
+    // Fetch event info
+    const { data: rbData } = await supabase.from('roadbooks').select('espetaculo, cidade').eq('id', roadbookId).maybeSingle();
+    const titulo = `Nota Fiscal Pendente - ${rbData?.espetaculo || 'Evento'} ${rbData?.cidade ? 'em ' + rbData.cidade : ''}`;
+    const mensagem = `Por favor, anexe sua nota fiscal referente à sua atuação.`;
+    
+    const { error } = await supabase.from('notificacoes').insert({
+      usuario_id: membro.usuario_id,
+      titulo,
+      mensagem,
+      tipo: 'financeiro',
+      link: '/meus-pagamentos'
+    });
+            
+    
+    if (!error) toast.success(`Cobrança enviada para ${membro.nome}`);
+    else toast.error("Erro ao enviar cobrança: " + error.message);
   }
 
   const handleStatusChange = async (escalaId: string, novoStatus: string) => {
@@ -113,15 +145,39 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
       const val = caches[escalaId];
       let numVal = val ? parseFloat(val.replace(/\./g, '').replace(',', '.')) : 0;
       if (isNaN(numVal)) numVal = 0;
+
+      const dVal = diarias[escalaId];
+      let numDiaria = dVal ? parseFloat(dVal.replace(/\./g, '').replace(',', '.')) : 0;
+      if (isNaN(numDiaria)) numDiaria = 0;
+
+      const tVal = transportes[escalaId];
+      let numTransporte = tVal ? parseFloat(tVal.replace(/\./g, '').replace(',', '.')) : 0;
+      if (isNaN(numTransporte)) numTransporte = 0;
   
       const { error } = await supabase.from('evento_escalas_financeiro').upsert({
         escala_id: escalaId,
         status_pagamento: novoStatus,
         cache_valor: numVal,
+        diaria_valor: numDiaria,
+        transporte_valor: numTransporte,
         recibo_url: recibos[escalaId] || null
       }, { onConflict: 'escala_id' });
       if (error) throw error;
       toast.success("Status atualizado!");
+      
+      if (novoStatus === 'pago') {
+          const membro = equipe.find(e => e.escala_id === escalaId);
+          if (membro && membro.usuario_id) {
+            const { data: rbData } = await supabase.from('roadbooks').select('espetaculo, cidade').eq('id', roadbookId).maybeSingle();
+            await supabase.from('notificacoes').insert({
+              usuario_id: membro.usuario_id,
+              titulo: 'Pagamento Realizado! 💰',
+              mensagem: `Seu cachê do evento ${rbData?.espetaculo || ''} ${rbData?.cidade ? 'em '+rbData.cidade : ''} foi pago.`,
+              tipo: 'financeiro',
+              link: '/meus-pagamentos'
+            });
+          }
+        }
     } catch (err: any) {
       toast.error("Erro ao atualizar status");
     }
@@ -153,9 +209,20 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
       const val = caches[escalaId];
       let numVal = val ? parseFloat(val.replace(/\./g, '').replace(',', '.')) : 0;
       if (isNaN(numVal)) numVal = 0;
+
+      const dVal = diarias[escalaId];
+      let numDiaria = dVal ? parseFloat(dVal.replace(/\./g, '').replace(',', '.')) : 0;
+      if (isNaN(numDiaria)) numDiaria = 0;
+
+      const tVal = transportes[escalaId];
+      let numTransporte = tVal ? parseFloat(tVal.replace(/\./g, '').replace(',', '.')) : 0;
+      if (isNaN(numTransporte)) numTransporte = 0;
+
       const { error } = await supabase.from('evento_escalas_financeiro').upsert({
         escala_id: escalaId,
         cache_valor: numVal,
+        diaria_valor: numDiaria,
+        transporte_valor: numTransporte,
         status_pagamento: status[escalaId] || 'pendente',
         recibo_url: publicUrl
       }, { onConflict: 'escala_id' });
@@ -196,10 +263,20 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
         const val = caches[membro.escala_id];
         let numVal = val ? parseFloat(val.replace(/\./g, '').replace(',', '.')) : 0;
         if (isNaN(numVal)) numVal = 0;
+
+        const dVal = diarias[membro.escala_id];
+        let numDiaria = dVal ? parseFloat(dVal.replace(/\./g, '').replace(',', '.')) : 0;
+        if (isNaN(numDiaria)) numDiaria = 0;
+
+        const tVal = transportes[membro.escala_id];
+        let numTransporte = tVal ? parseFloat(tVal.replace(/\./g, '').replace(',', '.')) : 0;
+        if (isNaN(numTransporte)) numTransporte = 0;
         
         financeiroPayload.push({
           escala_id: membro.escala_id,
           cache_valor: numVal,
+          diaria_valor: numDiaria,
+          transporte_valor: numTransporte,
           status_pagamento: status[membro.escala_id] || 'pendente',
           recibo_url: recibos[membro.escala_id] || null
         });
@@ -210,7 +287,7 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
         if (error) throw error;
       }
 
-      toast.success("Cachês salvos com sucesso!");
+      toast.success("Valores salvos com sucesso!");
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     } finally {
@@ -274,15 +351,77 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-semibold text-slate-500">Cachê:</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-bold text-sm">R$</span>
-                    <CurrencyInput 
-                      className="w-28 h-9 font-bold text-right" 
-                      value={caches[p.escala_id] || ''}
-                      onChange={val => setCaches({...caches, [p.escala_id]: val})}
-                    />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold text-slate-500">Cachê:</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400 font-bold text-sm">R$</span>
+                      <CurrencyInput 
+                        className="w-28 h-9 font-bold text-right" 
+                        value={caches[p.escala_id] || ''}
+                        onChange={val => setCaches({...caches, [p.escala_id]: val})}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="pt-1 border-t border-slate-100/70 dark:border-white/5 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-slate-500">Valor Diária:</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-400 font-medium text-xs">R$</span>
+                        <CurrencyInput 
+                          className="w-28 h-8 text-xs text-right" 
+                          value={diarias[p.escala_id] || ''}
+                          onChange={val => setDiarias({...diarias, [p.escala_id]: val})}
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-slate-500">Qtd. Diárias:</span>
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="90"
+                          value={qtdDiarias[p.escala_id] ?? 1}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10);
+                            setQtdDiarias({ ...qtdDiarias, [p.escala_id]: isNaN(val) || val < 1 ? 1 : val });
+                          }}
+                          className="w-16 h-7 text-xs text-center font-bold"
+                        />
+                        <span className="text-[10px] text-slate-400 font-semibold">dias</span>
+                      </div>
+                    </div>
+                    {(() => {
+                      const dValStr = diarias[p.escala_id] || '0,00';
+                      const dNum = parseFloat(dValStr.replace(/\./g, '').replace(',', '.')) || 0;
+                      const qNum = qtdDiarias[p.escala_id] ?? 1;
+                      const tot = dNum * qNum;
+                      if (dNum > 0 && qNum > 1) {
+                        return (
+                          <div className="flex items-center justify-between text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded-lg">
+                            <span>Total Diárias ({qNum}x):</span>
+                            <span>R$ {tot.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })()}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium text-slate-500">Transporte:</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-400 font-medium text-xs">R$</span>
+                      <CurrencyInput 
+                        className="w-28 h-8 text-xs text-right" 
+                        value={transportes[p.escala_id] || ''}
+                        onChange={val => setTransportes({...transportes, [p.escala_id]: val})}
+                        placeholder="0,00"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -322,7 +461,7 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
                       </Button>
                     </div>
                   ) : (
-                    <span className="text-xs text-slate-400 italic">Não anexada</span>
+                    <div className="flex items-center gap-2"><span className="text-xs text-slate-400 italic">Não anexada</span><Button variant="outline" size="sm" className="h-8 text-xs text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => cobrarNota(p.escala_id)}><Bell className="size-3 mr-1" /> Cobrar</Button></div>
                   )}
                 </div>
 

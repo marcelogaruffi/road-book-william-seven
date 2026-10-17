@@ -31,7 +31,7 @@ function FinanceiroPage() {
 
   useEffect(() => {
     (async () => {
-      const { data, error } = await supabase.from("roadbooks").select("id, espetaculo, cidade, data_inicial").order("data_inicial", { ascending: false });
+      const { data, error } = await supabase.from("roadbooks").select("id, espetaculo, cidade, estado, teatro_nome, data_inicial").order("data_inicial", { ascending: false });
       if (error) {
         toast.error("Erro ao carregar guias de viagem: " + getErrorMessage(error));
       } else {
@@ -75,7 +75,32 @@ function FinanceiroPage() {
               <div className="mt-4"><GridEventos onSelect={(eId, rId) => { if (rId) setSelectedRoadbook(rId); else toast.info("Este evento ainda não possui um Guia de Viagem (Roadbook). Crie-o primeiro para acessar o financeiro."); }} /></div>
             ) : (
           <div className="bg-white dark:bg-card/50 p-6 rounded-2xl border border-slate-200 dark:border-white/5 shadow-sm space-y-4">
-            <div className="flex items-center justify-start mb-4"><Button variant="outline" onClick={() => setSelectedRoadbook("")}>← Voltar para Grade</Button></div>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={() => setSelectedRoadbook("")} className="shrink-0 gap-1.5 font-bold">
+                  ← Voltar para Grade
+                </Button>
+                {(() => {
+                  const activeRb = roadbooks.find((r) => r.id === selectedRoadbook);
+                  if (!activeRb) return null;
+                  return (
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-black text-lg text-slate-800 dark:text-white">
+                          {activeRb.espetaculo || "Espetáculo"}
+                        </span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-primary/10 text-primary uppercase">
+                          {activeRb.cidade}{activeRb.estado ? `/${activeRb.estado}` : ""}
+                        </span>
+                      </div>
+                      <span className="text-xs text-slate-400">
+                        {activeRb.teatro_nome ? `${activeRb.teatro_nome} • ` : ""}{activeRb.data_inicial ? new Date(activeRb.data_inicial + "T00:00:00").toLocaleDateString("pt-BR") : "Data a definir"}
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
 
             {selectedRoadbook ? (
               <div className="pt-6 border-t border-slate-100 dark:border-white/5 mt-6">

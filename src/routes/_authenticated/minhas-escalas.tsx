@@ -1,11 +1,11 @@
 // @ts-nocheck
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, CalendarDays, DollarSign, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { MapPin, CalendarDays, DollarSign, CheckCircle2, XCircle, Clock, FileSignature } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -64,6 +64,40 @@ function MinhasEscalasPage() {
 
   useEffect(() => {
     loadData();
+
+    if (profile?.id) {
+      const channel = supabase
+        .channel(`minhas_escalas_${profile.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'evento_escalas',
+            filter: `usuario_id=eq.${profile.id}`
+          },
+          () => {
+            loadData();
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notificacoes',
+            filter: `usuario_id=eq.${profile.id}`
+          },
+          () => {
+            loadData();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
   }, [profile]);
 
   const handleResponse = async (id: string, status: 'aceita' | 'recusada') => {
@@ -81,7 +115,7 @@ function MinhasEscalasPage() {
           usuario_id: admin.id,
           tipo: 'resposta',
           titulo: `Escala ${status === 'aceita' ? 'Aceita' : 'Recusada'}`,
-          mensagem: `${profile.nome} ${status === 'aceita' ? 'aceitou' : 'recusou'} a escala para ${esc.evento.espetaculo} em ${esc.evento.cidade}.`,
+          mensagem: `${profile.nome} ${status === 'aceita' ? 'aceitou' : 'recusou'} a escala para ${esc.evento?.espetaculo} em ${esc.evento?.cidade}.`,
           link: '/escalas'
         }));
         await supabase.from('notificacoes').insert(notificacoes);
@@ -90,8 +124,8 @@ function MinhasEscalasPage() {
   };
 
   const hojeStr = new Date().toISOString().split('T')[0];
-  const futuras = escalas.filter(esc => (esc.evento.data_fim || esc.evento.data) >= hojeStr);
-  const anteriores = escalas.filter(esc => (esc.evento.data_fim || esc.evento.data) < hojeStr);
+  const futuras = escalas.filter(esc => (esc.evento?.data_fim || esc.evento?.data) >= hojeStr);
+  const anteriores = escalas.filter(esc => (esc.evento?.data_fim || esc.evento?.data) < hojeStr);
 
   const renderCard = (esc: any) => {
     const isPendente = esc.status === 'pendente';
@@ -107,7 +141,7 @@ function MinhasEscalasPage() {
           <div className="flex justify-between items-start gap-2">
             <div>
               <CardTitle className="text-lg font-bold text-slate-800 leading-tight">
-                {esc.evento.espetaculo}
+                {esc.evento?.espetaculo}
               </CardTitle>
               {esc.funcao && (
                 <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase font-bold mt-1 inline-block">
@@ -124,20 +158,29 @@ function MinhasEscalasPage() {
         <CardContent className="p-5 space-y-3 flex-1">
           <div className="flex items-center gap-2 text-slate-600 text-sm">
             <MapPin className="size-4 shrink-0 text-primary/70" />
-            <span>{esc.evento.cidade}</span>
+            <span>{esc.evento?.cidade}</span>
           </div>
           <div className="flex items-start gap-2 text-slate-600 text-sm">
             <CalendarDays className="size-4 shrink-0 mt-0.5 text-primary/70" />
             <div className="flex flex-col gap-0.5">
-              {esc.evento.data_inicio && <span><span className="font-semibold">Ida:</span> {format(new Date(esc.evento.data_inicio + 'T12:00:00Z'), "dd/MM/yyyy")}</span>}
-              <span><span className="font-semibold">Apresentação:</span> {format(new Date(esc.evento.data + 'T12:00:00Z'), "dd/MM/yyyy")}</span>
-              {esc.evento.data_fim && <span><span className="font-semibold">Volta:</span> {format(new Date(esc.evento.data_fim + 'T12:00:00Z'), "dd/MM/yyyy")}</span>}
+              {esc.evento?.data_inicio && <span><span className="font-semibold">Ida:</span> {format(new Date(esc.evento?.data_inicio + 'T12:00:00Z'), "dd/MM/yyyy")}</span>}
+              <span><span className="font-semibold">Apresentação:</span> {format(new Date(esc.evento?.data + 'T12:00:00Z'), "dd/MM/yyyy")}</span>
+              {esc.evento?.data_fim && <span><span className="font-semibold">Volta:</span> {format(new Date(esc.evento?.data_fim + 'T12:00:00Z'), "dd/MM/yyyy")}</span>}
             </div>
           </div>
           {cache > 0 && (
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cachê</span>
               <span className="text-lg font-extrabold text-green-600">R$ {cache.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+            </div>
+          )}
+          {isAceita && (
+            <div className="pt-2">
+              <Link to="/meus-contratos" className="block w-full">
+                <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 rounded-xl border-primary/30 text-primary hover:bg-primary/5">
+                  <FileSignature className="size-3.5" /> Ver / Assinar Contrato
+                </Button>
+              </Link>
             </div>
           )}
         </CardContent>

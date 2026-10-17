@@ -83,11 +83,21 @@ function applyExcelStyles(worksheet: any, headerRowNumber: number) {
   });
 }
 
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
+
 function EmissaoRelatoriosPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
+
   const [selectedEventoId, setSelectedEventoId] = useState<string>("");
   const [eventoFull, setEventoFull] = useState<any>(null);
   const [selectedReports, setSelectedReports] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
+
+  if (profile && !isProdutor) {
+    return <AccessDenied message="A emissão de relatórios consolidados é exclusiva para Administradores e Produtores." />;
+  }
 
   const toggleReport = (id: string) => setSelectedReports(prev => ({ ...prev, [id]: !prev[id] }));
   const selectAll = () => {
@@ -676,11 +686,26 @@ function EmissaoRelatoriosPage() {
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 border rounded-2xl shadow-sm overflow-hidden">
             <div className="p-4 border-b bg-slate-50 dark:bg-slate-800 flex justify-between items-center">
-              <div className="space-y-1">
-                <h2 className="font-semibold text-lg">{eventoFull?.espetaculo || 'Evento Selecionado'}</h2>
-                {eventoFull?.data && <p className="text-sm text-slate-500">{new Date(eventoFull.data + 'T12:00:00').toLocaleDateString('pt-BR')} {eventoFull?.cidade ? `- ${eventoFull.cidade}` : ''}</p>}
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={() => setSelectedEventoId("")} className="shrink-0 font-bold">
+                  &larr; Voltar para Grade
+                </Button>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-base text-slate-800 dark:text-white">
+                      {eventoFull?.espetaculo || 'Evento Selecionado'}
+                    </span>
+                    {eventoFull?.cidade && (
+                      <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-primary/10 text-primary uppercase">
+                        {eventoFull.cidade}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {eventoFull?.local ? `${eventoFull.local} • ` : ""}{eventoFull?.data ? new Date(eventoFull.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data a definir'}
+                  </span>
+                </div>
               </div>
-              <Button variant="outline" onClick={() => setSelectedEventoId("")}>&larr; Trocar Evento</Button>
             </div>
 
             <div className="p-6">

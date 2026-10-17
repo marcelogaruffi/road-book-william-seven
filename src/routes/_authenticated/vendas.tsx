@@ -44,7 +44,15 @@ type Evento = {
   data: string;
 };
 
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
+import { usePermissions } from "@/hooks/usePermissions";
+
 function VendasPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const { canAccessVendas } = usePermissions(profile);
+  const isAllowed = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor' || canAccessVendas;
+
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [vendas, setVendas] = useState<RegistroVenda[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
@@ -52,6 +60,10 @@ function VendasPage() {
   const [editProdutoDialog, setEditProdutoDialog] = useState<{ open: boolean, id: string, nome: string, preco: string, estoqueStr: string }>({ open: false, id: '', nome: '', preco: '', estoqueStr: '' });
   const [loading, setLoading] = useState(false);
   const [estoque, setEstoque] = useState<Record<string, number>>({});
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O Controle de Vendas é exclusivo para Administradores, Produtores e responsáveis de Merch/Vendas." />;
+  }
 
   // Form states
   const [novoProdutoNome, setNovoProdutoNome] = useState("");

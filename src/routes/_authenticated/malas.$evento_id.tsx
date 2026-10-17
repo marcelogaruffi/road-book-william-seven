@@ -172,10 +172,27 @@ function MalasEventoOperacao() {
   return (
     <>
       <div className="w-full px-2 md:px-6 max-w-4xl mx-auto mb-6 mt-4">
-        <div className="flex items-center justify-between mb-4">
-          <Button variant="ghost" asChild className="text-slate-500 hover:text-slate-800 dark:hover:text-white">
-            <Link to="/malas"><ChevronLeft className="size-4 mr-2" /> Voltar</Link>
-          </Button>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" asChild className="shrink-0 font-bold">
+              <Link to="/malas">&larr; Voltar para Grade</Link>
+            </Button>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="font-black text-xl text-slate-900 dark:text-white">
+                  {evento?.espetaculo || "Espetáculo"}
+                </span>
+                {evento?.cidade && (
+                  <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-slate-900/10 text-slate-800 dark:text-white dark:bg-white/10 uppercase">
+                    {evento.cidade}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs text-slate-400">
+                Operação de Malas • {evento?.data ? new Date(evento.data + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data a definir'}
+              </span>
+            </div>
+          </div>
           <div className="flex items-center gap-3">
             <Button variant="outline" onClick={handleClearChecklist} className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-900/30 dark:hover:bg-red-950/30 rounded-xl h-11 px-4">
               <Eraser className="size-4 mr-2" /> Limpar Checklist

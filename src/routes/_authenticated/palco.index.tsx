@@ -143,11 +143,13 @@ function PalcoPage() {
   async function fetchDadosIniciais() {
     setLoading(true);
     try {
-      const [evtRes, espRes] = await Promise.all([
+      const [evtRes, espRes, realEvtsRes] = await Promise.all([
         supabase.from("evento_apresentacoes").select("id, evento_id, data, horario, local, eventos(cidade, local, espetaculo)").order("data", { ascending: false }),
-        supabase.from('templates_espetaculos').select("nome_espetaculo").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order("nome_espetaculo", { ascending: true })
+        supabase.from('templates_espetaculos').select("nome_espetaculo").neq('nome_espetaculo', 'ESTOQUE_GLOBAL').order("nome_espetaculo", { ascending: true }),
+        supabase.from("eventos").select("id, cidade, local, data, espetaculo")
       ]);
       if (evtRes.data) setApresentacoes(evtRes.data as any);
+      if (realEvtsRes.data) setEventos(realEvtsRes.data as any);
       if (espRes.data) {
         const esps = espRes.data.map(e => e.nome_espetaculo);
         setEspetaculosList(esps);
@@ -615,8 +617,31 @@ function PalcoPage() {
             <CardHeader className="bg-slate-50 dark:bg-slate-800/50 border-b">
               <div className="flex flex-col sm:flex-row gap-4 items-end">
                 <div className="flex-1 space-y-2 w-full flex items-center justify-start">
-                    <Button variant="outline" onClick={() => setSelectedEventoId("")}>← Voltar para Grade</Button>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedEventoId("")} className="shrink-0 font-bold">
+                      &larr; Voltar para Grade
+                    </Button>
+                    {(() => {
+                      const ev = eventos.find((e) => e.id === selectedEventoId);
+                      if (!ev) return null;
+                      return (
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <span className="font-black text-base text-slate-800 dark:text-white">
+                              {ev.espetaculo || "Espetáculo"}
+                            </span>
+                            <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-primary/10 text-primary uppercase">
+                              {ev.cidade}
+                            </span>
+                          </div>
+                          <span className="text-xs text-slate-400">
+                            {ev.local ? `${ev.local} • ` : ""}{ev.data ? new Date(ev.data + "T00:00:00").toLocaleDateString("pt-BR") : "Data a definir"}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
+                </div>
                 {(selectedTipo === 'mapa_palco' || selectedTipo === 'props') && (
                   <div className="shrink-0 flex gap-2">
                     {selectedTipo === 'props' && selectedEventoId && (

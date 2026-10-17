@@ -1,4 +1,4 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -20,17 +20,28 @@ export const Route = createFileRoute("/_authenticated/padroes")({
   component: PadroesPage,
 });
 
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
+
 function PadroesPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
+
   const [espetaculos, setEspetaculos] = useState<string[]>([]);
   const [selectedEspetaculo, setSelectedEspetaculo] = useState<string>("");
 
   useEffect(() => {
+    if (!isProdutor) return;
     async function loadEspetaculos() {
       const { data } = await supabase.from('templates_espetaculos').select('nome_espetaculo').order('nome_espetaculo');
       if (data) setEspetaculos(data.map(d => d.nome_espetaculo));
     }
     loadEspetaculos();
-  }, []);
+  }, [isProdutor]);
+
+  if (profile && !isProdutor) {
+    return <AccessDenied message="A página de Padrões de Espetáculo é exclusiva para Administradores e Produtores." />;
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12 animate-in fade-in duration-300">

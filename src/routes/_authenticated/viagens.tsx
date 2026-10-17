@@ -98,7 +98,7 @@ function Viagens() {
       });
       setLogosEspetaculos(logos);
     }
-    setEscalasPendentes(esc?.filter(e => e.status === 'pendente').length || 0);
+    setEscalasPendentes(esc ? esc.filter(e => e.status === 'pendente').length : 0);
     setLoading(false);
   }
 

@@ -33,7 +33,13 @@ type RoomingList = {
 
 const tiposQuarto = ["Single", "Double (Casal)", "Twin (Solteiros)", "Triplo", "Outro"];
 
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
+
 function RoomingListPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
+
   const [selectedEventoId, setSelectedEventoId] = useState<string>("");
   const [quartos, setQuartos] = useState<RoomingList[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,6 +48,10 @@ function RoomingListPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<RoomingList>>({});
+
+  if (profile && !isProdutor) {
+    return <AccessDenied message="A gestão de Rooming List (Hotéis) é exclusiva para Administradores e Produtores." />;
+  }
 
   useEffect(() => {
     if (selectedEventoId) {
@@ -260,20 +270,28 @@ function RoomingListPage() {
         <div className="space-y-6">
           <Card className="border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-card/40 dark:backdrop-blur-xl dark:border dark:border-white/10 rounded-[2rem] overflow-hidden relative">
             <CardHeader className="relative z-10 border-b border-slate-100 dark:border-white/5 pb-5 flex flex-col sm:flex-row justify-between gap-4 items-center bg-slate-50/50">
-              <div className="flex items-center gap-4">
-                <div className="size-12 bg-indigo-100 rounded-xl flex items-center justify-center">
-                  <MapPin className="size-6 text-indigo-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">{eventoData?.cidade} - {eventoData?.local}</h2>
-                  <p className="text-sm text-slate-500 font-medium">Espetáculo: {eventoData?.espetaculo}</p>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={() => setSelectedEventoId("")} className="shrink-0 font-bold">
+                  &larr; Voltar para Grade
+                </Button>
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-lg text-slate-800 dark:text-white">
+                      {eventoData?.espetaculo || "Espetáculo"}
+                    </span>
+                    {eventoData?.cidade && (
+                      <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-primary/10 text-primary uppercase">
+                        {eventoData.cidade}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-slate-400">
+                    {eventoData?.local ? `${eventoData.local} • ` : ""}{eventoData?.data ? new Date(eventoData.data + "T00:00:00").toLocaleDateString("pt-BR") : "Data a definir"}
+                  </span>
                 </div>
               </div>
               <div className="flex gap-2">
-                
                 <ReportExportButton onExportPdf={exportToPDF} onExportExcel={exportToExcel} />
-                <Button variant="outline" onClick={() => setSelectedEventoId("")}>Voltar</Button>
-
                 <Button onClick={openNew} className="gap-2"><Plus className="size-4" /> Adicionar Quarto</Button>
               </div>
             </CardHeader>

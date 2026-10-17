@@ -68,7 +68,13 @@ const FICHA_FUNCOES = [
   "Preparação Corporal", "Preparação Vocal", "Produção Executiva", "Produção Musical", "Outros"
 ];
 
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
+
 function EspetaculosPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
+
   const [espetaculos, setEspetaculos] = useState<Espetaculo[]>([]);
   const [loading, setLoading] = useState(false);
   const [logoPickerOpen, setLogoPickerOpen] = useState<{open: boolean, field: 'logo_espetaculo_url' | 'logo_cia_url' | null}>({open: false, field: null});
@@ -381,6 +387,10 @@ function EspetaculosPage() {
   // ---------------------------------------------------------------------------
   // VIEW: LIST
   // ---------------------------------------------------------------------------
+  if (profile && !isProdutor) {
+    return <AccessDenied message="O Catálogo de Espetáculos é exclusivo para Administradores e Produtores." />;
+  }
+
   if (view === "list") {
     return (
       <div className="max-w-7xl mx-auto space-y-6">

@@ -108,13 +108,26 @@ function MapaVideoForm() {
   return (
     <>
       <div className="w-full px-2 md:px-6 max-w-6xl mx-auto mb-6 mt-4">
-<div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate({ to: '/video' })} className="rounded-full">
-          <ArrowLeft className="size-5" />
-        </Button>
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Rider Técnico de Vídeo</h1>
-          <p className="text-slate-500 font-medium">Preencha as configurações de audiovisual do espetáculo</p>
+<div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" onClick={() => navigate({ to: '/video' })} className="shrink-0 font-bold">
+            &larr; Voltar para Grade
+          </Button>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <span className="font-black text-xl text-slate-900 dark:text-white">
+                {mapa.espetaculo || "Espetáculo"}
+              </span>
+              {mapa.cidade && (
+                <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-emerald-500/10 text-emerald-600 uppercase">
+                  {mapa.cidade}
+                </span>
+              )}
+            </div>
+            <span className="text-xs text-slate-400">
+              Rider Técnico de Vídeo • {mapa.data_apresentacao ? new Date(mapa.data_apresentacao + 'T12:00:00').toLocaleDateString('pt-BR') : 'Data a definir'}
+            </span>
+          </div>
         </div>
       </div>
       </div>

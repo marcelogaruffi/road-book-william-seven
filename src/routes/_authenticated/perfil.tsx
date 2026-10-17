@@ -40,6 +40,7 @@ function PerfilPage() {
     nome: "",
     nome_social: "",
     cpf: "",
+    rg: "",
     telefone: "",
     endereco_cep: "",
     endereco_logradouro: "",
@@ -62,6 +63,7 @@ function PerfilPage() {
         nome: profile.nome || "",
         nome_social: profile.nome_social || "",
         cpf: profile.cpf || "",
+        rg: (profile as any).rg || "",
         telefone: profile.telefone || "",
         endereco_cep: profile.endereco_cep || "",
         endereco_logradouro: profile.endereco_logradouro || "",
@@ -94,34 +96,42 @@ function PerfilPage() {
     if (!profile) return;
     
     setLoading(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        nome: formData.nome,
-        nome_social: formData.nome_social,
-        cpf: formData.cpf,
-        telefone: formData.telefone,
-        endereco_cep: formData.endereco_cep,
-        endereco_logradouro: formData.endereco_logradouro,
-        endereco_numero: formData.endereco_numero,
-        endereco_complemento: formData.endereco_complemento,
-        endereco_cidade: formData.endereco_cidade,
-        endereco_estado: formData.endereco_estado,
-        banco_codigo: formData.banco_codigo,
-        banco_agencia: formData.banco_agencia,
-        banco_conta: formData.banco_conta,
-        pix_tipo: formData.pix_tipo,
-        pix_chave: formData.pix_chave,
-        data_nascimento: formData.data_nascimento || null,
-        restricao_alimentar: formData.restricao_alimentar,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", profile.id);
+    const payloadWithRg: any = {
+      nome: formData.nome,
+      nome_social: formData.nome_social,
+      cpf: formData.cpf,
+      rg: formData.rg,
+      telefone: formData.telefone,
+      endereco_cep: formData.endereco_cep,
+      endereco_logradouro: formData.endereco_logradouro,
+      endereco_numero: formData.endereco_numero,
+      endereco_complemento: formData.endereco_complemento,
+      endereco_cidade: formData.endereco_cidade,
+      endereco_estado: formData.endereco_estado,
+      banco_codigo: formData.banco_codigo,
+      banco_agencia: formData.banco_agencia,
+      banco_conta: formData.banco_conta,
+      pix_tipo: formData.pix_tipo,
+      pix_chave: formData.pix_chave,
+      data_nascimento: formData.data_nascimento || null,
+      restricao_alimentar: formData.restricao_alimentar,
+      updated_at: new Date().toISOString()
+    };
 
-    if (error) {
+    let { error } = await supabase.from("profiles").update(payloadWithRg).eq("id", profile.id);
+
+    if (error && (error.message?.includes("rg") || (error as any).code === "42703")) {
+      delete payloadWithRg.rg;
+      const fallbackRes = await supabase.from("profiles").update(payloadWithRg).eq("id", profile.id);
+      if (fallbackRes.error) {
+        toast.error("Erro ao salvar perfil: " + getErrorMessage(fallbackRes.error));
+      } else {
+        toast.warning("Perfil salvo! Obs: Execute o script SQL no Supabase para persistir a coluna RG no banco.");
+      }
+    } else if (error) {
       toast.error("Erro ao salvar perfil: " + getErrorMessage(error));
     } else {
-      toast.success("Perfil atualizado com sucesso!");
+      toast.success("Perfil e dados bancários atualizados com sucesso!");
     }
     setLoading(false);
   };
@@ -154,7 +164,7 @@ function PerfilPage() {
           Meus Dados
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-1">
-          Mantenha seus dados cadastrais e informações bancárias atualizadas para os pagamentos.
+          Mantenha seus dados cadastrais e informações bancárias atualizadas para a elaboração de contratos e pagamentos.
         </p>
       </div>
 
@@ -165,7 +175,7 @@ function PerfilPage() {
           <CardHeader className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-white/5 pb-4">
             <div className="flex items-center gap-2 text-primary">
               <User className="size-5" />
-              <CardTitle className="text-lg">Dados Pessoais</CardTitle>
+              <CardTitle className="text-lg">Dados Pessoais (Obrigatórios para Contrato)</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -178,12 +188,16 @@ function PerfilPage() {
               <Input name="nome_social" value={formData.nome_social} onChange={handleChange} placeholder="Como prefere ser chamado" />
             </div>
             <div className="space-y-2">
-              <Label>Data de Nascimento *</Label>
-              <Input name="data_nascimento" type="date" value={formData.data_nascimento} onChange={handleChange} required />
-            </div>
-            <div className="space-y-2">
               <Label>CPF *</Label>
               <Input name="cpf" value={formData.cpf} onChange={handleChange} placeholder="000.000.000-00" required />
+            </div>
+            <div className="space-y-2">
+              <Label>RG (Registro Geral) *</Label>
+              <Input name="rg" value={formData.rg} onChange={handleChange} placeholder="00.000.000-0" required />
+            </div>
+            <div className="space-y-2">
+              <Label>Data de Nascimento *</Label>
+              <Input name="data_nascimento" type="date" value={formData.data_nascimento} onChange={handleChange} required />
             </div>
             <div className="space-y-2">
               <Label>Telefone (WhatsApp) *</Label>

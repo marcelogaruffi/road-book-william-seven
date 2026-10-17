@@ -11,7 +11,8 @@ import { ROLE_BADGE_MAP } from "./cadastros";
 import { 
   Plus, ExternalLink, Pencil, Trash2, Copy, Calendar, MapPin, 
   MoreVertical, BookOpen, MapPinned, Bus, ChevronRight, AlertCircle, Wrench, Settings2, ShieldAlert,
-  ClipboardList, Route as RouteIcon, Banknote, Contact2, Music, Shirt, Volume2, Lightbulb, Projector, FileText, Drama, LayoutTemplate, DoorOpen, Video, Mic2, Sun, Sparkles
+  ClipboardList, Route as RouteIcon, Banknote, Contact2, Music, Shirt, Volume2, Lightbulb, Projector, FileText, Drama, LayoutTemplate, DoorOpen, Video, Mic2, Sun, Sparkles,
+  Wallet, CheckSquare, Settings, Play, Coffee, Luggage, Image as ImageIcon, Smartphone, Newspaper, Printer, ShoppingCart, UserPlus, SlidersHorizontal, Check
 } from "lucide-react";
 import { toast } from "sonner";
 import { DuplicateRoadbookDialog } from "@/components/DuplicateRoadbookDialog";
@@ -39,6 +40,75 @@ type Roadbook = {
 
 type Tour = { id: string; slug: string; nome: string; espetaculo: string | null };
 
+interface ShortcutItem {
+  id: string;
+  title: string;
+  to: string;
+  icon: any;
+  colorClass: string;
+  roles?: string[];
+}
+
+const ALL_SHORTCUTS: ShortcutItem[] = [
+  { id: 'minhas-escalas', title: 'Minhas Escalas', to: '/minhas-escalas', icon: ClipboardList, colorClass: 'bg-primary/10 text-primary' },
+  { id: 'meus-contratos', title: 'Meus Contratos', to: '/meus-contratos', icon: FileText, colorClass: 'bg-indigo-600/10 text-indigo-600' },
+  { id: 'viagens', title: 'Minhas Viagens', to: '/viagens', icon: Bus, colorClass: 'bg-emerald-500/10 text-emerald-600' },
+  { id: 'meus-pagamentos', title: 'Meus Pagamentos', to: '/meus-pagamentos', icon: Wallet, colorClass: 'bg-green-500/10 text-green-600' },
+  { id: 'eventos', title: 'Eventos', to: '/eventos', icon: Calendar, colorClass: 'bg-sky-500/10 text-sky-600', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'escalas', title: 'Gestão de Escalas', to: '/escalas', icon: CheckSquare, colorClass: 'bg-indigo-500/10 text-indigo-600', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'contratos', title: 'Gestão de Contratos', to: '/contratos', icon: FileText, colorClass: 'bg-teal-600/10 text-teal-600', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'financeiro', title: 'Financeiro', to: '/financeiro', icon: Banknote, colorClass: 'bg-emerald-500/10 text-emerald-600', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'som', title: 'Design de Som', to: '/som', icon: Mic2, colorClass: 'bg-blue-500/10 text-blue-600', roles: ['admin', 'dev', 'tecnico_som', 'produtor'] },
+  { id: 'som-operacao', title: 'Operação de Som', to: '/som-operacao', icon: Volume2, colorClass: 'bg-cyan-500/10 text-cyan-600', roles: ['admin', 'dev', 'tecnico_som', 'produtor'] },
+  { id: 'iluminacao', title: 'Iluminação', to: '/iluminacao', icon: Lightbulb, colorClass: 'bg-amber-500/10 text-amber-600', roles: ['admin', 'dev', 'iluminador', 'produtor'] },
+  { id: 'video', title: 'Vídeo e Mídia', to: '/video', icon: Video, colorClass: 'bg-purple-500/10 text-purple-600', roles: ['admin', 'dev', 'tecnico_video', 'produtor'] },
+  { id: 'palco', title: 'Montagem de Palco', to: '/palco', icon: StageIcon, colorClass: 'bg-slate-500/10 text-slate-600', roles: ['admin', 'dev', 'cenotecnico', 'roadie', 'produtor', 'stage_manager'] },
+  { id: 'partituras', title: 'Partituras', to: '/partituras', icon: Music, colorClass: 'bg-fuchsia-500/10 text-fuchsia-600', roles: ['admin', 'dev', 'produtor', 'assistente_producao', 'stage_manager', 'musico'] },
+  { id: 'musicas', title: 'Músicas e Áudios', to: '/musicas', icon: Play, colorClass: 'bg-violet-500/10 text-violet-600' },
+  { id: 'figurinos', title: 'Figurinos', to: '/figurinos', icon: ClothesRackIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['admin', 'dev', 'camareiro', 'produtor'] },
+  { id: 'meus-figurinos', title: 'Meus Figurinos', to: '/meus-figurinos', icon: ClothesRackIcon, colorClass: 'bg-rose-500/10 text-rose-600', roles: ['elenco', 'musico'] },
+  { id: 'camarins', title: 'Camarins', to: '/camarins', icon: StarDoorIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['admin', 'dev', 'camareiro', 'produtor'] },
+  { id: 'catering', title: 'Catering', to: '/catering', icon: Coffee, colorClass: 'bg-orange-500/10 text-orange-600', roles: ['admin', 'dev', 'produtor', 'assistente_producao'] },
+  { id: 'malas', title: 'Malas e Bagagens', to: '/malas', icon: Luggage, colorClass: 'bg-teal-500/10 text-teal-600' },
+  { id: 'fotos', title: 'Fotos e Arquivos', to: '/fotos', icon: ImageIcon, colorClass: 'bg-blue-600/10 text-blue-700' },
+  { id: 'midias', title: 'Mídias Sociais', to: '/midias', icon: Smartphone, colorClass: 'bg-indigo-600/10 text-indigo-700', roles: ['admin', 'dev', 'produtor', 'midias_sociais'] },
+  { id: 'imprensa', title: 'Assessoria de Imprensa', to: '/imprensa', icon: Newspaper, colorClass: 'bg-yellow-500/10 text-yellow-700', roles: ['admin', 'dev', 'produtor', 'assessoria_imprensa'] },
+  { id: 'relatorios', title: 'Relatórios', to: '/emissao-relatorios', icon: Printer, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'fornecedores', title: 'Fornecedores', to: '/fornecedores', icon: ShoppingCart, colorClass: 'bg-amber-600/10 text-amber-700', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'contatos', title: 'Contatos', to: '/contatos', icon: Contact2, colorClass: 'bg-red-500/10 text-red-600' },
+  { id: 'espetaculos', title: 'Cadastro Espetáculo', to: '/espetaculos', icon: Drama, colorClass: 'bg-purple-600/10 text-purple-700', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'padroes', title: 'Padrões Espetáculo', to: '/padroes', icon: Settings, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'cadastros', title: 'Usuários e Equipe', to: '/cadastros', icon: UserPlus, colorClass: 'bg-blue-700/10 text-blue-800', roles: ['admin', 'dev'] },
+];
+
+function getDefaultShortcuts(role: string): string[] {
+  if (['admin', 'dev', 'produtor'].includes(role)) {
+    return ['eventos', 'escalas', 'contratos', 'minhas-escalas', 'viagens', 'meus-pagamentos', 'financeiro', 'relatorios'];
+  }
+  if (role === 'tecnico_som') {
+    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'som', 'som-operacao', 'palco'];
+  }
+  if (role === 'iluminador') {
+    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'iluminacao', 'palco'];
+  }
+  if (role === 'tecnico_video') {
+    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'video', 'palco'];
+  }
+  if (['cenotecnico', 'roadie'].includes(role)) {
+    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'palco', 'malas'];
+  }
+  if (role === 'camareiro') {
+    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'figurinos', 'camarins'];
+  }
+  if (role === 'musico') {
+    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'partituras', 'musicas'];
+  }
+  if (role === 'elenco') {
+    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'meus-figurinos', 'partituras'];
+  }
+  return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'contatos'];
+}
+
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard - Áxis - Gestão de Teatros e Shows" }] }),
   component: Dashboard,
@@ -60,6 +130,74 @@ function Dashboard() {
   const [dup, setDup] = useState<Roadbook | null>(null);
   const [escalasPendentes, setEscalasPendentes] = useState<number>(0);
   const [bdaysToday, setBdaysToday] = useState<{nome: string, role: string}[]>([]);
+
+  const storageKey = `dashboard_quick_access_${profile?.id || 'guest'}`;
+  const [selectedShortcutIds, setSelectedShortcutIds] = useState<string[]>([]);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [tempSelected, setTempSelected] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSelectedShortcutIds(parsed.slice(0, 10));
+            return;
+          }
+        } catch (e) {}
+      }
+      setSelectedShortcutIds(getDefaultShortcuts(profile?.role || ''));
+    }
+  }, [profile?.id, profile?.role]);
+
+  const handleOpenCustomize = () => {
+    setTempSelected([...selectedShortcutIds]);
+    setIsCustomizeOpen(true);
+  };
+
+  const toggleShortcut = (id: string) => {
+    setTempSelected(prev => {
+      if (prev.includes(id)) {
+        return prev.filter(x => x !== id);
+      } else {
+        if (prev.length >= 10) {
+          toast.warning("Você pode selecionar no máximo 10 atalhos.");
+          return prev;
+        }
+        return [...prev, id];
+      }
+    });
+  };
+
+  const handleSaveShortcuts = () => {
+    if (tempSelected.length === 0) {
+      toast.warning("Selecione ao menos 1 atalho.");
+      return;
+    }
+    setSelectedShortcutIds(tempSelected);
+    localStorage.setItem(storageKey, JSON.stringify(tempSelected));
+    toast.success("Acesso Rápido atualizado com sucesso!");
+    setIsCustomizeOpen(false);
+  };
+
+  const handleResetDefault = () => {
+    const def = getDefaultShortcuts(profile?.role || '');
+    setTempSelected(def);
+  };
+
+  const allowedShortcuts = ALL_SHORTCUTS.filter(item => {
+    if (!item.roles || item.roles.length === 0) return true;
+    if (!profile) return false;
+    if (profile.role === 'dev' || profile.role === 'admin') return true;
+    const userFuncoes = Array.isArray(profile.funcoes) ? profile.funcoes : [];
+    return item.roles.includes(profile.role) || item.roles.some(r => userFuncoes.includes(r));
+  });
+
+  const displayShortcuts = selectedShortcutIds
+    .map(id => allowedShortcuts.find(item => item.id === id))
+    .filter(Boolean) as ShortcutItem[];
 
   async function load() {
     setLoading(true);
@@ -89,7 +227,7 @@ function Dashboard() {
     if (e2) toast.error(e2.message);
     setItems(roadbooksFinal);
     setTours((tr as Tour[]) ?? []);
-    setEscalasPendentes(esc?.filter(e => e.status === 'pendente').length || 0);
+    setEscalasPendentes(esc ? esc.filter(e => e.status === 'pendente').length : 0);
     
     if (profile && ['admin', 'dev', 'produtor', 'assistente_producao'].includes(profile.role)) {
       const { data: profs } = await supabase.from('profiles').select('nome, role, data_nascimento').not('data_nascimento', 'is', null);
@@ -438,104 +576,140 @@ function Dashboard() {
 
         {/* GRADES DE ACESSO RÁPIDO (MENUS) */}
         <section className="space-y-6 pt-4">
-          <div className="flex items-center gap-3 px-2">
-            <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Acesso Rápido</h2>
-            <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Acesso Rápido</h2>
+              <Badge variant="outline" className="text-xs px-2.5 py-0.5 font-bold rounded-lg border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+                {displayShortcuts.length} de 10
+              </Badge>
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOpenCustomize}
+              className="gap-2 rounded-xl text-xs font-bold border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 self-start sm:self-auto h-9 px-4 shadow-sm"
+            >
+              <SlidersHorizontal className="size-3.5 text-primary" />
+              Editar Atalhos
+            </Button>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            
-            <Link to="/minhas-escalas" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-              <div className="p-4 bg-primary/10 text-primary rounded-2xl group-hover:bg-primary group-hover:text-white transition-colors">
-                <ClipboardList className="size-6" />
+          {displayShortcuts.length === 0 ? (
+            <Card className="p-8 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-2xl">
+              <p className="text-sm text-slate-500 mb-3">Nenhum atalho selecionado para o Acesso Rápido.</p>
+              <Button size="sm" onClick={handleOpenCustomize} className="rounded-xl font-bold">
+                <Plus className="size-4 mr-1.5" /> Escolher Atalhos
+              </Button>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {displayShortcuts.map(item => {
+                const IconComponent = item.icon;
+                return (
+                  <Link 
+                    key={item.id} 
+                    to={item.to} 
+                    className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md hover:border-primary/40 dark:hover:border-primary/40 transition-all group flex flex-col items-center text-center gap-3 relative"
+                  >
+                    <div className={`p-4 rounded-2xl transition-all ${item.colorClass} group-hover:scale-110 shadow-sm`}>
+                      <IconComponent className="size-6" />
+                    </div>
+                    <span className="font-bold text-slate-700 dark:text-slate-200 text-sm line-clamp-1">{item.title}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {/* DIALOG DE PERSONALIZAÇÃO */}
+          <Dialog open={isCustomizeOpen} onOpenChange={setIsCustomizeOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-6">
+              <DialogHeader>
+                <div className="flex items-center justify-between pr-4">
+                  <DialogTitle className="text-xl font-black text-slate-800 dark:text-white">
+                    Personalizar Acesso Rápido
+                  </DialogTitle>
+                  <Badge 
+                    variant={tempSelected.length === 10 ? "destructive" : "secondary"}
+                    className="text-xs px-2.5 py-1 font-bold rounded-lg"
+                  >
+                    {tempSelected.length} de 10 selecionados
+                  </Badge>
+                </div>
+                <DialogDescription className="text-slate-500 text-sm mt-1">
+                  Selecione até 10 atalhos favoritos para exibir no seu painel principal.
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 py-4 max-h-[50vh] overflow-y-auto pr-1">
+                {allowedShortcuts.map(item => {
+                  const isChecked = tempSelected.includes(item.id);
+                  const isMaxReached = tempSelected.length >= 10 && !isChecked;
+                  const IconComponent = item.icon;
+
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => !isMaxReached && toggleShortcut(item.id)}
+                      className={`flex items-center justify-between p-3.5 rounded-2xl border transition-all cursor-pointer ${
+                        isChecked 
+                          ? 'border-primary bg-primary/5 dark:bg-primary/10 shadow-sm' 
+                          : isMaxReached
+                            ? 'opacity-40 border-slate-200 dark:border-white/5 cursor-not-allowed bg-slate-50 dark:bg-white/5'
+                            : 'border-slate-200 dark:border-white/10 hover:border-slate-300 dark:hover:border-white/20 bg-white dark:bg-card'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`p-2.5 rounded-xl ${item.colorClass} shrink-0`}>
+                          <IconComponent className="size-4" />
+                        </div>
+                        <span className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">
+                          {item.title}
+                        </span>
+                      </div>
+
+                      <div className={`size-5 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
+                        isChecked 
+                          ? 'bg-primary border-primary text-white shadow-sm' 
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800'
+                      }`}>
+                        {isChecked && <Check className="size-3.5 stroke-[3]" />}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <span className="font-bold text-slate-700 dark:text-slate-300">Minhas Escalas</span>
-            </Link>
-            
-            <Link to="/viagens" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-              <div className="p-4 bg-emerald-500/10 text-emerald-600 rounded-2xl group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                <Bus className="size-6" />
-              </div>
-              <span className="font-bold text-slate-700 dark:text-slate-300">Minhas Viagens</span>
-            </Link>
 
-
-
-            {/* EVENTOS - ADMIN/PRODUTOR */}
-            {['admin', 'dev', 'produtor'].includes(profile?.role || "") && (
-              <Link to="/eventos" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-sky-500/10 text-sky-600 rounded-2xl group-hover:bg-sky-500 group-hover:text-white transition-colors">
-                  <Calendar className="size-6" />
+              <DialogFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 pt-4 border-t border-slate-100 dark:border-white/10">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleResetDefault}
+                  className="text-xs text-slate-500 hover:text-slate-800 dark:hover:text-white"
+                >
+                  Restaurar Padrão
+                </Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsCustomizeOpen(false)}
+                    className="flex-1 sm:flex-none rounded-xl font-bold"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleSaveShortcuts}
+                    className="flex-1 sm:flex-none rounded-xl font-bold shadow-md"
+                  >
+                    Salvar Atalhos ({tempSelected.length})
+                  </Button>
                 </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Eventos</span>
-              </Link>
-            )}
-
-            {/* PARTITURAS */}
-            {['admin', 'dev', 'produtor', 'assistente_producao', 'stage_manager', 'musico'].includes(profile?.role || "") && (
-              <Link to="/partituras" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-fuchsia-500/10 text-fuchsia-600 rounded-2xl group-hover:bg-fuchsia-500 group-hover:text-white transition-colors">
-                  <Music className="size-6" />
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Partituras</span>
-              </Link>
-            )}
-
-
-            
-            {/* FIGURINOS GESTAO */}
-            {['admin', 'dev', 'camareiro'].includes(profile?.role || "") && (
-              <Link to="/figurinos" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-pink-500/10 text-pink-600 rounded-2xl group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                  <ClothesRackIcon className="size-6" />
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Figurinos</span>
-              </Link>
-            )}
-
-            {/* MAPAS TÉCNICOS */}
-            {['admin', 'dev', 'tecnico_som'].includes(profile?.role || "") && (
-              <Link to="/som" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-blue-500/10 text-blue-600 rounded-2xl group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                  <Mic2 className="size-6" />
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Design de Som</span>
-              </Link>
-            )}
-            {['admin', 'dev', 'iluminador'].includes(profile?.role || "") && (
-              <Link to="/iluminacao" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-amber-500/10 text-amber-600 rounded-2xl group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                  <Lightbulb className="size-6" />
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Iluminação</span>
-              </Link>
-            )}
-            {['admin', 'dev', 'tecnico_video'].includes(profile?.role || "") && (
-              <Link to="/video" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-purple-500/10 text-purple-600 rounded-2xl group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                  <Video className="size-6" />
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Vídeo e Mídia Cênica</span>
-              </Link>
-            )}
-            {['admin', 'dev', 'cenotecnico', 'roadie'].includes(profile?.role || "") && (
-              <Link to="/palco" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-slate-500/10 text-slate-600 rounded-2xl group-hover:bg-slate-500 group-hover:text-white transition-colors">
-                  <StageIcon className="size-6" />
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Palco / Cenário</span>
-              </Link>
-            )}
-            {['admin', 'dev', 'camareiro'].includes(profile?.role || "") && (
-              <Link to="/camarins" className="bg-white dark:bg-card/40 border border-slate-200 dark:border-white/10 p-5 rounded-2xl shadow-sm hover:shadow-md transition-all group flex flex-col items-center text-center gap-3">
-                <div className="p-4 bg-pink-500/10 text-pink-600 rounded-2xl group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                  <StarDoorIcon className="size-6" />
-                </div>
-                <span className="font-bold text-slate-700 dark:text-slate-300">Camarins</span>
-              </Link>
-            )}
-
-          </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </section>
 
       {/* EVENTO ATUAL (Somente os 2 primeiros roadbooks) */}
