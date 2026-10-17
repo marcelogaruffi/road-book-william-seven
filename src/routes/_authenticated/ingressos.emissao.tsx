@@ -255,7 +255,14 @@ function EmissaoIngressosPage() {
             prev.forEach(i => map.set(i.codigoIngresso, i));
             mapeados.forEach(i => map.set(i.codigoIngresso, i));
             const uniao = Array.from(map.values());
-            localStorage.setItem(storageKey, JSON.stringify(uniao));
+            
+            // Salvar no localStorage de forma limpa (sem base64 pesada de fotos para não estourar a cota de 5MB)
+            try {
+              const leves = uniao.map(({ bannerShowUrl, ...resto }) => resto);
+              localStorage.setItem(storageKey, JSON.stringify(leves));
+            } catch (eStorage) {
+              console.warn("Storage quota excedida, mantendo dados na memória e Supabase:", eStorage);
+            }
             return uniao;
           });
         }
@@ -450,7 +457,14 @@ function EmissaoIngressosPage() {
 
     const atualizados = [...novosIngressos, ...ingressos];
     setIngressos(atualizados);
-    localStorage.setItem(`ingressos_evento_${selectedShow.id}`, JSON.stringify(atualizados));
+    
+    // Salvar no localStorage de forma limpa (sem imagens base64 pesadas para não exceder a cota de 5MB)
+    try {
+      const leves = atualizados.map(({ bannerShowUrl, ...resto }) => resto);
+      localStorage.setItem(`ingressos_evento_${selectedShow.id}`, JSON.stringify(leves));
+    } catch (eStorage) {
+      console.warn("Storage quota excedida ao emitir, mantendo no Supabase e memória:", eStorage);
+    }
 
     // Fechar imediatamente a tela de emissão e dar feedback ao usuário sem travamentos
     setModalNovoOpen(false);
@@ -516,7 +530,10 @@ function EmissaoIngressosPage() {
     if (!confirm("Tem certeza que deseja cancelar e liberar este assento?")) return;
     const atualizados = ingressos.filter(i => i.id !== id);
     setIngressos(atualizados);
-    localStorage.setItem(`ingressos_evento_${selectedShow.id}`, JSON.stringify(atualizados));
+    try {
+      const leves = atualizados.map(({ bannerShowUrl, ...resto }) => resto);
+      localStorage.setItem(`ingressos_evento_${selectedShow.id}`, JSON.stringify(leves));
+    } catch (e) {}
 
     try {
       supabase.from("ingressos_evento").delete().eq("id", id).then(() => {});
