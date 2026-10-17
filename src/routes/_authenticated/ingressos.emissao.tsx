@@ -1015,7 +1015,7 @@ function EmissaoIngressosPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleEmitirIngresso} className="space-y-4 py-2">
+          <div className="space-y-4 py-2">
             
             {/* Bloco 1: Dados do Titular e Tipo */}
             <div className="bg-muted/30 p-3.5 rounded-2xl border border-border space-y-3">
@@ -1032,7 +1032,6 @@ function EmissaoIngressosPage() {
                     onBlur={() => setTouchedNome(true)}
                     placeholder="Nome completo do convidado ou comprador" 
                     className={`h-9 text-xs font-semibold ${touchedNome && !titularNome.trim() ? "border-rose-500 focus-visible:ring-rose-500" : ""}`}
-                    required
                   />
                   {touchedNome && !titularNome.trim() && (
                     <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
@@ -1054,7 +1053,6 @@ function EmissaoIngressosPage() {
                         : ""
                     }`}
                     maxLength={14}
-                    required
                   />
                   {touchedCpf && !titularCpf.trim() && (
                     <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
@@ -1083,7 +1081,6 @@ function EmissaoIngressosPage() {
                         : ""
                     }`}
                     maxLength={15}
-                    required
                   />
                   {touchedTelefone && (!telefone.trim() || telefone.replace(/\D/g, "").length < 10) && (
                     <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
@@ -1105,7 +1102,6 @@ function EmissaoIngressosPage() {
                         ? "border-rose-500 focus-visible:ring-rose-500 text-rose-600"
                         : ""
                     }`}
-                    required
                   />
                   {touchedEmail && (!email.trim() || !isValidEmail(email)) && (
                     <span className="text-[11px] font-semibold text-rose-500 flex items-center gap-1 mt-0.5">
@@ -1196,7 +1192,6 @@ function EmissaoIngressosPage() {
                         onChange={(e) => handleAtualizarAssentoDoLote(itemAss.id, "fileira", e.target.value.toUpperCase())}
                         placeholder="Fila"
                         className="h-8 text-xs uppercase text-center font-bold"
-                        required
                       />
                     </div>
 
@@ -1207,7 +1202,6 @@ function EmissaoIngressosPage() {
                         onChange={(e) => handleAtualizarAssentoDoLote(itemAss.id, "assento", e.target.value)}
                         placeholder="Nº Cadeira"
                         className="h-8 text-xs font-bold text-center font-mono text-primary"
-                        required
                       />
                     </div>
 
@@ -1252,7 +1246,11 @@ function EmissaoIngressosPage() {
               <Button type="button" variant="outline" onClick={() => setModalNovoOpen(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+              <Button 
+                type="button" 
+                onClick={handleEmitirIngresso}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
+              >
                 <Plus className="size-4 mr-2" />
                 {listaAssentosLote.length > 1 
                   ? `Gerar ${listaAssentosLote.length} Ingressos na Mesma Folha A4` 
@@ -1260,7 +1258,7 @@ function EmissaoIngressosPage() {
                 }
               </Button>
             </DialogFooter>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
 
