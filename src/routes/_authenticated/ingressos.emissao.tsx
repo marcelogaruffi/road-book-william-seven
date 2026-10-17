@@ -680,11 +680,6 @@ function EmissaoIngressosPage() {
                     <Calendar className="size-3 mr-1" />
                     {selectedShow.data ? new Date(selectedShow.data + "T00:00:00").toLocaleDateString("pt-BR") : "Data não informada"}
                   </Badge>
-                  {showBannerUrl && (
-                    <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-300 border-none text-[10px]">
-                      ✓ Foto do Ingresso Conectada
-                    </Badge>
-                  )}
                 </div>
                 <h2 className="text-xl md:text-2xl font-black text-white tracking-tight">
                   {selectedShow.espetaculo || "Gestão de Ingressos"}
