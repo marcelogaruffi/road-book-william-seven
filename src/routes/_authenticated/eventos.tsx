@@ -1,6 +1,6 @@
 import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
