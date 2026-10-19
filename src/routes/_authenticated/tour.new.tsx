@@ -10,6 +10,7 @@ import { makeTourSlug } from "@/lib/slug";
 import { Route as RouteIcon, Megaphone, Image as ImageIcon, Briefcase, Map, ArrowLeft, Save } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Route as AuthedRoute } from "./route";
 
 export const Route = createFileRoute("/_authenticated/tour/new")({
   head: () => ({ meta: [{ title: "Nova Turnê" }] }),
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/tour/new")({
 
 function NewTour() {
   const navigate = useNavigate();
+  const { user } = AuthedRoute.useRouteContext();
   const [nome, setNome] = useState("");
   const [espetaculo, setEspetaculo] = useState("");
   const [producao, setProducao] = useState("");
@@ -41,12 +43,13 @@ function NewTour() {
     try {
       const { data, error } = await supabase.from("tours").insert({
         nome,
-        espetaculo,
+        espetaculo: espetaculo === 'none' ? null : espetaculo,
         producao,
         slug: makeTourSlug(nome),
         exibir_logo_espetaculo: exibirLogoEspetaculo,
         exibir_logo_cia: exibirLogoCia,
         exibir_logo_producao: exibirLogoProducao,
+        user_id: user?.id,
       }).select().single();
 
       if (error) {

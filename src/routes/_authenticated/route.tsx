@@ -156,7 +156,7 @@ function AuthedLayout() {
 
       {/* SIDEBAR RETRÁTIL */}
       <aside 
-        className={`${sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full md:translate-x-0 md:w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/80 md:dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
+        className={`${sidebarOpen ? 'translate-x-0 w-[16.25rem]' : '-translate-x-full md:translate-x-0 md:w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/80 md:dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
       >
         <div className="flex h-20 items-center justify-between px-4 border-b border-slate-200/60 dark:border-white/10">
           {sidebarOpen ? (
@@ -198,10 +198,10 @@ function AuthedLayout() {
                 <Link 
                   to={to} 
                   ref={el => { if (isActive && el) { setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); } }}
-                  className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} 
+                  className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} 
                   activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}
                 >
-                  <Icon className={`${sidebarOpen ? 'mr-3' : ''} size-4 shrink-0`} />
+                  <Icon className={`${sidebarOpen ? 'mr-2.5' : ''} size-4 shrink-0`} />
                   {sidebarOpen && <span className="truncate">{label}</span>}
                 </Link>
               );
@@ -225,7 +225,7 @@ function AuthedLayout() {
                     </div>
                     <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                   </summary>
-                  <div className="mt-1 space-y-1 ml-2">
+                  <div className="mt-1 space-y-1 ml-1.5">
                     {children}
                   </div>
                 </details>
@@ -356,7 +356,7 @@ function AuthedLayout() {
       )}
 
       {/* CONTEÚDO PRINCIPAL */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-64' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] print:m-0 print:p-0`}>
+      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-[16.25rem]' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] print:m-0 print:p-0`}>
         <Outlet />
       </main>
       {/* SIMULADOR DIALOG */}

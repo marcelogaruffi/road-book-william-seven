@@ -574,6 +574,39 @@ function Dashboard() {
           </Card>
         </div>
 
+        {/* AÇÕES PRINCIPAIS (PRODUÇÃO E GESTÃO) */}
+        {['admin', 'dev', 'produtor'].includes(profile?.role || '') && (
+          <section className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden">
+            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+              <div>
+                <span className="text-xs uppercase font-extrabold tracking-widest text-indigo-400 flex items-center gap-1.5 mb-1">
+                  <Sparkles className="size-3.5" /> Gestão Operacional
+                </span>
+                <h3 className="text-xl sm:text-2xl font-black tracking-tight">Ações Principais</h3>
+                <p className="text-xs sm:text-sm text-slate-300 mt-1">Crie turnês, lance eventos e acompanhe a programação.</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <Button asChild className="rounded-xl h-11 px-5 font-bold bg-primary hover:bg-primary/90 text-white shadow-md">
+                  <Link to="/tour/new">
+                    <Plus className="size-4 mr-2" /> Criar Turnê
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" className="rounded-xl h-11 px-5 font-bold bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md">
+                  <Link to="/novo-projeto">
+                    <Calendar className="size-4 mr-2 text-indigo-400" /> Cadastrar Evento
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" className="rounded-xl h-11 px-4 font-bold text-slate-200 hover:text-white hover:bg-white/10">
+                  <Link to="/eventos">
+                    Consultar Eventos <ChevronRight className="size-4 ml-1" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* GRADES DE ACESSO RÁPIDO (MENUS) */}
         <section className="space-y-6 pt-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
@@ -615,7 +648,7 @@ function Dashboard() {
                     <div className={`p-4 rounded-2xl transition-all ${item.colorClass} group-hover:scale-110 shadow-sm`}>
                       <IconComponent className="size-6" />
                     </div>
-                    <span className="font-bold text-slate-700 dark:text-slate-200 text-sm line-clamp-1">{item.title}</span>
+                    <span className="font-bold text-slate-700 dark:text-slate-200 text-sm line-clamp-2 leading-snug min-h-[2.25rem] flex items-center justify-center">{item.title}</span>
                   </Link>
                 );
               })}

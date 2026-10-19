@@ -553,9 +553,14 @@ function EventosComponent() {
                 <Users className="size-3" /> {ev.equipe?.length || 0}
               </span>
               {ev.turne_id && (
-                <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-2 py-1 rounded-md truncate max-w-[120px]">
+                <Link 
+                  to="/tour/$id" 
+                  params={{ id: ev.turne_id }}
+                  className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 px-2 py-1 rounded-md truncate max-w-[140px] transition-colors"
+                  title={`Ver turnê: ${getTourName(ev.turne_id)}`}
+                >
                   {getTourName(ev.turne_id)}
-                </span>
+                </Link>
               )}
             </div>
             
@@ -694,9 +699,10 @@ function EventosComponent() {
                 onChange={e => setTurneId(e.target.value)}
                 className="flex h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">Nenhuma turnê</option>
+                <option value="">Nenhuma turnê vinculada</option>
                 {tours.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
               </select>
+              <p className="text-xs text-slate-500">Agrupe este evento em uma turnê para integrá-lo à logística e roteiro de viagens.</p>
             </div>
 
             <div className="space-y-2">
