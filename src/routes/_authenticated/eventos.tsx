@@ -604,8 +604,21 @@ function EventosComponent() {
       {loading ? (
         <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
       ) : proximos.length === 0 && realizados.length === 0 ? (
-        <Card className="p-16 text-center border-dashed border-2 bg-transparent rounded-[2rem]">
-          <p className="text-slate-500 font-medium mb-6">Nenhum evento cadastrado ainda.</p>
+        <Card className="p-16 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem] space-y-4">
+          <div className="size-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto text-primary">
+            <Calendar className="size-8" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white">Nenhum evento cadastrado ainda</h3>
+            <p className="text-slate-500 max-w-md mx-auto mt-1 text-sm">
+              Cadastre seu primeiro evento para gerenciar apresentações, locais, datas e escalar a equipe técnica e artística.
+            </p>
+          </div>
+          {canEdit && (
+            <Button onClick={handleOpenNew} className="rounded-xl px-6 h-11 font-bold shadow-md">
+              <Plus className="mr-2 size-4" /> Cadastrar Primeiro Evento
+            </Button>
+          )}
         </Card>
       ) : (
         <div className="space-y-12">
