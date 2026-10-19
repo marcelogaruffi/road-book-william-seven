@@ -244,7 +244,7 @@ function AuthedLayout() {
                 </SGroup>
 
                 <SGroup title="Viagens e Logística" icon={Bus}>
-                  <SLink to="/eventos" icon={Calendar} label="Eventos e Espetáculos" />
+                  <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" />
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" />
@@ -276,7 +276,7 @@ function AuthedLayout() {
 
                 <SGroup title="Produção Executiva" icon={ClipboardList}>
                   <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
-                  <SLink to="/espetaculos" icon={Music} label="Cadastro de Espetáculo" />
+                  <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" />
                     <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" />
                   <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
                   <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />

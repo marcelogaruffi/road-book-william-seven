@@ -99,7 +99,7 @@ function ToursPage() {
             <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-snug pb-2 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
               Turnês
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Gerencie e acompanhe todas as turnês da sua equipe.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Organize cidades, eventos e apresentações em uma única turnê.</p>
           </div>
           <Button asChild className="shadow-[0_8px_20px_rgba(var(--primary),0.2)] hover:shadow-[0_12px_25px_rgba(var(--primary),0.3)] transition-all rounded-xl px-6 h-12 bg-primary dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 font-semibold text-white">
             <Link to="/tour/new">

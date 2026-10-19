@@ -280,7 +280,7 @@ function EspetaculosPage() {
 
   const saveWizard = async () => {
     if (!currentShow.nome_espetaculo.trim()) {
-      toast.error("Nome do espetáculo é obrigatório");
+      toast.error("Preencha o nome do espetáculo.");
       setStep(1);
       return;
     }
@@ -303,7 +303,7 @@ function EspetaculosPage() {
       }
       
       toast.dismiss();
-      toast.success("Espetáculo salvo com sucesso!");
+      toast.success(isEditing ? "Alterações salvas." : "Espetáculo salvo com sucesso.");
       setView("dashboard");
     } catch (error: any) {
       toast.dismiss();
@@ -396,8 +396,8 @@ function EspetaculosPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Meus Espetáculos</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1">Gerencie o seu catálogo de shows e padrões técnicos.</p>
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Catálogo de Espetáculos</h1>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Cadastre as informações artísticas e técnicas dos espetáculos para reutilizá-las em diferentes produções.</p>
           </div>
           <Button onClick={() => { setCurrentShow(emptyShow); setIsEditing(false); setStep(1); setView("wizard"); }} className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-lg h-10 px-6 rounded-lg">
             <Plus className="mr-2 h-4 w-4" /> Novo Espetáculo

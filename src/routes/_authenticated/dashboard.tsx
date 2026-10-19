@@ -54,7 +54,7 @@ const ALL_SHORTCUTS: ShortcutItem[] = [
   { id: 'meus-contratos', title: 'Meus Contratos', to: '/meus-contratos', icon: FileText, colorClass: 'bg-indigo-600/10 text-indigo-600' },
   { id: 'viagens', title: 'Minhas Viagens', to: '/viagens', icon: Bus, colorClass: 'bg-emerald-500/10 text-emerald-600' },
   { id: 'meus-pagamentos', title: 'Meus Pagamentos', to: '/meus-pagamentos', icon: Wallet, colorClass: 'bg-green-500/10 text-green-600' },
-  { id: 'eventos', title: 'Eventos', to: '/eventos', icon: Calendar, colorClass: 'bg-sky-500/10 text-sky-600', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'eventos', title: 'Eventos e Apresentações', to: '/eventos', icon: Calendar, colorClass: 'bg-sky-500/10 text-sky-600', roles: ['admin', 'dev', 'produtor'] },
   { id: 'escalas', title: 'Gestão de Escalas', to: '/escalas', icon: CheckSquare, colorClass: 'bg-indigo-500/10 text-indigo-600', roles: ['admin', 'dev', 'produtor'] },
   { id: 'contratos', title: 'Gestão de Contratos', to: '/contratos', icon: FileText, colorClass: 'bg-teal-600/10 text-teal-600', roles: ['admin', 'dev', 'produtor'] },
   { id: 'financeiro', title: 'Financeiro', to: '/financeiro', icon: Banknote, colorClass: 'bg-emerald-500/10 text-emerald-600', roles: ['admin', 'dev', 'produtor'] },
@@ -76,7 +76,7 @@ const ALL_SHORTCUTS: ShortcutItem[] = [
   { id: 'relatorios', title: 'Relatórios', to: '/emissao-relatorios', icon: Printer, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['admin', 'dev', 'produtor'] },
   { id: 'fornecedores', title: 'Fornecedores', to: '/fornecedores', icon: ShoppingCart, colorClass: 'bg-amber-600/10 text-amber-700', roles: ['admin', 'dev', 'produtor'] },
   { id: 'contatos', title: 'Contatos', to: '/contatos', icon: Contact2, colorClass: 'bg-red-500/10 text-red-600' },
-  { id: 'espetaculos', title: 'Cadastro Espetáculo', to: '/espetaculos', icon: Drama, colorClass: 'bg-purple-600/10 text-purple-700', roles: ['admin', 'dev', 'produtor'] },
+  { id: 'espetaculos', title: 'Catálogo de Espetáculos', to: '/espetaculos', icon: Drama, colorClass: 'bg-purple-600/10 text-purple-700', roles: ['admin', 'dev', 'produtor'] },
   { id: 'padroes', title: 'Padrões Espetáculo', to: '/padroes', icon: Settings, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['admin', 'dev', 'produtor'] },
   { id: 'cadastros', title: 'Usuários e Equipe', to: '/cadastros', icon: UserPlus, colorClass: 'bg-blue-700/10 text-blue-800', roles: ['admin', 'dev'] },
 ];
@@ -479,7 +479,7 @@ function Dashboard() {
             <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-snug pb-2 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
               Visão Geral
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Bem-vindo de volta! Aqui está o resumo das suas turnês.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-base mt-2 font-medium">Acompanhe suas atividades e acesse rapidamente as principais ferramentas.</p>
           </div>
         </div>
 

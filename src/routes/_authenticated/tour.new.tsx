@@ -52,7 +52,7 @@ function NewTour() {
       if (error) {
         toast.error("Erro ao criar turnê: " + error.message);
       } else {
-        toast.success("Turnê criada com sucesso!");
+        toast.success("Turnê criada com sucesso.");
         navigate({ to: `/tour/${data.id}` as any });
       }
     } finally { 
@@ -70,7 +70,7 @@ function NewTour() {
           <h1 className="text-3xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
             <Map className="size-8 text-indigo-500" /> Nova Turnê
           </h1>
-          <p className="text-slate-500 mt-1">Crie um agrupamento de viagens e eventos para a sua temporada</p>
+          <p className="text-slate-500 mt-1">Organize cidades, eventos e apresentações em uma única turnê.</p>
         </div>
       </div>
 

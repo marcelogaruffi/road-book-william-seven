@@ -198,7 +198,7 @@ function NovoProjetoWizard() {
       <div>
         <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
           <MapPin className="size-8 text-primary" />
-          Novo Projeto Completo
+          Novo Projeto
         </h1>
         <p className="text-slate-500 mt-2">Assistente guiado para estruturar rapidamente um novo evento e seus módulos.</p>
       </div>

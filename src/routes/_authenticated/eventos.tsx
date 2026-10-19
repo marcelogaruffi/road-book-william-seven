@@ -279,7 +279,7 @@ function EventosComponent() {
     const finalLocal = apresentacoesList.length > 0 ? apresentacoesList[0].local : local;
 
     if (!cidade || !finalData || !finalHorario || !finalLocal || !espetaculo) {
-      toast.warning('Preencha os campos obrigatorios.');
+      toast.warning('Preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -584,9 +584,9 @@ function EventosComponent() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Eventos</h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Eventos e Apresentações</h1>
           <p className="text-slate-500 mt-2">
-            Gestão de Eventos e Espetáculos
+            Cadastre datas, locais e apresentações e organize as equipes dos seus eventos.
           </p>
         </div>
         {canEdit && (
@@ -709,7 +709,7 @@ function EventosComponent() {
                   <Label className="font-bold text-slate-700 dark:text-slate-300">Apresentações (Sessões) *</Label>
                   {!viewMode && (
                     <Button variant="outline" size="sm" onClick={() => setApresentacoesList([...apresentacoesList, { data: '', horario: '', local: local }])} className="h-8 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
-                      <Plus className="size-3 mr-1" /> Adicionar Sessão
+                      <Plus className="size-3 mr-1" /> Adicionar Apresentação
                     </Button>
                   )}
                 </div>
