@@ -8,7 +8,7 @@ function createSupabaseClient() {
   const env = typeof import.meta !== 'undefined' && import.meta.env ? import.meta.env : process.env;
   
   const SUPABASE_URL = env.VITE_SUPABASE_URL || env.SUPABASE_URL;
-  const SUPABASE_PUBLISHABLE_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY;
+  const SUPABASE_PUBLISHABLE_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY;
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
