@@ -1,4 +1,4 @@
-import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus, Layers, Ticket, QrCode, ShieldCheck, Bell, Sparkles, Hotel } from "lucide-react";
+import { Info, HelpCircle, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus, Layers, Ticket, QrCode, ShieldCheck, Bell, Sparkles, Hotel } from "lucide-react";
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -197,6 +197,7 @@ function AuthedLayout() {
 
       {/* SIDEBAR RETRÁTIL */}
       <aside 
+        id="tour-sidebar-navigation"
         className={`${sidebarOpen ? 'translate-x-0 w-[14.25rem]' : '-translate-x-full md:translate-x-0 md:w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/80 md:dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
       >
         <div className="flex h-16 items-center justify-between px-3 border-b border-slate-200/60 dark:border-white/10">
@@ -450,8 +451,33 @@ function AuthedLayout() {
           </div>
         )}
 
+        {/* BOTÃO DO TUTORIAL / GUIA */}
+          <div className="px-2 pb-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    localStorage.removeItem("axis_tutorial_completed");
+                    window.dispatchEvent(new CustomEvent("start-axis-tutorial"));
+                  }} 
+                  className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-3' : 'justify-center px-0'} h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 font-medium transition-all`}
+                >
+                  <HelpCircle className={`size-4.5 ${sidebarOpen ? 'mr-2.5' : ''}`} />
+                  {sidebarOpen && <span className="text-xs">Como Usar / Tour</span>}
+                </button>
+              </TooltipTrigger>
+              {!sidebarOpen && (
+                <TooltipContent side="right" className="bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs shadow-xl px-3 py-1.5 rounded-lg">
+                  Como Usar / Tour
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
+
         {/* RODAPÉ: SAIR E MODO ESCURO/CLARO */}
-        <div className="p-2 border-t border-slate-200/60 dark:border-white/10 space-y-1">
+        <div id="tour-profile-footer" className="p-2 border-t border-slate-200/60 dark:border-white/10 space-y-1">
+        
           {/* SAIR DA CONTA (LOGOFF) */}
           <Tooltip>
             <TooltipTrigger asChild>

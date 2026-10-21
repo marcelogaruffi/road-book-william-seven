@@ -1,3 +1,5 @@
+import { ProductTour } from "@/components/ProductTour";
+import { HelpCircle } from "lucide-react";
 // @ts-nocheck
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -126,6 +128,22 @@ function Dashboard() {
 
   const [tours, setTours] = useState<Tour[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isTutorial, setIsTutorial] = useState(false);
+
+  useEffect(() => {
+    // Check if first access
+    const completed = localStorage.getItem("axis_tutorial_completed");
+    if (!completed) {
+      setIsTutorial(true);
+    }
+
+    const handleStartTour = () => {
+      setIsTutorial(true);
+    };
+
+    window.addEventListener("start-axis-tutorial", handleStartTour);
+    return () => window.removeEventListener("start-axis-tutorial", handleStartTour);
+  }, []);
   const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const [dup, setDup] = useState<Roadbook | null>(null);
   const [escalasPendentes, setEscalasPendentes] = useState<number>(0);
@@ -336,7 +354,7 @@ function Dashboard() {
     if (escalasPendentes > 0) {
       return { 
         title: `Olá, ${firstName}!`, 
-        sub: `Você tem ${escalasPendentes} convite(s) pendente(s) de escala. Confirme sua presença para garantir a logística.`, 
+        sub: `Você tem ${displayEscalasPendentes} convite(s) pendente(s) de escala. Confirme sua presença para garantir a logística.`, 
         icon: AlertCircle, 
         color: 'from-amber-500 to-orange-600', 
         link: '/minhas-escalas', 
@@ -423,6 +441,35 @@ function Dashboard() {
     };
   };
 
+  
+  // DADOS DE DEMONSTRAÇÃO (MODO TUTORIAL SEGURO E ISOLADO)
+  const mockUpcomingRoadbooks: Roadbook[] = [
+    {
+      id: "demo-rb-1",
+      slug: "turne-demo-sao-paulo",
+      espetaculo: "Espetáculo Exemplo • Turnê Nacional",
+      cidade: "São Paulo",
+      estado: "SP",
+      data_inicial: new Date().toISOString().split("T")[0],
+      data_final: new Date(Date.now() + 86400000 * 3).toISOString().split("T")[0],
+      teatro_nome: "Teatro Santander",
+      hotel_nome: "Hotel Grand Mercure",
+      programacao: [],
+      quartos: [],
+      outros_contatos: [],
+      documentos: [],
+      voos: [],
+      teatro_fotos: [],
+      hotel_fotos: [],
+    } as any,
+  ];
+
+  const displayUpcoming = isTutorial ? mockUpcomingRoadbooks : upcomingRoadbooks;
+  const displayCurrentCity = isTutorial ? "São Paulo (Demonstração)" : currentCity;
+  const displayNextCity = isTutorial ? "Rio de Janeiro (Demonstração)" : nextCity;
+  const displayFuturosCount = isTutorial ? 3 : futuros.length;
+  const displayEscalasPendentes = isTutorial ? 1 : escalasPendentes;
+
   const smartMsg = getSmartMessage();
 
   const renderRoadbookCard = (r: Roadbook, index: number) => (
@@ -481,10 +528,43 @@ function Dashboard() {
     <div className="max-w-7xl mx-auto space-y-12">
       
       {/* HEADER E STATS */}
-      <section className="space-y-8">
+      <section id="tour-welcome-banner" className="space-y-8">
+        {isTutorial && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-4 animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-xl bg-amber-500 text-white font-bold text-xs">MODO DEMO</span>
+              <p className="text-xs sm:text-sm font-semibold">Você está no Tour Interativo. Todos os dados abaixo são fictícios para sua demonstração.</p>
+            </div>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => {
+                localStorage.setItem("axis_tutorial_completed", "true");
+                setIsTutorial(false);
+              }}
+              className="text-xs font-bold rounded-xl shrink-0"
+            >
+              Pular / Fechar Tutorial ✕
+            </Button>
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div>
-            <Badge variant="outline" className="mb-3 border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400">Sistema Online</Badge>
+            <div className="flex items-center gap-3 mb-3">
+              <Badge variant="outline" className="border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-400">Sistema Online</Badge>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem("axis_tutorial_completed");
+                  setIsTutorial(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-500/10 hover:bg-sky-100 transition-colors shadow-2xs"
+                title="Iniciar Tutorial Guiado"
+              >
+                <Sparkles className="size-3.5" />
+                Guia Rápido / Tutorial
+              </button>
+            </div>
             <h1 className="text-4xl xl:text-5xl font-black tracking-tight leading-snug pb-2 bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-400 bg-clip-text text-transparent">
               Visão Geral
             </h1>
@@ -538,7 +618,7 @@ function Dashboard() {
               </div>
               <div className="flex gap-6 divide-x divide-white/10">
                 <div>
-                  <div className="text-3xl font-black tabular-nums">{futuros.length}</div>
+                  <div className="text-3xl font-black tabular-nums">{displayFuturosCount}</div>
                   <div className="text-xs text-white/70 font-bold mt-1 uppercase tracking-wide">Eventos Futuros</div>
                 </div>
                 <div className="pl-6">
@@ -551,7 +631,7 @@ function Dashboard() {
         </div>
       </section>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div id="tour-city-status" className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <Card className="relative overflow-hidden p-6 xl:p-8 border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-white/[0.03] dark:backdrop-blur-xl dark:border dark:border-white/10 transition-all hover:-translate-y-1.5 hover:shadow-[0_12px_35px_rgb(0,0,0,0.06)] rounded-3xl group">
              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/10 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
             <div className="flex items-center gap-5 relative z-10">
@@ -560,7 +640,7 @@ function Dashboard() {
               </div>
               <div className="min-w-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-1 truncate">
-                  {currentCity}
+                  {displayCurrentCity}
                 </h3>
                 <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cidade Atual</p>
               </div>
@@ -575,7 +655,7 @@ function Dashboard() {
               </div>
               <div className="min-w-0">
                 <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-1 truncate">
-                  {nextCity}
+                  {displayNextCity}
                 </h3>
                 <p className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Próxima Cidade</p>
               </div>
@@ -617,7 +697,7 @@ function Dashboard() {
         )}
 
         {/* GRADES DE ACESSO RÁPIDO (MENUS) */}
-        <section className="space-y-6 pt-4">
+        <section id="tour-roadbooks-list" className="space-y-6 pt-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Acesso Rápido</h2>
@@ -761,17 +841,25 @@ function Dashboard() {
           <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
         </div>
         
-        {upcomingRoadbooks.length === 0 ? (
+        {displayUpcoming.length === 0 ? (
           <Card className="p-16 text-center border-dashed border-2 border-slate-200 dark:border-white/10 bg-transparent rounded-[2rem]">
             <p className="text-slate-500 dark:text-slate-400 font-medium">Você não possui eventos futuros programados.</p>
           </Card>
         ) : (
           <div className="grid gap-5">
-            {upcomingRoadbooks.slice(0, 2).map(renderRoadbookCard)}
+            {displayUpcoming.slice(0, 2).map(renderRoadbookCard)}
           </div>
         )}
       </section>
 
+      <ProductTour active={isTutorial} onFinish={() => {
+        localStorage.setItem("axis_tutorial_completed", "true");
+        setIsTutorial(false);
+      }} />
+      <ProductTour active={isTutorial} onFinish={() => {
+        localStorage.setItem("axis_tutorial_completed", "true");
+        setIsTutorial(false);
+      }} />
     </div>
   );
 }
