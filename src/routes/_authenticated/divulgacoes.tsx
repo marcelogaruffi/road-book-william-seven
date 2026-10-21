@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/divulgacoes")({
   component: DivulgacoesPage,
 });
 
-function DivulgacoesPage() {
+export default function DivulgacoesPage() {
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessMidias: isAllowed } = usePermissions(profile);
 
