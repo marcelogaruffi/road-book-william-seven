@@ -344,7 +344,7 @@ export default function FotosPage() {
               )}
 
               <Button disabled={isUploading} onClick={saveHd} className="w-full bg-blue-600 hover:bg-blue-700 mt-2">
-                {isUploading ? 'Salvando e Criando...' : 'Salvar no Repositório'}
+                {isUploading ? 'Salvando fotos...' : 'Salvar no Repositório'}
               </Button>
             </div>
           </DialogContent>

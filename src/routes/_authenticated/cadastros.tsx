@@ -228,7 +228,7 @@ function UsersPage() {
 
   async function deleteUser(u: Profile) {
     if (u.role === 'dev') {
-      toast.error("Você não pode deletar uma conta de Desenvolvedor.");
+      toast.error("Não é permitido excluir uma conta com perfil de Desenvolvedor.");
       return;
     }
     if (!confirm("Tem certeza que deseja remover este usuário? Ele perderá o acesso ao painel.")) return;

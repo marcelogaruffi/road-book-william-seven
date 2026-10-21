@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
+export function CachesEquipeTab({ roadbookId, eventoId }: { roadbookId?: string; eventoId?: string }) {
   const [equipe, setEquipe] = useState<any[]>([]);
   const [caches, setCaches] = useState<Record<string, string>>({});
   const [diarias, setDiarias] = useState<Record<string, string>>({});
@@ -27,6 +27,7 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
   const [recibos, setRecibos] = useState<Record<string, string>>({});
   const [uploading, setUploading] = useState<Record<string, boolean>>({});
   
+  const [eventoInfo, setEventoInfo] = useState<{ espetaculo?: string; cidade?: string }>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -34,20 +35,35 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   useEffect(() => {
-    if (!roadbookId) {
+    if (!roadbookId && !eventoId) {
       setLoading(false);
       return;
     }
     fetchEquipeCaches();
-  }, [roadbookId]);
+  }, [roadbookId, eventoId]);
 
   async function fetchEquipeCaches() {
     setLoading(true);
-    const { data: rbData } = await supabase.from('roadbooks').select('evento_id, cidade, espetaculo').eq('id', roadbookId).maybeSingle();
-    let realEventoId = rbData?.evento_id;
-    if (!realEventoId && rbData?.cidade && rbData?.espetaculo) {
-      const { data: evData } = await supabase.from('eventos').select('id').eq('cidade', rbData.cidade).eq('espetaculo', rbData.espetaculo).maybeSingle();
-      if (evData) realEventoId = evData.id;
+    let realEventoId = eventoId;
+
+    if (!realEventoId && roadbookId) {
+      const { data: rbData } = await supabase.from('roadbooks').select('evento_id, cidade, espetaculo').eq('id', roadbookId).maybeSingle();
+      realEventoId = rbData?.evento_id;
+      if (rbData) {
+        setEventoInfo({ espetaculo: rbData.espetaculo, cidade: rbData.cidade });
+      }
+      if (!realEventoId && rbData?.cidade && rbData?.espetaculo) {
+        const { data: evData } = await supabase.from('eventos').select('id, espetaculo, cidade').eq('cidade', rbData.cidade).eq('espetaculo', rbData.espetaculo).maybeSingle();
+        if (evData) {
+          realEventoId = evData.id;
+          setEventoInfo({ espetaculo: evData.espetaculo, cidade: evData.cidade });
+        }
+      }
+    } else if (realEventoId) {
+      const { data: evData } = await supabase.from('eventos').select('id, espetaculo, cidade').eq('id', realEventoId).maybeSingle();
+      if (evData) {
+        setEventoInfo({ espetaculo: evData.espetaculo, cidade: evData.cidade });
+      }
     }
 
     if (!realEventoId) {
@@ -121,9 +137,7 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
     const membro = equipe.find(e => e.escala_id === escalaId);
     if (!membro) return;
     
-    // Fetch event info
-    const { data: rbData } = await supabase.from('roadbooks').select('espetaculo, cidade').eq('id', roadbookId).maybeSingle();
-    const titulo = `Nota Fiscal Pendente - ${rbData?.espetaculo || 'Evento'} ${rbData?.cidade ? 'em ' + rbData.cidade : ''}`;
+    const titulo = `Nota Fiscal Pendente - ${eventoInfo.espetaculo || 'Evento'} ${eventoInfo.cidade ? 'em ' + eventoInfo.cidade : ''}`;
     const mensagem = `Por favor, anexe sua nota fiscal referente à sua atuação.`;
     
     const { error } = await supabase.from('notificacoes').insert({
@@ -134,7 +148,6 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
       link: '/meus-pagamentos'
     });
             
-    
     if (!error) toast.success(`Cobrança enviada para ${membro.nome}`);
     else toast.error("Erro ao enviar cobrança: " + error.message);
   }
@@ -168,11 +181,10 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
       if (novoStatus === 'pago') {
           const membro = equipe.find(e => e.escala_id === escalaId);
           if (membro && membro.usuario_id) {
-            const { data: rbData } = await supabase.from('roadbooks').select('espetaculo, cidade').eq('id', roadbookId).maybeSingle();
             await supabase.from('notificacoes').insert({
               usuario_id: membro.usuario_id,
               titulo: 'Pagamento Realizado! 💰',
-              mensagem: `Seu cachê do evento ${rbData?.espetaculo || ''} ${rbData?.cidade ? 'em '+rbData.cidade : ''} foi pago.`,
+              mensagem: `Seu cachê do evento ${eventoInfo.espetaculo || ''} ${eventoInfo.cidade ? 'em '+eventoInfo.cidade : ''} foi pago.`,
               tipo: 'financeiro',
               link: '/meus-pagamentos'
             });
@@ -314,197 +326,209 @@ export function CachesEquipeTab({ roadbookId }: { roadbookId?: string }) {
           <Input 
             placeholder="Buscar membro..." 
             value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-10 bg-white dark:bg-slate-900 border-0 shadow-sm"
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 bg-white dark:bg-card"
           />
         </div>
-        
-        <Button onClick={saveCaches} disabled={saving} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold h-10 px-6 rounded-xl shadow-md flex items-center gap-2">
-          {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          Salvar Cachês
+        <Button onClick={saveCaches} disabled={saving} className="w-full sm:w-auto font-bold gap-2">
+          {saving ? <Loader2 className="animate-spin size-4" /> : <Save className="size-4" />}
+          Salvar Alterações
         </Button>
       </div>
 
-      {equipe.length === 0 ? (
-        <Card className="p-12 text-center border-dashed border-2 bg-transparent rounded-[2rem]">
-          <DollarSign className="size-12 mx-auto text-slate-300 dark:text-slate-600 mb-3" />
-          <h3 className="text-lg font-bold text-slate-700 dark:text-slate-300">Nenhum profissional escalado</h3>
-          <p className="text-slate-500 dark:text-slate-400">Escale a equipe no evento primeiro para definir os cachês.</p>
-        </Card>
+      {sortedEquipe.length === 0 ? (
+        <div className="text-center py-12 bg-white dark:bg-card/50 rounded-2xl border border-slate-100 dark:border-white/5">
+          <DollarSign className="size-12 text-slate-300 mx-auto mb-3" />
+          <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Nenhum profissional encontrado</h3>
+          <p className="text-sm text-slate-400 max-w-sm mx-auto mt-1">
+            Não há profissionais escalados para este evento ou a busca não retornou resultados.
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4">
-          {sortedEquipe.map(p => (
-            <Card key={p.escala_id} className="flex flex-col shadow-sm border-0 bg-white dark:bg-card/40 dark:backdrop-blur-md dark:border dark:border-white/10 rounded-2xl overflow-hidden">
-              <div className="p-4 flex flex-col gap-4 border-b border-slate-100 dark:border-white/5">
-                <div className="flex items-center gap-3">
-                  <Avatar className="size-10 border-2 border-slate-100 dark:border-white/10">
-                    <AvatarImage src={p.foto_url || undefined} className="object-cover" />
-                    <AvatarFallback className="bg-primary/10 text-primary font-bold">{p.nome ? p.nome[0].toUpperCase() : 'U'}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-bold text-sm text-slate-800 dark:text-white truncate">{p.nome}</p>
-                    {p.funcao && (
-                      <Badge variant="secondary" className="mt-0.5 text-[10px] bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-slate-300 px-1.5 py-0 border-none capitalize">
-                        {p.funcao.replace('_', ' ')}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-semibold text-slate-500">Cachê:</span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-400 font-bold text-sm">R$</span>
-                      <CurrencyInput 
-                        className="w-28 h-9 font-bold text-right" 
-                        value={caches[p.escala_id] || ''}
-                        onChange={val => setCaches({...caches, [p.escala_id]: val})}
-                      />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sortedEquipe.map((p) => {
+            return (
+              <Card key={p.escala_id} className="overflow-hidden border-slate-200 dark:border-white/10 hover:shadow-md transition-shadow flex flex-col justify-between">
+                <div className="p-4 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="size-12 border border-slate-100 dark:border-white/10">
+                      <AvatarImage src={p.foto_url} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                        {p.nome?.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 overflow-hidden">
+                      <h4 className="font-bold text-slate-800 dark:text-white truncate">{p.nome}</h4>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0">
+                          {(p.funcao || p.role || 'Membro').replace(/_/g, ' ')}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="pt-1 border-t border-slate-100/70 dark:border-white/5 space-y-1">
+                  <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-white/5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-slate-500">Valor Diária:</span>
+                      <span className="text-xs font-medium text-slate-500">Cachê:</span>
                       <div className="flex items-center gap-1">
                         <span className="text-slate-400 font-medium text-xs">R$</span>
                         <CurrencyInput 
-                          className="w-28 h-8 text-xs text-right" 
-                          value={diarias[p.escala_id] || ''}
-                          onChange={val => setDiarias({...diarias, [p.escala_id]: val})}
+                          className="w-28 h-8 text-xs text-right font-bold" 
+                          value={caches[p.escala_id] || ''}
+                          onChange={val => setCaches({...caches, [p.escala_id]: val})}
                           placeholder="0,00"
                         />
                       </div>
                     </div>
+
+                    {/* Bloco de Diária + Quantidade */}
+                    <div className="bg-slate-50/80 dark:bg-white/5 p-2 rounded-xl space-y-2 border border-slate-100 dark:border-white/5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium text-slate-500">Valor Diária:</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-400 font-medium text-xs">R$</span>
+                          <CurrencyInput 
+                            className="w-28 h-8 text-xs text-right" 
+                            value={diarias[p.escala_id] || ''}
+                            onChange={val => setDiarias({...diarias, [p.escala_id]: val})}
+                            placeholder="0,00"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium text-slate-500">Qtd. Diárias:</span>
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="1"
+                            max="90"
+                            value={qtdDiarias[p.escala_id] ?? 1}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value, 10);
+                              setQtdDiarias({ ...qtdDiarias, [p.escala_id]: isNaN(val) || val < 1 ? 1 : val });
+                            }}
+                            className="w-16 h-7 text-xs text-center font-bold"
+                          />
+                          <span className="text-[10px] text-slate-400 font-semibold">dias</span>
+                        </div>
+                      </div>
+                      {(() => {
+                        const dValStr = diarias[p.escala_id] || '0,00';
+                        const dNum = parseFloat(dValStr.replace(/\./g, '').replace(',', '.')) || 0;
+                        const qNum = qtdDiarias[p.escala_id] ?? 1;
+                        const tot = dNum * qNum;
+                        if (dNum > 0 && qNum > 1) {
+                          return (
+                            <div className="flex items-center justify-between text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded-lg">
+                              <span>Total Diárias ({qNum}x):</span>
+                              <span>R$ {tot.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
+                    </div>
+
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-slate-500">Qtd. Diárias:</span>
+                      <span className="text-xs font-medium text-slate-500">Transporte:</span>
                       <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          min="1"
-                          max="90"
-                          value={qtdDiarias[p.escala_id] ?? 1}
-                          onChange={(e) => {
-                            const val = parseInt(e.target.value, 10);
-                            setQtdDiarias({ ...qtdDiarias, [p.escala_id]: isNaN(val) || val < 1 ? 1 : val });
-                          }}
-                          className="w-16 h-7 text-xs text-center font-bold"
+                        <span className="text-slate-400 font-medium text-xs">R$</span>
+                        <CurrencyInput 
+                          className="w-28 h-8 text-xs text-right" 
+                          value={transportes[p.escala_id] || ''}
+                          onChange={val => setTransportes({...transportes, [p.escala_id]: val})}
+                          placeholder="0,00"
                         />
-                        <span className="text-[10px] text-slate-400 font-semibold">dias</span>
                       </div>
                     </div>
-                    {(() => {
-                      const dValStr = diarias[p.escala_id] || '0,00';
-                      const dNum = parseFloat(dValStr.replace(/\./g, '').replace(',', '.')) || 0;
-                      const qNum = qtdDiarias[p.escala_id] ?? 1;
-                      const tot = dNum * qNum;
-                      if (dNum > 0 && qNum > 1) {
-                        return (
-                          <div className="flex items-center justify-between text-[11px] text-primary font-bold bg-primary/5 px-2 py-0.5 rounded-lg">
-                            <span>Total Diárias ({qNum}x):</span>
-                            <span>R$ {tot.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
-
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-slate-500">Transporte:</span>
-                    <div className="flex items-center gap-1">
-                      <span className="text-slate-400 font-medium text-xs">R$</span>
-                      <CurrencyInput 
-                        className="w-28 h-8 text-xs text-right" 
-                        value={transportes[p.escala_id] || ''}
-                        onChange={val => setTransportes({...transportes, [p.escala_id]: val})}
-                        placeholder="0,00"
-                      />
-                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="p-4 bg-slate-50/50 dark:bg-white/5 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-500">Status:</span>
-                  <Select
-                    value={status[p.escala_id] || 'pendente'}
-                    onValueChange={(val) => handleStatusChange(p.escala_id, val)}
-                  >
-                    <SelectTrigger className="w-32 h-8 text-xs font-semibold">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pendente">
-                        <div className="flex items-center gap-2 text-amber-600"><Clock className="size-3"/> Pendente</div>
-                      </SelectItem>
-                      <SelectItem value="pago">
-                        <div className="flex items-center gap-2 text-emerald-600"><CheckCircle2 className="size-3"/> Pago</div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div className="p-4 bg-slate-50/50 dark:bg-white/5 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-slate-500">Status:</span>
+                    <Select
+                      value={status[p.escala_id] || 'pendente'}
+                      onValueChange={(val) => handleStatusChange(p.escala_id, val)}
+                    >
+                      <SelectTrigger className="w-32 h-8 text-xs font-semibold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pendente">
+                          <div className="flex items-center gap-2 text-amber-600"><Clock className="size-3"/> Pendente</div>
+                        </SelectItem>
+                        <SelectItem value="pago">
+                          <div className="flex items-center gap-2 text-emerald-600"><CheckCircle2 className="size-3"/> Pago</div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="flex items-center gap-2 justify-between">
-                  <span className="text-sm font-semibold text-slate-500">Nota Fiscal:</span>
-                  {notas[p.escala_id] ? (
-                    <div className="flex items-center gap-1">
-                      <Button variant="outline" size="sm" className="h-8 text-xs bg-white text-blue-600 border-blue-200 hover:bg-blue-50" asChild>
-                        <a href={notas[p.escala_id]} target="_blank" rel="noopener noreferrer">
-                          <FileText className="size-3 mr-1" /> Ver NF
-                        </a>
-                      </Button>
-                      <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleDeleteFile(p.escala_id, 'nota_fiscal_url')}>
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2"><span className="text-xs text-slate-400 italic">Não anexada</span><Button variant="outline" size="sm" className="h-8 text-xs text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => cobrarNota(p.escala_id)}><Bell className="size-3 mr-1" /> Cobrar</Button></div>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 justify-between">
-                  <span className="text-sm font-semibold text-slate-500">Recibo:</span>
-                  <div className="flex items-center gap-2">
-                    {recibos[p.escala_id] && (
-                      <>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-green-600 border-green-200 hover:bg-green-50" asChild>
-                          <a href={recibos[p.escala_id]} target="_blank" rel="noopener noreferrer">
-                            <FileText className="size-4" />
+                  <div className="flex items-center gap-2 justify-between">
+                    <span className="text-sm font-semibold text-slate-500">Nota Fiscal:</span>
+                    {notas[p.escala_id] ? (
+                      <div className="flex items-center gap-1">
+                        <Button variant="outline" size="sm" className="h-8 text-xs bg-white text-blue-600 border-blue-200 hover:bg-blue-50" asChild>
+                          <a href={notas[p.escala_id]} target="_blank" rel="noopener noreferrer">
+                            <FileText className="size-3 mr-1" /> Ver NF
                           </a>
                         </Button>
-                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleDeleteFile(p.escala_id, 'recibo_url')}>
+                        <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleDeleteFile(p.escala_id, 'nota_fiscal_url')}>
                           <Trash2 className="size-4" />
                         </Button>
-                      </>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2"><span className="text-xs text-slate-400 italic">Não anexada</span><Button variant="outline" size="sm" className="h-8 text-xs text-orange-600 border-orange-200 hover:bg-orange-50" onClick={() => cobrarNota(p.escala_id)}><Bell className="size-3 mr-1" /> Cobrar</Button></div>
                     )}
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 text-xs" 
-                      onClick={() => fileInputRefs.current[p.escala_id]?.click()}
-                      disabled={uploading[p.escala_id]}
-                    >
-                      {uploading[p.escala_id] ? <Loader2 className="size-3 animate-spin mr-1" /> : <Upload className="size-3 mr-1" />}
-                      {recibos[p.escala_id] ? 'Trocar' : 'Anexar'}
-                    </Button>
-                    <input 
-                      type="file" 
-                      className="hidden" 
-                      accept=".pdf"
-                      ref={el => fileInputRefs.current[p.escala_id] = el}
-                      onChange={(e) => handleFileUpload(e, p.escala_id)}
-                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 justify-between">
+                    <span className="text-sm font-semibold text-slate-500">Recibo:</span>
+                    <div className="flex items-center gap-2">
+                      {recibos[p.escala_id] && (
+                        <>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-green-600 border-green-200 hover:bg-green-50" asChild>
+                            <a href={recibos[p.escala_id]} target="_blank" rel="noopener noreferrer">
+                              <FileText className="size-4" />
+                            </a>
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-8 w-8 p-0 text-red-500 border-red-200 hover:bg-red-50" onClick={() => handleDeleteFile(p.escala_id, 'recibo_url')}>
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </>
+                      )}
+                      <div>
+                        <input
+                          type="file"
+                          className="hidden"
+                          ref={el => fileInputRefs.current[p.escala_id] = el}
+                          onChange={(e) => handleFileUpload(e, p.escala_id)}
+                          accept="image/*,application/pdf"
+                        />
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-xs"
+                          disabled={uploading[p.escala_id]}
+                          onClick={() => fileInputRefs.current[p.escala_id]?.click()}
+                        >
+                          {uploading[p.escala_id] ? (
+                            <Loader2 className="animate-spin size-3" />
+                          ) : (
+                            <Upload className="size-3 mr-1" />
+                          )}
+                          {recibos[p.escala_id] ? 'Trocar' : 'Anexar'}
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>
   );
 }
-

@@ -8,6 +8,7 @@ import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Users, Printer, Contact2, Luggage, Image as ImageIcon, Megaphone, Coffee } from "lucide-react";
 import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
@@ -196,9 +197,9 @@ function AuthedLayout() {
 
       {/* SIDEBAR RETRÁTIL */}
       <aside 
-        className={`${sidebarOpen ? 'translate-x-0 w-[16.25rem]' : '-translate-x-full md:translate-x-0 md:w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/80 md:dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
+        className={`${sidebarOpen ? 'translate-x-0 w-[14.25rem]' : '-translate-x-full md:translate-x-0 md:w-20'} fixed left-0 top-0 h-screen z-40 bg-white/80 dark:bg-card/80 md:dark:bg-card/40 backdrop-blur-xl border-r border-slate-200/60 dark:border-white/10 transition-all duration-300 flex flex-col print:hidden`}
       >
-        <div className="flex h-20 items-center justify-between px-4 border-b border-slate-200/60 dark:border-white/10">
+        <div className="flex h-16 items-center justify-between px-3 border-b border-slate-200/60 dark:border-white/10">
           {sidebarOpen ? (
             <div className="flex items-center justify-between w-full pr-2">
               <div className="flex items-center gap-3 overflow-hidden">
@@ -266,13 +267,18 @@ function AuthedLayout() {
             </Avatar>
           )}
           
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} className={`shrink-0 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 ${!sidebarOpen && 'hidden md:flex absolute -right-4 top-6 bg-white dark:bg-card border shadow-sm z-50 h-8 w-8'}`}>
-            {sidebarOpen ? <ChevronLeft className="size-5" /> : <ChevronRight className="size-4" />}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setSidebarOpen(!sidebarOpen)} 
+            className="hidden md:flex absolute -right-3.5 top-6 bg-white dark:bg-card border border-slate-200 dark:border-white/10 shadow-sm z-50 h-7 w-7 rounded-full items-center justify-center p-0 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-600 dark:text-slate-300 transition-colors"
+          >
+            {sidebarOpen ? <ChevronLeft className="size-4" /> : <ChevronRight className="size-4" />}
           </Button>
         </div>
 
-        
-        <div className="flex-1 overflow-y-auto py-6 px-2 space-y-2" onClick={closeMobileMenu}>
+        <TooltipProvider delayDuration={50}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-2 space-y-1.5" onClick={closeMobileMenu}>
           
           {/* HELPERS FOR SIDEBAR */}
           {(() => {
@@ -282,46 +288,63 @@ function AuthedLayout() {
               return (
                 <Link 
                   to={to} 
-                  ref={el => { if (isActive && el) { setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); } }}
-                  className={`w-full flex items-center justify-start ${sidebarOpen ? 'px-3' : 'px-0 justify-center'} h-10 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 text-sm font-medium rounded-xl transition-colors`} 
-                  activeProps={{ className: "bg-primary/10 text-primary hover:bg-primary/20 dark:bg-primary/20 dark:text-primary-foreground font-semibold" }}
+                  ref={el => { if (isActive && el && sidebarOpen) { setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100); } }}
+                  className="w-full flex items-center justify-start px-3 h-9 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/10 text-xs font-semibold rounded-xl transition-all group/item" 
+                  activeProps={{ className: "bg-primary/10 text-primary font-bold dark:bg-primary/20 dark:text-white shadow-2xs" }}
                 >
-                  <Icon className={`${sidebarOpen ? 'mr-2.5' : ''} size-4 shrink-0`} />
-                  {sidebarOpen && <span className="truncate">{label}</span>}
+                  <Icon className="mr-2.5 size-4 shrink-0 text-slate-400 group-hover/item:text-primary transition-colors" />
+                  <span className="truncate">{label}</span>
                 </Link>
               );
             };
 
             const SGroup = ({ title, icon: Icon, children, show=true }: any) => {
               if (!show) return null;
+
+              // MENU RETRAÍDO: Ícones limpos com destaque azul royal e legenda no hover
               if (!sidebarOpen) {
                 return (
-                  <div className="py-2 border-b border-slate-100 dark:border-white/5 last:border-0 flex flex-col items-center space-y-1">
-                    <div className="mb-2 text-slate-300 dark:text-slate-600"><Icon className="size-5" /></div>
-                    {children}
+                  <div className="py-1.5 border-b border-slate-100/60 dark:border-white/5 last:border-0 flex flex-col items-center space-y-1 w-full">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button 
+                          type="button"
+                          onClick={() => setSidebarOpen(true)}
+                          className="size-10 rounded-xl flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all shadow-2xs hover:scale-105 cursor-pointer"
+                        >
+                          <Icon className="size-5 shrink-0" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs shadow-xl px-3 py-1.5 rounded-lg">
+                        {title}
+                      </TooltipContent>
+                    </Tooltip>
                   </div>
                 );
               }
+
+              // MENU EXPANDIDO NORMAL
               return (
                 <details className="group [&_summary::-webkit-details-marker]:hidden" open>
-                  <summary className="flex cursor-pointer items-center justify-between px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 select-none">
+                  <summary className="flex cursor-pointer items-center justify-between px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 select-none">
                     <div className="flex items-center gap-2">
                       <Icon className="size-4" /> {title}
                     </div>
                     <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                   </summary>
-                  <div className="mt-1 space-y-1 ml-1.5">
+                  <div className="mt-0.5 space-y-0.5 ml-1">
                     {children}
                   </div>
                 </details>
               );
             };
 
-            const isProdutor = userRole === 'admin' || userRole === 'dev' || userRole === 'produtor';
+                        const isProdutor = userRole === 'admin' || userRole === 'dev' || userRole === 'produtor';
 
             return (
               <>
-                                                <SGroup title="Meu Espaço" icon={Contact2}>
+                {/* 1. Meu Espaço */}
+                <SGroup title="Meu Espaço" icon={Contact2}>
                   <SLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                   <SLink to="/minha-agenda" icon={Calendar} label="Minha Agenda" />
                   <SLink to="/perfil" icon={UserPlus} label="Dados Cadastrais" />
@@ -330,6 +353,7 @@ function AuthedLayout() {
                   <SLink to="/notificacoes" icon={Bell} label="Notificações" />
                 </SGroup>
 
+                {/* 2. Viagens e Logística */}
                 <SGroup title="Viagens e Logística" icon={Bus}>
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
@@ -337,12 +361,22 @@ function AuthedLayout() {
                   <SLink to="/hospedagem" icon={Hotel} label="Hospedagem" show={isProdutor} />
                 </SGroup>
 
-                <SGroup title="Gestão de Ingressos" icon={Ticket}>
-                  <SLink to="/ingressos/mapa" icon={Ticket} label="Mapa de Assentos" show={isProdutor} />
-                  <SLink to="/ingressos/emissao" icon={QrCode} label="Emissão de Ingressos" show={isProdutor} />
-                  <SLink to="/ingressos/validacao" icon={ShieldCheck} label="Validação / Portaria" show={isProdutor} />
+                {/* 3. Produção Executiva */}
+                <SGroup title="Produção Executiva" icon={ClipboardList}>
+                  <SLink to="/novo-projeto" icon={Sparkles} label="Maestro de Produção" show={isProdutor} />
+                  <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" />
+                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
+                  <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" />
+                  <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" />
+                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
+                  <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
+                  <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
+                  <SLink to="/emissao-relatorios" icon={Printer} label="Emissão de Relatórios" show={isProdutor} />
+                  <SLink to="/fornecedores" icon={Contact2} label="Diretório de Fornecedores" show={isProdutor} />
+                  <SLink to="/contratos" icon={FileSignature} label="Gestão de Contratos" show={isProdutor} />
                 </SGroup>
 
+                {/* 4. Backstage */}
                 <SGroup title="Backstage" icon={DoorOpen}>
                   <SLink to="/camarins" icon={StarDoorIcon} label="Camarins" />
                   <SLink to="/palco" icon={StageIcon} label="Montagem de Palco" />
@@ -350,6 +384,7 @@ function AuthedLayout() {
                   <SLink to="/figurinos" icon={ClothesRackIcon} label="Figurinos" />
                 </SGroup>
 
+                {/* 5. Técnica e Artístico */}
                 <SGroup title="Técnica e Artístico" icon={Drama}>
                   <SLink to="/musicas" icon={FileAudio} label="Músicas" />
                   <SLink to="/partituras" icon={Music} label="Partituras" />
@@ -359,27 +394,7 @@ function AuthedLayout() {
                   <SLink to="/video" icon={Video} label="Vídeo" />
                 </SGroup>
 
-                <SGroup title="Produção Executiva" icon={ClipboardList}>
-                  <SLink to="/novo-projeto" icon={Sparkles} label="Maestro de Produção" show={isProdutor} />
-                  <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" />
-                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
-                  <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" />
-                    <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" />
-                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
-                  <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
-                  <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
-                  <SLink to="/emissao-relatorios" icon={Printer} label="Emissão de Relatórios" show={isProdutor} />
-                  <SLink to="/fornecedores" icon={Contact2} label="Diretório de Fornecedores" show={isProdutor} />
-                  <SLink to="/contratos" icon={FileSignature} label="Gestão de Contratos" show={isProdutor} />
-                </SGroup>
-
-                <SGroup title="Comunicação e Mídia" icon={Smartphone}>
-                  <SLink to="/imprensa" icon={Newspaper} label="Imprensa" show={isProdutor || userRole === 'assessoria_imprensa'} />
-                  <SLink to="/fotos" icon={ImageIcon} label="Fotos" show={isProdutor || userRole === 'midias_sociais'} />
-                  <SLink to="/midias" icon={Smartphone} label="Mídias Sociais" show={isProdutor || userRole === 'midias_sociais'} />
-                  <SLink to="/divulgacoes" icon={Megaphone} label="Divulgações Redes Sociais" show={isProdutor || userRole === 'midias_sociais'} />
-                </SGroup>
-
+                {/* 6. Equipe e RH */}
                 <SGroup title="Equipe e RH" icon={Users}>
                   <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
                   <SLink to="/contatos" icon={Contact2} label="Contatos da Equipe" />
@@ -387,49 +402,104 @@ function AuthedLayout() {
                   <SLink to="/cadastros" icon={UserPlus} label="Cadastros de Equipe" />
                 </SGroup>
 
+                {/* 7. Comunicação e Mídia */}
+                <SGroup title="Comunicação e Mídia" icon={Smartphone}>
+                  <SLink to="/imprensa" icon={Newspaper} label="Imprensa" show={isProdutor || userRole === 'assessoria_imprensa'} />
+                  <SLink to="/fotos" icon={ImageIcon} label="Fotos" show={isProdutor || userRole === 'midias_sociais'} />
+                  <SLink to="/midias" icon={Smartphone} label="Mídias Sociais" show={isProdutor || userRole === 'midias_sociais'} />
+                  <SLink to="/divulgacoes" icon={Megaphone} label="Divulgações Redes Sociais" show={isProdutor || userRole === 'midias_sociais'} />
+                </SGroup>
+
+                {/* 8. Gestão de Ingressos */}
+                <SGroup title="Gestão de Ingressos" icon={Ticket}>
+                  <SLink to="/ingressos/mapa" icon={Ticket} label="Mapa de Assentos" show={isProdutor} />
+                  <SLink to="/ingressos/emissao" icon={QrCode} label="Emissão de Ingressos" show={isProdutor} />
+                  <SLink to="/ingressos/validacao" icon={ShieldCheck} label="Validação / Portaria" show={isProdutor} />
+                </SGroup>
+
+                {/* 9. Administração */}
                 <SGroup title="Administração" icon={Settings} show={userRole === 'admin' || userRole === 'dev'}>
                   <SLink to="/configuracoes" icon={Settings} label="Configurações" />
                   <SLink to="/sobre" icon={Info} label="Sobre o Sistema" />
                 </SGroup>
               </>
             );
+
           })()}
         </div>
+        {/* BOTÃO DO SIMULADOR (DEV) */}
         {realProfile?.role === 'dev' && (
-            <Button variant="ghost" onClick={loadUsersToSimulate} className={`w-full justify-start ${sidebarOpen ? 'px-4' : 'px-0 justify-center'} h-12 text-slate-500 dark:text-slate-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 font-bold transition-colors`}>
-               <Users className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-               {sidebarOpen && <span>Simulador de Acesso</span>}
-            </Button>
-          )}
-        <div className="p-4 border-t border-slate-200/60 dark:border-white/10 space-y-3">
-          <Button 
-            variant="ghost" 
-            onClick={signOut} 
-            className={`w-full ${sidebarOpen ? 'justify-start px-4' : 'justify-center px-0'} h-12 rounded-xl text-slate-500 dark:text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 dark:hover:text-red-400 font-medium transition-colors`}
-          >
-             <LogOut className={`size-5 ${sidebarOpen ? 'mr-3' : ''}`} />
-             {sidebarOpen && <span>Sair da Conta</span>}
-          </Button>
+          <div className="px-2 pb-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button 
+                  type="button"
+                  onClick={loadUsersToSimulate} 
+                  className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-3' : 'justify-center px-0'} h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 font-bold transition-all`}
+                >
+                  <Users className={`size-4.5 ${sidebarOpen ? 'mr-2.5' : ''}`} />
+                  {sidebarOpen && <span className="text-xs">Simulador de Acesso</span>}
+                </button>
+              </TooltipTrigger>
+              {!sidebarOpen && (
+                <TooltipContent side="right" className="bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs shadow-xl px-3 py-1.5 rounded-lg">
+                  Simulador de Acesso
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </div>
+        )}
 
-          <Button 
-            variant="outline" 
-            onClick={toggleTheme} 
-            className={`w-full ${sidebarOpen ? 'justify-start px-4' : 'justify-center px-0'} h-12 rounded-xl shadow-sm border-slate-200 dark:border-white/10 transition-all`}
-          >
-            {theme === "light" ? (
-              <>
-                <Moon className={`size-5 text-indigo-500 ${sidebarOpen ? 'mr-3' : ''}`} />
-                {sidebarOpen && <span className="font-medium text-slate-700">Modo Escuro</span>}
-              </>
-            ) : (
-              <>
-                <Sun className={`size-5 text-amber-500 ${sidebarOpen ? 'mr-3' : ''}`} />
-                {sidebarOpen && <span className="font-medium text-slate-200">Modo Claro</span>}
-              </>
+        {/* RODAPÉ: SAIR E MODO ESCURO/CLARO */}
+        <div className="p-2 border-t border-slate-200/60 dark:border-white/10 space-y-1">
+          {/* SAIR DA CONTA (LOGOFF) */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button 
+                type="button"
+                onClick={signOut} 
+                className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-3' : 'justify-center px-0'} h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 font-medium transition-all`}
+              >
+                <LogOut className={`size-4.5 ${sidebarOpen ? 'mr-2.5' : ''}`} />
+                {sidebarOpen && <span className="text-xs">Sair da Conta</span>}
+              </button>
+            </TooltipTrigger>
+            {!sidebarOpen && (
+              <TooltipContent side="right" className="bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs shadow-xl px-3 py-1.5 rounded-lg">
+                Sair da Conta
+              </TooltipContent>
             )}
-          </Button>
+          </Tooltip>
+
+          {/* MODO ESCURO / CLARO */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button 
+                type="button"
+                onClick={toggleTheme} 
+                className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-3' : 'justify-center px-0'} h-9 rounded-xl border border-slate-200/80 dark:border-white/10 hover:border-sky-500 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 text-slate-600 dark:text-slate-300 transition-all`}
+              >
+                {theme === "light" ? (
+                  <>
+                    <Moon className={`size-4.5 text-indigo-500 ${sidebarOpen ? 'mr-2.5' : ''}`} />
+                    {sidebarOpen && <span className="text-xs font-semibold text-slate-700">Modo Escuro</span>}
+                  </>
+                ) : (
+                  <>
+                    <Sun className={`size-4.5 text-amber-500 ${sidebarOpen ? 'mr-2.5' : ''}`} />
+                    {sidebarOpen && <span className="text-xs font-semibold text-slate-200">Modo Claro</span>}
+                  </>
+                )}
+              </button>
+            </TooltipTrigger>
+            {!sidebarOpen && (
+              <TooltipContent side="right" className="bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs shadow-xl px-3 py-1.5 rounded-lg">
+                {theme === "light" ? "Mudar para Modo Escuro" : "Mudar para Modo Claro"}
+              </TooltipContent>
+            )}
+          </Tooltip>
         </div>
-      </aside>
+      </TooltipProvider></aside>
 
       {/* MOBILE TOGGLE (quando fechado) */}
       {!sidebarOpen && (
@@ -444,7 +514,7 @@ function AuthedLayout() {
       )}
 
       {/* CONTEÚDO PRINCIPAL */}
-      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-[16.25rem]' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] print:m-0 print:p-0`}>
+      <main className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'ml-0 md:ml-[14.25rem]' : 'ml-0 md:ml-20'} p-4 sm:p-6 md:p-8 xl:p-12 w-full max-w-[100vw] print:m-0 print:p-0`}>
         <Outlet />
       </main>
       {/* SIMULADOR DIALOG */}

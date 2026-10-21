@@ -1063,7 +1063,7 @@ function ContratosPage() {
     if (!selectedEvento) return toast.warning("Selecione um evento válido.");
 
     const selecionados = equipeEscalada.filter((item) => item.usuario && loteSelection[item.usuario.id]);
-    if (selecionados.length === 0) return toast.warning("Marque ao menos um profissional para gerar contrato.");
+    if (selecionados.length === 0) return toast.warning("Por favor, selecione pelo menos um profissional da lista para gerar o contrato.");
 
     setGerandoLote(true);
     let criados = 0;
@@ -3079,7 +3079,6 @@ function ContratosPage() {
                       {todosUsuarios.map((u) => (
                         <SelectItem key={u.id} value={u.id}>
                           <span className="font-semibold">{u.nome}</span>
-                          <span className="text-slate-400 text-xs ml-2">({formatarNomeFuncao(u.role)})</span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -3089,12 +3088,31 @@ function ContratosPage() {
                 {/* Função Contratual */}
                 <div>
                   <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Função / Atuação no Show *</Label>
-                  <Input
-                    value={novoFuncao}
-                    onChange={(e) => setNovoFuncao(e.target.value)}
-                    placeholder="Ex: Ator Protagonista, Iluminador, Músico..."
-                    className="mt-1 h-11 rounded-xl"
-                  />
+                  {(() => {
+                    const userObj = todosUsuarios.find((u) => u.id === novoUserId);
+                    const funcoesDisponiveis = userObj
+                      ? Array.from(new Set([userObj.role, ...(userObj.funcoes || [])])).filter(Boolean)
+                      : [];
+
+                    return (
+                      <Select 
+                        value={novoFuncao} 
+                        onValueChange={(val) => setNovoFuncao(val)}
+                        disabled={!novoUserId}
+                      >
+                        <SelectTrigger className="mt-1 h-11 rounded-xl disabled:opacity-50">
+                          <SelectValue placeholder={novoUserId ? "Selecione a função..." : "Selecione o profissional primeiro"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {funcoesDisponiveis.map((f) => (
+                            <SelectItem key={f} value={formatarNomeFuncao(f)}>
+                              {formatarNomeFuncao(f).toUpperCase()}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    );
+                  })()}
                 </div>
 
                 {/* Espetáculo */}

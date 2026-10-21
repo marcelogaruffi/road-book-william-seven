@@ -5,7 +5,7 @@ import autoTable from "jspdf-autotable";
 import * as ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { FileText, FileSpreadsheet, Download } from "lucide-react";
-import { BedDouble, Plus, MapPin, Users, Trash2, Edit2, Calendar } from "lucide-react";
+import { BedDouble, Plus, MapPin, Users, Trash2, Edit2, Calendar, Hotel, Phone, Clock, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,9 @@ import { ReportExportButton } from "@/components/ReportExportButton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { GridEventos } from "@/components/GridEventos";
+import { makeRoadbookSlug } from "@/lib/slug";
 
-export const Route = createFileRoute('/_authenticated/rooming-list')({
+export const Route = createFileRoute('/_authenticated/hospedagem')({
   component: RoomingListPage
 });
 
@@ -44,25 +45,146 @@ function RoomingListPage() {
   const [quartos, setQuartos] = useState<RoomingList[]>([]);
   const [loading, setLoading] = useState(false);
   const [eventoData, setEventoData] = useState<any>(null);
+  const [roadbookData, setRoadbookData] = useState<any>(null);
   
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<RoomingList>>({});
 
+  const [hotelModalOpen, setHotelModalOpen] = useState(false);
+  const [hotelForm, setHotelForm] = useState({
+    hotel_nome: "",
+    hotel_endereco: "",
+    hotel_telefone: "",
+    hotel_site: "",
+    hotel_checkin: "",
+    hotel_checkout: "",
+    hotel_checkin_hora: "",
+    hotel_checkout_hora: "",
+    hotel_observacoes: ""
+  });
+  const [savingHotel, setSavingHotel] = useState(false);
+
   if (profile && !isProdutor) {
-    return <AccessDenied message="A gestão de Rooming List (Hotéis) é exclusiva para Administradores e Produtores." />;
+    return <AccessDenied message="A gestão de Hospedagem (Rooming List) é exclusiva para Administradores e Produtores." />;
   }
 
   useEffect(() => {
     if (selectedEventoId) {
       fetchQuartos(selectedEventoId);
       fetchEvento(selectedEventoId);
+      fetchRoadbook(selectedEventoId);
     }
   }, [selectedEventoId]);
 
   async function fetchEvento(id: string) {
     const { data } = await supabase.from('eventos').select('*').eq('id', id).single();
     if (data) setEventoData(data);
+  }
+
+  async function fetchRoadbook(evento_id: string) {
+    const { data } = await supabase.from('roadbooks').select('*').eq('evento_id', evento_id).maybeSingle();
+    if (data) {
+      setRoadbookData(data);
+      const obs = (data.automacoes as any)?.info_hotel?.observacoes || (data as any).hotel_observacoes || "";
+      setHotelForm({
+        hotel_nome: data.hotel_nome || "",
+        hotel_endereco: data.hotel_endereco || "",
+        hotel_telefone: data.hotel_telefone || "",
+        hotel_site: data.hotel_site || "",
+        hotel_checkin: data.hotel_checkin || "",
+        hotel_checkout: data.hotel_checkout || "",
+        hotel_checkin_hora: data.hotel_checkin_hora || "",
+        hotel_checkout_hora: data.hotel_checkout_hora || "",
+        hotel_observacoes: obs
+      });
+    } else {
+      setRoadbookData(null);
+    }
+  }
+
+  async function handleSaveHotel(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedEventoId) return;
+    setSavingHotel(true);
+    try {
+      const { data: userAuth } = await supabase.auth.getUser();
+      const currentUserId = userAuth?.user?.id;
+
+      if (roadbookData?.id) {
+        // Atualiza roadbook existente
+        const currentAutomacoes = typeof roadbookData.automacoes === 'object' && roadbookData.automacoes ? roadbookData.automacoes : {};
+        const updatedAutomacoes = {
+          ...currentAutomacoes,
+          info_hotel: {
+            ...(currentAutomacoes.info_hotel || {}),
+            observacoes: hotelForm.hotel_observacoes
+          }
+        };
+
+        const { error } = await supabase.from('roadbooks').update({
+          hotel_nome: hotelForm.hotel_nome,
+          hotel_endereco: hotelForm.hotel_endereco,
+          hotel_telefone: hotelForm.hotel_telefone,
+          hotel_site: hotelForm.hotel_site,
+          hotel_checkin: hotelForm.hotel_checkin || null,
+          hotel_checkout: hotelForm.hotel_checkout || null,
+          hotel_checkin_hora: hotelForm.hotel_checkin_hora || null,
+          hotel_checkout_hora: hotelForm.hotel_checkout_hora || null,
+          automacoes: updatedAutomacoes
+        }).eq('id', roadbookData.id);
+
+        if (error) throw error;
+      } else {
+        // Cria roadbook com vinculação ao evento usando padrão espetaculo-cidade
+        const baseSlug = makeRoadbookSlug(eventoData?.espetaculo || "evento", eventoData?.cidade || "cidade");
+        
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const trySlug = attempt === 0 
+            ? baseSlug 
+            : attempt === 1 && eventoData?.data
+            ? `${baseSlug}-${eventoData.data}`
+            : `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+
+          const { error } = await supabase.from('roadbooks').insert({
+            evento_id: selectedEventoId,
+            user_id: currentUserId,
+            espetaculo: eventoData?.espetaculo || "",
+            cidade: eventoData?.cidade || "",
+            teatro_nome: eventoData?.local || "",
+            data_inicial: eventoData?.data || null,
+            data_final: eventoData?.data || null,
+            slug: trySlug,
+            hotel_nome: hotelForm.hotel_nome,
+            hotel_endereco: hotelForm.hotel_endereco,
+            hotel_telefone: hotelForm.hotel_telefone,
+            hotel_site: hotelForm.hotel_site,
+            hotel_checkin: hotelForm.hotel_checkin || null,
+            hotel_checkout: hotelForm.hotel_checkout || null,
+            hotel_checkin_hora: hotelForm.hotel_checkin_hora || null,
+            hotel_checkout_hora: hotelForm.hotel_checkout_hora || null,
+            automacoes: {
+              info_hotel: {
+                observacoes: hotelForm.hotel_observacoes
+              }
+            }
+          });
+
+          if (!error) break;
+          if (error && !`${error.message}`.toLowerCase().includes("duplicate") && !`${error.message}`.toLowerCase().includes("unique")) {
+            throw error;
+          }
+        }
+      }
+
+      toast.success("Informações do hotel sincronizadas com sucesso com o Guia de Viagem (Roadbook)!");
+      setHotelModalOpen(false);
+      fetchRoadbook(selectedEventoId);
+    } catch (err: any) {
+      toast.error("Erro ao salvar hotel: " + err.message);
+    } finally {
+      setSavingHotel(false);
+    }
   }
 
   async function fetchQuartos(evento_id: string) {
@@ -257,10 +379,10 @@ function RoomingListPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-3">
-            <BedDouble className="size-8 text-primary" />
-            Rooming List
+            <Hotel className="size-8 text-primary" />
+            Hospedagem
           </h1>
-          <p className="text-slate-500 mt-1">Gestão de hospedagem e divisão de quartos por evento.</p>
+          <p className="text-slate-500 mt-1">Gestão de hotelaria, rooming list e acomodação da equipe por evento.</p>
         </div>
       </div>
 
@@ -268,6 +390,97 @@ function RoomingListPage() {
         <GridEventos onSelect={setSelectedEventoId} />
       ) : (
         <div className="space-y-6">
+          {/* Card de Informações da Hospedagem / Hotel (Sincronizado com Roadbook) */}
+          <Card className="border border-slate-200/80 dark:border-white/10 shadow-sm bg-white dark:bg-card rounded-3xl overflow-hidden">
+            <CardHeader className="border-b border-slate-100 dark:border-white/5 py-4 px-6 bg-slate-50/70 dark:bg-white/[0.02] flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                  <Hotel className="size-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-black text-slate-800 dark:text-white">
+                      {roadbookData?.hotel_nome || "Hotel não informado"}
+                    </h2>
+                    {roadbookData?.slug && (
+                      <a
+                        href={`/rb/${roadbookData.slug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] font-bold text-primary hover:underline flex items-center gap-1"
+                      >
+                        Ver no Guia de Viagem <ExternalLink className="size-3" />
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Sincronizado em tempo real com o Guia de Viagem (Roadbook).
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setHotelModalOpen(true)}
+                className="rounded-xl font-bold gap-1.5 h-9 shrink-0"
+              >
+                <Edit2 className="size-3.5" /> Editar Dados do Hotel
+              </Button>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                    <MapPin className="size-3" /> Endereço
+                  </span>
+                  <p className="font-semibold text-slate-700 dark:text-slate-200">
+                    {roadbookData?.hotel_endereco || "Não informado"}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                    <Phone className="size-3" /> Telefone / Contato
+                  </span>
+                  <p className="font-semibold text-slate-700 dark:text-slate-200">
+                    {roadbookData?.hotel_telefone || "Não informado"}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                    <Clock className="size-3" /> Check-in
+                  </span>
+                  <p className="font-semibold text-slate-700 dark:text-slate-200">
+                    {roadbookData?.hotel_checkin ? new Date(roadbookData.hotel_checkin + "T00:00:00").toLocaleDateString("pt-BR") : "A definir"}
+                    {roadbookData?.hotel_checkin_hora ? ` às ${roadbookData.hotel_checkin_hora}` : ""}
+                  </p>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/5 space-y-1">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 flex items-center gap-1">
+                    <Clock className="size-3" /> Check-out
+                  </span>
+                  <p className="font-semibold text-slate-700 dark:text-slate-200">
+                    {roadbookData?.hotel_checkout ? new Date(roadbookData.hotel_checkout + "T00:00:00").toLocaleDateString("pt-BR") : "A definir"}
+                    {roadbookData?.hotel_checkout_hora ? ` às ${roadbookData.hotel_checkout_hora}` : ""}
+                  </p>
+                </div>
+              </div>
+
+              {(() => {
+                const obs = (roadbookData?.automacoes as any)?.info_hotel?.observacoes || (roadbookData as any)?.hotel_observacoes;
+                if (!obs) return null;
+                return (
+                  <div className="mt-4 p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 text-xs text-amber-800 dark:text-amber-200">
+                    <span className="font-bold">Observações de Hospedagem: </span>
+                    {obs}
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+
           <Card className="border-0 shadow-[0_4px_25px_rgb(0,0,0,0.03)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] bg-white dark:bg-card/40 dark:backdrop-blur-xl dark:border dark:border-white/10 rounded-[2rem] overflow-hidden relative">
             <CardHeader className="relative z-10 border-b border-slate-100 dark:border-white/5 pb-5 flex flex-col sm:flex-row justify-between gap-4 items-center bg-slate-50/50">
               <div className="flex items-center gap-3">
@@ -324,6 +537,112 @@ function RoomingListPage() {
           </Card>
         </div>
       )}
+
+      {/* Modal de Edição de Hotel (2-Way Sync com Roadbook) */}
+      <Dialog open={hotelModalOpen} onOpenChange={setHotelModalOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Hotel className="size-5 text-primary" />
+              Editar Dados da Hospedagem
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSaveHotel} className="space-y-4 py-2">
+            <p className="text-xs text-slate-500">
+              As alterações feitas aqui atualizam imediatamente o <strong>Guia de Viagem (Roadbook)</strong> deste evento.
+            </p>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold">Nome do Hotel</Label>
+              <Input
+                value={hotelForm.hotel_nome}
+                onChange={e => setHotelForm({ ...hotelForm, hotel_nome: e.target.value })}
+                placeholder="Ex: Ibis Curitiba Centro"
+                className="h-10 text-xs font-semibold"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Endereço Completo</Label>
+                <Input
+                  value={hotelForm.hotel_endereco}
+                  onChange={e => setHotelForm({ ...hotelForm, hotel_endereco: e.target.value })}
+                  placeholder="Rua, número, bairro"
+                  className="h-10 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Telefone / Recepção</Label>
+                <Input
+                  value={hotelForm.hotel_telefone}
+                  onChange={e => setHotelForm({ ...hotelForm, hotel_telefone: e.target.value })}
+                  placeholder="(00) 0000-0000"
+                  className="h-10 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Data Check-in</Label>
+                <Input
+                  type="date"
+                  value={hotelForm.hotel_checkin}
+                  onChange={e => setHotelForm({ ...hotelForm, hotel_checkin: e.target.value })}
+                  className="h-10 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Horário Check-in</Label>
+                <Input
+                  type="time"
+                  value={hotelForm.hotel_checkin_hora}
+                  onChange={e => setHotelForm({ ...hotelForm, hotel_checkin_hora: e.target.value })}
+                  className="h-10 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Data Check-out</Label>
+                <Input
+                  type="date"
+                  value={hotelForm.hotel_checkout}
+                  onChange={e => setHotelForm({ ...hotelForm, hotel_checkout: e.target.value })}
+                  className="h-10 text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Horário Check-out</Label>
+                <Input
+                  type="time"
+                  value={hotelForm.hotel_checkout_hora}
+                  onChange={e => setHotelForm({ ...hotelForm, hotel_checkout_hora: e.target.value })}
+                  className="h-10 text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">Observações de Hospedagem (Café da manhã, Wi-Fi, etc.)</Label>
+              <Input
+                value={hotelForm.hotel_observacoes}
+                onChange={e => setHotelForm({ ...hotelForm, hotel_observacoes: e.target.value })}
+                placeholder="Ex: Café incluso das 06h às 10h. Estacionamento gratuito."
+                className="h-10 text-xs"
+              />
+            </div>
+
+            <div className="pt-3 flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => setHotelModalOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={savingHotel} className="font-bold">
+                {savingHotel ? "Salvando..." : "Salvar e Sincronizar Hotel"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>

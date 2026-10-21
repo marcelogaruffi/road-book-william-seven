@@ -6,14 +6,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { CurrencyInput } from "@/components/CurrencyInput";
-
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X, ClipboardList, Lightbulb, Mic2, MessageSquareText, Loader2, Megaphone } from 'lucide-react';
+import { Calendar, MapPin, Clock, Edit, Trash2, Plus, Users, Save, X, ClipboardList, Lightbulb, Mic2, MessageSquareText, Loader2, Megaphone, DollarSign, ArrowRight } from 'lucide-react';
 import { LogoPicker } from '@/components/LogoPicker';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from "sonner";
 import { Route as AuthedRoute } from "./route";
 import RiderViewModal from "@/components/RiderViewModal";
@@ -35,12 +32,7 @@ type Evento = {
   equipe: string[];
   produtora_nome?: string | null;
   produtora_logo_url?: string | null;
-};
-
-type Profile = {
-  id: string;
-  nome: string;
-  role: string;
+  apresentacoes?: any[];
 };
 
 type Tour = {
@@ -53,7 +45,6 @@ function EventosComponent() {
   const role = profile?.role || null;
   const [eventos, setEventos] = useState<Evento[]>([]);
   const [tours, setTours] = useState<Tour[]>([]);
-  const [profissionais, setProfissionais] = useState<Profile[]>([]);
   const [templatesEspetaculos, setTemplatesEspetaculos] = useState<string[]>([]);
   const [logosEspetaculos, setLogosEspetaculos] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -64,7 +55,7 @@ function EventosComponent() {
   const [editingId, setEditingId] = useState<string | null>(null);
   
   // Form states
-    const [cidade, setCidade] = useState('');
+  const [cidade, setCidade] = useState('');
   const [turneId, setTurneId] = useState('');
   const [produtoraNome, setProdutoraNome] = useState('');
   const [produtoraLogoUrl, setProdutoraLogoUrl] = useState('');
@@ -74,20 +65,7 @@ function EventosComponent() {
   const [horario, setHorario] = useState('');
   const [local, setLocal] = useState('');
   const [espetaculo, setEspetaculo] = useState('');
-  const [escalasAtuais, setEscalasAtuais] = useState<{usuario_id: string, funcao: string}[]>([]);
-  const [escalasOriginais, setEscalasOriginais] = useState<{usuario_id: string, funcao: string}[]>([]);
-  // Compute derived state for easy lookup
-  const equipe = Array.from(new Set(escalasAtuais.map(e => e.usuario_id)));
-  const [caches, setCaches] = useState<Record<string, string>>({});
-  const [showCachesDialog, setShowCachêesDialog] = useState(false);
-  const [searchEquipe, setSearchEquipe] = useState('');
-  const [permitirSms, setPermitirSms] = useState(false);
-
-  // SMS Dialog states
-  const [showSmsDialog, setShowSmsDialog] = useState(false);
-  const [smsMembersToNotify, setSmsMembersToNotify] = useState<string[]>([]);
-  const [smsMessage, setSmsMessage] = useState('');
-  const [sendingSms, setSendingSms] = useState(false);
+  const [apresentacoesList, setApresentacoesList] = useState<any[]>([{ data: "", horario: "", local: "" }]);
 
   // Rider dialog states
   const [openRiderDialog, setOpenRiderDialog] = useState(false);
@@ -95,9 +73,6 @@ function EventosComponent() {
   const [currentRiderSom, setCurrentRiderSom] = useState<any>(null);
   const [currentRiderLuz, setCurrentRiderLuz] = useState<any>(null);
   const [currentEventName, setCurrentEventName] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [escalas, setEscalas] = useState<any[]>([]);
-  const [apresentacoesList, setApresentacoesList] = useState<any[]>([{ data: "", horario: "", local: "" }]);
 
   useEffect(() => {
     if (turneId && turneId !== 'none') {
@@ -115,31 +90,30 @@ function EventosComponent() {
 
   const loadData = async () => {
     setLoading(true);
-    const [evRes, trRes, profRes, tempRes, confRes, escRes, aprRes] = await Promise.all([
+    const [evRes, trRes, tempRes, aprRes] = await Promise.all([
       supabase.from('eventos').select('*').order('data', { ascending: true }),
       supabase.from('tours').select('id, nome').order('created_at', { ascending: false }),
-      supabase.from('profiles').select('id, nome, role, funcoes, caches_padrao').in('role', ['admin', 'dev', 'produtor', 'motorista', 'tecnico_som', 'iluminador', 'elenco', 'stage_manager', 'contra_regra', 'assistente_producao', 'camareiro', 'musico', 'tour_manager', 'roadie', 'cenotecnico', 'tecnico_video', 'rigger']),
       supabase.from('templates_espetaculos').select('nome_espetaculo, logo_espetaculo_url').neq('nome_espetaculo', 'ESTOQUE_GLOBAL'),
-      supabase.from('configuracoes_sistema').select('permitir_sms_escala').eq('id', 1).maybeSingle(),
-      supabase.from('evento_escalas').select('*'),
-        supabase.from('evento_apresentacoes').select('*')
+      supabase.from('evento_apresentacoes').select('*')
     ]);
 
     if (evRes.data) {
       let finalEv = evRes.data;
-        const allAps = aprRes?.data || [];
-        finalEv = finalEv.map(e => ({ ...e, apresentacoes: allAps.filter(a => a.evento_id === e.id).sort((a,b) => {
+      const allAps = aprRes?.data || [];
+      finalEv = finalEv.map(e => ({ 
+        ...e, 
+        apresentacoes: allAps.filter(a => a.evento_id === e.id).sort((a,b) => {
           const tA = new Date((a.data||'2000-01-01') + 'T' + (a.horario||'00:00'));
           const tB = new Date((b.data||'2000-01-01') + 'T' + (b.horario||'00:00'));
           return tA.getTime() - tB.getTime();
-        }) }));
+        }) 
+      }));
       if (isSimulating && profile && !['admin', 'dev', 'produtor'].includes(profile.role)) {
         finalEv = finalEv.filter(e => ((e.equipe as string[]) || []).includes(profile.id));
       }
       setEventos(finalEv as any);
     }
     if (trRes.data) setTours(trRes.data);
-    if (profRes.data) setProfissionais(profRes.data);
     if (tempRes.data) {
       setTemplatesEspetaculos(tempRes.data.map(t => t.nome_espetaculo));
       const logos: Record<string, string> = {};
@@ -148,8 +122,6 @@ function EventosComponent() {
       });
       setLogosEspetaculos(logos);
     }
-    if (confRes?.data) setPermitirSms(confRes.data.permitir_sms_escala);
-    if (escRes?.data) setEscalas(escRes.data);
     setLoading(false);
   };
 
@@ -168,16 +140,11 @@ function EventosComponent() {
     setHorario('');
     setLocal('');
     setEspetaculo('');
-    setEscalasAtuais([]);
-    setEscalasOriginais([]);
-      setApresentacoesList([{ data: '', horario: '', local: '' }]);
-    
-    setSearchEquipe('');
-    setShowDropdown(false);
+    setApresentacoesList([{ data: '', horario: '', local: '' }]);
     setOpenDialog(true);
   };
 
-  const handleOpenEdit = async (ev: Evento) => {
+  const handleOpenEdit = (ev: Evento) => {
     setEditingId(ev.id);
     setCidade(ev.cidade);
     setTurneId(ev.turne_id || '');
@@ -189,46 +156,7 @@ function EventosComponent() {
     setEspetaculo(ev.espetaculo);
     setProdutoraNome(ev.produtora_nome || '');
     setProdutoraLogoUrl(ev.produtora_logo_url || '');
-    setShowDropdown(false);
-    
-    setCaches({});
-    
-    let novasEscalas: {usuario_id: string, funcao: string}[] = [];
-    if (['admin', 'dev', 'produtor'].includes(role || '')) {
-       const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', ev.id).neq('status', 'recusada');
-       if (escData && escData.length > 0) {
-         const { data: cacheData } = await supabase.from('evento_escalas_financeiro').select('escala_id, cache_valor').in('escala_id', escData.map(e => e.id));
-         const cMap: any = {};
-         escData.forEach(e => {
-           if (e.funcao && profissionais.some(p => p.id === e.usuario_id)) {
-             novasEscalas.push({ usuario_id: e.usuario_id, funcao: e.funcao });
-             const c = cacheData?.find(x => x.escala_id === e.id);
-             if (c && c.cache_valor > 0) {
-               cMap[`${e.usuario_id}_${e.funcao}`] = c.cache_valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-             }
-           }
-         });
-         setCaches(cMap);
-       } else if (ev.equipe && ev.equipe.length > 0) {
-         // Fallback for old events without scales
-         novasEscalas = ev.equipe
-           .filter(uid => profissionais.some(p => p.id === uid))
-           .map(uid => {
-             const p = profissionais.find(pr => pr.id === uid);
-             return { usuario_id: uid, funcao: p?.role || 'user' };
-           });
-       }
-    } else {
-       if (ev.equipe && ev.equipe.length > 0) {
-         novasEscalas = ev.equipe
-           .filter(uid => profissionais.some(p => p.id === uid))
-           .map(uid => ({ usuario_id: uid, funcao: 'user' }));
-       }
-    }
-    setEscalasAtuais(novasEscalas);
-    setEscalasOriginais([...novasEscalas]);
-      setApresentacoesList(ev.apresentacoes && ev.apresentacoes.length > 0 ? ev.apresentacoes : [{ data: ev.data || '', horario: ev.horario || '', local: ev.local || '' }]);
-    
+    setApresentacoesList(ev.apresentacoes && ev.apresentacoes.length > 0 ? ev.apresentacoes : [{ data: ev.data || '', horario: ev.horario || '', local: ev.local || '' }]);
     setOpenDialog(true);
   };
 
@@ -262,16 +190,14 @@ function EventosComponent() {
     }
   };
 
-
-
   const handleSave = async () => {
     // Sort apresentacoes
     if (apresentacoesList.length > 0) {
-       apresentacoesList.sort((a,b) => {
-         const tA = new Date((a.data||'2000-01-01') + 'T' + (a.horario||'00:00'));
-         const tB = new Date((b.data||'2000-01-01') + 'T' + (b.horario||'00:00'));
-         return tA.getTime() - tB.getTime();
-       });
+      apresentacoesList.sort((a,b) => {
+        const tA = new Date((a.data||'2000-01-01') + 'T' + (a.horario||'00:00'));
+        const tB = new Date((b.data||'2000-01-01') + 'T' + (b.horario||'00:00'));
+        return tA.getTime() - tB.getTime();
+      });
     }
     
     const finalData = apresentacoesList.length > 0 ? apresentacoesList[0].data : dataApres;
@@ -283,7 +209,7 @@ function EventosComponent() {
       return;
     }
 
-    const payload = {
+    const payload: any = {
       cidade,
       produtora_nome: produtoraNome || null,
       produtora_logo_url: produtoraLogoUrl || null,
@@ -293,11 +219,10 @@ function EventosComponent() {
       data: finalData,
       horario: finalHorario,
       local: finalLocal,
-      espetaculo,
-      equipe
+      espetaculo
     };
 
-  let error;
+    let error;
     let savedEventId = editingId;
     if (editingId) {
       const res = await supabase.from('eventos').update(payload).eq('id', editingId);
@@ -312,138 +237,39 @@ function EventosComponent() {
     if (error) {
       toast.error(getErrorMessage(error));
     } else {
-      
-        // Save Apresentacoes
-        if (savedEventId) {
-          const { data: currentAps } = await supabase.from('evento_apresentacoes').select('id').eq('evento_id', savedEventId);
-          const currentIds = (currentAps || []).map((a:any) => a.id);
-          const keepIds = apresentacoesList.map(a => a.id).filter(Boolean);
-          const toDelete = currentIds.filter((id:any) => !keepIds.includes(id));
-          
-          if (toDelete.length > 0) {
-            await supabase.from('evento_apresentacoes').delete().in('id', toDelete);
-          }
-
-          const toUpsert = apresentacoesList.map((a) => ({
-             id: a.id || undefined,
-             evento_id: savedEventId,
-             data: a.data,
-             horario: a.horario,
-             local: a.local
-          }));
-          
-          if (toUpsert.length > 0) {
-             const { data: upsertedAps, error: upsertErr } = await supabase.from('evento_apresentacoes').upsert(toUpsert.map(u => ({...u, id: u.id || crypto.randomUUID()}))).select();
-             if (upsertErr) { toast.error('Erro no BD (Apresentacoes): ' + upsertErr.message); console.error(upsertErr); return; }
-             
-             const numAps = upsertedAps ? upsertedAps.length : 1;
-             
-             // Multiply Scales!
-             const removedEscalas = escalasOriginais.filter(eo => !escalasAtuais.some(ea => ea.usuario_id === eo.usuario_id && ea.funcao === eo.funcao));
-             if (removedEscalas.length > 0) {
-                for (const re of removedEscalas) {
-                   await supabase.from('evento_escalas').delete().match({ evento_id: savedEventId, usuario_id: re.usuario_id, funcao: re.funcao });
-                }
-             }
-
-             for (const ea of escalasAtuais) {
-                const { data: existingScales } = await supabase.from('evento_escalas').select('id').match({ evento_id: savedEventId, usuario_id: ea.usuario_id, funcao: ea.funcao });
-                const currentCount = existingScales ? existingScales.length : 0;
-                
-                if (currentCount < numAps) {
-                   const toAdd = numAps - currentCount;
-                   const insertData = Array(toAdd).fill({
-                      evento_id: savedEventId,
-                      usuario_id: ea.usuario_id,
-                      funcao: ea.funcao,
-                      
-                      status: 'pendente'
-                   });
-                   await supabase.from('evento_escalas').insert(insertData);
-                   
-                   // Notificacao para o profissional recem-escalado
-                   if (currentCount === 0) {
-                      await supabase.from('notificacoes').insert({
-                         usuario_id: ea.usuario_id,
-                         titulo: 'Nova Escala! 🎬',
-                         mensagem: `Você foi escalado(a) como ${(ea.funcao || 'membro da equipe').replace(/_/g, ' ')} no evento: ${espetaculo}${cidade ? ' em ' + cidade : ''}.`,
-                         tipo: 'escala',
-                         link: '/minhas-escalas'
-                      });
-                   }
-                } else if (currentCount > numAps) {
-                   const toRemove = currentCount - numAps;
-                   if (existingScales && existingScales.length >= toRemove) {
-                      const idsToRemove = existingScales.slice(0, toRemove).map((x:any) => x.id);
-                      await supabase.from('evento_escalas').delete().in('id', idsToRemove);
-                   }
-                }
-             }
-          }
-        }
-
-        toast.success('Evento salvo com sucesso.');
-        setOpenDialog(false);
-        loadData();
+      // Save Apresentacoes
+      if (savedEventId) {
+        const { data: currentAps } = await supabase.from('evento_apresentacoes').select('id').eq('evento_id', savedEventId);
+        const currentIds = (currentAps || []).map((a:any) => a.id);
+        const keepIds = apresentacoesList.map(a => a.id).filter(Boolean);
+        const toDelete = currentIds.filter((id:any) => !keepIds.includes(id));
         
-        // Update Financials for ALL current scales (since cache might have changed)
-      if (['admin', 'dev', 'produtor'].includes(role || '') && savedEventId) {
-        const { data: escData } = await supabase.from('evento_escalas').select('id, usuario_id, funcao').eq('evento_id', savedEventId).neq('status', 'recusada');
-        if (escData) {
-          const financeiroUpserts = escData.map(esc => {
-            const valStr = caches[`${esc.usuario_id}_${esc.funcao}`] || '0';
-            const val = parseFloat(valStr.replace(/\./g, '').replace(',', '.')) || 0;
-            return {
-              escala_id: esc.id,
-              cache_valor: val
-            };
-          });
-          if (financeiroUpserts.length > 0) {
-            await supabase.from('evento_escalas_financeiro').upsert(financeiroUpserts);
+        if (toDelete.length > 0) {
+          await supabase.from('evento_apresentacoes').delete().in('id', toDelete);
+        }
+
+        const toUpsert = apresentacoesList.map((a) => ({
+          id: a.id || undefined,
+          evento_id: savedEventId,
+          data: a.data,
+          horario: a.horario,
+          local: a.local
+        }));
+        
+        if (toUpsert.length > 0) {
+          const { error: upsertErr } = await supabase.from('evento_apresentacoes').upsert(toUpsert.map(u => ({...u, id: u.id || crypto.randomUUID()})));
+          if (upsertErr) { 
+            toast.error('Erro no BD (Apresentacoes): ' + upsertErr.message); 
+            console.error(upsertErr); 
+            return; 
           }
         }
       }
-    }
-  };
 
-  const handleSendSms = async (members: string[], customMessage: string) => {
-    setSendingSms(true);
-    const { data, error } = await supabase.rpc('send_sms_notification', {
-      profile_ids: members,
-      sms_body: customMessage
-    });
-    setSendingSms(false);
-    
-    if (error) {
-      toast.error("Erro ao enviar SMS: " + getErrorMessage(error));
-    } else {
-      const result: any = data;
-      if (result.success > 0) {
-        toast.success(`SMS enviado com sucesso para ${result.success} pessoa(s).`);
-      }
-      if (result.failed_no_phone > 0) {
-        toast.warning(`${result.failed_no_phone} pessoa(s) não tinham telefone cadastrado.`);
-      }
-      if (result.failed_api > 0) {
-        if (result.last_api_error) {
-          toast.error(`Falha no Twilio: ${result.last_api_error}`);
-          console.error("Twilio Error:", result.last_api_error);
-        } else {
-          toast.error(`Falha ao enviar para ${result.failed_api} pessoa(s) (Verifique o saldo do Twilio ou os números autorizados no modo Trial).`);
-        }
-      }
-      setShowSmsDialog(false);
+      toast.success('Evento salvo com sucesso.');
+      setOpenDialog(false);
+      loadData();
     }
-  };
-
-  const notifyAll = (ev: Evento) => {
-    if (!ev.equipe || ev.equipe.length === 0) {
-      toast.warning('Este evento não possui equipe escalada.');
-      return;
-    }
-    setSmsMembersToNotify(ev.equipe);
-    setSmsMessage(`Lembrete: O espetáculo ${ev.espetaculo} em ${ev.cidade} será dia ${new Date(ev.data + 'T12:00:00Z').toLocaleDateString('pt-BR')}.`);
-    setShowSmsDialog(true);
   };
 
   const handleViewRider = async (ev: Evento) => {
@@ -464,28 +290,6 @@ function EventosComponent() {
     setLoadingRider(false);
   };
 
-  const toggleEquipe = (id: string, funcao: string) => {
-    setEscalasAtuais(prev => {
-      const exists = prev.some(e => e.usuario_id === id && e.funcao === funcao);
-      if (exists) {
-        // Remove scale
-        setCaches(c => { const nc = { ...c }; delete nc[`${id}_${funcao}`]; return nc; });
-        return prev.filter(e => !(e.usuario_id === id && e.funcao === funcao));
-      } else {
-        // Add scale
-        const prof = profissionais.find(p => p.id === id);
-        if (prof && prof.caches_padrao) {
-          const baseCaches = typeof prof.caches_padrao === 'object' && prof.caches_padrao !== null ? prof.caches_padrao : {};
-          const cacheVal = baseCaches[funcao] ? baseCaches[funcao] : null;
-          if (cacheVal) {
-            setCaches(c => ({ ...c, [`${id}_${funcao}`]: cacheVal }));
-          }
-        }
-        return [...prev, { usuario_id: id, funcao }];
-      }
-    });
-  };
-
   const getTourName = (id: string | null) => tours.find(t => t.id === id)?.nome || 'Sem turnê vinculada';
   const fmtDate = (d: string) => d ? new Date(d + 'T12:00:00Z').toLocaleDateString('pt-BR') : '';
 
@@ -493,7 +297,7 @@ function EventosComponent() {
   const proximos = eventos.filter(e => (e.data_fim || e.data) >= hoje);
   const realizados = eventos.filter(e => (e.data_fim || e.data) < hoje).reverse();
 
-              const renderEventoCard = (ev: Evento) => {
+  const renderEventoCard = (ev: Evento) => {
     let monthStr = '';
     let dayStr = '';
     if (ev.data) {
@@ -548,7 +352,7 @@ function EventosComponent() {
           </div>
           
           <div className="mt-4 pt-3 border-t border-[var(--border)] flex justify-between items-center flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <span className="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md flex items-center gap-1">
                 <Users className="size-3" /> {ev.equipe?.length || 0}
               </span>
@@ -566,11 +370,6 @@ function EventosComponent() {
             
             {canEdit && (
               <div className="flex gap-1">
-                {permitirSms && (
-                  <Button variant="ghost" size="icon" onClick={() => notifyAll(ev)} className="h-8 w-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg" title="Notificar via SMS">
-                    <Mic2 className="size-4" />
-                  </Button>
-                )}
                 <Button variant="ghost" size="icon" onClick={() => { setViewMode(false); handleOpenEdit(ev); }} className="h-8 w-8 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg" title="Editar">
                   <Edit className="size-4" />
                 </Button>
@@ -591,7 +390,7 @@ function EventosComponent() {
         <div>
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Eventos e Apresentações</h1>
           <p className="text-slate-500 mt-2">
-            Cadastre datas, locais e apresentações e organize as equipes dos seus eventos.
+            Cadastre datas, locais e sessões dos seus eventos e espetáculos.
           </p>
         </div>
         {canEdit && (
@@ -611,7 +410,7 @@ function EventosComponent() {
           <div>
             <h3 className="text-xl font-bold text-slate-800 dark:text-white">Nenhum evento cadastrado ainda</h3>
             <p className="text-slate-500 max-w-md mx-auto mt-1 text-sm">
-              Cadastre seu primeiro evento para gerenciar apresentações, locais, datas e escalar a equipe técnica e artística.
+              Cadastre seu primeiro evento para gerenciar apresentações, locais e datas.
             </p>
           </div>
           {canEdit && (
@@ -626,8 +425,8 @@ function EventosComponent() {
             <div>
               <h3 className="text-2xl font-black text-slate-800 dark:text-white mb-6">Próximos Eventos</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {proximos.map(renderEventoCard)}
-            </div>
+                {proximos.map(renderEventoCard)}
+              </div>
             </div>
           ) : (
             <div className="text-center py-10 bg-white dark:bg-card/50 rounded-3xl border border-slate-100 dark:border-white/5">
@@ -642,8 +441,8 @@ function EventosComponent() {
                 <div className="h-px flex-1 bg-slate-200 dark:bg-white/10"></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 opacity-90">
-              {realizados.map(renderEventoCard)}
-            </div>
+                {realizados.map(renderEventoCard)}
+              </div>
             </div>
           )}
         </div>
@@ -653,17 +452,17 @@ function EventosComponent() {
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2rem]">
           <DialogHeader>
-              <div className="flex items-center justify-between pr-4">
-                <DialogTitle className="text-2xl font-black">
-                  {viewMode ? 'Informações do Evento' : (editingId ? 'Editar Evento' : 'Novo Evento')}
-                </DialogTitle>
-                {viewMode && canEdit && (
-                  <Button variant="outline" size="sm" onClick={() => setViewMode(false)} className="rounded-lg font-bold h-8 px-3 text-indigo-600 border-indigo-200 hover:bg-indigo-50 shadow-sm mt-1">
-                    <Edit className="size-3.5 mr-1" /> Editar
-                  </Button>
-                )}
-              </div>
-            </DialogHeader>
+            <div className="flex items-center justify-between pr-4">
+              <DialogTitle className="text-2xl font-black">
+                {viewMode ? 'Informações do Evento' : (editingId ? 'Editar Evento' : 'Novo Evento')}
+              </DialogTitle>
+              {viewMode && canEdit && (
+                <Button variant="outline" size="sm" onClick={() => setViewMode(false)} className="rounded-lg font-bold h-8 px-3 text-indigo-600 border-indigo-200 hover:bg-indigo-50 shadow-sm mt-1">
+                  <Edit className="size-3.5 mr-1" /> Editar
+                </Button>
+              )}
+            </div>
+          </DialogHeader>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 py-4">
             <div className="space-y-2 md:col-span-2">
@@ -685,7 +484,7 @@ function EventosComponent() {
               </select>
             </div>
 
-                        <div className="space-y-2 md:col-span-1">
+            <div className="space-y-2 md:col-span-1">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Produtora</Label>
               <Input disabled={viewMode} value={produtoraNome} onChange={e => setProdutoraNome(e.target.value)} placeholder="Nome da Produtora" className="h-12 rounded-xl" />
             </div>
@@ -723,48 +522,53 @@ function EventosComponent() {
               <Input disabled={viewMode} value={cidade} onChange={e => setCidade(e.target.value)} className="h-12 rounded-xl" />
             </div>
 
-            <div className="md:col-span-2 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="font-bold text-slate-700 dark:text-slate-300">Apresentações (Sessões) *</Label>
-                  {!viewMode && (
-                    <Button variant="outline" size="sm" onClick={() => setApresentacoesList([...apresentacoesList, { data: '', horario: '', local: local }])} className="h-8 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
-                      <Plus className="size-3 mr-1" /> Adicionar Apresentação
-                    </Button>
-                  )}
-                </div>
-                
-                {apresentacoesList.length === 0 && (
-                  <div className="text-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 text-sm">
-                    Clique no botão acima para adicionar datas e locais.
-                  </div>
-                )}
+            <div className="space-y-2">
+              <Label className="font-bold text-slate-700 dark:text-slate-300">Local Principal *</Label>
+              <Input disabled={viewMode} value={local} onChange={e => setLocal(e.target.value)} placeholder="Teatro, Arena ou Centro de Convenções" className="h-12 rounded-xl" />
+            </div>
 
-                <div className="space-y-3">
-                  {apresentacoesList.map((ap, idx) => (
-                    <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 relative">
-                      <div className="flex-[0.8] space-y-1">
-                        <Label className="text-[10px] uppercase text-slate-500 font-bold">Data *</Label>
-                        <Input type="date" disabled={viewMode} value={ap.data} onChange={e => { const nl = [...apresentacoesList]; nl[idx].data = e.target.value; setApresentacoesList(nl); if (idx === 0) setDataApres(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
-                      </div>
-                      <div className="flex-[0.6] space-y-1">
-                        <Label className="text-[10px] uppercase text-slate-500 font-bold">Horário *</Label>
-                        <Input type="time" disabled={viewMode} value={ap.horario} onChange={e => { const nl = [...apresentacoesList]; nl[idx].horario = e.target.value; setApresentacoesList(nl); if (idx === 0) setHorario(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
-                      </div>
-                      <div className="flex-[1.5] space-y-1">
-                        <Label className="text-[10px] uppercase text-slate-500 font-bold">Local *</Label>
-                        <Input disabled={viewMode} value={ap.local} onChange={e => { const nl = [...apresentacoesList]; nl[idx].local = e.target.value; setApresentacoesList(nl); if (idx === 0) setLocal(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
-                      </div>
-                      {!viewMode && apresentacoesList.length > 1 && (
-                        <div className="pt-5 shrink-0">
-                          <Button variant="ghost" size="icon" onClick={() => { const nl = [...apresentacoesList]; nl.splice(idx, 1); setApresentacoesList(nl); }} className="h-10 w-10 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+            <div className="md:col-span-2 pt-4 border-t border-slate-100 dark:border-white/5 space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="font-bold text-slate-700 dark:text-slate-300">Apresentações (Sessões) *</Label>
+                {!viewMode && (
+                  <Button variant="outline" size="sm" onClick={() => setApresentacoesList([...apresentacoesList, { data: '', horario: '', local: local }])} className="h-8 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100">
+                    <Plus className="size-3 mr-1" /> Adicionar Apresentação
+                  </Button>
+                )}
               </div>
+              
+              {apresentacoesList.length === 0 && (
+                <div className="text-center p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 text-slate-500 text-sm">
+                  Clique no botão acima para adicionar datas e locais.
+                </div>
+              )}
+
+              <div className="space-y-3">
+                {apresentacoesList.map((ap, idx) => (
+                  <div key={idx} className="flex gap-2 items-center bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-800 relative">
+                    <div className="flex-[0.8] space-y-1">
+                      <Label className="text-[10px] uppercase text-slate-500 font-bold">Data *</Label>
+                      <Input type="date" disabled={viewMode} value={ap.data} onChange={e => { const nl = [...apresentacoesList]; nl[idx].data = e.target.value; setApresentacoesList(nl); if (idx === 0) setDataApres(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
+                    </div>
+                    <div className="flex-[0.6] space-y-1">
+                      <Label className="text-[10px] uppercase text-slate-500 font-bold">Horário *</Label>
+                      <Input type="time" disabled={viewMode} value={ap.horario} onChange={e => { const nl = [...apresentacoesList]; nl[idx].horario = e.target.value; setApresentacoesList(nl); if (idx === 0) setHorario(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
+                    </div>
+                    <div className="flex-[1.5] space-y-1">
+                      <Label className="text-[10px] uppercase text-slate-500 font-bold">Local *</Label>
+                      <Input disabled={viewMode} value={ap.local} onChange={e => { const nl = [...apresentacoesList]; nl[idx].local = e.target.value; setApresentacoesList(nl); if (idx === 0) setLocal(e.target.value); }} className="h-10 bg-white dark:bg-slate-900" />
+                    </div>
+                    {!viewMode && apresentacoesList.length > 1 && (
+                      <div className="pt-5 shrink-0">
+                        <Button variant="ghost" size="icon" onClick={() => { const nl = [...apresentacoesList]; nl.splice(idx, 1); setApresentacoesList(nl); }} className="h-10 w-10 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg">
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div className="space-y-2">
               <Label className="font-bold text-slate-700 dark:text-slate-300">Data de Início da Viagem</Label>
@@ -775,212 +579,23 @@ function EventosComponent() {
               <Label className="font-bold text-slate-700 dark:text-slate-300">Data de Fim da Viagem</Label>
               <Input disabled={viewMode} type="date" value={dataFim} onChange={e => setDataFim(e.target.value)} className="h-12 rounded-xl" />
             </div>
-
-            {/* EQUIPE MULTISELECT */}
-            <div className="space-y-3 md:col-span-2 pt-2 border-t mt-2">
-              <Label className="font-bold text-slate-700 dark:text-slate-300">Equipe Escalada</Label>
-              <p className="text-sm text-slate-500 -mt-2">Selecione os profissionais que terão acesso aos road books desta viagem.</p>
-              
-              <div className="relative">
-                <div 
-                  className="flex min-h-12 w-full items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background cursor-pointer hover:border-slate-400 transition-colors"
-                  onClick={() => !viewMode && setShowDropdown(!showDropdown)}
-                >
-                  <span className="text-slate-500">Adicionar profissionais...</span>
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className={`opacity-50 transition-transform ${showDropdown ? 'rotate-180' : ''}`}><path d="M4.93179 5.43179C4.75605 5.60753 4.75605 5.89245 4.93179 6.06819L7.43179 8.56819C7.60753 8.74393 7.89245 8.74393 8.06819 8.56819L10.5682 6.06819C10.7439 5.89245 10.7439 5.60753 10.5682 5.43179C10.3924 5.25605 10.1075 5.25605 9.93179 5.43179L7.5 7.86358L5.06819 5.43179C4.89245 5.25605 4.60753 5.25605 4.43179 5.43179Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
-                </div>
-                
-                {showDropdown && (
-                  <>
-                  <div className="fixed inset-0 z-[60]" onMouseDown={() => setShowDropdown(false)}></div>
-                  <div className="absolute top-full mt-2 w-full bg-white dark:bg-slate-800 border rounded-xl shadow-xl z-[70] p-3 max-h-72 overflow-y-auto flex flex-col gap-3">
-                    <Input disabled={viewMode} 
-                      id="search-equipe-input"
-                        placeholder="Buscar profissional..." 
-                        value={searchEquipe}
-                        onChange={(e) => setSearchEquipe(e.target.value)}
-                        className="bg-slate-50 dark:bg-slate-900 sticky top-0 z-10"
-                        onClick={(e) => e.stopPropagation()}
-                        autoFocus
-                      />
-                    <div className="flex flex-col gap-4">
-                      {[
-                        { key: 'admin', label: 'Administradores', roles: ['admin'] },
-                        { key: 'produtor', label: 'Produtores', roles: ['produtor'] },
-                        { key: 'elenco', label: 'Elenco', roles: ['elenco'] },
-                        { key: 'musico', label: 'Músicos', roles: ['musico'] },
-                        { key: 'stage_manager', label: 'Stage Managers', roles: ['stage_manager'] },
-                        { key: 'contra_regra', label: 'Contra-regras', roles: ['contra_regra'] },
-                        { key: 'assistente_producao', label: 'Assistentes de Produção', roles: ['assistente_producao'] },
-                        { key: 'camareiro', label: 'Camareiros', roles: ['camareiro'] },
-                        { key: 'tour_manager', label: 'Tour Managers', roles: ['tour_manager'] },
-                        { key: 'iluminador', label: 'Iluminadores', roles: ['iluminador'] },
-                        { key: 'tecnico_som', label: 'Técnicos de Som', roles: ['tecnico_som'] },
-                        { key: 'tecnico_video', label: 'Técnicos de Vídeo', roles: ['tecnico_video'] },
-                        { key: 'roadie', label: 'Roadies', roles: ['roadie'] },
-                        { key: 'cenotecnico', label: 'Cenotécnicos', roles: ['cenotecnico'] },
-                        { key: 'motorista', label: 'Motoristas', roles: ['motorista'] },
-                      ].map(group => {
-                        const groupProfs = profissionais
-                          .filter(p => {
-                             const matchesRole = group.roles.includes(p.role) || (p.funcoes && p.funcoes.some((f: string) => group.roles.includes(f)));
-                             const isAlreadyInThisFunction = escalasAtuais.some(e => e.usuario_id === p.id && e.funcao === group.roles[0]);
-                             return matchesRole && !isAlreadyInThisFunction;
-                          })
-                          .filter(p => !searchEquipe || (p.nome || '').toLowerCase().includes(searchEquipe.toLowerCase()))
-                          .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
-                          
-                        if (groupProfs.length === 0) return null;
-                        return (
-                          <div key={group.key} className="space-y-2">
-                            <h4 className="font-bold text-xs text-slate-400 uppercase tracking-wider">{group.label}</h4>
-                            <div className="flex flex-col gap-1">
-                              {groupProfs.map(p => (
-                                 <div 
-                                    key={p.id} 
-                                    onClick={() => { toggleEquipe(p.id, group.roles[0]); setSearchEquipe(''); setTimeout(() => document.getElementById('search-equipe-input')?.focus(), 10); }}
-                                    className="flex items-center justify-between p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors group"
-                                 >
-                                   <span className="font-semibold text-slate-800 dark:text-white text-sm flex items-center gap-2">
-                                     {p.nome}
-                                     <div className="flex gap-1">
-                                        {(p.funcoes && p.funcoes.length > 0 ? p.funcoes : [p.role]).map((f: string, i: number) => (
-                                          <Badge key={i} variant="outline" className="text-[9px] uppercase px-1 py-0 h-4 border-slate-300">
-                                            {f.replace('_', ' ')}
-                                          </Badge>
-                                        ))}
-                                     </div>
-                                   </span>
-                                   <Plus className="size-4 text-slate-400 group-hover:text-primary transition-colors" />
-                                 </div>
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
-                      {profissionais.filter(p => !equipe.includes(p.id)).length === 0 && (
-                        <div className="text-center p-4 text-slate-500 text-sm font-medium">Todos os profissionais já foram adicionados.</div>
-                      )}
-                    </div>
-                  </div>
-                  </>
-                )}
-              </div>
-
-              {/* Exibição dos selecionados */}
-              {escalasAtuais.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-dashed">
-                  {[...escalasAtuais]
-                    .sort((a, b) => {
-                       const pa = profissionais.find(x => x.id === a.usuario_id);
-                       const pb = profissionais.find(x => x.id === b.usuario_id);
-                       return (pa?.nome || '').localeCompare(pb?.nome || '');
-                    })
-                    .map(esc => {
-                      const p = profissionais.find(x => x.id === esc.usuario_id);
-                      if (!p) return null;
-                      const cacheKey = `${esc.usuario_id}_${esc.funcao}`;
-                      const escala = escalas.find(e => e.evento_id === editingId && e.usuario_id === esc.usuario_id && e.funcao === esc.funcao);
-                      const statusColor = escala?.status === 'aceita' ? 'bg-green-100 text-green-700 border-green-200' :
-                                          escala?.status === 'recusada' ? 'bg-red-100 text-red-700 border-red-200' :
-                                          escala?.status === 'pendente' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                                          'bg-slate-100 text-slate-700 border-slate-200';
-                      const statusLabel = escala?.status === 'aceita' ? 'Aceita' :
-                                          escala?.status === 'recusada' ? 'Recusada' :
-                                          escala?.status === 'pendente' ? 'Pendente' :
-                                          'Pendente';
-
-                      return (
-                        <div key={cacheKey} className="flex items-center justify-between p-3 rounded-xl border border-primary/20 bg-white dark:bg-card shadow-sm">
-                          <div>
-                            <p className="font-bold text-slate-800 dark:text-white text-sm flex items-center gap-2">
-                              {p.nome}
-                              <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border ${statusColor}`}>
-                                {statusLabel}
-                              </Badge>
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 mt-1">
-                              <span className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded-md uppercase font-bold">
-                                Escalado como: {esc.funcao.replace('_', ' ')}
-                              </span>
-                            </div>
-                          </div>
-                          
-                          {!viewMode && (<button onClick={() => toggleEquipe(esc.usuario_id, esc.funcao)}
-                             className="size-8 rounded-full flex items-center justify-center hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-500 text-slate-400 transition-colors"
-                          >
-                             <X className="size-4" />
-                            </button>)}
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-            </div>
           </div>
 
           <DialogFooter className="mt-4 gap-2">
-              <Button variant="outline" onClick={() => setShowCachêesDialog(true)} className="rounded-xl h-12 px-6 font-bold mr-auto bg-green-50 text-green-700 hover:bg-green-100 hover:text-green-800 border-green-200">
-                💰 Cachês da Equipe
+            {viewMode ? (
+              <Button onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-8 font-bold shadow-md bg-indigo-600 hover:bg-indigo-700 text-white">
+                Fechar
               </Button>
-              {viewMode ? (
-                <Button onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-8 font-bold shadow-md bg-indigo-600 hover:bg-indigo-700 text-white">
-                  Fechar
+            ) : (
+              <>
+                <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">
+                  Cancelar
                 </Button>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={() => setOpenDialog(false)} className="rounded-xl h-12 px-6 font-bold">
-                    Cancelar
-                  </Button>
-                  <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md">
-                    <Save className="size-4 mr-2"/> Salvar Evento
-                  </Button>
-                </>
-              )}
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* MODAL DE CACHÊS */}
-      <Dialog open={showCachesDialog} onOpenChange={setShowCachêesDialog}>
-        <DialogContent className="rounded-[2rem] p-6 max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-black">Cachês da Equipe ({equipe.length})</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 mt-4">
-            {[...escalasAtuais]
-              .sort((a, b) => {
-                 const pa = profissionais.find(x => x.id === a.usuario_id);
-                 const pb = profissionais.find(x => x.id === b.usuario_id);
-                 return (pa?.nome || '').localeCompare(pb?.nome || '');
-              })
-              .map(esc => {
-                const p = profissionais.find(x => x.id === esc.usuario_id);
-                if (!p) return null;
-                const cacheKey = `${esc.usuario_id}_${esc.funcao}`;
-                return (
-                  <div key={cacheKey} className="flex items-center justify-between p-3 border rounded-xl bg-slate-50 dark:bg-slate-900/50">
-                    <div>
-                      <p className="font-bold text-sm">{p.nome}</p>
-                      <p className="text-xs text-slate-500 uppercase font-semibold">
-                        {esc.funcao.replace('_', ' ')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-slate-400">R$</span>
-                      <CurrencyInput 
-                        className="w-28 h-9 font-bold text-right bg-white dark:bg-slate-900"
-                        value={caches[cacheKey] || ''}
-                        onChange={(val) => setCaches({...caches, [cacheKey]: val})}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-              {escalasAtuais.length === 0 && <p className="text-slate-500 text-center text-sm py-4">Nenhum profissional selecionado.</p>}
-          </div>
-          <DialogFooter className="mt-4">
-            <Button onClick={() => setShowCachêesDialog(false)} className="w-full h-12 rounded-xl font-bold">Concluído</Button>
+                <Button onClick={handleSave} className="rounded-xl h-12 px-8 font-bold shadow-md">
+                  <Save className="size-4 mr-2"/> Salvar Evento
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -993,40 +608,6 @@ function EventosComponent() {
         somData={currentRiderSom}
         luzData={currentRiderLuz}
       />
-
-      <Dialog open={showSmsDialog} onOpenChange={setShowSmsDialog}>
-        <DialogContent className="max-w-md w-[95vw] rounded-[2rem] p-0 overflow-hidden border-0 shadow-2xl bg-white dark:bg-slate-900">
-          <div className="bg-indigo-600 dark:bg-indigo-900 p-6 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                <MessageSquareText className="size-6" /> Notificar Equipe
-              </DialogTitle>
-              <DialogDescription className="text-indigo-100 font-medium">
-                Deseja enviar um SMS para avisar {smsMembersToNotify.length} pessoa(s) sobre a escala?
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-          
-          <div className="p-6 space-y-4">
-            <div className="space-y-2">
-              <Label className="text-slate-700 font-bold">Mensagem do SMS</Label>
-              <Textarea disabled={viewMode} 
-                value={smsMessage} 
-                onChange={(e) => setSmsMessage(e.target.value)} 
-                className="min-h-[100px] resize-none bg-slate-50 text-base"
-              />
-              <p className="text-xs text-slate-500 text-right">{smsMessage.length} caracteres</p>
-            </div>
-          </div>
-          
-          <DialogFooter className="p-6 pt-0 gap-2">
-            <Button variant="outline" onClick={() => setShowSmsDialog(false)} className="rounded-xl h-12 px-6 font-bold">Pular</Button>
-            <Button onClick={() => handleSendSms(smsMembersToNotify, smsMessage)} disabled={sendingSms} className="rounded-xl h-12 px-8 font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md">
-              {sendingSms ? <Loader2 className="size-5 animate-spin mr-2" /> : <Mic2 className="size-5 mr-2"/>} Enviar SMS
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

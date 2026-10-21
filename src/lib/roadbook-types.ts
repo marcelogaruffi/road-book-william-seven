@@ -407,6 +407,9 @@ export function normalizeExternalUrl(u: string | null | undefined): string {
 export function mapsUrl(address: string | null | undefined): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((address ?? "").trim())}`;
 }
+export function wazeUrl(address: string | null | undefined): string {
+  return `https://waze.com/ul?q=${encodeURIComponent((address ?? "").trim())}`;
+}
 
 export function progTitle(p: ProgItem): string {
   return p.titulo || p.atividade || "—";

@@ -86,20 +86,20 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
     if (!roadbookId) return;
     const nova: Partial<FinancasReceita> = { roadbook_id: roadbookId, contratante: "Novo Contratante", valor: 0, status: "pendente" };
     const { data, error } = await supabase.from("financas_receitas").insert(nova).select().single();
-    if (error) { toast.error("Erro ao adicionar"); return; }
+    if (error) { toast.error("Não foi possível adicionar a receita: " + (error.message || "verifique os dados")); return; }
     setReceitas([...receitas, data as FinancasReceita]);
   };
 
   const updateReceita = async (id: string, updates: Partial<FinancasReceita>) => {
     const { error } = await supabase.from("financas_receitas").update(updates).eq("id", id);
-    if (error) { toast.error("Erro ao atualizar"); return; }
+    if (error) { toast.error("Não foi possível salvar a receita: " + (error.message || "verifique os dados")); return; }
     setReceitas(receitas.map(r => r.id === id ? { ...r, ...updates } : r));
   };
 
   const removeReceita = async (id: string) => {
     if (!confirm("Remover receita?")) return;
     const { error } = await supabase.from("financas_receitas").delete().eq("id", id);
-    if (error) { toast.error("Erro ao remover"); return; }
+    if (error) { toast.error("Não foi possível excluir a receita: " + (error.message || "tente novamente")); return; }
     setReceitas(receitas.filter(r => r.id !== id));
   };
 
@@ -107,20 +107,20 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
     if (!roadbookId) return;
     const nova: Partial<FinancasDespesa> = { roadbook_id: roadbookId, tipo: "cache_equipe", descricao: "Nova Despesa", valor: 0, status: "pendente" };
     const { data, error } = await supabase.from("financas_despesas").insert(nova).select().single();
-    if (error) { toast.error("Erro ao adicionar"); return; }
+    if (error) { toast.error("Não foi possível adicionar a despesa: " + (error.message || "verifique os dados")); return; }
     setDespesas([...despesas, data as FinancasDespesa]);
   };
 
   const updateDespesa = async (id: string, updates: Partial<FinancasDespesa>) => {
     const { error } = await supabase.from("financas_despesas").update(updates).eq("id", id);
-    if (error) { toast.error("Erro ao atualizar"); return; }
+    if (error) { toast.error("Não foi possível salvar a despesa: " + (error.message || "verifique os dados")); return; }
     setDespesas(despesas.map(d => d.id === id ? { ...d, ...updates } : d));
   };
 
   const removeDespesa = async (id: string) => {
     if (!confirm("Remover despesa?")) return;
     const { error } = await supabase.from("financas_despesas").delete().eq("id", id);
-    if (error) { toast.error("Erro ao remover"); return; }
+    if (error) { toast.error("Não foi possível excluir a despesa: " + (error.message || "tente novamente")); return; }
     setDespesas(despesas.filter(d => d.id !== id));
   };
 
@@ -129,7 +129,7 @@ export function FinanceiroTab({ roadbookId }: { roadbookId?: string }) {
     const path = `finance/${roadbookId}/${Date.now()}-${file.name}`;
     const { error: uploadError } = await supabase.storage.from("roadbook-docs").upload(path, file);
     if (uploadError) {
-      toast.error("Erro ao subir arquivo");
+      toast.error("Não foi possível enviar o comprovante: " + (uploadError.message || "verifique o tamanho do arquivo ou formato"));
       setUploading(false);
       return;
     }

@@ -100,7 +100,7 @@ function AdminLimpeza() {
       const { error } = await supabase.storage.from('roadbook-docs').remove(paths);
       if (error) throw error;
 
-      toast.success(`${paths.length} arquivos inúteis foram excluídos com sucesso!`);
+      toast.success(`${paths.length} arquivos órfãos sem vínculo foram excluídos com sucesso!`);
       setOrphans([]);
       setScanned(false);
     } catch (err: any) {
@@ -124,7 +124,7 @@ function AdminLimpeza() {
 
       <Card className="border-0 shadow-lg rounded-[2rem] overflow-hidden">
         <CardHeader className="bg-slate-50 border-b border-slate-100">
-          <CardTitle>Scanner de Logos e Imagens Inúteis</CardTitle>
+          <CardTitle>Varredura e Otimização de Armazenamento</CardTitle>
           <CardDescription>
             Essa ferramenta vasculha a nuvem (Supabase Storage) buscando por logos que foram enviados no passado e que não estão mais vinculados a nenhum Cadastro, Evento ou Guia de Viagem.
           </CardDescription>
@@ -158,7 +158,7 @@ function AdminLimpeza() {
                 <div className="space-y-6 text-left">
                   <div className="p-6 bg-amber-50 rounded-2xl border border-amber-200">
                     <h3 className="text-xl font-bold text-amber-800 flex items-center gap-2 mb-2">
-                      <ShieldAlert className="size-5" /> Encontramos {orphans.length} arquivo(s) inútil(is)
+                      <ShieldAlert className="size-5" /> Encontramos {orphans.length} arquivo(s) desvinculado(s)
                     </h3>
                     <p className="text-amber-700 font-medium">
                       Estes arquivos estão ocupando espaço na nuvem e podem ser deletados com segurança pois não constam em nenhum registro atual do sistema.
@@ -180,7 +180,7 @@ function AdminLimpeza() {
                       disabled={deleting}
                       className="h-14 px-8 rounded-xl text-lg font-bold bg-red-500 hover:bg-red-600 text-white"
                     >
-                      {deleting ? "Limpando..." : <><Trash2 className="size-5 mr-2" /> Apagar {orphans.length} arquivos inúteis</>}
+                      {deleting ? "Limpando..." : <><Trash2 className="size-5 mr-2" /> Apagar {orphans.length} arquivos órfãos sem vínculo</>}
                     </Button>
                   </div>
                 </div>

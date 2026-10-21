@@ -253,7 +253,7 @@ function Dashboard() {
   
   async function onDelete(id: string) {
     const { error } = await supabase.from("roadbooks").delete().eq("id", id);
-    if (error) toast.error(getErrorMessage(error)); else { toast.success("Excluído"); load(); }
+    if (error) toast.error("Não foi possível excluir o Guia de Viagem: " + getErrorMessage(error)); else { toast.success("Guia de Viagem removido com sucesso!"); load(); }
     setDeleteRbId(null);
   }
 
@@ -261,7 +261,7 @@ function Dashboard() {
 
   async function onDeleteTour(id: string) {
     const { error } = await supabase.from("tours").delete().eq("id", id);
-    if (error) toast.error(getErrorMessage(error)); else { toast.success("Excluída"); load(); }
+    if (error) toast.error("Não foi possível excluir a Turnê: " + getErrorMessage(error)); else { toast.success("Turnê removida com sucesso!"); load(); }
     setDeleteTourId(null);
   }
 
@@ -287,20 +287,27 @@ function Dashboard() {
     return colors[index % colors.length];
   };
 
+  const safeTime = (t?: string, fallback = "00:00") => {
+    if (!t || typeof t !== 'string') return fallback;
+    const parts = t.trim().split(':');
+    if (parts.length < 2) return fallback;
+    return parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0');
+  };
+
   const getRoadbookStartDateTime = (rb: Roadbook): Date => {
     if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
-      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${safeTime(a.hora_inicio || a.hora, "00:00")}:00-03:00`).getTime() - new Date(`${b.data}T${safeTime(b.hora_inicio || b.hora, "00:00")}:00-03:00`).getTime());
       const firstProg = progs[0];
-      return new Date(`${firstProg.data}T${firstProg.hora_inicio || firstProg.hora || "00:00"}:00-03:00`);
+      return new Date(`${firstProg.data}T${safeTime(firstProg.hora_inicio || firstProg.hora, "00:00")}:00-03:00`);
     }
     return new Date(`${rb.data_inicial || "2000-01-01"}T00:00:00-03:00`);
   };
 
   const getRoadbookEndDateTime = (rb: Roadbook): Date => {
     if (rb.programacao && Array.isArray(rb.programacao) && rb.programacao.length > 0) {
-      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${a.hora_inicio || a.hora || "00:00"}`).getTime() - new Date(`${b.data}T${b.hora_inicio || b.hora || "00:00"}`).getTime());
+      const progs = [...rb.programacao].sort((a, b) => new Date(`${a.data}T${safeTime(a.hora_inicio || a.hora, "00:00")}:00-03:00`).getTime() - new Date(`${b.data}T${safeTime(b.hora_inicio || b.hora, "00:00")}:00-03:00`).getTime());
       const lastProg = progs[progs.length - 1];
-      return new Date(`${lastProg.data}T${lastProg.hora_fim || lastProg.hora_inicio || lastProg.hora || "23:59"}:00-03:00`);
+      return new Date(`${lastProg.data}T${safeTime(lastProg.hora_fim || lastProg.hora_inicio || lastProg.hora, "23:59")}:00-03:00`);
     }
     return new Date(`${rb.data_final || rb.data_inicial || "2000-01-01"}T23:59:59-03:00`);
   };
@@ -310,11 +317,13 @@ function Dashboard() {
   const eventosAtuais = items.filter(r => getRoadbookStartDateTime(r) <= now && getRoadbookEndDateTime(r) >= now).sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
   const futuros = items.filter(r => getRoadbookStartDateTime(r) > now).sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
 
-  const upcomingRoadbooks = items.filter(r => getRoadbookEndDateTime(r) >= now);
-  upcomingRoadbooks.sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
+  // Cidade Atual: apenas se houver viagem ocorrendo exatamente hoje/agora
+  const currentCity = eventosAtuais.length > 0 ? eventosAtuais[0].cidade : "Nenhuma viagem em andamento";
+  // Próxima Cidade: a primeira viagem futura
+  const nextCity = futuros.length > 0 ? futuros[0].cidade : "Sem viagem programada";
 
-  const currentCity = upcomingRoadbooks.length > 0 ? upcomingRoadbooks[0].cidade : "Sem viagem";
-  const nextCity = upcomingRoadbooks.length > 1 ? upcomingRoadbooks[1].cidade : "Sem viagem";
+  // Próximas viagens para exibição nos cards do dashboard
+  const upcomingRoadbooks = items.filter(r => getRoadbookEndDateTime(r) >= now).sort((a, b) => getRoadbookStartDateTime(a).getTime() - getRoadbookStartDateTime(b).getTime());
   
   const hoje = now.toISOString().split('T')[0];
   const realizados = items.filter(r => getRoadbookEndDateTime(r).getTime() < now.getTime()).sort((a, b) => getRoadbookStartDateTime(b).getTime() - getRoadbookStartDateTime(a).getTime());

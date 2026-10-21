@@ -6,11 +6,12 @@ import { signRoadbookFiles } from "@/lib/storage.functions";
 import {
   MapPin, Phone, Hotel, Theater, CalendarDays, FileText, Globe,
   MessageCircle, Users, BedDouble, CloudSun, Calendar, Sparkles, Camera, X,
-  Navigation, Droplets, Plane, Clock, Map as MapIcon, Instagram, Printer, Moon, Sun, Sunrise, Sunset
+  Navigation, Droplets, Plane, Clock, Map as MapIcon, Instagram, Printer, Moon, Sun, Sunrise, Sunset,
+  Wind, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import {
   rowToRoadbook, progTitle, progHora, TIPO_COLORS, TEATRO_FOTO_CATEGORIAS, HOTEL_FOTO_CATEGORIAS,
-  normalizeExternalUrl, mapsUrl, getDaySummary,
+  normalizeExternalUrl, mapsUrl, wazeUrl, getDaySummary,
   type ProgItem, type Documento, type Quarto, type OutroContato, type Foto, type Voo,
 } from "@/lib/roadbook-types";
 import "leaflet/dist/leaflet.css";
@@ -68,8 +69,24 @@ export const Route = createFileRoute("/rb/$slug")({
     ] };
   },
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center p-8 text-center">
-      <div><h1 className="text-2xl font-semibold">Guia de Viagem não encontrado</h1></div>
+    <div className="min-h-screen flex items-center justify-center p-8 text-center bg-slate-50 dark:bg-slate-950">
+      <div className="max-w-md w-full bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl space-y-4">
+        <div className="size-14 rounded-2xl bg-amber-500/10 text-amber-500 mx-auto flex items-center justify-center">
+          <Sparkles className="size-7" />
+        </div>
+        <h1 className="text-2xl font-extrabold text-slate-800 dark:text-slate-100">Guia de Viagem não encontrado</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+          O link acessado é antigo ou este Guia de Viagem foi desativado ou removido pela produção.
+        </p>
+        <div className="pt-2">
+          <a
+            href="/"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground shadow-sm hover:bg-primary/90 transition-all"
+          >
+            Voltar ao Início
+          </a>
+        </div>
+      </div>
     </div>
   ),
   errorComponent: ({ error }: { error: any }) => (
@@ -196,6 +213,11 @@ function getCarTime(d: number) {
 
 export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }: { r: ReturnType<typeof rowToRoadbook>; isFirst?: boolean; isConcatenated?: boolean }) {
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
   const prog: ProgItem[] = (r.programacao ?? []).slice().sort((a, b) => (a.data + (a.hora_inicio || a.hora || "")).localeCompare(b.data + (b.hora_inicio || b.hora || "")));
   const groups: Record<string, ProgItem[]> = prog.reduce((acc: Record<string, ProgItem[]>, p) => {
     const k = p.data || "—"; (acc[k] ||= []).push(p); return acc;
@@ -648,6 +670,7 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
       )}
 
       <main className="w-full max-w-3xl mx-auto px-4 sm:px-5 py-8 space-y-10 no-print overflow-x-hidden">
+        
         {/* RESUMO */}
         {r.resumo_executivo && (
           <Section title="Resumo executivo" icon={<Sparkles className="size-4" />}>
@@ -714,25 +737,110 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                 <div key={date}>
                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">{fmtDate(date)}</h3>
                   <DayWeather date={date} />
+                  <DefesaCivilAlert cidade={r.cidade} estado={r.estado} date={date} />
                   <div className="rounded-lg border divide-y bg-card mt-2">
-                    {groups[date].map((p, i) => (
-                      <div key={i} className="p-3 flex gap-3 items-start">
-                        <div className="flex flex-col gap-1 shrink-0 w-20 text-primary pt-0.5">
-                          <span className="text-xs font-mono tabular-nums font-bold">{progHora(p)}</span>
+                    {groups[date].map((p, i) => {
+                      const todayStr = currentTime.toISOString().split("T")[0];
+                      const isDateToday = date === todayStr;
+                      const startStr = p.hora_inicio || p.hora || "";
+                      let isCurrent = false;
+                      let isPast = false;
+                      let progressPct = 0;
+                      let diffMinText = "";
+                      let diffFutureText = "";
+
+                      if (isDateToday && startStr) {
+                        const [sh, sm] = startStr.split(":").map(Number);
+                        const itemStart = new Date(currentTime);
+                        itemStart.setHours(sh || 0, sm || 0, 0, 0);
+
+                        let itemEnd = new Date(itemStart);
+                        if (p.hora_fim) {
+                          const [eh, em] = p.hora_fim.split(":").map(Number);
+                          itemEnd.setHours(eh || 0, em || 0, 0, 0);
+                          if (itemEnd <= itemStart) itemEnd.setDate(itemEnd.getDate() + 1);
+                        } else {
+                          itemEnd = new Date(itemStart.getTime() + 60 * 60 * 1000);
+                        }
+
+                        const tNow = currentTime.getTime();
+                        const tStart = itemStart.getTime();
+                        const tEnd = itemEnd.getTime();
+
+                        if (tNow >= tStart && tNow <= tEnd) {
+                          isCurrent = true;
+                          const total = tEnd - tStart;
+                          progressPct = total > 0 ? Math.min(100, Math.max(8, Math.round(((tNow - tStart) / total) * 100))) : 50;
+                          const rem = Math.max(1, Math.round((tEnd - tNow) / 60000));
+                          diffMinText = rem > 60 ? `${Math.floor(rem / 60)}h ${rem % 60}m` : `${rem} min`;
+                        } else if (tNow > tEnd) {
+                          isPast = true;
+                        } else {
+                          const diffF = Math.round((tStart - tNow) / 60000);
+                          if (diffF > 0 && diffF <= 12 * 60) {
+                            diffFutureText = diffF >= 60 ? `${Math.floor(diffF / 60)}h ${diffF % 60}m` : `${diffF} min`;
+                          }
+                        }
+                      }
+
+                      return (
+                      <div 
+                        key={i} 
+                        className={`p-3.5 flex gap-3 sm:gap-4 items-start transition-all relative ${
+                          isCurrent 
+                            ? "bg-rose-50/70 dark:bg-rose-950/30 border-l-4 border-l-rose-500 shadow-xs" 
+                            : isPast 
+                            ? "opacity-60 bg-muted/20" 
+                            : "hover:bg-muted/30"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-1 shrink-0 w-20 pt-0.5">
+                          <span className={`text-xs font-mono tabular-nums font-bold ${isCurrent ? "text-rose-600 dark:text-rose-400 font-extrabold scale-105 origin-left" : isPast ? "text-muted-foreground line-through decoration-muted-foreground/40" : "text-primary"}`}>
+                            {progHora(p)}
+                          </span>
                           <HourWeather date={date} time={progHora(p)} />
                         </div>
-                        <div className="min-w-0 flex-1">
+                        <div className="min-w-0 flex-1 space-y-1">
                           <div className="flex items-start gap-2 flex-wrap">
-                            <span className="font-medium">{progTitle(p)}</span>
+                            <span className={`font-semibold text-sm ${isCurrent ? "text-rose-950 dark:text-rose-100 font-bold" : "text-foreground"}`}>
+                              {progTitle(p)}
+                            </span>
                             {p.tipo && (
-                              <span className={`text-[10px] uppercase tracking-wider border rounded px-1.5 py-0.5 ${TIPO_COLORS[p.tipo] ?? TIPO_COLORS["Outro"]}`}>{p.tipo}</span>
+                              <span className={`text-[10px] uppercase tracking-wider border rounded-md px-1.5 py-0.5 ${TIPO_COLORS[p.tipo] ?? TIPO_COLORS["Outro"]}`}>{p.tipo}</span>
+                            )}
+                            {isCurrent && (
+                              <span className="inline-flex items-center gap-1 bg-rose-500 text-white text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full shadow-xs animate-pulse">
+                                Acontecendo Agora
+                              </span>
+                            )}
+                            {diffFutureText && (
+                              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 px-1.5 py-0.5 rounded-md">
+                                Em ${diffFutureText}
+                              </span>
                             )}
                           </div>
-                          {p.local && <div className="text-sm text-muted-foreground mt-0.5">{p.local}</div>}
-                          {p.observacao && <div className="text-xs text-muted-foreground mt-1 whitespace-pre-line">{p.observacao}</div>}
+                          
+                          {isCurrent && (
+                            <div className="pt-1.5 pb-0.5">
+                              <div className="flex items-center justify-between text-[11px] font-medium text-rose-700 dark:text-rose-300 mb-1">
+                                <span>Em andamento</span>
+                                <span>Resta aprox. ${diffMinText}</span>
+                              </div>
+                              <div className="w-full bg-rose-200 dark:bg-rose-900/60 h-1.5 rounded-full overflow-hidden">
+                                <div 
+                                  className="bg-rose-500 h-full rounded-full transition-all duration-500 ease-out" 
+                                  style={{ width: `${progressPct}%` }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {p.local && <div className="text-xs text-muted-foreground flex items-center gap-1"><MapPin className="size-3 text-slate-400" />{p.local}</div>}
+                          {p.observacao && <div className="text-xs text-muted-foreground whitespace-pre-line bg-muted/30 p-2 rounded-lg mt-1">{p.observacao}</div>}
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}
@@ -793,13 +901,35 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                 </div>
               )}
               {(r.hotel_endereco || r.hotel_nome) && (
-                <a
-                  href={mapsUrl([r.hotel_nome, r.hotel_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
-                  target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-md border bg-background hover:bg-accent text-sm font-medium px-3 py-2 w-full transition-colors"
-                >
-                  <Navigation className="size-4" />📍 Abrir Hotel no Google Maps
-                </a>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                  <a
+                    href={mapsUrl([r.hotel_nome, r.hotel_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5 text-sm font-semibold px-3 py-2.5 transition-all shadow-2xs hover:scale-[1.01]"
+                  >
+                    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8z" fill="#EA4335"/>
+                      <circle cx="12" cy="10" r="3" fill="#FFFFFF"/>
+                      <path d="M12 7a3 3 0 0 0-3 3c0 .74.27 1.42.72 1.94L12 10z" fill="#4285F4"/>
+                      <path d="M12 7v3l2.28 1.94A3 3 0 0 0 15 10a3 3 0 0 0-3-3z" fill="#FBBC04"/>
+                      <path d="M9.72 11.94A3 3 0 0 0 12 13v-3l-2.28 1.94z" fill="#34A853"/>
+                    </svg>
+                    Google Maps
+                  </a>
+                  <a
+                    href={wazeUrl([r.hotel_nome, r.hotel_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-200 dark:border-cyan-800/40 bg-cyan-50/50 dark:bg-cyan-950/20 hover:bg-cyan-100/60 dark:hover:bg-cyan-900/30 text-cyan-900 dark:text-cyan-200 text-sm font-semibold px-3 py-2.5 transition-all shadow-2xs hover:scale-[1.01]"
+                  >
+                    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.5 10.5C20.5 5.25 16.25 1 11 1C5.75 1 1.5 5.25 1.5 10.5C1.5 13.88 3.25 16.85 5.92 18.52L5.27 20.87C5.1 21.49 5.65 22.04 6.27 21.87L9.18 21.05C9.77 21.23 10.37 21.33 11 21.33C11.53 21.33 12.06 21.25 12.57 21.11C12.18 20.35 11.96 19.49 11.96 18.57C11.96 15.22 14.67 12.5 18.03 12.5C19.06 12.5 20.02 12.76 20.86 13.23C20.95 12.35 21 11.43 21 10.5M8 9.5C7.17 9.5 6.5 8.83 6.5 8C6.5 7.17 7.17 6.5 8 6.5C8.83 6.5 9.5 7.17 9.5 8C9.5 8.83 8.83 9.5 8 9.5M14 9.5C13.17 9.5 12.5 8.83 12.5 8C12.5 7.17 13.17 6.5 14 6.5C14.83 6.5 15.5 7.17 15.5 8C15.5 8.83 14.83 9.5 14 9.5Z" fill="#33CCFF"/>
+                      <circle cx="18.5" cy="18.5" r="4.5" fill="#33CCFF"/>
+                      <circle cx="7" cy="20.5" r="1.5" fill="#333333"/>
+                      <circle cx="12" cy="20.5" r="1.5" fill="#333333"/>
+                    </svg>
+                    Waze
+                  </a>
+                </div>
               )}
             </div>
             {r.quartos.length > 0 && (
@@ -829,13 +959,35 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
               </div>
               {r.teatro_observacoes && <p className="text-sm text-muted-foreground whitespace-pre-line">{r.teatro_observacoes}</p>}
               {(r.teatro_endereco || r.teatro_nome) && (
-                <a
-                  href={mapsUrl([r.teatro_nome, r.teatro_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
-                  target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 rounded-md border bg-background hover:bg-accent text-sm font-medium px-3 py-2 w-full transition-colors"
-                >
-                  <Navigation className="size-4" />📍 Abrir Teatro no Google Maps
-                </a>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                  <a
+                    href={mapsUrl([r.teatro_nome, r.teatro_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5 text-sm font-semibold px-3 py-2.5 transition-all shadow-2xs hover:scale-[1.01]"
+                  >
+                    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8z" fill="#EA4335"/>
+                      <circle cx="12" cy="10" r="3" fill="#FFFFFF"/>
+                      <path d="M12 7a3 3 0 0 0-3 3c0 .74.27 1.42.72 1.94L12 10z" fill="#4285F4"/>
+                      <path d="M12 7v3l2.28 1.94A3 3 0 0 0 15 10a3 3 0 0 0-3-3z" fill="#FBBC04"/>
+                      <path d="M9.72 11.94A3 3 0 0 0 12 13v-3l-2.28 1.94z" fill="#34A853"/>
+                    </svg>
+                    Google Maps
+                  </a>
+                  <a
+                    href={wazeUrl([r.teatro_nome, r.teatro_endereco, r.cidade, r.estado].filter(Boolean).join(", "))}
+                    target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-200 dark:border-cyan-800/40 bg-cyan-50/50 dark:bg-cyan-950/20 hover:bg-cyan-100/60 dark:hover:bg-cyan-900/30 text-cyan-900 dark:text-cyan-200 text-sm font-semibold px-3 py-2.5 transition-all shadow-2xs hover:scale-[1.01]"
+                  >
+                    <svg className="size-4 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20.5 10.5C20.5 5.25 16.25 1 11 1C5.75 1 1.5 5.25 1.5 10.5C1.5 13.88 3.25 16.85 5.92 18.52L5.27 20.87C5.1 21.49 5.65 22.04 6.27 21.87L9.18 21.05C9.77 21.23 10.37 21.33 11 21.33C11.53 21.33 12.06 21.25 12.57 21.11C12.18 20.35 11.96 19.49 11.96 18.57C11.96 15.22 14.67 12.5 18.03 12.5C19.06 12.5 20.02 12.76 20.86 13.23C20.95 12.35 21 11.43 21 10.5M8 9.5C7.17 9.5 6.5 8.83 6.5 8C6.5 7.17 7.17 6.5 8 6.5C8.83 6.5 9.5 7.17 9.5 8C9.5 8.83 8.83 9.5 8 9.5M14 9.5C13.17 9.5 12.5 8.83 12.5 8C12.5 7.17 13.17 6.5 14 6.5C14.83 6.5 15.5 7.17 15.5 8C15.5 8.83 14.83 9.5 14 9.5Z" fill="#33CCFF"/>
+                      <circle cx="18.5" cy="18.5" r="4.5" fill="#33CCFF"/>
+                      <circle cx="7" cy="20.5" r="1.5" fill="#333333"/>
+                      <circle cx="12" cy="20.5" r="1.5" fill="#333333"/>
+                    </svg>
+                    Waze
+                  </a>
+                </div>
               )}
             </div>
             <PhotoGallery fotos={r.teatro_fotos} label="Fotos do teatro" categorias={TEATRO_FOTO_CATEGORIAS} onOpen={(f, all, i) => setLightbox({ item: f, allItems: all, index: i })} />
@@ -887,13 +1039,33 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                     )}
 
                     {l.endereco && (
-                      <div className="pt-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
                         <a
                           href={mapsUrl([l.nome, l.endereco].filter(Boolean).join(", "))}
                           target="_blank" rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-2 rounded-md border bg-background hover:bg-accent text-xs font-semibold px-3 py-2 w-full transition-colors"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5 text-xs font-semibold px-3 py-2 transition-all shadow-2xs hover:scale-[1.01]"
                         >
-                          <Navigation className="size-3.5" />📍 Abrir no Google Maps
+                          <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8z" fill="#EA4335"/>
+                            <circle cx="12" cy="10" r="3" fill="#FFFFFF"/>
+                            <path d="M12 7a3 3 0 0 0-3 3c0 .74.27 1.42.72 1.94L12 10z" fill="#4285F4"/>
+                            <path d="M12 7v3l2.28 1.94A3 3 0 0 0 15 10a3 3 0 0 0-3-3z" fill="#FBBC04"/>
+                            <path d="M9.72 11.94A3 3 0 0 0 12 13v-3l-2.28 1.94z" fill="#34A853"/>
+                          </svg>
+                          Google Maps
+                        </a>
+                        <a
+                          href={wazeUrl([l.nome, l.endereco].filter(Boolean).join(", "))}
+                          target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-200 dark:border-cyan-800/40 bg-cyan-50/50 dark:bg-cyan-950/20 hover:bg-cyan-100/60 dark:hover:bg-cyan-900/30 text-cyan-900 dark:text-cyan-200 text-xs font-semibold px-3 py-2 transition-all shadow-2xs hover:scale-[1.01]"
+                        >
+                          <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.5 10.5C20.5 5.25 16.25 1 11 1C5.75 1 1.5 5.25 1.5 10.5C1.5 13.88 3.25 16.85 5.92 18.52L5.27 20.87C5.1 21.49 5.65 22.04 6.27 21.87L9.18 21.05C9.77 21.23 10.37 21.33 11 21.33C11.53 21.33 12.06 21.25 12.57 21.11C12.18 20.35 11.96 19.49 11.96 18.57C11.96 15.22 14.67 12.5 18.03 12.5C19.06 12.5 20.02 12.76 20.86 13.23C20.95 12.35 21 11.43 21 10.5M8 9.5C7.17 9.5 6.5 8.83 6.5 8C6.5 7.17 7.17 6.5 8 6.5C8.83 6.5 9.5 7.17 9.5 8C9.5 8.83 8.83 9.5 8 9.5M14 9.5C13.17 9.5 12.5 8.83 12.5 8C12.5 7.17 13.17 6.5 14 6.5C14.83 6.5 15.5 7.17 15.5 8C15.5 8.83 14.83 9.5 14 9.5Z" fill="#33CCFF"/>
+                            <circle cx="18.5" cy="18.5" r="4.5" fill="#33CCFF"/>
+                            <circle cx="7" cy="20.5" r="1.5" fill="#333333"/>
+                            <circle cx="12" cy="20.5" r="1.5" fill="#333333"/>
+                          </svg>
+                          Waze
                         </a>
                       </div>
                     )}
@@ -2291,6 +2463,8 @@ function PrintWeatherForecastCard({ date }: { date: string }) {
     return () => { cancel = true; };
   }, [date, geo, target]);
 
+  
+
   if (data.status === "loading") {
     return (
       <div className="flex-1 min-w-[50px] border border-slate-200/60 rounded-lg p-2 bg-slate-50/50 flex flex-col items-center justify-center text-[9px] text-slate-400 font-sans">
@@ -2358,6 +2532,33 @@ function daysBetween(a: Date, b: Date) {
 function DayWeather({ date }: { date: string }) {
   const geo = useContext(GeoContext);
   const [data, setData] = useState<DayData>({ status: "loading" });
+
+  const [airQuality, setAirQuality] = useState<{ aqi: number; label: string; color: string } | null>(null);
+
+  useEffect(() => {
+    if (!date || geo.status !== "ok") return;
+    let cancel = false;
+    const { latitude, longitude } = geo.place;
+
+    fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${latitude}&longitude=${longitude}&current=european_aqi`)
+      .then(r => r.json())
+      .then(d => {
+        if (cancel) return;
+        const aqi = d?.current?.european_aqi;
+        if (typeof aqi === "number") {
+          let label = "Boa";
+          let color = "text-emerald-500";
+          if (aqi > 80) { label = "Muito Ruim"; color = "text-purple-500"; }
+          else if (aqi > 60) { label = "Ruim"; color = "text-rose-500"; }
+          else if (aqi > 40) { label = "Moderada"; color = "text-amber-500"; }
+          else if (aqi > 20) { label = "Razoável"; color = "text-blue-500"; }
+          setAirQuality({ aqi, label, color });
+        }
+      })
+      .catch(() => {});
+
+    return () => { cancel = true; };
+  }, [date, geo]);
 
   const target = useMemo(() => {
     const [y, m, d] = (date || "").split("-").map(Number);
@@ -2472,6 +2673,16 @@ function DayWeather({ date }: { date: string }) {
               <Sunset className="size-3.5 text-orange-500" />
               <span>{data.sunset}</span>
             </div>
+          </div>
+        </>
+      )}
+      {/* Qualidade do Ar */}
+      {airQuality && (
+        <>
+          <div className="h-3 w-px bg-muted-foreground/30" />
+          <div className="flex items-center gap-1" title={`Qualidade do Ar (AQI: ${airQuality.aqi})`}>
+            <Wind className={`size-3.5 ${airQuality.color}`} />
+            <span className="font-semibold">Ar: <span className={airQuality.color}>{airQuality.label}</span></span>
           </div>
         </>
       )}
@@ -2747,15 +2958,37 @@ function OperationalMap({
                 <span>🚶 {getWalkingTime(p.distance)} a pé ({getDistanceFmt(p.distance)})</span>
                 <span>🚗 {getCarTime(p.distance)} de carro</span>
               </div>
-              <a
-                href={mapsUrl(p.address)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center justify-center gap-1.5 rounded-md border bg-background hover:bg-accent text-xs font-semibold px-2.5 py-1.5 w-full transition-colors"
-              >
-                <Navigation className="size-3" />
-                Abrir no Google Maps
-              </a>
+              <div className="mt-3 grid grid-cols-2 gap-1.5">
+                <a
+                  href={mapsUrl(p.address)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-slate-200 dark:border-white/10 bg-white dark:bg-card hover:bg-slate-50 dark:hover:bg-white/5 text-[11px] font-semibold px-2 py-1.5 transition-all shadow-2xs"
+                >
+                  <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C7.58 2 4 5.58 4 10c0 5.25 8 12 8 12s8-6.75 8-12c0-4.42-3.58-8-8-8z" fill="#EA4335"/>
+                    <circle cx="12" cy="10" r="3" fill="#FFFFFF"/>
+                    <path d="M12 7a3 3 0 0 0-3 3c0 .74.27 1.42.72 1.94L12 10z" fill="#4285F4"/>
+                    <path d="M12 7v3l2.28 1.94A3 3 0 0 0 15 10a3 3 0 0 0-3-3z" fill="#FBBC04"/>
+                    <path d="M9.72 11.94A3 3 0 0 0 12 13v-3l-2.28 1.94z" fill="#34A853"/>
+                  </svg>
+                  Maps
+                </a>
+                <a
+                  href={wazeUrl(p.address)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-md border border-cyan-200 dark:border-cyan-800/40 bg-cyan-50/50 dark:bg-cyan-950/20 hover:bg-cyan-100/60 dark:hover:bg-cyan-900/30 text-cyan-900 dark:text-cyan-200 text-[11px] font-semibold px-2 py-1.5 transition-all shadow-2xs"
+                >
+                  <svg className="size-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.5 10.5C20.5 5.25 16.25 1 11 1C5.75 1 1.5 5.25 1.5 10.5C1.5 13.88 3.25 16.85 5.92 18.52L5.27 20.87C5.1 21.49 5.65 22.04 6.27 21.87L9.18 21.05C9.77 21.23 10.37 21.33 11 21.33C11.53 21.33 12.06 21.25 12.57 21.11C12.18 20.35 11.96 19.49 11.96 18.57C11.96 15.22 14.67 12.5 18.03 12.5C19.06 12.5 20.02 12.76 20.86 13.23C20.95 12.35 21 11.43 21 10.5M8 9.5C7.17 9.5 6.5 8.83 6.5 8C6.5 7.17 7.17 6.5 8 6.5C8.83 6.5 9.5 7.17 9.5 8C9.5 8.83 8.83 9.5 8 9.5M14 9.5C13.17 9.5 12.5 8.83 12.5 8C12.5 7.17 13.17 6.5 14 6.5C14.83 6.5 15.5 7.17 15.5 8C15.5 8.83 14.83 9.5 14 9.5Z" fill="#33CCFF"/>
+                    <circle cx="18.5" cy="18.5" r="4.5" fill="#33CCFF"/>
+                    <circle cx="7" cy="20.5" r="1.5" fill="#333333"/>
+                    <circle cx="12" cy="20.5" r="1.5" fill="#333333"/>
+                  </svg>
+                  Waze
+                </a>
+              </div>
             </div>
           </div>
         ))}
@@ -2768,4 +3001,117 @@ function OperationalMap({
 function PublicPage() {
   const r = Route.useLoaderData() as ReturnType<typeof rowToRoadbook>;
   return <PublicRoadbookView r={r} />;
+}
+
+// ==========================================================
+// COMPONENTE: Alerta Meteorológico e Defesa Civil (INMET / Defesa Civil)
+// Específico para o município e a data informada
+// ==========================================================
+function DefesaCivilAlert({ cidade, estado, date }: { cidade?: string | null; estado?: string | null; date?: string | null }) {
+  const [alerta, setAlerta] = useState<any | null>(null);
+  const [closed, setClosed] = useState(false);
+
+  useEffect(() => {
+    if (!cidade || !date) return;
+    let cancel = false;
+
+    // Consulta os avisos vigentes da Defesa Civil / INMET
+    fetch("https://apiprevmet3.inmet.gov.br/avisos/ativos")
+      .then(r => r.json())
+      .then(d => {
+        if (cancel) return;
+        const hojeAvisos = d?.hoje || [];
+        const futuroAvisos = d?.futuro || [];
+        const todos = [...hojeAvisos, ...futuroAvisos];
+
+        const cleanCity = cidade.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        const uf = (estado || "").toLowerCase().trim();
+        const targetDate = date.slice(0, 10);
+
+        // Procura alertas que atinjam o município exato E que vigorem na data indicada
+        const encontrado = todos.find(a => {
+          const dIni = (a.data_inicio || a.inicio || "").slice(0, 10);
+          const dFim = (a.data_fim || a.fim || "").slice(0, 10);
+
+          // Filtro por data
+          if (dIni && dFim) {
+            if (targetDate < dIni || targetDate > dFim) return false;
+          }
+
+          // Filtro por município (formato INMET: "cidade - uf (código)")
+          const munNormalized = (a.municipios || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          if (uf) {
+            const pattern = cleanCity + " - " + uf;
+            return munNormalized.includes(pattern);
+          }
+          return munNormalized.includes(cleanCity + " - ");
+        });
+
+        if (encontrado) {
+          setAlerta(encontrado);
+        }
+      })
+      .catch(() => {});
+
+    return () => { cancel = true; };
+  }, [cidade, estado, date]);
+
+  if (!alerta || closed) return null;
+
+  const isGrandePerigo = (alerta.severidade || "").toLowerCase().includes("grande perigo") || alerta.aviso_cor === "#FF0000";
+  const isPerigo = (alerta.severidade || "").toLowerCase().includes("perigo");
+
+  return (
+    <div className={`p-3.5 my-2 rounded-2xl border transition-all animate-in fade-in slide-in-from-top-1 relative overflow-hidden shadow-xs ${
+      isGrandePerigo 
+        ? "bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-100" 
+        : isPerigo 
+        ? "bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-100"
+        : "bg-yellow-50 dark:bg-yellow-950/40 border-yellow-300 dark:border-yellow-800 text-yellow-900 dark:text-yellow-100"
+    }`}>
+      <button 
+        type="button" 
+        onClick={() => setClosed(true)} 
+        className="absolute top-2.5 right-2.5 text-current/60 hover:text-current p-1 rounded-lg transition-colors"
+        title="Dispensar aviso"
+      >
+        <X className="size-4" />
+      </button>
+
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-xl bg-white/60 dark:bg-black/20 shrink-0 mt-0.5">
+          <ShieldAlert className={`size-5 ${isGrandePerigo ? "text-rose-600 animate-pulse" : "text-amber-600"}`} />
+        </div>
+        <div className="min-w-0 flex-1 pr-5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-white/80 dark:bg-black/30 shadow-2xs">
+              Alerta Oficial Defesa Civil / INMET
+            </span>
+            <span className="text-xs font-bold uppercase tracking-wide">
+              {alerta.severidade || "Atenção"}
+            </span>
+            {alerta.inicio && alerta.fim && (
+              <span className="text-[11px] opacity-75 font-mono">
+                ({alerta.inicio.slice(11, 16) || "00:00"} até {alerta.fim.slice(11, 16) || "23:59"})
+              </span>
+            )}
+          </div>
+
+          <h4 className="text-sm font-extrabold mt-1">
+            {alerta.descricao || "Condições climáticas adversas"}
+          </h4>
+
+          {alerta.riscos && (
+            <p className="text-xs opacity-90 mt-1 whitespace-pre-line leading-relaxed">
+              {alerta.riscos}
+            </p>
+          )}
+
+          <div className="flex items-center gap-4 text-[11px] font-medium opacity-80 mt-2 pt-2 border-t border-current/10">
+            <span>📞 Defesa Civil <strong>199</strong> | Bombeiros <strong>193</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

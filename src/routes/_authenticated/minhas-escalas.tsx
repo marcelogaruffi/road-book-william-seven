@@ -174,15 +174,6 @@ function MinhasEscalasPage() {
               <span className="text-lg font-extrabold text-green-600">R$ {cache.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
             </div>
           )}
-          {isAceita && (
-            <div className="pt-2">
-              <Link to="/meus-contratos" className="block w-full">
-                <Button variant="outline" size="sm" className="w-full text-xs gap-1.5 rounded-xl border-primary/30 text-primary hover:bg-primary/5">
-                  <FileSignature className="size-3.5" /> Ver / Assinar Contrato
-                </Button>
-              </Link>
-            </div>
-          )}
         </CardContent>
         {isPendente && (
           <CardFooter className="p-4 bg-yellow-50/50 gap-3 border-t border-yellow-100">

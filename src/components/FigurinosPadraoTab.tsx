@@ -107,7 +107,7 @@ export function FigurinosPadraoTab({ espetaculoNome }: { espetaculoNome?: string
       if (fileInputRef.current) fileInputRef.current.value = "";
       toast.success("Peça adicionada ao figurino");
     } catch (error) {
-      toast.error("Erro ao salvar");
+      toast.error("Não foi possível salvar o figurino: verifique os campos obrigatórios.");
     } finally {
       setUploading(false);
     }
@@ -141,7 +141,7 @@ export function FigurinosPadraoTab({ espetaculoNome }: { espetaculoNome?: string
       setNovoArquivo(null);
       toast.success("Peça editada");
     } catch (error) {
-      toast.error("Erro ao editar");
+      toast.error("Não foi possível atualizar o figurino: tente novamente.");
     } finally {
       setUploading(false);
     }
@@ -166,7 +166,7 @@ export function FigurinosPadraoTab({ espetaculoNome }: { espetaculoNome?: string
       setFigurinosPadrao(figurinosPadrao.filter(a => a.id !== id));
       toast.success("Peça excluída");
     } catch (error) {
-      toast.error("Erro ao excluir peça");
+      toast.error("Não foi possível excluir a peça de figurino.");
     }
   }
 
