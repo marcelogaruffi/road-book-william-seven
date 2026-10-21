@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/midias")({
   component: MidiasPage,
 });
 
-export default function MidiasPage() {
+function MidiasPage() {
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessMidias: isAllowed } = usePermissions(profile);
 

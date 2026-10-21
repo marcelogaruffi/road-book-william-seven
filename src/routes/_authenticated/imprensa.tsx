@@ -25,7 +25,7 @@ export const Route = createFileRoute("/_authenticated/imprensa")({
   component: ImprensaPage,
 });
 
-export default function ImprensaPage() {
+function ImprensaPage() {
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessImprensa: isAllowed } = usePermissions(profile);
 

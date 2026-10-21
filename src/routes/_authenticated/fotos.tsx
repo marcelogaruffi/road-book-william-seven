@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_authenticated/fotos")({
   component: FotosPage,
 });
 
-export default function FotosPage() {
+function FotosPage() {
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessMidias: isAllowed } = usePermissions(profile);
 
