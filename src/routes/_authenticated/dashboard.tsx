@@ -447,7 +447,7 @@ function Dashboard() {
     {
       id: "demo-rb-1",
       slug: "turne-demo-sao-paulo",
-      espetaculo: "Espetáculo Exemplo • Turnê Nacional",
+      espetaculo: "O Grande Mistério • Turnê Nacional",
       cidade: "São Paulo",
       estado: "SP",
       data_inicial: new Date().toISOString().split("T")[0],
@@ -465,8 +465,8 @@ function Dashboard() {
   ];
 
   const displayUpcoming = isTutorial ? mockUpcomingRoadbooks : upcomingRoadbooks;
-  const displayCurrentCity = isTutorial ? "São Paulo (Demonstração)" : currentCity;
-  const displayNextCity = isTutorial ? "Rio de Janeiro (Demonstração)" : nextCity;
+  const displayCurrentCity = isTutorial ? "São Paulo" : currentCity;
+  const displayNextCity = isTutorial ? "Rio de Janeiro" : nextCity;
   const displayFuturosCount = isTutorial ? 3 : futuros.length;
   const displayEscalasPendentes = isTutorial ? 1 : escalasPendentes;
 
@@ -533,7 +533,7 @@ function Dashboard() {
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-4 animate-in fade-in">
             <div className="flex items-center gap-3">
               <span className="p-2 rounded-xl bg-amber-500 text-white font-bold text-xs">MODO DEMO</span>
-              <p className="text-xs sm:text-sm font-semibold">Você está no Tour Interativo. Todos os dados abaixo são fictícios para sua demonstração.</p>
+              <p className="text-xs sm:text-sm font-semibold">Tour Inicial Guiado: conheça a plataforma com uma visão prática e realista.</p>
             </div>
             <Button 
               size="sm" 
@@ -697,7 +697,7 @@ function Dashboard() {
         )}
 
         {/* GRADES DE ACESSO RÁPIDO (MENUS) */}
-        <section id="tour-roadbooks-list" className="space-y-6 pt-4">
+        <section className="space-y-6 pt-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-2">
             <div className="flex items-center gap-3">
               <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Acesso Rápido</h2>
@@ -835,7 +835,7 @@ function Dashboard() {
         </section>
 
       {/* EVENTO ATUAL (Somente os 2 primeiros roadbooks) */}
-      <section className="space-y-6 pt-4">
+      <section id="tour-guias-viagem" className="space-y-6 pt-4">
         <div className="flex items-center gap-3 px-2">
           <h2 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">Próximos Eventos</h2>
           <div className="h-px flex-1 bg-slate-200 dark:bg-white/10 ml-4"></div>
@@ -852,10 +852,6 @@ function Dashboard() {
         )}
       </section>
 
-      <ProductTour active={isTutorial} onFinish={() => {
-        localStorage.setItem("axis_tutorial_completed", "true");
-        setIsTutorial(false);
-      }} />
       <ProductTour active={isTutorial} onFinish={() => {
         localStorage.setItem("axis_tutorial_completed", "true");
         setIsTutorial(false);

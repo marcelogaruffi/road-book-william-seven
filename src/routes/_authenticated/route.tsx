@@ -348,7 +348,7 @@ function AuthedLayout() {
                 <SGroup title="Meu Espaço" icon={Contact2}>
                   <SLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                   <SLink to="/minha-agenda" icon={Calendar} label="Minha Agenda" />
-                  <SLink to="/perfil" icon={UserPlus} label="Dados Cadastrais" />
+                  <div id="tour-profile-menu"><SLink to="/perfil" icon={UserPlus} label="Dados Cadastrais" /></div>
                   <SLink to="/minhas-escalas" icon={Calendar} label="Minhas Escalas" />
                   <SLink to="/meus-pagamentos" icon={Wallet} label="Meus Pagamentos" />
                   <SLink to="/notificacoes" icon={Bell} label="Notificações" />
@@ -459,7 +459,13 @@ function AuthedLayout() {
                   type="button"
                   onClick={() => {
                     localStorage.removeItem("axis_tutorial_completed");
-                    window.dispatchEvent(new CustomEvent("start-axis-tutorial"));
+                    if (location.pathname !== "/dashboard") {
+                      navigate({ to: "/dashboard" }).then(() => {
+                        setTimeout(() => window.dispatchEvent(new CustomEvent("start-axis-tutorial")), 400);
+                      });
+                    } else {
+                      window.dispatchEvent(new CustomEvent("start-axis-tutorial"));
+                    }
                   }} 
                   className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-3' : 'justify-center px-0'} h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 font-medium transition-all`}
                 >
@@ -476,7 +482,7 @@ function AuthedLayout() {
           </div>
 
         {/* RODAPÉ: SAIR E MODO ESCURO/CLARO */}
-        <div id="tour-profile-footer" className="p-2 border-t border-slate-200/60 dark:border-white/10 space-y-1">
+        <div className="p-2 border-t border-slate-200/60 dark:border-white/10 space-y-1">
         
           {/* SAIR DA CONTA (LOGOFF) */}
           <Tooltip>

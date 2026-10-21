@@ -28,6 +28,81 @@ const GeoContext = createContext<GeoState>({ status: "loading" });
 export const Route = createFileRoute("/rb/$slug")({
   ssr: false,
   loader: async ({ params }) => {
+    if (params.slug === "turne-demo-sao-paulo" || params.slug === "demo-guia-sao-paulo") {
+      const demoData = {
+        id: "demo-rb-1",
+        slug: params.slug,
+        espetaculo: "O Grande Mistério • Turnê Nacional",
+        cidade: "São Paulo",
+        estado: "SP",
+        festival: "Temporada Especial",
+        data_inicial: new Date().toISOString().split("T")[0],
+        data_final: new Date(Date.now() + 86400000 * 3).toISOString().split("T")[0],
+        teatro_nome: "Teatro Bradesco",
+        teatro_endereco: "Rua Palestra Itália, 500 - Perdizes, São Paulo - SP",
+        teatro_telefone: "(11) 3670-4100",
+        teatro_capacidade: 1439,
+        hotel_nome: "Hotel Tivoli Mofarrej",
+        hotel_endereco: "Alameda Santos, 1437 - Cerqueira César, São Paulo - SP",
+        hotel_telefone: "(11) 3146-5900",
+        hotel_checkin: "14:00",
+        hotel_checkout: "12:00",
+        programacao: [
+          {
+            data: new Date().toISOString().split("T")[0],
+            hora_inicio: "10:00",
+            hora_fim: "13:00",
+            titulo: "Chegada da Equipe Técnica e Descarga",
+            tipo: "Montagem",
+            local: "Teatro Bradesco",
+            observacao: "Entrada pela doca de carga",
+          },
+          {
+            data: new Date().toISOString().split("T")[0],
+            hora_inicio: "13:00",
+            hora_fim: "14:30",
+            titulo: "Almoço da Equipe",
+            tipo: "Alimentação",
+            local: "Restaurante Parceiro Shopping Bourbon",
+            observacao: "Apresentar crachá da produção",
+          },
+          {
+            data: new Date().toISOString().split("T")[0],
+            hora_inicio: "15:00",
+            hora_fim: "18:00",
+            titulo: "Passagem de Som e Luz com Elenco",
+            tipo: "Montagem",
+            local: "Palco Principal",
+            observacao: "Todos a postos com figurinos de ensaio",
+          },
+          {
+            data: new Date().toISOString().split("T")[0],
+            hora_inicio: "20:00",
+            hora_fim: "21:30",
+            titulo: "Apresentação Oficial (Estreia)",
+            tipo: "Espetáculo",
+            local: "Teatro Bradesco",
+            observacao: "Abertura dos portões às 19:30",
+          },
+        ],
+        quartos: [],
+        outros_contatos: [
+          {
+            nome: "Coordenação de Produção",
+            funcao: "Produção Geral",
+            telefone: "(11) 99999-8888",
+          },
+        ],
+        documentos: [],
+        voos: [],
+        teatro_fotos: [],
+        hotel_fotos: [],
+      };
+      const rb = rowToRoadbook(demoData as any);
+      (rb as any)._resolved_logos = { logoEspetaculo: null, logoCia: null, logoProducao: null };
+      return rb;
+    }
+
     const { data, error } = await supabase.from("roadbooks").select("*").eq("slug", params.slug).maybeSingle();
     if (error) throw error;
     if (!data) throw notFound();

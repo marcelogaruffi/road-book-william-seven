@@ -13,7 +13,9 @@ export function ProductTour({ active, onFinish }: ProductTourProps) {
   useEffect(() => {
     if (!active) {
       if (driverRef.current) {
-        driverRef.current.destroy();
+        try {
+          driverRef.current.destroy();
+        } catch (e) {}
         driverRef.current = null;
       }
       return;
@@ -38,8 +40,8 @@ export function ProductTour({ active, onFinish }: ProductTourProps) {
         {
           element: "#tour-welcome-banner",
           popover: {
-            title: "👋 Bem-vindo ao Áxis Roadbook!",
-            description: "Você está no Modo Demonstração. Os dados exibidos nesta tela são apenas exemplos limpos para você conhecer as ferramentas antes de acessar seus registros reais.",
+            title: "👋 Bem-vindo ao Áxis!",
+            description: "Esta é a sua central de gestão de espetáculos e turnês. Preparamos uma rápida apresentação prática para você conhecer os recursos fundamentais.",
             side: "bottom",
             align: "center",
           },
@@ -48,7 +50,7 @@ export function ProductTour({ active, onFinish }: ProductTourProps) {
           element: "#tour-city-status",
           popover: {
             title: "📍 Cidade Atual & Próxima Viagem",
-            description: "Aqui você acompanha na hora em qual cidade a equipe está hoje e qual é o próximo destino agendado da turnê.",
+            description: "Acompanhe de relance onde a turnê está sediada hoje e qual é o próximo destino programado no calendário da companhia.",
             side: "bottom",
             align: "start",
           },
@@ -56,34 +58,34 @@ export function ProductTour({ active, onFinish }: ProductTourProps) {
         {
           element: "#tour-sidebar-navigation",
           popover: {
-            title: "📂 Menu de Ferramentas",
-            description: "Navegue com facilidade entre sua Agenda Pessoal, Escalas de Equipe, Mídias de Divulgação, Central de Padrões e Financeiro.",
+            title: "📂 Meu Espaço & Ferramentas",
+            description: "Na barra lateral você encontra o Meu Espaço, onde consulta sua Agenda, Escalas, Pagamentos e Notificações, além das ferramentas dedicadas à sua área.",
             side: "right",
             align: "start",
           },
         },
         {
-          element: "#tour-roadbooks-list",
+          element: "#tour-guias-viagem",
           popover: {
-            title: "📖 Guias de Viagem (Roadbooks)",
-            description: "Aqui ficam centralizados todos os roteiros. Ao abrir um guia, você vê o cronograma minuto a minuto, hotel, teatro, clima e rotas diretas para Waze e Google Maps.",
+            title: "📖 Guias de Viagem",
+            description: "Acesse o cronograma completo de cada viagem. Ao abrir um guia, você confere horários minuto a minuto, hotéis, mapas do teatro, documentos e contatos.",
             side: "top",
             align: "start",
           },
         },
         {
-          element: "#tour-profile-footer",
+          element: "#tour-profile-menu",
           popover: {
-            title: "👤 Seu Perfil & Dados Bancários",
-            description: "Dica de ouro: acesse 'Meu Perfil' para cadastrar seu CPF e Chave Pix. Isso garante que seus contratos e cachês sejam gerados e pagos sem atrasos!",
+            title: "👤 Dados Cadastrais & Chave Pix",
+            description: "Importante: mantenha sempre seus Dados Cadastrais completos com CPF e Chave Pix para a correta emissão de escalas, contratos e pagamentos.",
             side: "right",
-            align: "end",
+            align: "center",
           },
         },
         {
           popover: {
             title: "🚀 Tudo Pronto!",
-            description: "Ao clicar abaixo, o modo demonstração será finalizado e seus dados reais serão carregados. Você pode rever este tutorial quando quiser no botão de ajuda do menu!",
+            description: "O tour inicial foi concluído! A partir de agora você terá acesso em tempo real a todas as suas informações oficiais. Você pode revisitar este tour a qualquer momento no botão de ajuda.",
           },
         },
       ],
@@ -91,14 +93,22 @@ export function ProductTour({ active, onFinish }: ProductTourProps) {
 
     driverRef.current = d;
 
-    // Small delay to ensure DOM is ready
+    // Small delay to ensure DOM is fully rendered
     const timer = setTimeout(() => {
-      d.drive();
-    }, 300);
+      try {
+        d.drive();
+      } catch (err) {
+        console.error("Erro ao iniciar driver tour:", err);
+      }
+    }, 400);
 
     return () => {
       clearTimeout(timer);
-      if (d) d.destroy();
+      if (d) {
+        try {
+          d.destroy();
+        } catch (e) {}
+      }
     };
   }, [active, onFinish]);
 
