@@ -1,4 +1,4 @@
-import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus, Layers, Ticket, QrCode, ShieldCheck } from "lucide-react";
+import { Info, FileSignature, ChevronLeft, ClipboardList, Drama, DoorOpen, Banknote, ShoppingCart, LogOut, Sun, Moon, ChevronRight, Menu, ChevronDown, Plus, Layers, Ticket, QrCode, ShieldCheck, Bell, Sparkles, Hotel } from "lucide-react";
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { LayoutDashboard, UserPlus, Calendar, Wallet, Route as RouteIcon, Bus, C
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import { Users, Printer, Contact2, Luggage, Image as ImageIcon, Megaphone, Coffee } from "lucide-react";
 import { StageIcon, ClothesRackIcon, StarDoorIcon } from "@/components/CustomIcons";
 
@@ -76,6 +78,44 @@ function AuthedLayout() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [simuladorOpen, setSimuladorOpen] = useState(false);
   const [usersToSimulate, setUsersToSimulate] = useState<Profile[]>([]);
+  const [notificacoesUnread, setNotificacoesUnread] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (profile?.id) {
+      const fetchNotificacoes = async () => {
+        const { data } = await supabase
+          .from("notificacoes")
+          .select("id, titulo, mensagem, link, lida, created_at")
+          .eq("usuario_id", profile.id)
+          .eq("lida", false)
+          .order("created_at", { ascending: false })
+          .limit(5);
+        if (data) setNotificacoesUnread(data);
+      };
+
+      fetchNotificacoes();
+
+      const channel = supabase
+        .channel(`sidebar_notificacoes_${profile.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "notificacoes",
+            filter: `usuario_id=eq.${profile.id}`
+          },
+          () => {
+            fetchNotificacoes();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [profile?.id]);
   
   async function loadUsersToSimulate() {
     setSimuladorOpen(true);
@@ -160,19 +200,64 @@ function AuthedLayout() {
       >
         <div className="flex h-20 items-center justify-between px-4 border-b border-slate-200/60 dark:border-white/10">
           {sidebarOpen ? (
-            <div className="flex items-center gap-3 overflow-hidden">
-              <Avatar className="size-9 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0">
-                <AvatarImage src={fotoUrl || undefined} alt={userName} className="object-cover" />
-                <AvatarFallback className="bg-gradient-to-tr from-primary to-purple-500 text-white font-bold rounded-xl text-sm">{getInitials(userName)}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col min-w-0">
-                <span className="font-extrabold text-sm tracking-tight bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent truncate leading-tight">
-                  {userName}
-                </span>
-                <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider leading-tight">
-                  {ROLE_BADGE_MAP[userRole as keyof typeof ROLE_BADGE_MAP]?.label || userRole.toUpperCase()}
-                </span>
+            <div className="flex items-center justify-between w-full pr-2">
+              <div className="flex items-center gap-3 overflow-hidden">
+                <Avatar className="size-9 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0">
+                  <AvatarImage src={fotoUrl || undefined} alt={userName} className="object-cover" />
+                  <AvatarFallback className="bg-gradient-to-tr from-primary to-purple-500 text-white font-bold rounded-xl text-sm">{getInitials(userName)}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-extrabold text-sm tracking-tight bg-gradient-to-r from-slate-800 to-slate-600 dark:from-white dark:to-slate-300 bg-clip-text text-transparent truncate leading-tight">
+                    {userName}
+                  </span>
+                  <span className="text-xs font-semibold text-primary/80 uppercase tracking-wider leading-tight">
+                    {ROLE_BADGE_MAP[userRole as keyof typeof ROLE_BADGE_MAP]?.label || userRole.toUpperCase()}
+                  </span>
+                </div>
               </div>
+
+              {/* SININHO DE NOTIFICAÇÕES */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative shrink-0 rounded-full hover:bg-slate-100 dark:hover:bg-white/10 h-9 w-9" title="Notificações">
+                    <Bell className="size-5 text-slate-500 dark:text-slate-400" />
+                    {notificacoesUnread.length > 0 && (
+                      <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-80 p-0 rounded-2xl shadow-2xl border-slate-200 dark:border-white/10 overflow-hidden" sideOffset={8}>
+                  <div className="bg-slate-50 dark:bg-slate-900 p-3 flex items-center justify-between border-b border-slate-100 dark:border-white/5">
+                    <span className="font-bold text-sm text-slate-800 dark:text-slate-200">Notificações</span>
+                    {notificacoesUnread.length > 0 && (
+                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-4">{notificacoesUnread.length} novas</Badge>
+                    )}
+                  </div>
+                  <div className="max-h-[280px] overflow-y-auto">
+                    {notificacoesUnread.length === 0 ? (
+                      <div className="p-6 text-center text-slate-500 text-xs flex flex-col items-center">
+                        <Bell className="size-6 mb-2 text-slate-300 opacity-50" />
+                        Nenhuma notificação nova.
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-slate-100 dark:divide-white/5">
+                        {notificacoesUnread.map(n => (
+                          <Link key={n.id} to={n.link || "/notificacoes"} className="block p-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 line-clamp-1">{n.titulo}</p>
+                            <p className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{n.mensagem}</p>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <Link to="/notificacoes" className="block p-2 text-center text-xs font-bold text-primary hover:bg-slate-50 dark:hover:bg-white/5 border-t border-slate-100 dark:border-white/5">
+                    Abrir Central Completa
+                  </Link>
+                </PopoverContent>
+              </Popover>
             </div>
           ) : (
             <Avatar className="size-10 mx-auto rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0">
@@ -238,18 +323,18 @@ function AuthedLayout() {
               <>
                                                 <SGroup title="Meu Espaço" icon={Contact2}>
                   <SLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
+                  <SLink to="/minha-agenda" icon={Calendar} label="Minha Agenda" />
                   <SLink to="/perfil" icon={UserPlus} label="Dados Cadastrais" />
                   <SLink to="/minhas-escalas" icon={Calendar} label="Minhas Escalas" />
                   <SLink to="/meus-pagamentos" icon={Wallet} label="Meus Pagamentos" />
+                  <SLink to="/notificacoes" icon={Bell} label="Notificações" />
                 </SGroup>
 
                 <SGroup title="Viagens e Logística" icon={Bus}>
-                  <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" />
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" />
-                  <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
-                  <SLink to="/rooming-list" icon={DoorOpen} label="Rooming List (Hotéis)" show={isProdutor} />
+                  <SLink to="/hospedagem" icon={Hotel} label="Hospedagem" show={isProdutor} />
                 </SGroup>
 
                 <SGroup title="Gestão de Ingressos" icon={Ticket}>
@@ -275,6 +360,8 @@ function AuthedLayout() {
                 </SGroup>
 
                 <SGroup title="Produção Executiva" icon={ClipboardList}>
+                  <SLink to="/novo-projeto" icon={Sparkles} label="Maestro de Produção" show={isProdutor} />
+                  <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" />
                   <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
                   <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" />
                     <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" />
@@ -294,6 +381,7 @@ function AuthedLayout() {
                 </SGroup>
 
                 <SGroup title="Equipe e RH" icon={Users}>
+                  <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
                   <SLink to="/contatos" icon={Contact2} label="Contatos da Equipe" />
                   <SLink to="/dados-equipe" icon={Users} label="Dados da Equipe" />
                   <SLink to="/cadastros" icon={UserPlus} label="Cadastros de Equipe" />

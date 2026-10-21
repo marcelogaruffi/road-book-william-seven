@@ -31,10 +31,12 @@ import { Route as AuthenticatedEventosRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedFinanceiroRouteImport } from './routes/_authenticated/financeiro'
 import { Route as AuthenticatedFornecedoresRouteImport } from './routes/_authenticated/fornecedores'
 import { Route as AuthenticatedFotosRouteImport } from './routes/_authenticated/fotos'
+import { Route as AuthenticatedHospedagemRouteImport } from './routes/_authenticated/hospedagem'
 import { Route as AuthenticatedImprensaRouteImport } from './routes/_authenticated/imprensa'
 import { Route as AuthenticatedMeusContratosRouteImport } from './routes/_authenticated/meus-contratos'
 import { Route as AuthenticatedMeusPagamentosRouteImport } from './routes/_authenticated/meus-pagamentos'
 import { Route as AuthenticatedMidiasRouteImport } from './routes/_authenticated/midias'
+import { Route as AuthenticatedMinhaAgendaRouteImport } from './routes/_authenticated/minha-agenda'
 import { Route as AuthenticatedMinhasEscalasRouteImport } from './routes/_authenticated/minhas-escalas'
 import { Route as AuthenticatedNotificacoesRouteImport } from './routes/_authenticated/notificacoes'
 import { Route as AuthenticatedNovoProjetoRouteImport } from './routes/_authenticated/novo-projeto'
@@ -42,7 +44,6 @@ import { Route as AuthenticatedPadroesRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedPerfilRouteImport } from './routes/_authenticated/perfil'
 import { Route as AuthenticatedPermissoesRouteImport } from './routes/_authenticated/permissoes'
 import { Route as AuthenticatedPublicoRouteImport } from './routes/_authenticated/publico'
-import { Route as AuthenticatedRoomingListRouteImport } from './routes/_authenticated/rooming-list'
 import { Route as AuthenticatedSobreRouteImport } from './routes/_authenticated/sobre'
 import { Route as AuthenticatedVendasRouteImport } from './routes/_authenticated/vendas'
 import { Route as AuthenticatedViagensRouteImport } from './routes/_authenticated/viagens'
@@ -195,6 +196,11 @@ const AuthenticatedFotosRoute = AuthenticatedFotosRouteImport.update({
   path: '/fotos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHospedagemRoute = AuthenticatedHospedagemRouteImport.update({
+  id: '/hospedagem',
+  path: '/hospedagem',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedImprensaRoute = AuthenticatedImprensaRouteImport.update({
   id: '/imprensa',
   path: '/imprensa',
@@ -217,6 +223,12 @@ const AuthenticatedMidiasRoute = AuthenticatedMidiasRouteImport.update({
   path: '/midias',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMinhaAgendaRoute =
+  AuthenticatedMinhaAgendaRouteImport.update({
+    id: '/minha-agenda',
+    path: '/minha-agenda',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMinhasEscalasRoute =
   AuthenticatedMinhasEscalasRouteImport.update({
     id: '/minhas-escalas',
@@ -255,12 +267,6 @@ const AuthenticatedPublicoRoute = AuthenticatedPublicoRouteImport.update({
   path: '/publico',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedRoomingListRoute =
-  AuthenticatedRoomingListRouteImport.update({
-    id: '/rooming-list',
-    path: '/rooming-list',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedSobreRoute = AuthenticatedSobreRouteImport.update({
   id: '/sobre',
   path: '/sobre',
@@ -472,10 +478,12 @@ export interface FileRoutesByFullPath {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/fotos': typeof AuthenticatedFotosRoute
+  '/hospedagem': typeof AuthenticatedHospedagemRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
   '/meus-contratos': typeof AuthenticatedMeusContratosRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
+  '/minha-agenda': typeof AuthenticatedMinhaAgendaRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
@@ -483,7 +491,6 @@ export interface FileRoutesByFullPath {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
-  '/rooming-list': typeof AuthenticatedRoomingListRoute
   '/sobre': typeof AuthenticatedSobreRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/viagens': typeof AuthenticatedViagensRoute
@@ -541,10 +548,12 @@ export interface FileRoutesByTo {
   '/financeiro': typeof AuthenticatedFinanceiroRoute
   '/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/fotos': typeof AuthenticatedFotosRoute
+  '/hospedagem': typeof AuthenticatedHospedagemRoute
   '/imprensa': typeof AuthenticatedImprensaRoute
   '/meus-contratos': typeof AuthenticatedMeusContratosRoute
   '/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/midias': typeof AuthenticatedMidiasRoute
+  '/minha-agenda': typeof AuthenticatedMinhaAgendaRoute
   '/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
   '/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/novo-projeto': typeof AuthenticatedNovoProjetoRoute
@@ -552,7 +561,6 @@ export interface FileRoutesByTo {
   '/perfil': typeof AuthenticatedPerfilRoute
   '/permissoes': typeof AuthenticatedPermissoesRoute
   '/publico': typeof AuthenticatedPublicoRoute
-  '/rooming-list': typeof AuthenticatedRoomingListRoute
   '/sobre': typeof AuthenticatedSobreRoute
   '/vendas': typeof AuthenticatedVendasRoute
   '/viagens': typeof AuthenticatedViagensRoute
@@ -612,10 +620,12 @@ export interface FileRoutesById {
   '/_authenticated/financeiro': typeof AuthenticatedFinanceiroRoute
   '/_authenticated/fornecedores': typeof AuthenticatedFornecedoresRoute
   '/_authenticated/fotos': typeof AuthenticatedFotosRoute
+  '/_authenticated/hospedagem': typeof AuthenticatedHospedagemRoute
   '/_authenticated/imprensa': typeof AuthenticatedImprensaRoute
   '/_authenticated/meus-contratos': typeof AuthenticatedMeusContratosRoute
   '/_authenticated/meus-pagamentos': typeof AuthenticatedMeusPagamentosRoute
   '/_authenticated/midias': typeof AuthenticatedMidiasRoute
+  '/_authenticated/minha-agenda': typeof AuthenticatedMinhaAgendaRoute
   '/_authenticated/minhas-escalas': typeof AuthenticatedMinhasEscalasRoute
   '/_authenticated/notificacoes': typeof AuthenticatedNotificacoesRoute
   '/_authenticated/novo-projeto': typeof AuthenticatedNovoProjetoRoute
@@ -623,7 +633,6 @@ export interface FileRoutesById {
   '/_authenticated/perfil': typeof AuthenticatedPerfilRoute
   '/_authenticated/permissoes': typeof AuthenticatedPermissoesRoute
   '/_authenticated/publico': typeof AuthenticatedPublicoRoute
-  '/_authenticated/rooming-list': typeof AuthenticatedRoomingListRoute
   '/_authenticated/sobre': typeof AuthenticatedSobreRoute
   '/_authenticated/vendas': typeof AuthenticatedVendasRoute
   '/_authenticated/viagens': typeof AuthenticatedViagensRoute
@@ -683,10 +692,12 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/fornecedores'
     | '/fotos'
+    | '/hospedagem'
     | '/imprensa'
     | '/meus-contratos'
     | '/meus-pagamentos'
     | '/midias'
+    | '/minha-agenda'
     | '/minhas-escalas'
     | '/notificacoes'
     | '/novo-projeto'
@@ -694,7 +705,6 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/permissoes'
     | '/publico'
-    | '/rooming-list'
     | '/sobre'
     | '/vendas'
     | '/viagens'
@@ -752,10 +762,12 @@ export interface FileRouteTypes {
     | '/financeiro'
     | '/fornecedores'
     | '/fotos'
+    | '/hospedagem'
     | '/imprensa'
     | '/meus-contratos'
     | '/meus-pagamentos'
     | '/midias'
+    | '/minha-agenda'
     | '/minhas-escalas'
     | '/notificacoes'
     | '/novo-projeto'
@@ -763,7 +775,6 @@ export interface FileRouteTypes {
     | '/perfil'
     | '/permissoes'
     | '/publico'
-    | '/rooming-list'
     | '/sobre'
     | '/vendas'
     | '/viagens'
@@ -822,10 +833,12 @@ export interface FileRouteTypes {
     | '/_authenticated/financeiro'
     | '/_authenticated/fornecedores'
     | '/_authenticated/fotos'
+    | '/_authenticated/hospedagem'
     | '/_authenticated/imprensa'
     | '/_authenticated/meus-contratos'
     | '/_authenticated/meus-pagamentos'
     | '/_authenticated/midias'
+    | '/_authenticated/minha-agenda'
     | '/_authenticated/minhas-escalas'
     | '/_authenticated/notificacoes'
     | '/_authenticated/novo-projeto'
@@ -833,7 +846,6 @@ export interface FileRouteTypes {
     | '/_authenticated/perfil'
     | '/_authenticated/permissoes'
     | '/_authenticated/publico'
-    | '/_authenticated/rooming-list'
     | '/_authenticated/sobre'
     | '/_authenticated/vendas'
     | '/_authenticated/viagens'
@@ -1037,6 +1049,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFotosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/hospedagem': {
+      id: '/_authenticated/hospedagem'
+      path: '/hospedagem'
+      fullPath: '/hospedagem'
+      preLoaderRoute: typeof AuthenticatedHospedagemRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/imprensa': {
       id: '/_authenticated/imprensa'
       path: '/imprensa'
@@ -1063,6 +1082,13 @@ declare module '@tanstack/react-router' {
       path: '/midias'
       fullPath: '/midias'
       preLoaderRoute: typeof AuthenticatedMidiasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/minha-agenda': {
+      id: '/_authenticated/minha-agenda'
+      path: '/minha-agenda'
+      fullPath: '/minha-agenda'
+      preLoaderRoute: typeof AuthenticatedMinhaAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/minhas-escalas': {
@@ -1112,13 +1138,6 @@ declare module '@tanstack/react-router' {
       path: '/publico'
       fullPath: '/publico'
       preLoaderRoute: typeof AuthenticatedPublicoRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/rooming-list': {
-      id: '/_authenticated/rooming-list'
-      path: '/rooming-list'
-      fullPath: '/rooming-list'
-      preLoaderRoute: typeof AuthenticatedRoomingListRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/sobre': {
@@ -1381,10 +1400,12 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedFinanceiroRoute: typeof AuthenticatedFinanceiroRoute
   AuthenticatedFornecedoresRoute: typeof AuthenticatedFornecedoresRoute
   AuthenticatedFotosRoute: typeof AuthenticatedFotosRoute
+  AuthenticatedHospedagemRoute: typeof AuthenticatedHospedagemRoute
   AuthenticatedImprensaRoute: typeof AuthenticatedImprensaRoute
   AuthenticatedMeusContratosRoute: typeof AuthenticatedMeusContratosRoute
   AuthenticatedMeusPagamentosRoute: typeof AuthenticatedMeusPagamentosRoute
   AuthenticatedMidiasRoute: typeof AuthenticatedMidiasRoute
+  AuthenticatedMinhaAgendaRoute: typeof AuthenticatedMinhaAgendaRoute
   AuthenticatedMinhasEscalasRoute: typeof AuthenticatedMinhasEscalasRoute
   AuthenticatedNotificacoesRoute: typeof AuthenticatedNotificacoesRoute
   AuthenticatedNovoProjetoRoute: typeof AuthenticatedNovoProjetoRoute
@@ -1392,7 +1413,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPerfilRoute: typeof AuthenticatedPerfilRoute
   AuthenticatedPermissoesRoute: typeof AuthenticatedPermissoesRoute
   AuthenticatedPublicoRoute: typeof AuthenticatedPublicoRoute
-  AuthenticatedRoomingListRoute: typeof AuthenticatedRoomingListRoute
   AuthenticatedSobreRoute: typeof AuthenticatedSobreRoute
   AuthenticatedVendasRoute: typeof AuthenticatedVendasRoute
   AuthenticatedViagensRoute: typeof AuthenticatedViagensRoute
@@ -1444,10 +1464,12 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedFinanceiroRoute: AuthenticatedFinanceiroRoute,
   AuthenticatedFornecedoresRoute: AuthenticatedFornecedoresRoute,
   AuthenticatedFotosRoute: AuthenticatedFotosRoute,
+  AuthenticatedHospedagemRoute: AuthenticatedHospedagemRoute,
   AuthenticatedImprensaRoute: AuthenticatedImprensaRoute,
   AuthenticatedMeusContratosRoute: AuthenticatedMeusContratosRoute,
   AuthenticatedMeusPagamentosRoute: AuthenticatedMeusPagamentosRoute,
   AuthenticatedMidiasRoute: AuthenticatedMidiasRoute,
+  AuthenticatedMinhaAgendaRoute: AuthenticatedMinhaAgendaRoute,
   AuthenticatedMinhasEscalasRoute: AuthenticatedMinhasEscalasRoute,
   AuthenticatedNotificacoesRoute: AuthenticatedNotificacoesRoute,
   AuthenticatedNovoProjetoRoute: AuthenticatedNovoProjetoRoute,
@@ -1455,7 +1477,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPerfilRoute: AuthenticatedPerfilRoute,
   AuthenticatedPermissoesRoute: AuthenticatedPermissoesRoute,
   AuthenticatedPublicoRoute: AuthenticatedPublicoRoute,
-  AuthenticatedRoomingListRoute: AuthenticatedRoomingListRoute,
   AuthenticatedSobreRoute: AuthenticatedSobreRoute,
   AuthenticatedVendasRoute: AuthenticatedVendasRoute,
   AuthenticatedViagensRoute: AuthenticatedViagensRoute,
