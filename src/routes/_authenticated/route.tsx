@@ -3,7 +3,7 @@ import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } fro
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import { LayoutDashboard, UserPlus, Calendar, Wallet, Route as RouteIcon, Bus, Contact, FileAudio, Music, Play, Lightbulb, Mic2, Newspaper, Settings, CheckSquare, Smartphone, Video, File } from "lucide-react";
+import { LayoutDashboard, UserPlus, Calendar, Wallet, Route as RouteIcon, Bus, Contact, FileAudio, Music, Play, Lightbulb, Mic2, Newspaper, Settings, Settings2, CheckSquare, Smartphone, Video, File } from "lucide-react";
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -340,7 +340,32 @@ function AuthedLayout() {
               );
             };
 
-                        const isProdutor = userRole === 'admin' || userRole === 'dev' || userRole === 'produtor';
+                        // Helpers de Acesso baseados na Matriz Oficial de Permissões
+            const isAdmin = userRole === 'admin' || userRole === 'dev';
+            const isProdutor = isAdmin || userRole === 'produtor';
+            const isProdutorOuAss = isProdutor || userRole === 'assistente_producao';
+            const isCoordLogistica = isProdutorOuAss || userRole === 'tour_manager';
+
+            // Permissões específicas por setor:
+            const canVerMalas = isCoordLogistica || userRole === 'cenotecnico' || userRole === 'roadie';
+            const canVerEventos = isCoordLogistica;
+            const canVerCamarinsEFigurinos = isProdutorOuAss || userRole === 'contra_regra' || userRole === 'stage_manager' || userRole === 'camareiro';
+            const canVerMontagemPalco = isProdutorOuAss || userRole === 'musico' || userRole === 'tecnico_som' || userRole === 'iluminador' || userRole === 'tecnico_video' || userRole === 'cenotecnico' || userRole === 'roadie' || userRole === 'contra_regra' || userRole === 'stage_manager' || userRole === 'rigger';
+            const canVerCatering = isProdutorOuAss || userRole === 'stage_manager' || userRole === 'camareiro';
+
+            const canVerMusicas = isProdutor || userRole === 'musico' || userRole === 'stage_manager';
+            const canVerPartituras = isProdutor || userRole === 'musico' || userRole === 'stage_manager' || userRole === 'rigger' || userRole === 'camareiro' || userRole === 'motorista' || userRole === 'assessoria_imprensa' || userRole === 'midias_sociais';
+            const canVerLuz = isProdutor || userRole === 'iluminador' || userRole === 'stage_manager';
+            const canVerSom = isProdutor || userRole === 'tecnico_som' || userRole === 'stage_manager';
+            const canVerVideo = isProdutor || userRole === 'tecnico_video' || userRole === 'stage_manager';
+
+            const canVerContatos = isCoordLogistica || userRole === 'stage_manager';
+            const canVerDadosEquipe = isCoordLogistica;
+
+            // Pranchetas de Checklist por setor
+            const canPranchetaTecnica = isProdutor || userRole === 'tecnico_som' || userRole === 'iluminador' || userRole === 'tecnico_video' || userRole === 'stage_manager';
+            const canPranchetaBackstage = isProdutor || userRole === 'camareiro' || userRole === 'cenotecnico' || userRole === 'contra_regra' || userRole === 'stage_manager';
+            const canPranchetaProdutor = isProdutor;
 
             return (
               <>
@@ -358,48 +383,50 @@ function AuthedLayout() {
                 <SGroup title="Viagens e Logística" icon={Bus}>
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
-                  <SLink to="/malas" icon={Luggage} label="Malas e Cases" />
-                  <SLink to="/hospedagem" icon={Hotel} label="Hospedagem" show={isProdutor} />
+                  <SLink to="/malas" icon={Luggage} label="Malas e Cases" show={canVerMalas} />
+                  <SLink to="/hospedagem" icon={Hotel} label="Hospedagem" show={isProdutorOuAss} />
                 </SGroup>
 
                 {/* 3. Produção Executiva */}
                 <SGroup title="Produção Executiva" icon={ClipboardList}>
                   <SLink to="/novo-projeto" icon={Sparkles} label="Maestro de Produção" show={isProdutor} />
-                  <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" />
-                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={isProdutor} />
+                  <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" show={canVerEventos} />
+                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={canPranchetaProdutor} />
                   <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" />
                   <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" />
-                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={userRole === 'admin' || userRole === 'dev'} />
+                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={isProdutor} />
                   <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
-                  <SLink to="/publico" icon={Users} label="Público" show={isProdutor} />
+                  <SLink to="/publico" icon={Users} label="Público" show={isProdutorOuAss} />
                   <SLink to="/emissao-relatorios" icon={Printer} label="Emissão de Relatórios" show={isProdutor} />
-                  <SLink to="/fornecedores" icon={Contact2} label="Diretório de Fornecedores" show={isProdutor} />
+                  <SLink to="/fornecedores" icon={Contact2} label="Diretório de Fornecedores" show={isProdutorOuAss} />
                   <SLink to="/contratos" icon={FileSignature} label="Gestão de Contratos" show={isProdutor} />
                 </SGroup>
 
                 {/* 4. Backstage */}
                 <SGroup title="Backstage" icon={DoorOpen}>
-                  <SLink to="/camarins" icon={StarDoorIcon} label="Camarins" />
-                  <SLink to="/palco" icon={StageIcon} label="Montagem de Palco" />
-                  <SLink to="/catering" icon={Coffee} label="Catering" />
-                  <SLink to="/figurinos" icon={ClothesRackIcon} label="Figurinos" />
+                  <SLink to="/camarins" icon={StarDoorIcon} label="Camarins" show={canVerCamarinsEFigurinos} />
+                  <SLink to="/palco" icon={StageIcon} label="Montagem de Palco" show={canVerMontagemPalco} />
+                  <SLink to="/catering" icon={Coffee} label="Catering" show={canVerCatering} />
+                  <SLink to="/figurinos" icon={ClothesRackIcon} label="Figurinos" show={canVerCamarinsEFigurinos} />
+                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta de Backstage" show={canPranchetaBackstage} />
                 </SGroup>
 
                 {/* 5. Técnica e Artístico */}
                 <SGroup title="Técnica e Artístico" icon={Drama}>
-                  <SLink to="/musicas" icon={FileAudio} label="Músicas" />
-                  <SLink to="/partituras" icon={Music} label="Partituras" />
-                  <SLink to="/iluminacao" icon={Lightbulb} label="Iluminação" />
-                  <SLink to="/som" icon={Mic2} label="Áudio / Som" />
-                  <SLink to="/som-operacao" icon={Play} label="Operação de Som" />
-                  <SLink to="/video" icon={Video} label="Vídeo" />
+                  <SLink to="/musicas" icon={FileAudio} label="Músicas" show={canVerMusicas} />
+                  <SLink to="/partituras" icon={Music} label="Partituras" show={canVerPartituras} />
+                  <SLink to="/iluminacao" icon={Lightbulb} label="Iluminação" show={canVerLuz} />
+                  <SLink to="/som" icon={Mic2} label="Áudio / Som" show={canVerSom} />
+                  <SLink to="/som-operacao" icon={Play} label="Operação de Som" show={canVerSom} />
+                  <SLink to="/video" icon={Video} label="Vídeo" show={canVerVideo} />
+                  <SLink to="/checklist" icon={CheckSquare} label="Prancheta Técnica" show={canPranchetaTecnica} />
                 </SGroup>
 
                 {/* 6. Equipe e RH */}
                 <SGroup title="Equipe e RH" icon={Users}>
                   <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
-                  <SLink to="/contatos" icon={Contact2} label="Contatos da Equipe" />
-                  <SLink to="/dados-equipe" icon={Users} label="Dados da Equipe" />
+                  <SLink to="/contatos" icon={Contact2} label="Contatos da Equipe" show={canVerContatos} />
+                  <SLink to="/dados-equipe" icon={Users} label="Dados da Equipe" show={canVerDadosEquipe} />
                   <SLink to="/cadastros" icon={UserPlus} label="Cadastros de Equipe" />
                 </SGroup>
 
@@ -413,14 +440,15 @@ function AuthedLayout() {
 
                 {/* 8. Gestão de Ingressos */}
                 <SGroup title="Gestão de Ingressos" icon={Ticket}>
-                  <SLink to="/ingressos/mapa" icon={Ticket} label="Mapa de Assentos" show={isProdutor} />
+                  <SLink to="/ingressos/mapa" icon={Ticket} label="Mapa de Assentos" show={isProdutorOuAss} />
                   <SLink to="/ingressos/emissao" icon={QrCode} label="Emissão de Ingressos" show={isProdutor} />
-                  <SLink to="/ingressos/validacao" icon={ShieldCheck} label="Validação / Portaria" show={isProdutor} />
+                  <SLink to="/ingressos/validacao" icon={ShieldCheck} label="Validação / Portaria" show={isProdutorOuAss} />
                 </SGroup>
 
-                {/* 9. Administração */}
-                <SGroup title="Administração" icon={Settings} show={userRole === 'admin' || userRole === 'dev'}>
-                  <SLink to="/configuracoes" icon={Settings} label="Configurações" />
+                {/* 9. Painel de Controle */}
+                <SGroup title="Painel de Controle" icon={Settings2}>
+                  <SLink to="/configuracoes" icon={Settings} label="Configurações" show={isProdutor} />
+                  <SLink to="/ajuda" icon={HelpCircle} label="Central de Ajuda" />
                   <SLink to="/sobre" icon={Info} label="Sobre o Sistema" />
                 </SGroup>
               </>

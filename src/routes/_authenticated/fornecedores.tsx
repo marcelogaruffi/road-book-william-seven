@@ -31,7 +31,7 @@ import { AccessDenied } from "@/components/AccessDenied";
 
 function FornecedoresPage() {
   const { profile } = AuthedRoute.useRouteContext();
-  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
+  const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor' || profile?.role === 'assistente_producao';
 
   const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
   const [loading, setLoading] = useState(true);

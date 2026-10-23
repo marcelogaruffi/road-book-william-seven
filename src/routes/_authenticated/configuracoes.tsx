@@ -24,6 +24,7 @@ import { AccessDenied } from "@/components/AccessDenied";
 function ConfiguracoesComponent() {
   const { profile } = AuthedRoute.useRouteContext();
   const navigate = useNavigate();
+  const { isAdmin } = usePermissions(profile);
   const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';
 
   const [loading, setLoading] = useState(true);
@@ -55,7 +56,7 @@ function ConfiguracoesComponent() {
       .from('configuracoes_sistema')
       .select('exigir_sms_cadastro, permitir_sms_escala, twilio_sid, twilio_token, twilio_number')
       .eq('id', 1)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setExigirSms(data.exigir_sms_cadastro);
@@ -75,8 +76,7 @@ function ConfiguracoesComponent() {
     setSaving(true);
     const { error } = await supabase
       .from('configuracoes_sistema')
-      .update({ exigir_sms_cadastro: checked })
-      .eq('id', 1);
+      .upsert({ id: 1, exigir_sms_cadastro: checked });
 
     setSaving(false);
     if (error) {
@@ -92,8 +92,7 @@ function ConfiguracoesComponent() {
     setSaving(true);
     const { error } = await supabase
       .from('configuracoes_sistema')
-      .update({ permitir_sms_escala: checked })
-      .eq('id', 1);
+      .upsert({ id: 1, permitir_sms_escala: checked });
 
     setSaving(false);
     if (error) {
@@ -108,12 +107,12 @@ function ConfiguracoesComponent() {
     setSavingTwilio(true);
     const { error } = await supabase
       .from('configuracoes_sistema')
-      .update({ 
+      .upsert({ 
+        id: 1, 
         twilio_sid: twilioSid, 
         twilio_token: twilioToken, 
         twilio_number: twilioNumber 
-      })
-      .eq('id', 1);
+      });
 
     setSavingTwilio(false);
     if (error) {

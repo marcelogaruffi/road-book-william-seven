@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as VerifyPhoneRouteImport } from './routes/verify-phone'
 import { Route as AuthenticatedAdminLimpezaRouteImport } from './routes/_authenticated/admin-limpeza'
+import { Route as AuthenticatedAjudaRouteImport } from './routes/_authenticated/ajuda'
 import { Route as AuthenticatedCadastrosRouteImport } from './routes/_authenticated/cadastros'
 import { Route as AuthenticatedChecklistRouteImport } from './routes/_authenticated/checklist'
 import { Route as AuthenticatedConfiguracoesRouteImport } from './routes/_authenticated/configuracoes'
@@ -104,6 +105,11 @@ const AuthenticatedAdminLimpezaRoute =
     path: '/admin-limpeza',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAjudaRoute = AuthenticatedAjudaRouteImport.update({
+  id: '/ajuda',
+  path: '/ajuda',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCadastrosRoute = AuthenticatedCadastrosRouteImport.update({
   id: '/cadastros',
   path: '/cadastros',
@@ -461,6 +467,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/verify-phone': typeof VerifyPhoneRoute
   '/admin-limpeza': typeof AuthenticatedAdminLimpezaRoute
+  '/ajuda': typeof AuthenticatedAjudaRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/checklist': typeof AuthenticatedChecklistRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -531,6 +538,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/verify-phone': typeof VerifyPhoneRoute
   '/admin-limpeza': typeof AuthenticatedAdminLimpezaRoute
+  '/ajuda': typeof AuthenticatedAjudaRoute
   '/cadastros': typeof AuthenticatedCadastrosRoute
   '/checklist': typeof AuthenticatedChecklistRoute
   '/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -603,6 +611,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/verify-phone': typeof VerifyPhoneRoute
   '/_authenticated/admin-limpeza': typeof AuthenticatedAdminLimpezaRoute
+  '/_authenticated/ajuda': typeof AuthenticatedAjudaRoute
   '/_authenticated/cadastros': typeof AuthenticatedCadastrosRoute
   '/_authenticated/checklist': typeof AuthenticatedChecklistRoute
   '/_authenticated/configuracoes': typeof AuthenticatedConfiguracoesRoute
@@ -675,6 +684,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/verify-phone'
     | '/admin-limpeza'
+    | '/ajuda'
     | '/cadastros'
     | '/checklist'
     | '/configuracoes'
@@ -745,6 +755,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/verify-phone'
     | '/admin-limpeza'
+    | '/ajuda'
     | '/cadastros'
     | '/checklist'
     | '/configuracoes'
@@ -816,6 +827,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/verify-phone'
     | '/_authenticated/admin-limpeza'
+    | '/_authenticated/ajuda'
     | '/_authenticated/cadastros'
     | '/_authenticated/checklist'
     | '/_authenticated/configuracoes'
@@ -928,6 +940,13 @@ declare module '@tanstack/react-router' {
       path: '/admin-limpeza'
       fullPath: '/admin-limpeza'
       preLoaderRoute: typeof AuthenticatedAdminLimpezaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/ajuda': {
+      id: '/_authenticated/ajuda'
+      path: '/ajuda'
+      fullPath: '/ajuda'
+      preLoaderRoute: typeof AuthenticatedAjudaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/cadastros': {
@@ -1383,6 +1402,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminLimpezaRoute: typeof AuthenticatedAdminLimpezaRoute
+  AuthenticatedAjudaRoute: typeof AuthenticatedAjudaRoute
   AuthenticatedCadastrosRoute: typeof AuthenticatedCadastrosRoute
   AuthenticatedChecklistRoute: typeof AuthenticatedChecklistRoute
   AuthenticatedConfiguracoesRoute: typeof AuthenticatedConfiguracoesRoute
@@ -1447,6 +1467,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminLimpezaRoute: AuthenticatedAdminLimpezaRoute,
+  AuthenticatedAjudaRoute: AuthenticatedAjudaRoute,
   AuthenticatedCadastrosRoute: AuthenticatedCadastrosRoute,
   AuthenticatedChecklistRoute: AuthenticatedChecklistRoute,
   AuthenticatedConfiguracoesRoute: AuthenticatedConfiguracoesRoute,
