@@ -17,7 +17,7 @@ type Profile = {
   id: string;
   nome: string;
   foto_url: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger" | "contador" | "juridico";
 };
 
 export const Route = createFileRoute("/_authenticated")({
@@ -419,12 +419,12 @@ function AuthedLayout() {
                   <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={canPranchetaProdutor} />
                   <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" show={isProdutor} />
                   <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" show={isProdutor} />
-                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={isProdutor} />
+                  <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={isProdutor || hasRole('contador')} />
                   <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
                   <SLink to="/publico" icon={Users} label="Público" show={isProdutorOuAss} />
                   <SLink to="/emissao-relatorios" icon={Printer} label="Emissão de Relatórios" show={isProdutor} />
                   <SLink to="/fornecedores" icon={Contact2} label="Diretório de Fornecedores" show={isProdutorOuAss} />
-                  <SLink to="/contratos" icon={FileSignature} label="Gestão de Contratos" show={isProdutor} />
+                  <SLink to="/contratos" icon={FileSignature} label="Gestão de Contratos" show={isProdutor || hasRole('juridico')} />
                 </SGroup>
 
                 {/* 4. Backstage */}

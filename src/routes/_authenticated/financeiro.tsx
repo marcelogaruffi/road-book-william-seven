@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
 function FinanceiroPage() {
   // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
   const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
-  const allowedRolesList = ["dev","produtor"];
+  const allowedRolesList = ["dev","produtor","contador"];
   const profileRoles = routeCtx?.profile ? [routeCtx.profile.role, ...(Array.isArray(routeCtx.profile.funcoes) ? routeCtx.profile.funcoes : [])] : [];
   const hasAccess = profileRoles.some(r => allowedRolesList.includes(r));
   if (routeCtx?.profile && !hasAccess) {

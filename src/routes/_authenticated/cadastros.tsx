@@ -35,7 +35,7 @@ type Profile = {
   telefone: string | null;
   foto_url: string | null;
   email?: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger";
+  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger" | "contador" | "juridico";
   telefone_verificado?: boolean | null;
 };
 
@@ -67,6 +67,8 @@ export const ROLE_BADGE_MAP: Record<string, { label: string, classes: string }> 
   assessoria_imprensa: { label: 'Assessoria de Imprensa', classes: 'bg-violet-100 text-violet-700 hover:bg-violet-100' },
   midias_sociais: { label: 'Mídias Sociais', classes: 'bg-blue-200 text-blue-800 hover:bg-blue-200' },
   rigger: { label: 'Rigger', classes: 'bg-stone-200 text-stone-800 hover:bg-stone-200' },
+  contador: { label: 'Contador', classes: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100' },
+  juridico: { label: 'Jurídico', classes: 'bg-slate-200 text-slate-800 hover:bg-slate-200' },
 };
 
 export const Route = createFileRoute("/_authenticated/cadastros")({
@@ -402,6 +404,8 @@ function UsersPage() {
                       <option value="rigger">Rigger</option>
                       <option value="assessoria_imprensa">Assessoria de Imprensa</option>
                       <option value="midias_sociais">Mídias Sociais</option>
+                      <option value="contador">Contador</option>
+                      <option value="juridico">Jurídico</option>
                     </select>
                   </div>
 

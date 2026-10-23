@@ -58,8 +58,8 @@ const ALL_SHORTCUTS: ShortcutItem[] = [
   { id: 'meus-pagamentos', title: 'Meus Pagamentos', to: '/meus-pagamentos', icon: Wallet, colorClass: 'bg-green-500/10 text-green-600' },
   { id: 'eventos', title: 'Eventos e Apresentações', to: '/eventos', icon: Calendar, colorClass: 'bg-sky-500/10 text-sky-600', roles: ['dev', 'produtor', 'assistente_producao', 'tour_manager'] },
   { id: 'escalas', title: 'Gestão de Escalas', to: '/escalas', icon: CheckSquare, colorClass: 'bg-indigo-500/10 text-indigo-600', roles: ['dev', 'produtor'] },
-  { id: 'contratos', title: 'Gestão de Contratos', to: '/contratos', icon: FileText, colorClass: 'bg-teal-600/10 text-teal-600', roles: ['dev', 'produtor'] },
-  { id: 'financeiro', title: 'Financeiro', to: '/financeiro', icon: Banknote, colorClass: 'bg-emerald-500/10 text-emerald-600', roles: ['dev', 'produtor'] },
+  { id: 'contratos', title: 'Gestão de Contratos', to: '/contratos', icon: FileText, colorClass: 'bg-teal-600/10 text-teal-600', roles: ['dev', 'produtor', 'juridico'] },
+  { id: 'financeiro', title: 'Financeiro', to: '/financeiro', icon: Banknote, colorClass: 'bg-emerald-500/10 text-emerald-600', roles: ['dev', 'produtor', 'contador'] },
   { id: 'som', title: 'Design de Som', to: '/som', icon: Mic2, colorClass: 'bg-blue-500/10 text-blue-600', roles: ['dev', 'produtor', 'tecnico_som', 'stage_manager'] },
   { id: 'som-operacao', title: 'Operação de Som', to: '/som-operacao', icon: Volume2, colorClass: 'bg-cyan-500/10 text-cyan-600', roles: ['dev', 'produtor', 'tecnico_som', 'stage_manager'] },
   { id: 'iluminacao', title: 'Iluminação', to: '/iluminacao', icon: Lightbulb, colorClass: 'bg-amber-500/10 text-amber-600', roles: ['dev', 'produtor', 'iluminador', 'stage_manager'] },
@@ -134,6 +134,12 @@ function getShortcutsForSingleRole(role: string): string[] {
   }
   if (role === 'midias_sociais') {
     return ['midias', 'fotos', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  if (role === 'contador') {
+    return ['financeiro', 'minhas-escalas', 'meus-pagamentos'];
+  }
+  if (role === 'juridico') {
+    return ['contratos', 'minhas-escalas', 'meus-pagamentos'];
   }
   return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos'];
 }
