@@ -264,103 +264,21 @@ function UsersPage() {
       {/* HEADER */}
       <section className="space-y-4">
         <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white pb-1">
-          Configurações do Sistema
+          Cadastros de Equipe & Convites
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 font-medium">Gerencie acessos e modelos padrão (Riders) do sistema.</p>
+        <p className="text-slate-500 dark:text-slate-400 font-medium">Gerencie os membros da equipe e envie novos convites de acesso.</p>
       </section>
 
-      <Tabs defaultValue="equipe" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-lg bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
-          <TabsTrigger value="equipe" className="rounded-lg h-full font-bold text-xs sm:text-sm">Equipe e Convites</TabsTrigger>
-          <TabsTrigger value="riders" className="rounded-lg h-full font-bold text-xs sm:text-sm">Riders Padrão</TabsTrigger>
+      <Tabs defaultValue="usuarios" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md bg-slate-100 dark:bg-white/10 rounded-xl h-14 p-1">
+          <TabsTrigger value="usuarios" className="rounded-lg h-full font-bold text-xs sm:text-sm">Usuários Cadastrados ({users.length})</TabsTrigger>
+          <TabsTrigger value="convites" className="rounded-lg h-full font-bold text-xs sm:text-sm">Gerar e Ver Convites</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="equipe" className="mt-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* COLUNA ESQUERDA: CONVITES */}
-        <div className="space-y-6">
-          <Card className="border-0 shadow-lg dark:bg-white/[0.02] dark:backdrop-blur-xl rounded-[2rem] overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 text-white relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10"></div>
-            <CardContent className="p-8 relative z-10 space-y-6">
-              <div>
-                <h3 className="text-2xl font-black mb-2">Novo Membro</h3>
-                <p className="text-indigo-100 font-medium text-sm">Gere um token de convite seguro e envie para a pessoa criar a conta.</p>
-              </div>
-              
-              <div className="space-y-2">
-                <select 
-                  value={inviteRole} 
-                  onChange={(e: any) => setInviteRole(e.target.value)}
-                  className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/20"
-                >
-                  <option value="admin">Administrador (Prod. Executiva)</option>
-                  <option value="produtor">Produtor</option>
-                  <option value="iluminador">Iluminador</option>
-                  <option value="tecnico_som">Técnico de Som</option>
-                  <option value="motorista">Motorista</option>
-                  <option value="stage_manager">Stage Manager</option>
-                  <option value="contra_regra">Contra-regra</option>
-                  <option value="assistente_producao">Assistente de Produção</option>
-                  <option value="camareiro">Camareiro / Figurinista</option>
-                  <option value="elenco">Elenco</option>
-                  <option value="musico">Músico</option>
-                  <option value="tour_manager">Tour Manager</option>
-                  <option value="roadie">Roadie</option>
-                  <option value="cenotecnico">Cenotécnico</option>
-                  <option value="tecnico_video">Técnico de Vídeo</option>
-                  <option value="rigger">Rigger</option>
-
-                </select>
-              </div>
-
-              <Button onClick={generateInvite} className="w-full bg-white text-indigo-600 hover:bg-slate-100 font-bold h-12 rounded-xl shadow-lg">
-                <Plus className="mr-2 size-5" /> Gerar Convite
-              </Button>
-            </CardContent>
-          </Card>
-
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg text-slate-800 dark:text-white px-2">Convites Pendentes</h3>
-            {invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).length === 0 ? (
-              <p className="text-slate-500 text-sm px-2">Nenhum convite pendente no momento.</p>
-            ) : (
-              <div className="space-y-3">
-                {invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).map(i => (
-                  <Card key={i.id} className="border-0 shadow-sm bg-white dark:bg-card/40 rounded-xl overflow-hidden group">
-                    <div className="flex items-center justify-between p-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <KeyRound className="size-4 text-primary" />
-                          <span className="font-mono font-bold tracking-wider">{i.token}</span>
-                          {ROLE_BADGE_MAP[i.role] && (
-                            <Badge className={`ml-2 text-xs border-none px-2 rounded-md uppercase tracking-wider ${ROLE_BADGE_MAP[i.role].classes}`}>
-                              {ROLE_BADGE_MAP[i.role].label}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString('pt-BR')}</p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => copyToken(i.token)} className="rounded-full text-slate-400 hover:text-primary hover:bg-primary/10" title="Copiar Token">
-                          <Copy className="size-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => deleteInvite(i.id)} className="rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50" title="Apagar Convite">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* COLUNA DIREITA: USUÁRIOS */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* ABA 1: USUÁRIOS CADASTRADOS */}
+        <TabsContent value="usuarios" className="mt-8 space-y-6">
           <div className="flex items-center justify-between px-2">
-            <h3 className="font-bold text-xl text-slate-800 dark:text-white">Usuários Cadastrados ({users.length})</h3>
+            <h3 className="font-bold text-xl text-slate-800 dark:text-white">Membros da Equipe ({users.length})</h3>
           </div>
 
           {loading ? (
@@ -381,7 +299,6 @@ function UsersPage() {
                         <h4 className="font-bold text-lg text-slate-800 dark:text-white truncate">{u.nome}</h4>
                         {(() => {
                           const funcs = u.funcoes && u.funcoes.length > 0 ? u.funcoes : [u.role];
-                          // Some accounts might have dev/admin role but no funcoes array
                           if (['dev', 'admin', 'user'].includes(u.role) && !funcs.includes(u.role)) {
                             funcs.unshift(u.role);
                           }
@@ -436,13 +353,91 @@ function UsersPage() {
               ))}
             </div>
           )}
-        </div>
-      </div>
-      </TabsContent>
+        </TabsContent>
 
-        <TabsContent value="riders" className="mt-0">
-        <TemplateRidersTab role={profile?.role || ''} />
-      </TabsContent>
+        {/* ABA 2: CONVITES */}
+        <TabsContent value="convites" className="mt-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="space-y-6">
+              <Card className="border-0 shadow-lg dark:bg-white/[0.02] dark:backdrop-blur-xl rounded-[2rem] overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 text-white relative">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10"></div>
+                <CardContent className="p-8 relative z-10 space-y-6">
+                  <div>
+                    <h3 className="text-2xl font-black mb-2">Novo Membro</h3>
+                    <p className="text-indigo-100 font-medium text-sm">Gere um token de convite seguro e envie para a pessoa criar a conta.</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <select 
+                      value={inviteRole} 
+                      onChange={(e: any) => setInviteRole(e.target.value)}
+                      className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/20"
+                    >
+                      <option value="admin">Administrador (Prod. Executiva)</option>
+                      <option value="produtor">Produtor</option>
+                      <option value="iluminador">Iluminador</option>
+                      <option value="tecnico_som">Técnico de Som</option>
+                      <option value="motorista">Motorista</option>
+                      <option value="stage_manager">Stage Manager</option>
+                      <option value="contra_regra">Contra-regra</option>
+                      <option value="assistente_producao">Assistente de Produção</option>
+                      <option value="camareiro">Camareiro / Figurinista</option>
+                      <option value="elenco">Elenco</option>
+                      <option value="musico">Músico</option>
+                      <option value="tour_manager">Tour Manager</option>
+                      <option value="roadie">Roadie</option>
+                      <option value="cenotecnico">Cenotécnico</option>
+                      <option value="tecnico_video">Técnico de Vídeo</option>
+                      <option value="rigger">Rigger</option>
+                      <option value="assessoria_imprensa">Assessoria de Imprensa</option>
+                      <option value="midias_sociais">Mídias Sociais</option>
+                    </select>
+                  </div>
+
+                  <Button onClick={generateInvite} className="w-full bg-white text-indigo-600 hover:bg-slate-100 font-bold h-12 rounded-xl shadow-lg">
+                    <Plus className="mr-2 size-5" /> Gerar Convite
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-2 space-y-4">
+              <h3 className="font-bold text-xl text-slate-800 dark:text-white px-2">Convites Pendentes</h3>
+              {invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).length === 0 ? (
+                <p className="text-slate-500 text-sm px-2">Nenhum convite pendente no momento.</p>
+              ) : (
+                <div className="space-y-3">
+                  {invites.filter(i => !i.used_at && new Date(i.expires_at) > new Date()).map(i => (
+                    <Card key={i.id} className="border-0 shadow-sm bg-white dark:bg-card/40 rounded-xl overflow-hidden group">
+                      <div className="flex items-center justify-between p-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <KeyRound className="size-4 text-primary" />
+                            <span className="font-mono font-bold tracking-wider">{i.token}</span>
+                            {ROLE_BADGE_MAP[i.role] && (
+                              <Badge className={`ml-2 text-xs border-none px-2 rounded-md uppercase tracking-wider ${ROLE_BADGE_MAP[i.role].classes}`}>
+                                {ROLE_BADGE_MAP[i.role].label}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString('pt-BR')}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => copyToken(i.token)} className="rounded-full text-slate-400 hover:text-primary hover:bg-primary/10" title="Copiar Token">
+                            <Copy className="size-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => deleteInvite(i.id)} className="rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50" title="Apagar Convite">
+                            <Trash2 className="size-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* MODAL DE EDIÇÃO */}
