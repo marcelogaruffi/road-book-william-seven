@@ -2,7 +2,7 @@ import { Info, HelpCircle, FileSignature, ChevronLeft, ClipboardList, Drama, Doo
 import { createFileRoute, Outlet, redirect, Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Children, isValidElement } from "react";
 import { LayoutDashboard, UserPlus, Calendar, Wallet, Route as RouteIcon, Bus, Contact, FileAudio, Music, Play, Lightbulb, Mic2, Newspaper, Settings, Settings2, CheckSquare, Smartphone, Video, File } from "lucide-react";
 import { ROLE_BADGE_MAP } from "./cadastros";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -340,9 +340,13 @@ function AuthedLayout() {
               );
             };
 
-                        // Helpers de Acesso baseados na Matriz Oficial de Permissões
-            const isAdmin = userRole === 'admin' || userRole === 'dev';
-            const isProdutor = isAdmin || userRole === 'produtor';
+                        // Helpers de Acesso:
+            // Administrador (admin): Focado estritamente em ajustes e Painel de Controle do sistema.
+            // Desenvolvedor (dev): Acesso amplo de manutenção.
+            // Produtor (produtor): Gestor executivo completo das turnês, eventos e finanças.
+            const isDev = userRole === 'dev';
+            const isAdmin = userRole === 'admin' || isDev;
+            const isProdutor = isDev || userRole === 'produtor';
             const isProdutorOuAss = isProdutor || userRole === 'assistente_producao';
             const isCoordLogistica = isProdutorOuAss || userRole === 'tour_manager';
 
@@ -362,9 +366,9 @@ function AuthedLayout() {
             const canVerContatos = isCoordLogistica || userRole === 'stage_manager';
             const canVerDadosEquipe = isCoordLogistica;
 
-            // Pranchetas de Checklist por setor
-            const canPranchetaTecnica = isProdutor || userRole === 'tecnico_som' || userRole === 'iluminador' || userRole === 'tecnico_video' || userRole === 'stage_manager';
-            const canPranchetaBackstage = isProdutor || userRole === 'camareiro' || userRole === 'cenotecnico' || userRole === 'contra_regra' || userRole === 'stage_manager';
+            // Pranchetas de Checklist por setor (Produtor só vê na Produção Executiva)
+            const canPranchetaTecnica = !isProdutor && (userRole === 'tecnico_som' || userRole === 'iluminador' || userRole === 'tecnico_video' || userRole === 'stage_manager');
+            const canPranchetaBackstage = !isProdutor && (userRole === 'camareiro' || userRole === 'cenotecnico' || userRole === 'contra_regra' || userRole === 'stage_manager');
             const canPranchetaProdutor = isProdutor;
 
             return (
@@ -392,8 +396,8 @@ function AuthedLayout() {
                   <SLink to="/novo-projeto" icon={Sparkles} label="Maestro de Produção" show={isProdutor} />
                   <SLink to="/eventos" icon={Calendar} label="Eventos e Apresentações" show={canVerEventos} />
                   <SLink to="/checklist" icon={CheckSquare} label="Prancheta Produtor" show={canPranchetaProdutor} />
-                  <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" />
-                  <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" />
+                  <SLink to="/espetaculos" icon={Music} label="Catálogo de Espetáculos" show={isProdutor} />
+                  <SLink to="/padroes" icon={Layers} label="Padrões de Espetáculo" show={isProdutor} />
                   <SLink to="/financeiro" icon={Wallet} label="Financeiro" show={isProdutor} />
                   <SLink to="/vendas" icon={ShoppingCart} label="Controle de Vendas" show={isProdutor} />
                   <SLink to="/publico" icon={Users} label="Público" show={isProdutorOuAss} />
@@ -427,7 +431,7 @@ function AuthedLayout() {
                   <SLink to="/escalas" icon={Users} label="Painel de Escalas" show={isProdutor} />
                   <SLink to="/contatos" icon={Contact2} label="Contatos da Equipe" show={canVerContatos} />
                   <SLink to="/dados-equipe" icon={Users} label="Dados da Equipe" show={canVerDadosEquipe} />
-                  <SLink to="/cadastros" icon={UserPlus} label="Cadastros de Equipe" />
+                  <SLink to="/cadastros" icon={UserPlus} label="Cadastros de Equipe" show={isAdmin || isProdutor} />
                 </SGroup>
 
                 {/* 7. Comunicação e Mídia */}
@@ -447,7 +451,7 @@ function AuthedLayout() {
 
                 {/* 9. Painel de Controle */}
                 <SGroup title="Painel de Controle" icon={Settings2}>
-                  <SLink to="/configuracoes" icon={Settings} label="Configurações" show={isProdutor} />
+                  <SLink to="/configuracoes" icon={Settings} label="Configurações" show={isAdmin || isProdutor} />
                   <SLink to="/ajuda" icon={HelpCircle} label="Central de Ajuda" />
                   <SLink to="/sobre" icon={Info} label="Sobre o Sistema" />
                 </SGroup>
@@ -478,36 +482,6 @@ function AuthedLayout() {
             </Tooltip>
           </div>
         )}
-
-        {/* BOTÃO DO TUTORIAL / GUIA */}
-          <div className="px-2 pb-1">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    localStorage.removeItem("axis_tutorial_completed");
-                    if (location.pathname !== "/dashboard") {
-                      navigate({ to: "/dashboard" }).then(() => {
-                        setTimeout(() => window.dispatchEvent(new CustomEvent("start-axis-tutorial")), 400);
-                      });
-                    } else {
-                      window.dispatchEvent(new CustomEvent("start-axis-tutorial"));
-                    }
-                  }} 
-                  className={`w-full flex items-center ${sidebarOpen ? 'justify-start px-3' : 'justify-center px-0'} h-9 rounded-xl text-slate-500 dark:text-slate-400 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-500/10 dark:hover:text-sky-400 font-medium transition-all`}
-                >
-                  <HelpCircle className={`size-4.5 ${sidebarOpen ? 'mr-2.5' : ''}`} />
-                  {sidebarOpen && <span className="text-xs">Como Usar / Tour</span>}
-                </button>
-              </TooltipTrigger>
-              {!sidebarOpen && (
-                <TooltipContent side="right" className="bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-bold text-xs shadow-xl px-3 py-1.5 rounded-lg">
-                  Como Usar / Tour
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </div>
 
         {/* RODAPÉ: SAIR E MODO ESCURO/CLARO */}
         <div className="p-2 border-t border-slate-200/60 dark:border-white/10 space-y-1">

@@ -203,8 +203,7 @@ function ChecklistPage() {
       obrigatorio: item.obrigatorio,
       concluido: false,
       ordem: index,
-      setor: selectedSetor,
-      usuario_id: profile?.id || null
+      setor: selectedSetor
     }));
 
     const { data, error } = await supabase.from("checklist_eventos").insert(novosItens).select();
@@ -252,8 +251,7 @@ function ChecklistPage() {
       item_nome: novoItemNome.trim(),
       obrigatorio: novoItemObrigatorio,
       ordem: novaOrdem,
-      setor: selectedSetor,
-      created_by: profile?.id || null
+      setor: selectedSetor
     }).select().single();
 
     if (error) {
@@ -282,8 +280,7 @@ function ChecklistPage() {
       obrigatorio: novoItemExtraObrigatorio,
       concluido: false,
       ordem: novaOrdem,
-      setor: selectedSetor,
-      usuario_id: profile?.id || null
+      setor: selectedSetor
     }).select().single();
 
     if (error) {
