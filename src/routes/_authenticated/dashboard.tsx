@@ -56,59 +56,86 @@ const ALL_SHORTCUTS: ShortcutItem[] = [
   { id: 'meus-contratos', title: 'Meus Contratos', to: '/meus-contratos', icon: FileText, colorClass: 'bg-indigo-600/10 text-indigo-600' },
   { id: 'viagens', title: 'Minhas Viagens', to: '/viagens', icon: Bus, colorClass: 'bg-emerald-500/10 text-emerald-600' },
   { id: 'meus-pagamentos', title: 'Meus Pagamentos', to: '/meus-pagamentos', icon: Wallet, colorClass: 'bg-green-500/10 text-green-600' },
-  { id: 'eventos', title: 'Eventos e Apresentações', to: '/eventos', icon: Calendar, colorClass: 'bg-sky-500/10 text-sky-600', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'escalas', title: 'Gestão de Escalas', to: '/escalas', icon: CheckSquare, colorClass: 'bg-indigo-500/10 text-indigo-600', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'contratos', title: 'Gestão de Contratos', to: '/contratos', icon: FileText, colorClass: 'bg-teal-600/10 text-teal-600', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'financeiro', title: 'Financeiro', to: '/financeiro', icon: Banknote, colorClass: 'bg-emerald-500/10 text-emerald-600', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'som', title: 'Design de Som', to: '/som', icon: Mic2, colorClass: 'bg-blue-500/10 text-blue-600', roles: ['admin', 'dev', 'tecnico_som', 'produtor'] },
-  { id: 'som-operacao', title: 'Operação de Som', to: '/som-operacao', icon: Volume2, colorClass: 'bg-cyan-500/10 text-cyan-600', roles: ['admin', 'dev', 'tecnico_som', 'produtor'] },
-  { id: 'iluminacao', title: 'Iluminação', to: '/iluminacao', icon: Lightbulb, colorClass: 'bg-amber-500/10 text-amber-600', roles: ['admin', 'dev', 'iluminador', 'produtor'] },
-  { id: 'video', title: 'Vídeo e Mídia', to: '/video', icon: Video, colorClass: 'bg-purple-500/10 text-purple-600', roles: ['admin', 'dev', 'tecnico_video', 'produtor'] },
-  { id: 'palco', title: 'Montagem de Palco', to: '/palco', icon: StageIcon, colorClass: 'bg-slate-500/10 text-slate-600', roles: ['admin', 'dev', 'cenotecnico', 'roadie', 'produtor', 'stage_manager'] },
-  { id: 'partituras', title: 'Partituras', to: '/partituras', icon: Music, colorClass: 'bg-fuchsia-500/10 text-fuchsia-600', roles: ['admin', 'dev', 'produtor', 'assistente_producao', 'stage_manager', 'musico'] },
-  { id: 'musicas', title: 'Músicas e Áudios', to: '/musicas', icon: Play, colorClass: 'bg-violet-500/10 text-violet-600' },
-  { id: 'figurinos', title: 'Figurinos', to: '/figurinos', icon: ClothesRackIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['admin', 'dev', 'camareiro', 'produtor'] },
-  { id: 'meus-figurinos', title: 'Meus Figurinos', to: '/meus-figurinos', icon: ClothesRackIcon, colorClass: 'bg-rose-500/10 text-rose-600', roles: ['elenco', 'musico'] },
-  { id: 'camarins', title: 'Camarins', to: '/camarins', icon: StarDoorIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['admin', 'dev', 'camareiro', 'produtor'] },
-  { id: 'catering', title: 'Catering', to: '/catering', icon: Coffee, colorClass: 'bg-orange-500/10 text-orange-600', roles: ['admin', 'dev', 'produtor', 'assistente_producao'] },
-  { id: 'malas', title: 'Malas e Bagagens', to: '/malas', icon: Luggage, colorClass: 'bg-teal-500/10 text-teal-600' },
-  { id: 'fotos', title: 'Fotos e Arquivos', to: '/fotos', icon: ImageIcon, colorClass: 'bg-blue-600/10 text-blue-700' },
-  { id: 'midias', title: 'Mídias Sociais', to: '/midias', icon: Smartphone, colorClass: 'bg-indigo-600/10 text-indigo-700', roles: ['admin', 'dev', 'produtor', 'midias_sociais'] },
-  { id: 'imprensa', title: 'Assessoria de Imprensa', to: '/imprensa', icon: Newspaper, colorClass: 'bg-yellow-500/10 text-yellow-700', roles: ['admin', 'dev', 'produtor', 'assessoria_imprensa'] },
-  { id: 'relatorios', title: 'Relatórios', to: '/emissao-relatorios', icon: Printer, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'fornecedores', title: 'Fornecedores', to: '/fornecedores', icon: ShoppingCart, colorClass: 'bg-amber-600/10 text-amber-700', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'contatos', title: 'Contatos', to: '/contatos', icon: Contact2, colorClass: 'bg-red-500/10 text-red-600' },
-  { id: 'espetaculos', title: 'Catálogo de Espetáculos', to: '/espetaculos', icon: Drama, colorClass: 'bg-purple-600/10 text-purple-700', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'padroes', title: 'Padrões Espetáculo', to: '/padroes', icon: Settings, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['admin', 'dev', 'produtor'] },
-  { id: 'cadastros', title: 'Usuários e Equipe', to: '/cadastros', icon: UserPlus, colorClass: 'bg-blue-700/10 text-blue-800', roles: ['admin', 'dev'] },
+  { id: 'eventos', title: 'Eventos e Apresentações', to: '/eventos', icon: Calendar, colorClass: 'bg-sky-500/10 text-sky-600', roles: ['dev', 'produtor', 'assistente_producao', 'tour_manager'] },
+  { id: 'escalas', title: 'Gestão de Escalas', to: '/escalas', icon: CheckSquare, colorClass: 'bg-indigo-500/10 text-indigo-600', roles: ['dev', 'produtor'] },
+  { id: 'contratos', title: 'Gestão de Contratos', to: '/contratos', icon: FileText, colorClass: 'bg-teal-600/10 text-teal-600', roles: ['dev', 'produtor'] },
+  { id: 'financeiro', title: 'Financeiro', to: '/financeiro', icon: Banknote, colorClass: 'bg-emerald-500/10 text-emerald-600', roles: ['dev', 'produtor'] },
+  { id: 'som', title: 'Design de Som', to: '/som', icon: Mic2, colorClass: 'bg-blue-500/10 text-blue-600', roles: ['dev', 'produtor', 'tecnico_som', 'stage_manager'] },
+  { id: 'som-operacao', title: 'Operação de Som', to: '/som-operacao', icon: Volume2, colorClass: 'bg-cyan-500/10 text-cyan-600', roles: ['dev', 'produtor', 'tecnico_som', 'stage_manager'] },
+  { id: 'iluminacao', title: 'Iluminação', to: '/iluminacao', icon: Lightbulb, colorClass: 'bg-amber-500/10 text-amber-600', roles: ['dev', 'produtor', 'iluminador', 'stage_manager'] },
+  { id: 'video', title: 'Vídeo e Mídia', to: '/video', icon: Video, colorClass: 'bg-purple-500/10 text-purple-600', roles: ['dev', 'produtor', 'tecnico_video', 'stage_manager'] },
+  { id: 'palco', title: 'Montagem de Palco', to: '/palco', icon: StageIcon, colorClass: 'bg-slate-500/10 text-slate-600', roles: ['dev', 'produtor', 'assistente_producao', 'musico', 'tecnico_som', 'iluminador', 'tecnico_video', 'cenotecnico', 'roadie', 'contra_regra', 'stage_manager', 'rigger'] },
+  { id: 'partituras', title: 'Partituras', to: '/partituras', icon: Music, colorClass: 'bg-fuchsia-500/10 text-fuchsia-600', roles: ['dev', 'produtor', 'musico', 'stage_manager', 'rigger', 'camareiro', 'motorista', 'assessoria_imprensa', 'midias_sociais'] },
+  { id: 'musicas', title: 'Músicas e Áudios', to: '/musicas', icon: Play, colorClass: 'bg-violet-500/10 text-violet-600', roles: ['dev', 'produtor', 'musico', 'stage_manager'] },
+  { id: 'figurinos', title: 'Figurinos', to: '/figurinos', icon: ClothesRackIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['dev', 'produtor', 'assistente_producao', 'contra_regra', 'stage_manager', 'camareiro'] },
+  { id: 'meus-figurinos', title: 'Meus Figurinos', to: '/meus-figurinos', icon: ClothesRackIcon, colorClass: 'bg-rose-500/10 text-rose-600', roles: ['dev', 'produtor', 'assistente_producao', 'contra_regra', 'stage_manager', 'camareiro'] },
+  { id: 'camarins', title: 'Camarins', to: '/camarins', icon: StarDoorIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['dev', 'produtor', 'assistente_producao', 'contra_regra', 'stage_manager', 'camareiro'] },
+  { id: 'catering', title: 'Catering', to: '/catering', icon: Coffee, colorClass: 'bg-orange-500/10 text-orange-600', roles: ['dev', 'produtor', 'assistente_producao', 'stage_manager', 'camareiro'] },
+  { id: 'malas', title: 'Malas e Bagagens', to: '/malas', icon: Luggage, colorClass: 'bg-teal-500/10 text-teal-600', roles: ['dev', 'produtor', 'assistente_producao', 'tour_manager', 'cenotecnico', 'roadie'] },
+  { id: 'fotos', title: 'Fotos e Arquivos', to: '/fotos', icon: ImageIcon, colorClass: 'bg-blue-600/10 text-blue-700', roles: ['dev', 'produtor', 'midias_sociais'] },
+  { id: 'midias', title: 'Mídias Sociais', to: '/midias', icon: Smartphone, colorClass: 'bg-indigo-600/10 text-indigo-700', roles: ['dev', 'produtor', 'midias_sociais'] },
+  { id: 'imprensa', title: 'Assessoria de Imprensa', to: '/imprensa', icon: Newspaper, colorClass: 'bg-yellow-500/10 text-yellow-700', roles: ['dev', 'produtor', 'assessoria_imprensa'] },
+  { id: 'relatorios', title: 'Relatórios', to: '/emissao-relatorios', icon: Printer, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['dev', 'produtor'] },
+  { id: 'fornecedores', title: 'Fornecedores', to: '/fornecedores', icon: ShoppingCart, colorClass: 'bg-amber-600/10 text-amber-700', roles: ['dev', 'produtor', 'assistente_producao'] },
+  { id: 'contatos', title: 'Contatos', to: '/contatos', icon: Contact2, colorClass: 'bg-red-500/10 text-red-600', roles: ['dev', 'produtor', 'assistente_producao', 'tour_manager', 'stage_manager'] },
+  { id: 'espetaculos', title: 'Catálogo de Espetáculos', to: '/espetaculos', icon: Drama, colorClass: 'bg-purple-600/10 text-purple-700', roles: ['dev', 'produtor'] },
+  { id: 'padroes', title: 'Padrões Espetáculo', to: '/padroes', icon: Settings, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['dev', 'produtor'] },
+  { id: 'cadastros', title: 'Usuários e Equipe', to: '/cadastros', icon: UserPlus, colorClass: 'bg-blue-700/10 text-blue-800', roles: ['dev', 'admin', 'produtor'] },
 ];
 
 function getDefaultShortcuts(role: string): string[] {
-  if (['admin', 'dev', 'produtor'].includes(role)) {
+  if (['dev', 'produtor'].includes(role)) {
     return ['eventos', 'escalas', 'contratos', 'minhas-escalas', 'viagens', 'meus-pagamentos', 'financeiro', 'relatorios'];
   }
+  if (role === 'admin') {
+    return ['cadastros', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  if (role === 'assistente_producao') {
+    return ['eventos', 'fornecedores', 'camarins', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  if (role === 'tour_manager') {
+    return ['eventos', 'contatos', 'malas', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  if (role === 'stage_manager') {
+    return ['palco', 'camarins', 'contatos', 'som', 'iluminacao', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  if (role === 'contra_regra') {
+    return ['palco', 'camarins', 'figurinos', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
   if (role === 'tecnico_som') {
-    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'som', 'som-operacao', 'palco'];
+    return ['som', 'som-operacao', 'palco', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'iluminador') {
-    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'iluminacao', 'palco'];
+    return ['iluminacao', 'palco', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'tecnico_video') {
-    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'video', 'palco'];
+    return ['video', 'palco', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (['cenotecnico', 'roadie'].includes(role)) {
-    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'palco', 'malas'];
+    return ['palco', 'malas', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  if (role === 'rigger') {
+    return ['palco', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'camareiro') {
-    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'figurinos', 'camarins'];
+    return ['camarins', 'figurinos', 'catering', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'musico') {
-    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'partituras', 'musicas'];
+    return ['partituras', 'musicas', 'palco', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'elenco') {
-    return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'meus-figurinos', 'partituras'];
+    return ['minhas-escalas', 'viagens', 'meus-pagamentos', 'meus-contratos'];
   }
-  return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos', 'contatos'];
+  if (role === 'motorista') {
+    return ['viagens', 'partituras', 'minhas-escalas', 'meus-pagamentos'];
+  }
+  if (role === 'assessoria_imprensa') {
+    return ['imprensa', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  if (role === 'midias_sociais') {
+    return ['midias', 'fotos', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+  }
+  return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos'];
 }
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -501,7 +528,7 @@ function Dashboard() {
           {profile?.role === 'motorista' ? (<a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Ver Roteiro</a>) : (<a href={`/rb/${r.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="size-4 mr-2" /> Ver Roteiro</a>)}
         </Button>
         
-        {profile?.role !== 'motorista' && (
+        {['dev', 'produtor', 'assistente_producao'].includes(profile?.role || '') && (
         <div className="grid grid-cols-4 sm:flex gap-2 w-full sm:w-auto sm:border-l sm:border-slate-200 dark:sm:border-white/10 sm:pl-3 sm:ml-1">
           <Button variant="outline" className="rounded-xl h-11 w-full sm:w-11 px-0 bg-slate-50 shadow-sm hover:bg-slate-200 border-slate-200 text-slate-500 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors" asChild title="Versão para motorista">
             <a href={`/versao-motorista/${r.slug}`} target="_blank" rel="noreferrer">
@@ -664,7 +691,7 @@ function Dashboard() {
         </div>
 
         {/* AÇÕES PRINCIPAIS (PRODUÇÃO E GESTÃO) */}
-        {['admin', 'dev', 'produtor'].includes(profile?.role || '') && (
+        {['dev', 'produtor'].includes(profile?.role || '') && (
           <section className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg relative overflow-hidden">
             <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none"></div>
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
