@@ -523,7 +523,7 @@ function UsersPage() {
               <Label>Funções na Equipe (Múltipla Escolha)</Label>
               <div className="flex flex-wrap gap-2 mt-1">
                 {Object.keys(ROLE_BADGE_MAP)
-                  .filter(f => !['dev', 'admin'].includes(f))
+                  .filter(f => f !== 'dev')
                   .sort((a, b) => ROLE_BADGE_MAP[a].label.localeCompare(ROLE_BADGE_MAP[b].label, 'pt-BR'))
                   .map(f => (
                   <Badge 
