@@ -181,7 +181,12 @@ function UsersPage() {
     setEditTelefone(u.telefone || "");
     setEditRole(u.role);
     setEditFotoUrl(u.foto_url);
-    setEditFuncoes(u.funcoes || []);
+    // Já deixa selecionadas as funções designadas + a role principal se não for dev/admin
+    const existingFuncoes = Array.isArray(u.funcoes) ? [...u.funcoes] : [];
+    if (u.role && !['dev', 'admin'].includes(u.role) && !existingFuncoes.includes(u.role)) {
+      existingFuncoes.push(u.role);
+    }
+    setEditFuncoes(Array.from(new Set(existingFuncoes)));
     setEditCachesPadrao(u.caches_padrao || {});
   }
 
@@ -538,24 +543,7 @@ function UsersPage() {
               </div>
             </div>
 
-            {editFuncoes.length > 0 && (
-              <div className="space-y-3 pt-2">
-                <Label>Cachê Padrão por Função</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  {editFuncoes.map(f => (
-                    <div key={f} className="space-y-1.5">
-                      <Label className="text-xs text-slate-500">{f.toUpperCase().replace('_', ' ')}</Label>
-                      <CurrencyInput 
-                        value={editCachesPadrao[f] || ""}
-                        onChange={(v) => setEditCachesPadrao(prev => ({...prev, [f]: v}))}
-                        className="h-10 rounded-lg text-sm"
-                        placeholder="R$ 0,00"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+
 
             <div className="space-y-2">
               <Label>Nível de Acesso Principal (Permissões)</Label>
