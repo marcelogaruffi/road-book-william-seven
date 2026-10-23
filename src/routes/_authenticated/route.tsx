@@ -454,7 +454,7 @@ function AuthedLayout() {
                 {/* 7. Comunicação e Mídia */}
                 <SGroup title="Comunicação e Mídia" icon={Smartphone}>
                   <SLink to="/imprensa" icon={Newspaper} label="Imprensa" show={isProdutor || userRole === 'assessoria_imprensa'} />
-                  <SLink to="/fotos" icon={ImageIcon} label="Fotos" show={isProdutor || userRole === 'midias_sociais'} />
+                  <SLink to="/fotos" icon={ImageIcon} label="Fotos" show={isProdutor || userRole === 'midias_sociais' || userRole === 'assessoria_imprensa'} />
                   <SLink to="/midias" icon={Smartphone} label="Mídias Sociais" show={isProdutor || userRole === 'midias_sociais'} />
                   <SLink to="/divulgacoes" icon={Megaphone} label="Divulgações Redes Sociais" show={isProdutor || userRole === 'midias_sociais'} />
                 </SGroup>

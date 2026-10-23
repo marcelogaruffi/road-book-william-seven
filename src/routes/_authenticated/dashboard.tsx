@@ -72,7 +72,7 @@ const ALL_SHORTCUTS: ShortcutItem[] = [
   { id: 'camarins', title: 'Camarins', to: '/camarins', icon: StarDoorIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['dev', 'produtor', 'assistente_producao', 'contra_regra', 'stage_manager', 'camareiro'] },
   { id: 'catering', title: 'Catering', to: '/catering', icon: Coffee, colorClass: 'bg-orange-500/10 text-orange-600', roles: ['dev', 'produtor', 'assistente_producao', 'stage_manager', 'camareiro'] },
   { id: 'malas', title: 'Malas e Bagagens', to: '/malas', icon: Luggage, colorClass: 'bg-teal-500/10 text-teal-600', roles: ['dev', 'produtor', 'assistente_producao', 'tour_manager', 'cenotecnico', 'roadie'] },
-  { id: 'fotos', title: 'Fotos e Arquivos', to: '/fotos', icon: ImageIcon, colorClass: 'bg-blue-600/10 text-blue-700', roles: ['dev', 'produtor', 'midias_sociais'] },
+  { id: 'fotos', title: 'Fotos e Arquivos', to: '/fotos', icon: ImageIcon, colorClass: 'bg-blue-600/10 text-blue-700', roles: ['dev', 'produtor', 'midias_sociais', 'assessoria_imprensa'] },
   { id: 'midias', title: 'Mídias Sociais', to: '/midias', icon: Smartphone, colorClass: 'bg-indigo-600/10 text-indigo-700', roles: ['dev', 'produtor', 'midias_sociais'] },
   { id: 'imprensa', title: 'Assessoria de Imprensa', to: '/imprensa', icon: Newspaper, colorClass: 'bg-yellow-500/10 text-yellow-700', roles: ['dev', 'produtor', 'assessoria_imprensa'] },
   { id: 'relatorios', title: 'Relatórios', to: '/emissao-relatorios', icon: Printer, colorClass: 'bg-slate-600/10 text-slate-700', roles: ['dev', 'produtor'] },
@@ -130,7 +130,7 @@ function getDefaultShortcuts(role: string): string[] {
     return ['viagens', 'minhas-escalas', 'meus-pagamentos'];
   }
   if (role === 'assessoria_imprensa') {
-    return ['imprensa', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+    return ['imprensa', 'fotos', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'midias_sociais') {
     return ['midias', 'fotos', 'minhas-escalas', 'viagens', 'meus-pagamentos'];

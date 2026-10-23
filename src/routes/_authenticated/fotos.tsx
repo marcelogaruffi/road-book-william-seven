@@ -22,7 +22,7 @@ export default function FotosPage() {
   // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
   const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
   const currentRole = routeCtx?.profile?.role || "";
-  const allowedRolesList = ["dev","produtor","midias_sociais"];
+  const allowedRolesList = ["dev","produtor","midias_sociais","assessoria_imprensa"];
   if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
     return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
   }
