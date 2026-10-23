@@ -107,7 +107,7 @@ function UsersPage() {
   const [editCachesPadrao, setEditCachesPadrao] = useState<Record<string, string>>({});
   const [customFuncao, setCustomFuncao] = useState("");
   const [showCustomFuncaoInput, setShowCustomFuncaoInput] = useState(false);
-  const [inviteRole, setInviteRole] = useState<'admin'|'dev'|'produtor'|'iluminador'|'tecnico_som'|'motorista'|'stage_manager'|'contra_regra'|'assistente_producao'|'camareiro'|'elenco'|'musico'|'tour_manager'|'roadie'|'cenotecnico'|'tecnico_video'|'rigger'>('produtor');
+  const [inviteRole, setInviteRole] = useState<string>('');
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Crop states
@@ -131,7 +131,7 @@ function UsersPage() {
   async function loadData() {
     setLoading(true);
     const [ { data: profilesData }, { data: invitesData } ] = await Promise.all([
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("*").order("nome", { ascending: true }),
       supabase.from("invites").select("*").order("created_at", { ascending: false })
     ]);
     if (profilesData) setUsers(profilesData as Profile[]);
@@ -151,6 +151,10 @@ function UsersPage() {
   }
 
   async function generateInvite() {
+    if (!inviteRole) {
+      toast.warning("Selecione uma função para gerar o convite.");
+      return;
+    }
     const token = Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
     
     const { error } = await supabase.from("invites").insert({ token, role: inviteRole });
@@ -386,26 +390,27 @@ function UsersPage() {
                       onChange={(e: any) => setInviteRole(e.target.value)}
                       className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/20"
                     >
-                      <option value="admin">Administrador (Prod. Executiva)</option>
-                      <option value="produtor">Produtor</option>
-                      <option value="iluminador">Iluminador</option>
-                      <option value="tecnico_som">Técnico de Som</option>
-                      <option value="motorista">Motorista</option>
-                      <option value="stage_manager">Stage Manager</option>
-                      <option value="contra_regra">Contra-regra</option>
+                      <option value="">Selecione a Função...</option>
+                      <option value="admin">Administrador</option>
+                      <option value="assessoria_imprensa">Assessoria de Imprensa</option>
                       <option value="assistente_producao">Assistente de Produção</option>
                       <option value="camareiro">Camareiro / Figurinista</option>
-                      <option value="elenco">Elenco</option>
-                      <option value="musico">Músico</option>
-                      <option value="tour_manager">Tour Manager</option>
-                      <option value="roadie">Roadie</option>
                       <option value="cenotecnico">Cenotécnico</option>
-                      <option value="tecnico_video">Técnico de Vídeo</option>
-                      <option value="rigger">Rigger</option>
-                      <option value="assessoria_imprensa">Assessoria de Imprensa</option>
-                      <option value="midias_sociais">Mídias Sociais</option>
                       <option value="contador">Contador</option>
+                      <option value="contra_regra">Contra-regra</option>
+                      <option value="elenco">Elenco</option>
+                      <option value="iluminador">Iluminador</option>
                       <option value="juridico">Jurídico</option>
+                      <option value="midias_sociais">Mídias Sociais</option>
+                      <option value="motorista">Motorista</option>
+                      <option value="musico">Músico</option>
+                      <option value="produtor">Produtor</option>
+                      <option value="rigger">Rigger</option>
+                      <option value="roadie">Roadie</option>
+                      <option value="stage_manager">Stage Manager</option>
+                      <option value="tecnico_som">Técnico de Som</option>
+                      <option value="tecnico_video">Técnico de Vídeo</option>
+                      <option value="tour_manager">Tour Manager</option>
                     </select>
                   </div>
 
@@ -561,7 +566,7 @@ function UsersPage() {
                   onChange={(e: any) => setEditRole(e.target.value)}
                   className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/20"
                 >
-                  <option value="admin">Administrador (Prod. Executiva)</option>
+                  <option value="admin">Administrador</option>
                   <option value="produtor">Produtor</option>
                   <option value="iluminador">Iluminador</option>
                   <option value="tecnico_som">Técnico de Som</option>
