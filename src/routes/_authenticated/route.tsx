@@ -375,7 +375,7 @@ function AuthedLayout() {
             const canVerCatering = isProdutorOuAss || userRole === 'stage_manager' || userRole === 'camareiro';
 
             const canVerMusicas = isProdutor || userRole === 'musico' || userRole === 'stage_manager';
-            const canVerPartituras = isProdutor || userRole === 'musico' || userRole === 'stage_manager' || userRole === 'rigger' || userRole === 'camareiro' || userRole === 'motorista' || userRole === 'assessoria_imprensa' || userRole === 'midias_sociais';
+            const canVerPartituras = isProdutor || userRole === 'musico' || userRole === 'stage_manager';
             const canVerLuz = isProdutor || userRole === 'iluminador' || userRole === 'stage_manager';
             const canVerSom = isProdutor || userRole === 'tecnico_som' || userRole === 'stage_manager';
             const canVerVideo = isProdutor || userRole === 'tecnico_video' || userRole === 'stage_manager';

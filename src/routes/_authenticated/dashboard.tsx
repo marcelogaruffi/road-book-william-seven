@@ -65,7 +65,7 @@ const ALL_SHORTCUTS: ShortcutItem[] = [
   { id: 'iluminacao', title: 'Iluminação', to: '/iluminacao', icon: Lightbulb, colorClass: 'bg-amber-500/10 text-amber-600', roles: ['dev', 'produtor', 'iluminador', 'stage_manager'] },
   { id: 'video', title: 'Vídeo e Mídia', to: '/video', icon: Video, colorClass: 'bg-purple-500/10 text-purple-600', roles: ['dev', 'produtor', 'tecnico_video', 'stage_manager'] },
   { id: 'palco', title: 'Montagem de Palco', to: '/palco', icon: StageIcon, colorClass: 'bg-slate-500/10 text-slate-600', roles: ['dev', 'produtor', 'assistente_producao', 'musico', 'tecnico_som', 'iluminador', 'tecnico_video', 'cenotecnico', 'roadie', 'contra_regra', 'stage_manager', 'rigger'] },
-  { id: 'partituras', title: 'Partituras', to: '/partituras', icon: Music, colorClass: 'bg-fuchsia-500/10 text-fuchsia-600', roles: ['dev', 'produtor', 'musico', 'stage_manager', 'rigger', 'camareiro', 'motorista', 'assessoria_imprensa', 'midias_sociais'] },
+  { id: 'partituras', title: 'Partituras', to: '/partituras', icon: Music, colorClass: 'bg-fuchsia-500/10 text-fuchsia-600', roles: ['dev', 'produtor', 'musico', 'stage_manager'] },
   { id: 'musicas', title: 'Músicas e Áudios', to: '/musicas', icon: Play, colorClass: 'bg-violet-500/10 text-violet-600', roles: ['dev', 'produtor', 'musico', 'stage_manager'] },
   { id: 'figurinos', title: 'Figurinos', to: '/figurinos', icon: ClothesRackIcon, colorClass: 'bg-pink-500/10 text-pink-600', roles: ['dev', 'produtor', 'assistente_producao', 'contra_regra', 'stage_manager', 'camareiro'] },
   { id: 'meus-figurinos', title: 'Meus Figurinos', to: '/meus-figurinos', icon: ClothesRackIcon, colorClass: 'bg-rose-500/10 text-rose-600', roles: ['dev', 'produtor', 'assistente_producao', 'contra_regra', 'stage_manager', 'camareiro'] },
@@ -115,10 +115,10 @@ function getDefaultShortcuts(role: string): string[] {
     return ['palco', 'malas', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'rigger') {
-    return ['palco', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+    return ['palco', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'camareiro') {
-    return ['camarins', 'figurinos', 'catering', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+    return ['camarins', 'figurinos', 'catering', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'musico') {
     return ['partituras', 'musicas', 'palco', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
@@ -127,13 +127,13 @@ function getDefaultShortcuts(role: string): string[] {
     return ['minhas-escalas', 'viagens', 'meus-pagamentos', 'meus-contratos'];
   }
   if (role === 'motorista') {
-    return ['viagens', 'partituras', 'minhas-escalas', 'meus-pagamentos'];
+    return ['viagens', 'minhas-escalas', 'meus-pagamentos'];
   }
   if (role === 'assessoria_imprensa') {
-    return ['imprensa', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+    return ['imprensa', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   if (role === 'midias_sociais') {
-    return ['midias', 'fotos', 'partituras', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
+    return ['midias', 'fotos', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos'];
 }
