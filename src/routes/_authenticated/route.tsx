@@ -391,7 +391,7 @@ function AuthedLayout() {
             return (
               <>
                 {/* 1. Meu Espaço */}
-                <SGroup title="Meu Espaço" icon={Contact2}>
+                <SGroup title="Meu Espaço" icon={Contact2} show={userRole !== "admin"}>
                   <SLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                   <SLink to="/minha-agenda" icon={Calendar} label="Minha Agenda" />
                   <div id="tour-profile-menu"><SLink to="/perfil" icon={UserPlus} label="Dados Cadastrais" /></div>
@@ -401,7 +401,7 @@ function AuthedLayout() {
                 </SGroup>
 
                 {/* 2. Viagens e Logística */}
-                <SGroup title="Viagens e Logística" icon={Bus}>
+                <SGroup title="Viagens e Logística" icon={Bus} show={userRole !== "admin"}>
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" show={canVerMalas} />
