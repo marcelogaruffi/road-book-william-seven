@@ -126,7 +126,7 @@ function AuthedLayout() {
 
   function startSimulation(u: Profile) {
     localStorage.setItem('simulated_profile', JSON.stringify(u));
-    window.location.reload();
+    window.location.href = '/dashboard';
   }
 
   useEffect(() => {
@@ -171,7 +171,7 @@ function AuthedLayout() {
 
   const clearSimulation = () => {
     localStorage.removeItem("simulated_profile");
-    window.location.reload();
+    window.location.href = '/dashboard';
   };
 
   return (
@@ -302,6 +302,23 @@ function AuthedLayout() {
             const SGroup = ({ title, icon: Icon, children, show=true }: any) => {
               if (!show) return null;
 
+              // Avalia se pelo menos um item filho é visível para a função atual
+              const hasVisibleChild = (nodes: any): boolean => {
+                return Children.toArray(nodes).some((c: any) => {
+                  if (!c) return false;
+                  if (c.props?.show === false) return false;
+                  // Se for um container wrapper (como div id="tour-profile-menu"), avalia recursivamente seus filhos
+                  if (c.props?.children && typeof c.props.children !== "string") {
+                    return hasVisibleChild(c.props.children);
+                  }
+                  return true;
+                });
+              };
+
+              if (!hasVisibleChild(children)) {
+                return null;
+              }
+
               // MENU RETRAÍDO: Ícones limpos com destaque azul royal e legenda no hover
               if (!sidebarOpen) {
                 return (
@@ -386,7 +403,7 @@ function AuthedLayout() {
                 {/* 2. Viagens e Logística */}
                 <SGroup title="Viagens e Logística" icon={Bus}>
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
-                  <SLink to="/tour" icon={RouteIcon} label="Turnês" show={isProdutor} />
+                  <SLink to="/tour" icon={RouteIcon} label="Turnês" />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" show={canVerMalas} />
                   <SLink to="/hospedagem" icon={Hotel} label="Hospedagem" show={isProdutorOuAss} />
                 </SGroup>
