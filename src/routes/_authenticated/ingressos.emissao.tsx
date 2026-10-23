@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 // @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
@@ -67,6 +69,15 @@ type ItemAssentoLote = {
 };
 
 function EmissaoIngressosPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="A Emissão de Ingressos é exclusiva para o Produtor." />;
+  }
+
   const [selectedShow, setSelectedShow] = useState<any>(null);
   const [showBannerUrl, setShowBannerUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);

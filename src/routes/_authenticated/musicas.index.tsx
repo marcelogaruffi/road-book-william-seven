@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { GridEventos } from "@/components/GridEventos";
@@ -43,6 +45,15 @@ type Evento = {
 };
 
 function MusicasPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","musico","stage_manager"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Músicas é exclusivo para Músicos, Stage Manager e Produção." />;
+  }
+
   const [activeTab, setActiveTab] = useState("evento");
   const selectedTipo = "musica";
   

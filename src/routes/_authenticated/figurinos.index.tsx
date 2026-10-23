@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { GridEventos } from "@/components/GridEventos";
@@ -37,6 +39,15 @@ type FigurinoPadrao = FigurinoBase & { id: string; espetaculo_nome: string; };
 type FigurinoEvento = FigurinoBase & { id: string; evento_id: string; concluido: boolean; };
 
 function FigurinosPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","assistente_producao","contra_regra","stage_manager","camareiro"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Figurinos é exclusivo para Produção, Backstage e Figurinos." />;
+  }
+
   const [activeTab, setActiveTab] = useState("evento");
   const [selectedTipo, setSelectedTipo] = useState<"lista" | "conferencia">("lista");
   

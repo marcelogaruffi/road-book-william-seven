@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect } from 'react';
 import { GridEventos } from "@/components/GridEventos";
@@ -12,7 +13,16 @@ export const Route = createFileRoute('/_authenticated/malas/')({
 });
 
 function MalasComponent() {
-  const { profile, isSimulating } = AuthedRoute.useRouteContext();
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","assistente_producao","tour_manager","cenotecnico","roadie"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Malas e Cases é restrito à Logística, Cenotécnica e Produção." />;
+  }
+
+  
   const navigate = useNavigate();
 
   return (

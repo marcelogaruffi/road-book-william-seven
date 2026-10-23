@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,6 +71,15 @@ export type TeatroCadastrado = {
 };
 
 function MapaAssentosPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","assistente_producao"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O Mapa de Assentos é exclusivo para a equipe de Produção." />;
+  }
+
   const [selectedEventoId, setSelectedEventoId] = useState<string>("");
   const [activeEvento, setActiveEvento] = useState<any>(null);
   const [loading, setLoading] = useState(false);

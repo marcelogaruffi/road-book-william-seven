@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
@@ -37,7 +38,16 @@ type MapaLuz = {
 };
 
 function IluminacaoComponent() {
-  const { profile, isSimulating } = AuthedRoute.useRouteContext();
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","iluminador","stage_manager"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Iluminação é exclusivo para a equipe de Luz e Produção." />;
+  }
+
+  
   const navigate = useNavigate();
 
   const handleGridSelect = async (id: string, rbId?: string | null, ev?: any) => {

@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { GridEventos } from "@/components/GridEventos";
@@ -67,6 +69,15 @@ type CateringItem = {
 };
 
 function CateringPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","assistente_producao","stage_manager","camareiro"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Catering é exclusivo para Produção, Stage Manager e Camareiro." />;
+  }
+
   const [selectedEventoId, setSelectedEventoId] = useState<string>("");
   const [eventoFull, setEventoFull] = useState<any>(null);
   const [equipePerfis, setEquipePerfis] = useState<ProfileData[]>([]);

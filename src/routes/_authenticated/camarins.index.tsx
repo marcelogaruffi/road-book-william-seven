@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +53,15 @@ type ProfileData = {
 };
 
 function CamarinsPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","assistente_producao","contra_regra","stage_manager","camareiro"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Camarins é exclusivo para Produção, Backstage e Camarins." />;
+  }
+
   const [activeTab, setActiveTab] = useState("evento");
   const [selectedTipo, setSelectedTipo] = useState<"lista" | "conferencia" >("lista");
   

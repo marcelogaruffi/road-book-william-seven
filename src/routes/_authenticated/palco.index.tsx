@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { GridEventos } from "@/components/GridEventos";
@@ -56,6 +58,15 @@ type Evento = {
 };
 
 function PalcoPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","assistente_producao","musico","tecnico_som","iluminador","tecnico_video","cenotecnico","roadie","contra_regra","stage_manager","rigger"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Montagem de Palco é exclusivo para a equipe Técnica, Backstage e Produção." />;
+  }
+
   const [activeTab, setActiveTab] = useState("evento");
   const [selectedTipo, setSelectedTipo] = useState<"mapa_palco" | "props" | "conferencia" | "infra">("mapa_palco");
   

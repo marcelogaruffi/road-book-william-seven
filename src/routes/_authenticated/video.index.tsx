@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
@@ -31,8 +32,16 @@ type MapaVideo = {
 };
 
 function VideoComponent() {
-  const { profile, isSimulating } = AuthedRoute.useRouteContext();
-  const navigate = useNavigate();
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","tecnico_video","stage_manager"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="O módulo de Vídeo é exclusivo para a equipe de Vídeo e Produção." />;
+  }
+
+    const navigate = useNavigate();
 
   const handleGridSelect = async (id: string, rbId?: string | null, ev?: any) => {
     // Check if map exists

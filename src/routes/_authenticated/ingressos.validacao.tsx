@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 // @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useRef } from "react";
@@ -75,6 +77,15 @@ function formatarCpfMascarado(cpf?: string): string {
 }
 
 function ValidacaoIngressosPage() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","assistente_producao"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="A Validação de Ingressos é restrita à Portaria e Produção." />;
+  }
+
   const [activeTab, setActiveTab] = useState<"leitura" | "digitar" | "historico">("leitura");
   const [codigoInput, setCodigoInput] = useState("");
   const [loading, setLoading] = useState(false);

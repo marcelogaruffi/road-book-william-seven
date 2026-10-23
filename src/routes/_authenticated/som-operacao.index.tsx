@@ -1,3 +1,5 @@
+import { AccessDenied } from "@/components/AccessDenied";
+import { Route as AuthedRoute } from "./route";
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState, useEffect } from 'react';
@@ -20,6 +22,15 @@ export const Route = createFileRoute('/_authenticated/som-operacao/')({
 });
 
 function SomOperacaoIndex() {
+  const { profile } = AuthedRoute.useRouteContext();
+  const userRole = profile?.role || "";
+  const allowedRoles = ["dev","produtor","tecnico_som","stage_manager"];
+  const isAllowed = allowedRoles.includes(userRole);
+
+  if (profile && !isAllowed) {
+    return <AccessDenied message="A Operação de Som é exclusiva para a equipe de Áudio / Som e Produção." />;
+  }
+
   const navigate = useNavigate();
 
   const handleGridSelect = (id: string) => {
