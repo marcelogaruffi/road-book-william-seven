@@ -357,41 +357,45 @@ function AuthedLayout() {
               );
             };
 
-                        // Helpers de Acesso:
+                        // Helpers de Acesso com Suporte a Múltiplas Funções:
             // Administrador (admin): Focado estritamente em ajustes e Painel de Controle do sistema.
             // Desenvolvedor (dev): Acesso amplo de manutenção.
             // Produtor (produtor): Gestor executivo completo das turnês, eventos e finanças.
-            const isDev = userRole === 'dev';
-            const isAdmin = userRole === 'admin' || isDev;
-            const isProdutor = isDev || userRole === 'produtor';
-            const isProdutorOuAss = isProdutor || userRole === 'assistente_producao';
-            const isCoordLogistica = isProdutorOuAss || userRole === 'tour_manager';
+            const isDev = hasRole('dev');
+            const isAdmin = hasRole('admin') || isDev;
+            const isProdutor = isDev || hasRole('produtor');
+            const isProdutorOuAss = isProdutor || hasRole('assistente_producao');
+            const isCoordLogistica = isProdutorOuAss || hasRole('tour_manager');
 
             // Permissões específicas por setor:
-            const canVerMalas = isCoordLogistica || userRole === 'cenotecnico' || userRole === 'roadie';
+            const canVerMalas = isCoordLogistica || hasRole('cenotecnico') || hasRole('roadie');
             const canVerEventos = isCoordLogistica;
-            const canVerCamarinsEFigurinos = isProdutorOuAss || userRole === 'contra_regra' || userRole === 'stage_manager' || userRole === 'camareiro';
-            const canVerMontagemPalco = isProdutorOuAss || userRole === 'musico' || userRole === 'tecnico_som' || userRole === 'iluminador' || userRole === 'tecnico_video' || userRole === 'cenotecnico' || userRole === 'roadie' || userRole === 'contra_regra' || userRole === 'stage_manager' || userRole === 'rigger';
-            const canVerCatering = isProdutorOuAss || userRole === 'stage_manager' || userRole === 'camareiro';
+            const canVerCamarinsEFigurinos = isProdutorOuAss || hasRole('contra_regra') || hasRole('stage_manager') || hasRole('camareiro');
+            const canVerMontagemPalco = isProdutorOuAss || hasRole('musico') || hasRole('tecnico_som') || hasRole('iluminador') || hasRole('tecnico_video') || hasRole('cenotecnico') || hasRole('roadie') || hasRole('contra_regra') || hasRole('stage_manager') || hasRole('rigger');
+            const canVerCatering = isProdutorOuAss || hasRole('stage_manager') || hasRole('camareiro');
 
-            const canVerMusicas = isProdutor || userRole === 'musico' || userRole === 'stage_manager';
-            const canVerPartituras = isProdutor || userRole === 'musico' || userRole === 'stage_manager';
-            const canVerLuz = isProdutor || userRole === 'iluminador' || userRole === 'stage_manager';
-            const canVerSom = isProdutor || userRole === 'tecnico_som' || userRole === 'stage_manager';
-            const canVerVideo = isProdutor || userRole === 'tecnico_video' || userRole === 'stage_manager';
+            const canVerMusicas = isProdutor || hasRole('musico') || hasRole('stage_manager');
+            const canVerPartituras = isProdutor || hasRole('musico') || hasRole('stage_manager');
+            const canVerLuz = isProdutor || hasRole('iluminador') || hasRole('stage_manager');
+            const canVerSom = isProdutor || hasRole('tecnico_som') || hasRole('stage_manager');
+            const canVerVideo = isProdutor || hasRole('tecnico_video') || hasRole('stage_manager');
 
-            const canVerContatos = isCoordLogistica || userRole === 'stage_manager';
+            const canVerContatos = isCoordLogistica || hasRole('stage_manager');
             const canVerDadosEquipe = isCoordLogistica;
 
             // Pranchetas de Checklist por setor (Produtor só vê na Produção Executiva)
-            const canPranchetaTecnica = !isProdutor && (userRole === 'tecnico_som' || userRole === 'iluminador' || userRole === 'tecnico_video' || userRole === 'stage_manager');
-            const canPranchetaBackstage = !isProdutor && (userRole === 'camareiro' || userRole === 'cenotecnico' || userRole === 'contra_regra' || userRole === 'stage_manager');
+            const canPranchetaTecnica = !isProdutor && (hasRole('tecnico_som') || hasRole('iluminador') || hasRole('tecnico_video') || hasRole('stage_manager'));
+            const canPranchetaBackstage = !isProdutor && (hasRole('camareiro') || hasRole('cenotecnico') || hasRole('contra_regra') || hasRole('stage_manager'));
             const canPranchetaProdutor = isProdutor;
+
+            const hasOtherRoles = userFuncoes.some(f => f !== 'admin');
+            const showMeuEspaco = userRole !== "admin" || hasOtherRoles;
+            const showViagens = userRole !== "admin" || hasOtherRoles;
 
             return (
               <>
                 {/* 1. Meu Espaço */}
-                <SGroup title="Meu Espaço" icon={Contact2} show={userRole !== "admin"}>
+                <SGroup title="Meu Espaço" icon={Contact2} show={showMeuEspaco}>
                   <SLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
                   <SLink to="/minha-agenda" icon={Calendar} label="Minha Agenda" />
                   <div id="tour-profile-menu"><SLink to="/perfil" icon={UserPlus} label="Dados Cadastrais" /></div>
@@ -401,7 +405,7 @@ function AuthedLayout() {
                 </SGroup>
 
                 {/* 2. Viagens e Logística */}
-                <SGroup title="Viagens e Logística" icon={Bus} show={userRole !== "admin"}>
+                <SGroup title="Viagens e Logística" icon={Bus} show={showViagens}>
                   <SLink to="/viagens" icon={Bus} label="Guias de Viagem" />
                   <SLink to="/tour" icon={RouteIcon} label="Turnês" />
                   <SLink to="/malas" icon={Luggage} label="Malas e Cases" show={canVerMalas} />
@@ -453,10 +457,10 @@ function AuthedLayout() {
 
                 {/* 7. Comunicação e Mídia */}
                 <SGroup title="Comunicação e Mídia" icon={Smartphone}>
-                  <SLink to="/imprensa" icon={Newspaper} label="Imprensa" show={isProdutor || userRole === 'assessoria_imprensa'} />
-                  <SLink to="/fotos" icon={ImageIcon} label="Fotos" show={isProdutor || userRole === 'midias_sociais' || userRole === 'assessoria_imprensa'} />
-                  <SLink to="/midias" icon={Smartphone} label="Mídias Sociais" show={isProdutor || userRole === 'midias_sociais'} />
-                  <SLink to="/divulgacoes" icon={Megaphone} label="Divulgações Redes Sociais" show={isProdutor || userRole === 'midias_sociais'} />
+                  <SLink to="/imprensa" icon={Newspaper} label="Imprensa" show={isProdutor || hasRole('assessoria_imprensa')} />
+                  <SLink to="/fotos" icon={ImageIcon} label="Fotos" show={isProdutor || hasRole('midias_sociais') || hasRole('assessoria_imprensa')} />
+                  <SLink to="/midias" icon={Smartphone} label="Mídias Sociais" show={isProdutor || hasRole('midias_sociais')} />
+                  <SLink to="/divulgacoes" icon={Megaphone} label="Divulgações Redes Sociais" show={isProdutor || hasRole('midias_sociais')} />
                 </SGroup>
 
                 {/* 8. Gestão de Ingressos */}

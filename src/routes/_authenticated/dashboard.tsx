@@ -83,7 +83,7 @@ const ALL_SHORTCUTS: ShortcutItem[] = [
   { id: 'cadastros', title: 'Usuários e Equipe', to: '/cadastros', icon: UserPlus, colorClass: 'bg-blue-700/10 text-blue-800', roles: ['dev', 'admin', 'produtor'] },
 ];
 
-function getDefaultShortcuts(role: string): string[] {
+function getShortcutsForSingleRole(role: string): string[] {
   if (['dev', 'produtor'].includes(role)) {
     return ['eventos', 'escalas', 'contratos', 'minhas-escalas', 'viagens', 'meus-pagamentos', 'financeiro', 'relatorios'];
   }
@@ -136,6 +136,22 @@ function getDefaultShortcuts(role: string): string[] {
     return ['midias', 'fotos', 'minhas-escalas', 'viagens', 'meus-pagamentos'];
   }
   return ['minhas-escalas', 'meus-contratos', 'viagens', 'meus-pagamentos'];
+}
+
+function getDefaultShortcuts(role: string, funcoes: string[] = []): string[] {
+  const allRoles = Array.from(new Set([role, ...funcoes].filter(Boolean)));
+  if (allRoles.length === 0) return getShortcutsForSingleRole(role);
+  
+  const merged: string[] = [];
+  for (const r of allRoles) {
+    const list = getShortcutsForSingleRole(r);
+    for (const item of list) {
+      if (!merged.includes(item)) {
+        merged.push(item);
+      }
+    }
+  }
+  return merged.slice(0, 10);
 }
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -193,9 +209,10 @@ function Dashboard() {
           }
         } catch (e) {}
       }
-      setSelectedShortcutIds(getDefaultShortcuts(profile?.role || ''));
+      const userFuncoes = Array.isArray(profile?.funcoes) ? profile.funcoes : [];
+      setSelectedShortcutIds(getDefaultShortcuts(profile?.role || '', userFuncoes));
     }
-  }, [profile?.id, profile?.role]);
+  }, [profile?.id, profile?.role, profile?.funcoes]);
 
   const handleOpenCustomize = () => {
     setTempSelected([...selectedShortcutIds]);
@@ -228,7 +245,8 @@ function Dashboard() {
   };
 
   const handleResetDefault = () => {
-    const def = getDefaultShortcuts(profile?.role || '');
+    const userFuncoes = Array.isArray(profile?.funcoes) ? profile.funcoes : [];
+    const def = getDefaultShortcuts(profile?.role || '', userFuncoes);
     setTempSelected(def);
   };
 
@@ -460,7 +478,7 @@ function Dashboard() {
     
     return { 
       title: `Boas-vindas, ${firstName}!`, 
-      sub: `Nenhum evento futuro programado. Aproveite o descanso e recarregue as energias! âš¡`, 
+      sub: `Nenhum evento futuro programado. Aproveite o descanso e recarregue as energias! ⚡`, 
       icon: Sun, 
       color: 'from-sky-400 to-blue-600', 
       link: '/eventos', 

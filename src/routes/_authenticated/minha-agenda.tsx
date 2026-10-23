@@ -160,9 +160,10 @@ export type AgendaItem = {
 function MinhaAgendaPage() {
   // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
   const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
-  const currentRole = routeCtx?.profile?.role || "";
   const allowedRolesList = ["dev","produtor","assistente_producao","tour_manager","stage_manager","contra_regra","cenotecnico","iluminador","tecnico_som","tecnico_video","rigger","roadie","camareiro","musico","elenco","motorista","assessoria_imprensa","midias_sociais"];
-  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+  const profileRoles = routeCtx?.profile ? [routeCtx.profile.role, ...(Array.isArray(routeCtx.profile.funcoes) ? routeCtx.profile.funcoes : [])] : [];
+  const hasAccess = profileRoles.some(r => allowedRolesList.includes(r));
+  if (routeCtx?.profile && !hasAccess) {
     return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
   }
   // ----------------------------------------------------
@@ -226,11 +227,29 @@ function MinhaAgendaPage() {
     try {
       const eventosAgregados: AgendaItem[] = [];
 
-      // 1. Viagens / Roadbooks (Fonte única oficial de cronograma e apresentações)
-      // 2. Viagens / Roadbooks
-      const { data: viagensData } = await supabase
-        .from("roadbooks")
-        .select("id, espetaculo, cidade, data_inicial, data_final, programacao");
+      // 1. Viagens / Roadbooks (Filtrando se o usuário está escalado, a menos que seja gestão executiva)
+      const isGestorAgenda = ['admin', 'dev', 'produtor', 'assistente_producao', 'tour_manager'].includes(profile?.role || '');
+      
+      const [{ data: rawViagens }, { data: evtsList }, { data: userEscalas }] = await Promise.all([
+        supabase.from("roadbooks").select("id, evento_id, espetaculo, cidade, data_inicial, data_final, programacao"),
+        !isGestorAgenda ? supabase.from("eventos").select("id, equipe") : Promise.resolve({ data: [] }),
+        !isGestorAgenda ? supabase.from("evento_escalas").select("evento_id, status").eq("usuario_id", profile.id) : Promise.resolve({ data: [] })
+      ]);
+
+      let viagensData = rawViagens || [];
+      if (!isGestorAgenda) {
+        viagensData = viagensData.filter(rb => {
+          const eId = (rb as any).evento_id;
+          if (!eId) return false;
+          
+          const isAceita = userEscalas?.some(e => String(e.evento_id) === String(eId) && String(e.status).toLowerCase().includes('aceit'));
+          if (isAceita) return true;
+
+          const evt = evtsList?.find(e => String(e.id) === String(eId));
+          const isInEquipe = evt?.equipe && Array.isArray(evt.equipe) && evt.equipe.includes(profile.id);
+          return isInEquipe;
+        });
+      }
 
       if (viagensData) {
         viagensData.forEach((rb) => {
