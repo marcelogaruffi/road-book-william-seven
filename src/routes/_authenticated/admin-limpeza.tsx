@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute } from "@tanstack/react-router";
 import { Route as AuthedRoute } from "./route";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,15 @@ export const Route = createFileRoute("/_authenticated/admin-limpeza")({
 });
 
 function AdminLimpeza() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","admin","produtor"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const [loading, setLoading] = useState(false);
   const [scanned, setScanned] = useState(false);

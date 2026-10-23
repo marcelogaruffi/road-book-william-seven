@@ -1,3 +1,4 @@
+import { Route as AuthedRoute } from "./route";
 import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { formatPhone } from '@/lib/utils';
@@ -76,6 +77,15 @@ export const Route = createFileRoute("/_authenticated/cadastros")({
 import { AccessDenied } from "@/components/AccessDenied";
 
 function UsersPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","admin","produtor"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const router = useRouter();
   const { user, profile } = Route.useRouteContext();
   const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor';

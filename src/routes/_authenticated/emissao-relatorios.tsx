@@ -62,6 +62,15 @@ const REPORT_GROUPS = [
 const REPORT_OPTIONS = REPORT_GROUPS.flatMap(g => g.options);
 
 function applyExcelStyles(worksheet: any, headerRowNumber: number) {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const headerRow = worksheet.getRow(headerRowNumber);
   headerRow.eachCell((cell: any) => {
     cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };

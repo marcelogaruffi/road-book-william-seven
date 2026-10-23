@@ -38,6 +38,15 @@ import { Route as AuthedRoute } from "./route";
 import { AccessDenied } from "@/components/AccessDenied";
 
 function RoomingListPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const isProdutor = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor' || profile?.role === 'assistente_producao';
 

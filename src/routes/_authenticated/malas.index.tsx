@@ -13,6 +13,15 @@ export const Route = createFileRoute('/_authenticated/malas/')({
 });
 
 function MalasComponent() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao","tour_manager","cenotecnico","roadie"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const userRole = profile?.role || "";
   const allowedRoles = ["dev","produtor","assistente_producao","tour_manager","cenotecnico","roadie"];

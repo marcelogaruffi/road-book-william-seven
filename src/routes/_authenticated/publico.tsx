@@ -1,3 +1,5 @@
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +35,15 @@ const PUBLICO_OPCOES = [
 ].sort((a, b) => a.localeCompare(b));
 
 function PublicoPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const [roadbooks, setRoadbooks] = useState<any[]>([]);
   const [registros, setRegistros] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

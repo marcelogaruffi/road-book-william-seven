@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute } from "@tanstack/react-router";
 import { Route as AuthedRoute } from "./route";
 import { Smartphone, Image as ImageIcon, Calendar, Plus, Trash2, CheckCircle2, Clock, PlayCircle, HardDrive, Link as LinkIcon, UploadCloud, FolderUp } from "lucide-react";
@@ -21,6 +22,15 @@ export const Route = createFileRoute("/_authenticated/midias")({
 });
 
 export default function MidiasPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","midias_sociais"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessMidias: isAllowed } = usePermissions(profile);
 

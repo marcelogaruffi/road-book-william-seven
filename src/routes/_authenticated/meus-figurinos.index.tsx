@@ -1,3 +1,5 @@
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardContent } from '@/components/ui/card'
 import { Construction } from 'lucide-react'
@@ -8,6 +10,15 @@ export const Route = createFileRoute('/_authenticated/meus-figurinos/')({
 })
 
 function MeusFigurinosPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao","contra_regra","stage_manager","camareiro","elenco"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 w-full max-w-7xl mx-auto mb-16 md:mb-0">
       <div className="flex items-center justify-between space-y-2">

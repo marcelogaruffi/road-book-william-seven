@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute } from "@tanstack/react-router";
 import { Route as AuthedRoute } from "./route";
 import { Image as ImageIcon, Trash2, FolderUp, Link as LinkIcon, UploadCloud, X, Calendar, ArrowLeft, ImagePlus, FolderOpen, Edit2 } from "lucide-react";
@@ -18,6 +19,15 @@ export const Route = createFileRoute("/_authenticated/fotos")({
 });
 
 export default function FotosPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","midias_sociais"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessMidias: isAllowed } = usePermissions(profile);
 

@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 // @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
@@ -157,6 +158,15 @@ export type AgendaItem = {
 };
 
 function MinhaAgendaPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao","tour_manager","stage_manager","contra_regra","cenotecnico","iluminador","tecnico_som","tecnico_video","rigger","roadie","camareiro","musico","elenco","motorista","assessoria_imprensa","midias_sociais"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const isProdutor = profile?.role === "admin" || profile?.role === "dev" || profile?.role === "produtor";
 

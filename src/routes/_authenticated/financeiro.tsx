@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { getErrorMessage } from "@/lib/utils";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -20,6 +21,15 @@ export const Route = createFileRoute("/_authenticated/financeiro")({
 });
 
 function FinanceiroPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const [roadbooks, setRoadbooks] = useState<any[]>([]);
   const [selectedRoadbook, setSelectedRoadbook] = useState<string>("");
   const [selectedEventoId, setSelectedEventoId] = useState<string>("");

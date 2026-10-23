@@ -1,3 +1,5 @@
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { MalasTemplateTab } from "@/components/MalasTemplateTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,6 +20,15 @@ export const Route = createFileRoute('/_authenticated/malas/$evento_id')({
 });
 
 function MalasEventoOperacao() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao","tour_manager","cenotecnico","roadie"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { evento_id } = Route.useParams();
   const [evento, setEvento] = useState<any>(null);
   const [roadbook, setRoadbook] = useState<any>(null);

@@ -1,3 +1,5 @@
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, useRef } from "react";
 import { GridEventos } from "@/components/GridEventos";
@@ -43,6 +45,15 @@ type Evento = {
 };
 
 function PartiturasPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","musico","stage_manager","rigger","camareiro","motorista","assessoria_imprensa","midias_sociais"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const [activeTab, setActiveTab] = useState("evento");
   const selectedTipo = "partitura";
   

@@ -49,6 +49,15 @@ import { AccessDenied } from "@/components/AccessDenied";
 import { usePermissions } from "@/hooks/usePermissions";
 
 function VendasPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessVendas } = usePermissions(profile);
   const isAllowed = profile?.role === 'admin' || profile?.role === 'dev' || profile?.role === 'produtor' || canAccessVendas;

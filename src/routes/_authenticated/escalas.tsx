@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 // @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
@@ -39,6 +40,15 @@ export const Route = createFileRoute("/_authenticated/escalas")({
 });
 
 function EscalasPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const [activeTab, setActiveTab] = useState<string>("evento");
   const [escalas, setEscalas] = useState<any[]>([]);

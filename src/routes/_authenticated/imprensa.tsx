@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { createFileRoute } from "@tanstack/react-router";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -26,6 +27,15 @@ export const Route = createFileRoute("/_authenticated/imprensa")({
 });
 
 export default function ImprensaPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assessoria_imprensa"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const { canAccessImprensa: isAllowed } = usePermissions(profile);
 

@@ -1,3 +1,5 @@
+import { Route as AuthedRoute } from "./route";
+import { AccessDenied } from "@/components/AccessDenied";
 // @ts-nocheck
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect, useState, useMemo } from "react";
@@ -34,6 +36,15 @@ export const Route = createFileRoute("/_authenticated/dados-equipe")({
 });
 
 function getRoleColor(role: string) {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao","tour_manager"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   switch (role) {
     case 'admin': return 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300';
     case 'dev': return 'bg-slate-100 text-slate-700 dark:bg-slate-500/20 dark:text-slate-300';

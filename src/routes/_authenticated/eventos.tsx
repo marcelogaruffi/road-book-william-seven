@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { createFileRoute, Link } from '@tanstack/react-router';
@@ -41,6 +42,15 @@ type Tour = {
 };
 
 function EventosComponent() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao","tour_manager"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const role = profile?.role || null;
   const [eventos, setEventos] = useState<Evento[]>([]);

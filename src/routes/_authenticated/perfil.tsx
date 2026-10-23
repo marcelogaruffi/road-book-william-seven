@@ -1,3 +1,4 @@
+import { AccessDenied } from "@/components/AccessDenied";
 import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { createFileRoute } from "@tanstack/react-router";
@@ -32,6 +33,15 @@ const BANCOS = [
 ];
 
 function PerfilPage() {
+  // --- SEGURANÇA E CONTROLE DE ACESSO OFICIAL AXIS ---
+  const routeCtx = AuthedRoute.useRouteContext ? AuthedRoute.useRouteContext() : null;
+  const currentRole = routeCtx?.profile?.role || "";
+  const allowedRolesList = ["dev","produtor","assistente_producao","tour_manager","stage_manager","contra_regra","cenotecnico","iluminador","tecnico_som","tecnico_video","rigger","roadie","camareiro","musico","elenco","motorista","assessoria_imprensa","midias_sociais"];
+  if (routeCtx?.profile && !allowedRolesList.includes(currentRole)) {
+    return <AccessDenied message="Você não possui permissão para acessar esta área com o seu perfil atual." />;
+  }
+  // ----------------------------------------------------
+
   const { profile } = AuthedRoute.useRouteContext();
   const [loading, setLoading] = useState(false);
 
