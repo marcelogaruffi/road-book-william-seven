@@ -3,14 +3,14 @@ import { getErrorMessage } from "@/lib/utils";
 // @ts-nocheck
 import { formatPhone } from '@/lib/utils';
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Copy, Plus, UserX, UserCheck, ShieldAlert, KeyRound, Pencil, Trash2, Mail, Check } from "lucide-react";
+import { Copy, Plus, UserX, UserCheck, ShieldAlert, KeyRound, Pencil, Trash2, Mail, Check, Search, ChevronDown, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TemplateRidersTab from "@/components/TemplateRidersTab";
@@ -26,6 +26,7 @@ import { Suspense, lazy } from "react";
 const Cropper = lazy(() => import("react-easy-crop"));
 import getCroppedImg from "@/lib/cropUtils";
 import { Slider } from "@/components/ui/slider";
+import { ROLES_CATALOG, ROLES_BY_ID, ROLE_BADGE_MAP, getAreasTrabalho } from "@/constants/roles";
 
 type Profile = {
   caches_padrao?: Record<string, string>;
@@ -35,40 +36,18 @@ type Profile = {
   telefone: string | null;
   foto_url: string | null;
   email?: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger" | "contador" | "juridico";
+  role: string;
   telefone_verificado?: boolean | null;
 };
 
 type Invite = {
   id: string;
   token: string;
+  role: string;
+  funcoes?: string[];
   created_at: string;
   expires_at: string;
   used_at: string | null;
-};
-
-export const ROLE_BADGE_MAP: Record<string, { label: string, classes: string }> = {
-  dev: { label: 'Desenvolvedor', classes: 'bg-purple-100 text-purple-700 hover:bg-purple-100' },
-  admin: { label: 'Administrador', classes: 'bg-amber-100 text-amber-700 hover:bg-amber-100' },
-  produtor: { label: 'Produtor', classes: 'bg-blue-100 text-blue-700 hover:bg-blue-100' },
-  iluminador: { label: 'Iluminador', classes: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100' },
-  tecnico_som: { label: 'Técnico de Som', classes: 'bg-orange-100 text-orange-700 hover:bg-orange-100' },
-  motorista: { label: 'Motorista', classes: 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100' },
-  elenco: { label: 'Elenco', classes: 'bg-pink-100 text-pink-700 hover:bg-pink-100' },
-  stage_manager: { label: 'Stage Manager', classes: 'bg-indigo-100 text-indigo-700 hover:bg-indigo-100' },
-  contra_regra: { label: 'Contra-regra', classes: 'bg-stone-100 text-stone-700 hover:bg-stone-100' },
-  assistente_producao: { label: 'Assistente', classes: 'bg-cyan-100 text-cyan-700 hover:bg-cyan-100' },
-  camareiro: { label: 'Camareiro', classes: 'bg-rose-100 text-rose-700 hover:bg-rose-100' },
-  musico: { label: 'Músico', classes: 'bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-100' },
-  tour_manager: { label: 'Tour Manager', classes: 'bg-sky-100 text-sky-700 hover:bg-sky-100' },
-  roadie: { label: 'Roadie', classes: 'bg-zinc-100 text-zinc-700 hover:bg-zinc-100' },
-  cenotecnico: { label: 'Cenotécnico', classes: 'bg-slate-200 text-slate-800 hover:bg-slate-200' },
-  tecnico_video: { label: 'Téc. de Vídeo', classes: 'bg-teal-100 text-teal-700 hover:bg-teal-100' },
-  assessoria_imprensa: { label: 'Assessoria de Imprensa', classes: 'bg-violet-100 text-violet-700 hover:bg-violet-100' },
-  midias_sociais: { label: 'Mídias Sociais', classes: 'bg-blue-200 text-blue-800 hover:bg-blue-200' },
-  rigger: { label: 'Rigger', classes: 'bg-stone-200 text-stone-800 hover:bg-stone-200' },
-  contador: { label: 'Contador', classes: 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100' },
-  juridico: { label: 'Jurídico', classes: 'bg-slate-200 text-slate-800 hover:bg-slate-200' },
 };
 
 export const Route = createFileRoute("/_authenticated/cadastros")({
@@ -107,8 +86,36 @@ function UsersPage() {
   const [editCachesPadrao, setEditCachesPadrao] = useState<Record<string, string>>({});
   const [customFuncao, setCustomFuncao] = useState("");
   const [showCustomFuncaoInput, setShowCustomFuncaoInput] = useState(false);
+  const [inviteGroup, setInviteGroup] = useState<string>('');
   const [inviteRole, setInviteRole] = useState<string>('');
+  const [inviteFuncoes, setInviteFuncoes] = useState<string[]>([]);
+  const [isInviteDropdownOpen, setIsInviteDropdownOpen] = useState(false);
+  const [searchInviteTerm, setSearchInviteTerm] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  // States para o dropdown de busca de funções
+  const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>("");
+  const [searchFuncaoTerm, setSearchFuncaoTerm] = useState("");
+  const [isFuncoesDropdownOpen, setIsFuncoesDropdownOpen] = useState(false);
+
+  // Refs para detectar cliques fora dos dropdowns e fechar automaticamente
+  const editDropdownRef = useRef<HTMLDivElement>(null);
+  const inviteDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (editDropdownRef.current && !editDropdownRef.current.contains(event.target as Node)) {
+        setIsFuncoesDropdownOpen(false);
+      }
+      if (inviteDropdownRef.current && !inviteDropdownRef.current.contains(event.target as Node)) {
+        setIsInviteDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Crop states
   const [imageSrc, setImageSrc] = useState<string | null>(null);
@@ -151,17 +158,28 @@ function UsersPage() {
   }
 
   async function generateInvite() {
-    if (!inviteRole) {
-      toast.warning("Selecione uma função para gerar o convite.");
+    const funcoesArray = inviteFuncoes.length > 0 ? inviteFuncoes : (inviteRole ? [inviteRole] : []);
+    if (funcoesArray.length === 0) {
+      toast.warning("Selecione pelo menos uma área e função para gerar o convite.");
       return;
     }
+    const primaryRole = funcoesArray[0];
     const token = Math.random().toString(36).substring(2, 10).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
     
-    const { error } = await supabase.from("invites").insert({ token, role: inviteRole });
+    // Insere com a role primária e a lista de funcoes selecionadas
+    const { error } = await supabase.from("invites").insert({ 
+      token, 
+      role: primaryRole,
+      funcoes: funcoesArray
+    });
+
     if (error) {
       toast.error("Erro ao gerar convite: " + getErrorMessage(error));
     } else {
-      toast.success("Convite gerado com sucesso!");
+      toast.success("Convite gerado com sucesso com as funções selecionadas!");
+      setInviteFuncoes([]);
+      setInviteRole('');
+      setInviteGroup('');
       loadData();
     }
   }
@@ -188,6 +206,48 @@ function UsersPage() {
     }
     setEditFuncoes(Array.from(new Set(existingFuncoes)));
     setEditCachesPadrao(u.caches_padrao || {});
+    setSearchFuncaoTerm("");
+    setIsFuncoesDropdownOpen(false);
+  }
+
+  const isGaruffi = Boolean(profile?.email?.toLowerCase().includes('garuffi') || profile?.nome?.toLowerCase().includes('garuffi') || profile?.role === 'dev');
+  const areasTrabalho = useMemo(() => getAreasTrabalho(isGaruffi), [isGaruffi]);
+
+  // Função para alternar seleção de função nos convites respeitando a regra de nível único por Área de Trabalho
+  function toggleInviteRoleSelection(roleId: string) {
+    const targetRole = ROLES_BY_ID[roleId];
+    if (!targetRole) return;
+
+    if (inviteFuncoes.includes(roleId)) {
+      setInviteFuncoes(prev => prev.filter(id => id !== roleId));
+    } else {
+      setInviteFuncoes(prev => {
+        const filtrado = prev.filter(id => {
+          const item = ROLES_BY_ID[id];
+          return item?.area !== targetRole.area;
+        });
+        return [...filtrado, roleId];
+      });
+    }
+  }
+  function toggleRoleSelection(roleId: string) {
+    const targetRole = ROLES_BY_ID[roleId];
+    if (!targetRole) return;
+
+    if (editFuncoes.includes(roleId)) {
+      // Se já está marcado, remove
+      setEditFuncoes(prev => prev.filter(id => id !== roleId));
+    } else {
+      // Se está marcando, remove qualquer outra subfunção DA MESMA ÁREA DE TRABALHO
+      // e adiciona a nova selecionada (respeitando nível único por área de trabalho)
+      setEditFuncoes(prev => {
+        const filtrado = prev.filter(id => {
+          const item = ROLES_BY_ID[id];
+          return item?.area !== targetRole.area;
+        });
+        return [...filtrado, roleId];
+      });
+    }
   }
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -229,10 +289,13 @@ function UsersPage() {
     e.preventDefault();
     if (!editUser) return;
     
+    // A role primária no banco assume a primeira função selecionada (ou mantém a atual se não houver)
+    const primaryRole = editFuncoes.length > 0 ? editFuncoes[0] : (editUser.role || 'user');
+
     const { error } = await supabase.from("profiles").update({
       nome: editNome,
       telefone: editTelefone,
-      role: editRole,
+      role: editUser.role === 'dev' ? 'dev' : primaryRole,
       funcoes: editFuncoes,
       caches_padrao: editCachesPadrao,
       foto_url: editFotoUrl
@@ -382,41 +445,120 @@ function UsersPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="space-y-6">
               <Card className="border-0 shadow-lg dark:bg-white/[0.02] dark:backdrop-blur-xl rounded-[2rem] overflow-hidden bg-gradient-to-br from-indigo-500 to-purple-600 text-white relative">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-bl-full -mr-10 -mt-10 pointer-events-none"></div>
                 <CardContent className="p-8 relative z-10 space-y-6">
                   <div>
                     <h3 className="text-2xl font-black mb-2">Novo Membro</h3>
                     <p className="text-indigo-100 font-medium text-sm">Gere um token de convite seguro e envie para a pessoa criar a conta.</p>
                   </div>
                   
-                  <div className="space-y-2">
-                    <select 
-                      value={inviteRole} 
-                      onChange={(e: any) => setInviteRole(e.target.value)}
-                      className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/20"
-                    >
-                      <option value="">Selecione a Função...</option>
-                      <option value="admin">Administrador</option>
-                      <option value="assessoria_imprensa">Assessoria de Imprensa</option>
-                      <option value="assistente_producao">Assistente de Produção</option>
-                      <option value="camareiro">Camareiro / Figurinista</option>
-                      <option value="cenotecnico">Cenotécnico</option>
-                      <option value="contador">Contador</option>
-                      <option value="contra_regra">Contra-regra</option>
-                      <option value="elenco">Elenco</option>
-                      <option value="iluminador">Iluminador</option>
-                      <option value="juridico">Jurídico</option>
-                      <option value="midias_sociais">Mídias Sociais</option>
-                      <option value="motorista">Motorista</option>
-                      <option value="musico">Músico</option>
-                      <option value="produtor">Produtor</option>
-                      <option value="rigger">Rigger</option>
-                      <option value="roadie">Roadie</option>
-                      <option value="stage_manager">Stage Manager</option>
-                      <option value="tecnico_som">Técnico de Som</option>
-                      <option value="tecnico_video">Técnico de Vídeo</option>
-                      <option value="tour_manager">Tour Manager</option>
-                    </select>
+                  <div className="space-y-4">
+                    {/* Dica amigável de múltipla escolha */}
+                    <div className="bg-white/10 rounded-xl p-2.5 text-xs text-indigo-100 flex items-center gap-2 border border-white/15">
+                      <Plus className="size-4 shrink-0 text-white" />
+                      <span>Você pode vincular <strong>uma ou mais áreas</strong> para a mesma pessoa.</span>
+                    </div>
+
+                    {/* Dropdown 1: Área de atuação */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-indigo-100 uppercase tracking-wider block">
+                        Área de atuação
+                      </label>
+                      <select 
+                        value={inviteGroup} 
+                        onChange={(e: any) => {
+                          const areaEscolhida = e.target.value;
+                          setInviteGroup(areaEscolhida);
+                          const areaObj = areasTrabalho.find(a => a.area === areaEscolhida);
+                          if (areaObj && areaObj.funcoes.length === 1) {
+                            setInviteRole(areaObj.funcoes[0].id);
+                          } else {
+                            setInviteRole('');
+                          }
+                        }}
+                        className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-white shadow-sm focus:outline-none focus:ring-4 focus:ring-white/20 text-sm"
+                      >
+                        <option value="">Selecione a Área de atuação...</option>
+                        {areasTrabalho
+                          .filter(a => !inviteFuncoes.some(fId => ROLES_BY_ID[fId]?.area === a.area))
+                          .map(a => (
+                            <option key={a.area} value={a.area}>{a.area}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Dropdown 2: Função com Botão Incluir abaixo */}
+                    {inviteGroup && (() => {
+                      const selectedAreaObj = areasTrabalho.find(a => a.area === inviteGroup);
+                      if (!selectedAreaObj) return null;
+                      return (
+                        <div className="space-y-2 p-3 bg-white/10 rounded-2xl border border-white/20">
+                          <label className="text-xs font-bold text-white uppercase tracking-wider block">
+                            Função ({inviteGroup})
+                          </label>
+                          <select 
+                            value={inviteRole} 
+                            onChange={(e: any) => setInviteRole(e.target.value)}
+                            className="w-full h-11 rounded-xl px-3 font-semibold text-slate-800 bg-white shadow-sm focus:outline-none focus:ring-4 focus:ring-white/20 text-sm"
+                          >
+                            <option value="">Selecione a Função...</option>
+                            {selectedAreaObj.funcoes.map(sub => (
+                              <option key={sub.id} value={sub.id}>
+                                {sub.label} (Nível {sub.nivel})
+                              </option>
+                            ))}
+                          </select>
+                          
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              if (!inviteRole) {
+                                toast.warning("Selecione a função antes de adicionar.");
+                                return;
+                              }
+                              toggleInviteRoleSelection(inviteRole);
+                              setInviteRole('');
+                              setInviteGroup('');
+                              toast.success("Área e função adicionadas ao convite!");
+                            }}
+                            className="w-full h-10 bg-indigo-950/60 hover:bg-indigo-950 text-white font-bold rounded-xl border border-white/20 shadow-sm transition-colors text-xs"
+                          >
+                            <Plus className="size-4 mr-1.5" /> Adicionar esta função ao convite
+                          </Button>
+                        </div>
+                      );
+                    })()}
+
+                    {/* Badges das funções acumuladas no convite */}
+                    {inviteFuncoes.length > 0 && (
+                      <div className="space-y-1.5 pt-1 border-t border-white/15">
+                        <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                          Funções vinculadas ao convite ({inviteFuncoes.length}):
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {inviteFuncoes.map(fId => {
+                            const r = ROLES_BY_ID[fId];
+                            if (!r) return null;
+                            return (
+                              <Badge
+                                key={fId}
+                                className="border-none pl-3 pr-2 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 bg-white text-indigo-950 shadow-md"
+                              >
+                                <span>{r.area !== r.label ? `${r.area}: ` : ''}{r.label}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleInviteRoleSelection(fId)}
+                                  className="hover:bg-slate-200 rounded-full p-0.5 transition-colors text-slate-500 hover:text-slate-900"
+                                  title="Remover"
+                                >
+                                  <X className="size-3.5" />
+                                </button>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <Button onClick={generateInvite} className="w-full bg-white text-indigo-600 hover:bg-slate-100 font-bold h-12 rounded-xl shadow-lg">
@@ -436,14 +578,26 @@ function UsersPage() {
                     <Card key={i.id} className="border-0 shadow-sm bg-white dark:bg-card/40 rounded-xl overflow-hidden group">
                       <div className="flex items-center justify-between p-4">
                         <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <KeyRound className="size-4 text-primary" />
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <KeyRound className="size-4 text-primary shrink-0" />
                             <span className="font-mono font-bold tracking-wider">{i.token}</span>
-                            {ROLE_BADGE_MAP[i.role] && (
-                              <Badge className={`ml-2 text-xs border-none px-2 rounded-md uppercase tracking-wider ${ROLE_BADGE_MAP[i.role].classes}`}>
-                                {ROLE_BADGE_MAP[i.role].label}
-                              </Badge>
-                            )}
+                            {(() => {
+                              const funcsList = Array.isArray(i.funcoes) && i.funcoes.length > 0 
+                                ? i.funcoes 
+                                : [i.role];
+
+                              return funcsList.map(rKey => (
+                                ROLE_BADGE_MAP[rKey] ? (
+                                  <Badge key={rKey} className={`text-xs border-none px-2 rounded-md uppercase tracking-wider ${ROLE_BADGE_MAP[rKey].classes}`}>
+                                    {ROLE_BADGE_MAP[rKey].label}
+                                  </Badge>
+                                ) : (
+                                  <Badge key={rKey} className="text-xs border-none px-2 rounded-md bg-slate-100 text-slate-700 capitalize">
+                                    {rKey}
+                                  </Badge>
+                                )
+                              ));
+                            })()}
                           </div>
                           <p className="text-xs text-slate-400">Expira em: {new Date(i.expires_at).toLocaleDateString('pt-BR')}</p>
                         </div>
@@ -519,65 +673,146 @@ function UsersPage() {
                 placeholder="(11) 99999-9999"
               />
             </div>
-            <div className="space-y-2">
-              <Label>Funções na Equipe (Múltipla Escolha)</Label>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {Object.keys(ROLE_BADGE_MAP)
-                  .filter(f => f !== 'dev')
-                  .sort((a, b) => ROLE_BADGE_MAP[a].label.localeCompare(ROLE_BADGE_MAP[b].label, 'pt-BR'))
-                  .map(f => (
-                  <Badge 
-                    key={f}
-                    variant="outline" 
-                    className={`cursor-pointer border px-3 py-1.5 transition-all text-sm font-semibold rounded-xl
-                      ${editFuncoes.includes(f) 
-                        ? `${ROLE_BADGE_MAP[f].classes} border-transparent ring-2 ring-indigo-500/30 scale-105 shadow-sm` 
-                        : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/5 hover:-translate-y-0.5'
-                      }
-                    `}
-                    onClick={() => setEditFuncoes(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f])}
-                  >
-                    {ROLE_BADGE_MAP[f].label}
-                  </Badge>
-                ))}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-bold text-slate-800 dark:text-white">Áreas de atuação e Funções</Label>
+                <span className="text-xs font-semibold text-slate-500">
+                  {areasTrabalho.filter(a => a.funcoes.some(f => editFuncoes.includes(f.id))).length} área(s) selecionada(s)
+                </span>
               </div>
-            </div>
 
-
-
-            <div className="space-y-2">
-              <Label>Nível de Acesso Principal (Permissões)</Label>
-              {editUser?.role === 'dev' || editUser?.nome?.toLowerCase().includes('garuffi') ? (
-                <div className="p-4 bg-slate-100 rounded-xl font-bold text-slate-500 border border-slate-200">
-                  🔒 O nível do Desenvolvedor não pode ser modificado.
-                </div>
-              ) : (
-                <select 
-                  value={editRole} 
-                  onChange={(e: any) => setEditRole(e.target.value)}
-                  className="w-full h-12 rounded-xl px-4 font-semibold text-slate-800 bg-slate-50 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-primary/20"
+              {/* MENU DROPDOWN FECHADO / ABERTO */}
+              <div className="relative" ref={editDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsFuncoesDropdownOpen(prev => !prev)}
+                  className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-card/40 flex items-center justify-between text-left focus:outline-none focus:ring-4 focus:ring-primary/20 hover:bg-slate-100/80 transition-all"
                 >
-                  <option value="admin">Administrador</option>
-                  <option value="assessoria_imprensa">Assessoria de Imprensa</option>
-                  <option value="assistente_producao">Assistente de Produção</option>
-                  <option value="camareiro">Camareiro / Figurinista</option>
-                  <option value="cenotecnico">Cenotécnico</option>
-                  <option value="contador">Contador</option>
-                  <option value="contra_regra">Contra-regra</option>
-                  <option value="elenco">Elenco</option>
-                  <option value="iluminador">Iluminador</option>
-                  <option value="juridico">Jurídico</option>
-                  <option value="midias_sociais">Mídias Sociais</option>
-                  <option value="motorista">Motorista</option>
-                  <option value="musico">Músico</option>
-                  <option value="produtor">Produtor</option>
-                  <option value="rigger">Rigger</option>
-                  <option value="roadie">Roadie</option>
-                  <option value="stage_manager">Stage Manager</option>
-                  <option value="tecnico_som">Técnico de Som</option>
-                  <option value="tecnico_video">Técnico de Vídeo</option>
-                  <option value="tour_manager">Tour Manager</option>
-                </select>
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 truncate">
+                    {editFuncoes.length === 0
+                      ? "Selecione as Áreas de atuação..."
+                      : `${areasTrabalho.filter(a => a.funcoes.some(f => editFuncoes.includes(f.id))).length} Área(s) marcada(s) — clique para gerenciar`}
+                  </span>
+                  <ChevronDown className={`size-4 text-slate-400 transition-transform ${isFuncoesDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* CONTEÚDO SUSPENSO DO DROPDOWN */}
+                {isFuncoesDropdownOpen && (
+                  <div className="absolute z-50 left-0 right-0 mt-2 p-3 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-white/10 max-h-80 flex flex-col space-y-2">
+                    {/* Caixa de pesquisa dentro do dropdown */}
+                    <div className="relative">
+                      <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <Input
+                        autoFocus
+                        value={searchFuncaoTerm}
+                        onChange={(e) => setSearchFuncaoTerm(e.target.value)}
+                        placeholder="Pesquisar área ou função..."
+                        className="pl-9 h-9 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border-slate-200"
+                      />
+                    </div>
+
+                    {/* Lista com scroll das Áreas com Checkbox na frente + Função */}
+                    <div className="overflow-y-auto max-h-60 space-y-2 pr-1">
+                      {areasTrabalho.map(a => {
+                        const areaChecked = a.funcoes.some(f => editFuncoes.includes(f.id));
+                        const funcaoAtiva = a.funcoes.find(f => editFuncoes.includes(f.id));
+
+                        const term = searchFuncaoTerm.toLowerCase();
+                        const matchArea = a.area.toLowerCase().includes(term);
+                        const matchFunc = a.funcoes.some(f => f.label.toLowerCase().includes(term) || `nível ${f.nivel}`.includes(term));
+                        if (term && !matchArea && !matchFunc) return null;
+
+                        return (
+                          <div 
+                            key={a.area} 
+                            className={`p-2.5 rounded-xl border transition-all ${
+                              areaChecked 
+                                ? 'bg-primary/[0.04] border-primary/30' 
+                                : 'bg-slate-50/50 dark:bg-white/5 border-slate-200/70 dark:border-white/5'
+                            }`}
+                          >
+                            {/* Checkbox da Área */}
+                            <div className="flex items-center justify-between">
+                              <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={areaChecked}
+                                  onChange={() => {
+                                    if (areaChecked) {
+                                      setEditFuncoes(prev => prev.filter(id => !a.funcoes.some(f => f.id === id)));
+                                    } else {
+                                      const defaultRole = a.funcoes[0];
+                                      if (defaultRole) toggleRoleSelection(defaultRole.id);
+                                    }
+                                  }}
+                                  className="size-4 rounded text-primary focus:ring-primary/30 cursor-pointer"
+                                />
+                                <span className={`text-sm ${areaChecked ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                                  {a.area}
+                                </span>
+                              </label>
+
+                              {areaChecked && funcaoAtiva && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary">
+                                  Nível {funcaoAtiva.nivel}
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Dropdown de Função da Área Selecionada */}
+                            {areaChecked && (
+                              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-white/5 pl-6">
+                                <select
+                                  value={funcaoAtiva?.id || ''}
+                                  onChange={(e) => {
+                                    const novaRoleId = e.target.value;
+                                    if (novaRoleId) toggleRoleSelection(novaRoleId);
+                                  }}
+                                  className="w-full h-9 rounded-lg px-2.5 font-medium text-xs text-slate-800 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                                >
+                                  {a.funcoes.map(f => (
+                                    <option key={f.id} value={f.id}>
+                                      {f.label} (Nível {f.nivel})
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Badges das Funções Selecionadas com botão de remoção */}
+              {editFuncoes.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {editFuncoes.map(fId => {
+                    const r = ROLES_BY_ID[fId];
+                    if (!r) return null;
+                    return (
+                      <Badge
+                        key={fId}
+                        className={`border-none pl-3 pr-2 py-1.5 rounded-xl font-semibold text-xs flex items-center gap-1.5 shadow-sm ${r.classes}`}
+                      >
+                        <span>
+                          {r.area !== r.label ? `${r.area}: ` : ''}
+                          {r.label}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => toggleRoleSelection(fId)}
+                          className="hover:bg-black/10 rounded-full p-0.5 transition-colors"
+                          title="Remover função"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })}
+                </div>
               )}
             </div>
             <div className="flex gap-3 pt-4">

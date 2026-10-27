@@ -266,14 +266,17 @@ function AuthPage() {
       // Fetch the role from the invite
       const { data: inviteData } = await supabase
         .from("invites")
-        .select("role")
+        .select("role, funcoes")
         .eq("token", token)
         .single();
         
       const role = inviteData?.role || 'user';
+      const funcoes = Array.isArray(inviteData?.funcoes) && inviteData.funcoes.length > 0
+        ? inviteData.funcoes
+        : [role];
 
       // Atualizar perfil com a foto e a role correta! (a trigger no banco já criou o perfil base)
-      const updatePayload: any = { role: role };
+      const updatePayload: any = { role: role, funcoes: funcoes };
       if (fotoUrl) updatePayload.foto_url = fotoUrl;
       
       await supabase.from("profiles").update(updatePayload).eq("id", user.id);

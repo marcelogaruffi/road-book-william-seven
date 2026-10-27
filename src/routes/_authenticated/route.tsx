@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect, Children, isValidElement } from "react";
 import { LayoutDashboard, UserPlus, Calendar, Wallet, Route as RouteIcon, Bus, Contact, FileAudio, Music, Play, Lightbulb, Mic2, Newspaper, Settings, Settings2, CheckSquare, Smartphone, Video, File } from "lucide-react";
-import { ROLE_BADGE_MAP } from "./cadastros";
+import { ROLE_BADGE_MAP } from "@/constants/roles";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,7 +17,7 @@ type Profile = {
   id: string;
   nome: string;
   foto_url: string | null;
-  role: "dev" | "admin" | "produtor" | "iluminador" | "tecnico_som" | "motorista" | "stage_manager" | "contra_regra" | "assistente_producao" | "camareiro" | "elenco" | "musico" | "tour_manager" | "roadie" | "cenotecnico" | "tecnico_video" | "assessoria_imprensa" | "midias_sociais" | "rigger" | "contador" | "juridico";
+  role: string;
 };
 
 export const Route = createFileRoute("/_authenticated")({
@@ -360,23 +360,27 @@ function AuthedLayout() {
                         // Helpers de Acesso com Suporte a Múltiplas Funções:
             // Administrador (admin): Focado estritamente em ajustes e Painel de Controle do sistema.
             // Desenvolvedor (dev): Acesso amplo de manutenção.
-            // Produtor (produtor): Gestor executivo completo das turnês, eventos e finanças.
+            // Produção: Produtor Executivo (produtor_executivo) e Produtor (produtor) têm gestão executiva completa
             const isDev = hasRole('dev');
             const isAdmin = hasRole('admin') || isDev;
-            const isProdutor = isDev || hasRole('produtor');
+            const isProdutor = isDev || hasRole('produtor_executivo') || hasRole('produtor');
             const isProdutorOuAss = isProdutor || hasRole('assistente_producao');
             const isCoordLogistica = isProdutorOuAss || hasRole('tour_manager');
 
-            // Permissões específicas por setor:
+            // Permissões específicas por setor (atualizadas com a nova hierarquia):
+            const isCamarinsFigurinos = hasRole('figurinista') || hasRole('supervisor_figurino') || hasRole('camareiro_chefe') || hasRole('camareiro');
+            const isIluminacao = hasRole('lighting_designer') || hasRole('tecnico_iluminacao') || hasRole('operador_iluminacao') || hasRole('iluminador');
+            const isMusica = hasRole('diretor_musical') || hasRole('maestro') || hasRole('musico') || hasRole('pit_singer');
+
             const canVerMalas = isCoordLogistica || hasRole('cenotecnico') || hasRole('roadie');
             const canVerEventos = isCoordLogistica;
-            const canVerCamarinsEFigurinos = isProdutorOuAss || hasRole('contra_regra') || hasRole('stage_manager') || hasRole('camareiro');
-            const canVerMontagemPalco = isProdutorOuAss || hasRole('musico') || hasRole('tecnico_som') || hasRole('iluminador') || hasRole('tecnico_video') || hasRole('cenotecnico') || hasRole('roadie') || hasRole('contra_regra') || hasRole('stage_manager') || hasRole('rigger');
-            const canVerCatering = isProdutorOuAss || hasRole('stage_manager') || hasRole('camareiro');
+            const canVerCamarinsEFigurinos = isProdutorOuAss || hasRole('contra_regra') || hasRole('stage_manager') || isCamarinsFigurinos;
+            const canVerMontagemPalco = isProdutorOuAss || isMusica || hasRole('tecnico_som') || isIluminacao || hasRole('tecnico_video') || hasRole('cenotecnico') || hasRole('roadie') || hasRole('contra_regra') || hasRole('stage_manager') || hasRole('rigger');
+            const canVerCatering = isProdutorOuAss || hasRole('stage_manager') || isCamarinsFigurinos;
 
-            const canVerMusicas = isProdutor || hasRole('musico') || hasRole('stage_manager');
-            const canVerPartituras = isProdutor || hasRole('musico') || hasRole('stage_manager');
-            const canVerLuz = isProdutor || hasRole('iluminador') || hasRole('stage_manager');
+            const canVerMusicas = isProdutor || isMusica || hasRole('stage_manager');
+            const canVerPartituras = isProdutor || isMusica || hasRole('stage_manager');
+            const canVerLuz = isProdutor || isIluminacao || hasRole('stage_manager');
             const canVerSom = isProdutor || hasRole('tecnico_som') || hasRole('stage_manager');
             const canVerVideo = isProdutor || hasRole('tecnico_video') || hasRole('stage_manager');
 
@@ -384,8 +388,8 @@ function AuthedLayout() {
             const canVerDadosEquipe = isCoordLogistica;
 
             // Pranchetas de Checklist por setor (Produtor só vê na Produção Executiva)
-            const canPranchetaTecnica = !isProdutor && (hasRole('tecnico_som') || hasRole('iluminador') || hasRole('tecnico_video') || hasRole('stage_manager'));
-            const canPranchetaBackstage = !isProdutor && (hasRole('camareiro') || hasRole('cenotecnico') || hasRole('contra_regra') || hasRole('stage_manager'));
+            const canPranchetaTecnica = !isProdutor && (hasRole('tecnico_som') || isIluminacao || hasRole('tecnico_video') || hasRole('stage_manager'));
+            const canPranchetaBackstage = !isProdutor && (isCamarinsFigurinos || hasRole('cenotecnico') || hasRole('contra_regra') || hasRole('stage_manager'));
             const canPranchetaProdutor = isProdutor;
 
             const hasOtherRoles = userFuncoes.some(f => f !== 'admin');

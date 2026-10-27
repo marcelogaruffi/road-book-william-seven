@@ -9,7 +9,7 @@ import { Route as AuthedRoute } from "./route";
 import { Card } from "@/components/ui/card";
 import { getErrorMessage } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { ROLE_BADGE_MAP } from "./cadastros";
+import { ROLE_BADGE_MAP } from "@/constants/roles";
 import { 
   Plus, ExternalLink, Pencil, Trash2, Copy, Calendar, MapPin, 
   MoreVertical, BookOpen, MapPinned, Bus, ChevronRight, AlertCircle, Wrench, Settings2, ShieldAlert,

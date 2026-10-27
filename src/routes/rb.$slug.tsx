@@ -888,18 +888,14 @@ export function PublicRoadbookView({ r, isFirst = true, isConcatenated = false }
                                 Acontecendo Agora
                               </span>
                             )}
-                            {diffFutureText && (
-                              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 px-1.5 py-0.5 rounded-md">
-                                Em ${diffFutureText}
-                              </span>
-                            )}
+
                           </div>
                           
                           {isCurrent && (
                             <div className="pt-1.5 pb-0.5">
                               <div className="flex items-center justify-between text-[11px] font-medium text-rose-700 dark:text-rose-300 mb-1">
                                 <span>Em andamento</span>
-                                <span>Resta aprox. ${diffMinText}</span>
+                                <span>Resta aprox. {diffMinText}</span>
                               </div>
                               <div className="w-full bg-rose-200 dark:bg-rose-900/60 h-1.5 rounded-full overflow-hidden">
                                 <div 
