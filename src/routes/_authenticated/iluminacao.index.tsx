@@ -48,10 +48,10 @@ function IluminacaoComponent() {
   }
   // ----------------------------------------------------
 
-  const { profile } = AuthedRoute.useRouteContext();
+  const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const userRole = profile?.role || "";
   const allowedRoles = ["dev","produtor","iluminador","stage_manager"];
-  const isAllowed = allowedRoles.includes(userRole);
+  const isAllowed = profileRoles.some(r => allowedRoles.includes(r));
 
   if (profile && !isAllowed) {
     return <AccessDenied message="O módulo de Iluminação é exclusivo para a equipe de Luz e Produção." />;

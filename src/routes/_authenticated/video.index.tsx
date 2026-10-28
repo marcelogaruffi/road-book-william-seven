@@ -42,10 +42,10 @@ function VideoComponent() {
   }
   // ----------------------------------------------------
 
-  const { profile } = AuthedRoute.useRouteContext();
+  const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const userRole = profile?.role || "";
   const allowedRoles = ["dev","produtor","tecnico_video","stage_manager"];
-  const isAllowed = allowedRoles.includes(userRole);
+  const isAllowed = profileRoles.some(r => allowedRoles.includes(r));
 
   if (profile && !isAllowed) {
     return <AccessDenied message="O módulo de Vídeo é exclusivo para a equipe de Vídeo e Produção." />;

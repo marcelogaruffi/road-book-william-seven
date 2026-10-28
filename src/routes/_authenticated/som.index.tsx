@@ -48,10 +48,10 @@ function SomComponent() {
   }
   // ----------------------------------------------------
 
-  const { profile } = AuthedRoute.useRouteContext();
+  const { profile, isSimulating } = AuthedRoute.useRouteContext();
   const userRole = profile?.role || "";
   const allowedRoles = ["dev","produtor","tecnico_som","stage_manager"];
-  const isAllowed = allowedRoles.includes(userRole);
+  const isAllowed = profileRoles.some(r => allowedRoles.includes(r));
 
   if (profile && !isAllowed) {
     return <AccessDenied message="O módulo de Som é exclusivo para a equipe de Áudio / Som e Produção." />;
